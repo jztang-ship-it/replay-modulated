@@ -177,6 +177,16 @@ export interface H2HRevealScreenProps {
    *  `reveal.phase === "done"`, this renders the same end-state as
    *  the phase-2 static path. */
   reveal?: UseH2HRevealReturn;
+  /** Step-4 glide / C2 — per-team glide-handoff suppression. When a
+   *  team's flag is true, its ScoreCell's INNER GLYPH gets
+   *  `visibility: hidden` so C4's glide clone can carry the only
+   *  visible copy of the number to the docked target. The outer
+   *  ScoreCell box, the score panel behind it, the delta float, and
+   *  every adjacent rect stay byte-identical — only the glyph
+   *  becomes invisible. Default-false on both sides means C2 is a
+   *  no-op on the live reveal screen; C4 will flip flags true at the
+   *  glide's start. */
+  glideHandoff?: { opponent: boolean; user: boolean };
 }
 
 // ── Tier colors ──────────────────────────────────────────────────────────
@@ -1353,7 +1363,7 @@ function BattlefieldSlot({ card, renderCard, visibleFp, revealed, shakeType, glo
 // ── H2HRevealScreen ──────────────────────────────────────────────────────
 
 export function H2HRevealScreen(props: H2HRevealScreenProps) {
-  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal } = props;
+  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal, glideHandoff } = props;
   const reducedMotion = usePrefersReducedMotion();
 
   // Resolve battlefield + display state from either the reveal hook
@@ -1730,7 +1740,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {senderBattle && !showEntranceDeck
-            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" pop={popState.senderPop} />
+            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" pop={popState.senderPop} suppressed={glideHandoff?.opponent ?? false} />
             : <div />}
 
           {/* Row 2: recipient's battlefield card + score */}
@@ -1753,7 +1763,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 reducedMotion={reducedMotion}
               />}
           {recipientBattle && !showEntranceDeck
-            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" pop={popState.recipientPop} />
+            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" pop={popState.recipientPop} suppressed={glideHandoff?.user ?? false} />
             : <div />}
 
           {/* Matchup delta — floats in the right-rail GAP between the

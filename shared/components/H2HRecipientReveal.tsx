@@ -195,6 +195,22 @@ function H2HRecipientRevealInner(props: InnerProps) {
   const showOverlay = reveal.phase === "done";
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
 
+  // Step-4 glide / C2 — glide-handoff suppression state. Per-team
+  // flag that, when true, hides the reveal ScoreCell's INNER GLYPH
+  // (visibility:hidden — outer cell box, panel, delta float, momentum
+  // tag all stay byte-identical). C2 ships the dormant mechanism only;
+  // both flags stay false here so this commit is a no-op on the live
+  // reveal screen. C4 will add the setter that flips a flag true at
+  // the moment its glide clone leaves the rail toward the docked
+  // target, so the score never visibly doubles. The state is here
+  // rather than a const so C4's diff is a one-line addition of the
+  // trigger rather than a re-shape of the prop chain.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [glideHandoff, _setGlideHandoff] = useState<{ opponent: boolean; user: boolean }>({
+    opponent: false,
+    user: false,
+  });
+
   return (
     <div
       data-h2h-recipient-reveal="true"
@@ -212,6 +228,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
         recipient={recipient}
         renderCard={renderBattlefieldCard}
         reveal={reveal}
+        glideHandoff={glideHandoff}
       />
       {overlayCrossfade.mounted && (
         <H2HResultsOverlay

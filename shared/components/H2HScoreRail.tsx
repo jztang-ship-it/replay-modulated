@@ -206,6 +206,23 @@ interface ScoreCellProps {
     kind: "scaled" | "lead-change";
     key: number;
   };
+  /** Step-4 glide / C2 — glide-handoff suppression.
+   *
+   *  When true, the INNER GLYPH only gets `visibility: hidden` — the
+   *  outer flex-center cell keeps its full layout footprint (size,
+   *  filter glow, animation, all data-attrs). The reveal cluster's
+   *  geometry (other ScoreCell, delta float, momentum tag, the
+   *  step-2 score panel behind) is unaffected; only the glyph itself
+   *  becomes invisible so the C4 glide clone can carry the only
+   *  visible copy of the number across to the docked target without
+   *  doubling-up with the rest score.
+   *
+   *  Defaults to false. C2 only ships the dormant mechanism; no
+   *  caller flips it true until C4. With suppressed=false (or
+   *  omitted), this ScoreCell renders byte-identically to the
+   *  pre-C2 component — the no-jump assertions and the reveal-side
+   *  relay-tension feel both stay intact. */
+  suppressed?: boolean;
 }
 
 export function ScoreCell({
@@ -215,6 +232,7 @@ export function ScoreCell({
   sizeProgress,
   surface,
   pop,
+  suppressed,
 }: ScoreCellProps) {
   useEffect(ensureScoreRailKeyframesInjected, []);
 
@@ -317,6 +335,7 @@ export function ScoreCell({
       data-h2h-score-pop-magnitude={pop ? pop.magnitude.toFixed(3) : "none"}
       data-h2h-score-pop-duration-ms={pop ? String(pop.durationMs) : "none"}
       data-h2h-score-size-progress={sizeProgress.toFixed(3)}
+      data-h2h-score-suppressed={suppressed ? "true" : "false"}
       style={{
         display: "flex",
         justifyContent: "center",
@@ -340,6 +359,15 @@ export function ScoreCell({
           transformOrigin: "center center",
           textShadow: innerTextShadow,
           transition: `transform ${LEADER_TREATMENT_TRANSITION_MS}ms ease, color ${LEADER_TREATMENT_TRANSITION_MS}ms ease, text-shadow ${LEADER_TREATMENT_TRANSITION_MS}ms ease`,
+          // C2 — glide-handoff suppression on the INNER GLYPH only.
+          // visibility:hidden, NEVER display:none (display:none would
+          // collapse the cell and reflow the reveal cluster, breaking
+          // strip Y, user hero Y, and the score-panel rect behind).
+          // The outer flex-center box above keeps its layout footprint;
+          // only the glyph becomes invisible. When suppressed=false /
+          // omitted (the C2 default), this resolves to "visible" — the
+          // pre-C2 default — and the no-op invariant holds.
+          visibility: suppressed ? "hidden" : "visible",
         }}
       >
         {shownStr}
