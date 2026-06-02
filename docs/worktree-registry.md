@@ -117,6 +117,21 @@ This check matters more than the unique-commit count. SHA divergence ≠ work di
 
 ---
 
+### `feat/ch-debug-instrumentation` — active
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat+ch-debug-instrumentation`
+- **Branch HEAD:** off `origin/main` (created 2026-06-02)
+- **Unique commits vs main:** 1 (the instrumentation commit)
+- **Uncommitted state:** none post-commit
+- **What it carries:** Pure `[ch-debug]` instrumentation set for the ripe-challenge "drops to fresh deal" investigation. New file `shared/lib/chDebug.ts` (info-level, gated by `window.__CH_DEBUG__ !== false`), with call sites in `basketball/src/App.tsx`, `shared/components/H2HRecipientPlay.tsx`, `shared/components/ErrorBoundary.tsx`, `shared/lib/chunkReload.ts`, `shared/components/ChallengeLandingScreen.tsx`, `shared/hooks/useChallengeAttempt.ts`. Zero logic changes — logging only.
+- **Equivalence on main:** None — new branch, intentional.
+- **Intent:** land quickly to capture the path that fires on the next ripe-challenge bug repro; the helper is single-file so removal = revert one commit.
+- **Do-not-touch:** no — short-lived, merge once instrumentation has captured the bug.
+- **Last reviewed:** 2026-06-02
+- **Next action:** merge to main; after the bug is captured + fixed elsewhere, revert this commit.
+
+---
+
 ## Worktree naming conventions
 
 Proposal locked 2026-05-23. Applies to future branches; existing branches will be renamed lazily when next touched.

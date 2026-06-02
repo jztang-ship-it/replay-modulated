@@ -22,6 +22,8 @@
  * for users who still have the old index.html cached when they next visit.
  */
 
+import { chDebug } from "@shared/lib/chDebug";
+
 const CHUNK_ERROR_PATTERNS = [
   /Failed to fetch dynamically imported module/i,
   /Failed to load module script/i,
@@ -47,12 +49,17 @@ export function tryAutoReload(): boolean {
       // Only suppress if recent — a stale guard from a previous session
       // shouldn't block recovery.
       const ts = Number(prev);
-      if (Number.isFinite(ts) && Date.now() - ts < GUARD_TTL_MS) return false;
+      if (Number.isFinite(ts) && Date.now() - ts < GUARD_TTL_MS) {
+        chDebug("chunkReload:tryAutoReload", { suppressedByGuard: true, guardAgeMs: Date.now() - ts });
+        return false;
+      }
     }
     sessionStorage.setItem(RELOAD_GUARD_KEY, String(Date.now()));
+    chDebug("chunkReload:tryAutoReload", { suppressedByGuard: false, reloading: true });
     window.location.reload();
     return true;
-  } catch {
+  } catch (e) {
+    chDebug("chunkReload:tryAutoReload", { error: String(e) });
     return false;
   }
 }
@@ -63,13 +70,21 @@ export function installChunkReloadHandler(): void {
   installed = true;
 
   window.addEventListener("unhandledrejection", (e) => {
-    if (isChunkLoadError(e.reason)) {
+    const matched = isChunkLoadError(e.reason);
+    if (matched) {
+      chDebug("chunkReload:unhandledrejection", {
+        message: String((e.reason as any)?.message ?? e.reason ?? ""),
+      });
       tryAutoReload();
     }
   });
 
   window.addEventListener("error", (e) => {
-    if (isChunkLoadError(e.error) || isChunkLoadError(e.message)) {
+    const matched = isChunkLoadError(e.error) || isChunkLoadError(e.message);
+    if (matched) {
+      chDebug("chunkReload:errorEvent", {
+        message: String((e.error as any)?.message ?? e.message ?? ""),
+      });
       tryAutoReload();
     }
   });

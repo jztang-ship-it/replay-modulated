@@ -109,6 +109,7 @@ import {
   type H2HCard,
 } from "./H2HRevealScreen";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
+import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
 import {
   H2HBoardShell,
@@ -340,6 +341,11 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         if (cancelled) return;
         // eslint-disable-next-line no-console
         console.error("[h2h-play] dataEngine load failed:", err);
+        chDebug("dataLoadError:set", {
+          message: err instanceof Error ? err.message : String(err),
+          seasonKey: challengeCtx.season,
+          attempt: loadAttempt,
+        });
         setDataLoadError(true);
       });
     return () => { cancelled = true; };
@@ -557,6 +563,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       }
       if (cancelled) return;
       if (redrawThrew) {
+        chDebug("engineError:set", { which: "redraw" });
         setEngineError("redraw");
         return;
       }
@@ -683,6 +690,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       }
       if (cancelled) return;
       if (resolveThrew) {
+        chDebug("engineError:set", { which: "resolve" });
         setEngineError("resolve");
         return;
       }
@@ -890,6 +898,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     // scratch. For transient data-load failures (network blip) this
     // recovers cleanly; for persistent failures the user sees the
     // same error state again. Either way, no degenerate reveal.
+    chDebug("handleRetry:tap", { loadAttempt });
     onTryAgain();
   };
 

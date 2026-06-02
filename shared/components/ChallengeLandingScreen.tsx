@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types/index";
 import { track } from "@shared/analytics/analytics";
+import { chDebug } from "@shared/lib/chDebug";
 import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
 // (replays are unlimited — hasAttemptedChallenge is still imported below as
 //  a hint label for the CTA, never as a block.)
@@ -81,7 +82,14 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
     fetch(`/api/challenge/${challengeId}`)
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(d => { setData(d); setLoading(false); })
-      .catch(() => { setError("Challenge not found."); setLoading(false); });
+      .catch((reason) => {
+        chDebug("ChallengeLandingScreen:fetchCatch", {
+          challengeId,
+          status: typeof reason === "number" ? reason : null,
+          reason: String(reason),
+        });
+        setError("Challenge not found."); setLoading(false);
+      });
   }, [challengeId, sport]);
 
   function handleAccept() {

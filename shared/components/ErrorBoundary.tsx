@@ -9,6 +9,7 @@
 import { Component, type ReactNode } from "react";
 import { captureError } from "@shared/lib/sentry";
 import { isChunkLoadError, tryAutoReload } from "@shared/lib/chunkReload";
+import { chDebug } from "@shared/lib/chDebug";
 
 interface Props { children: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
@@ -20,13 +21,24 @@ export class ErrorBoundary extends Component<Props, State, any> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    if (isChunkLoadError(error) && tryAutoReload()) {
+    const isChunk = isChunkLoadError(error);
+    const autoReloaded = isChunk && tryAutoReload();
+    chDebug("ErrorBoundary:getDerivedStateFromError", {
+      message: error?.message,
+      isChunkLoadError: isChunk,
+      autoReloaded,
+    });
+    if (autoReloaded) {
       return { hasError: false, error: null };
     }
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, info: any) {
+    chDebug("ErrorBoundary:componentDidCatch", {
+      message: error?.message,
+      isChunkLoadError: isChunkLoadError(error),
+    });
     console.error("[ReplayMod] Uncaught error:", error, info);
     captureError(error, { reactInfo: info });
   }
