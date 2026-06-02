@@ -63,6 +63,7 @@ import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import {
   trashTalkBucket,
   type TrashTalkBucket,
+  selectChallengeResolution,
 } from "../commentary/chadChallenge";
 import {
   ScoreCell,
@@ -144,6 +145,23 @@ export const OVERLAY_CROSSFADE_MS = 350;
 
 const HERO_ROW_GAP_PX = 14;
 const HERO_CARD_MAX_WIDTH = "min(145px, 32vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
+
+// Step 3: explicit per-row hero height for the hero grid. Pinning each
+// row to this prevents row-1 from collapsing when the opponent HeroCell
+// is removed (replaced by the commentary block) — without it, row 1
+// would auto-size to commentary's intrinsic height (~60-90px), pulling
+// the user hero up and breaking the no-jump invariant locked in step 1.
+// Value: HERO_CARD_MAX_WIDTH × 478/329 (the hero card's aspect-ratio-
+// derived height). Step-1 no-jump assertion stays green because the
+// user hero in row 2 retains the exact X/Y it had before.
+const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed(6)})`;
+
+// Step 3: docked-score target minimum width inside each ZoneHeader.
+// Reserves right-aligned space for the score that will glide in at
+// step 4. Widest realistic total "999.9" at fontSize 18, fontWeight 900,
+// tabular-nums, letterSpacing -0.3 measures ~52px; 60 pads for metric
+// variance across iOS/Android renderers.
+const DOCKED_SCORE_TARGET_MIN_WIDTH_PX = 60;
 
 // Hand-strip cell sizing — matches H2HRevealScreen's HandStrip exactly so
 // strips look identical between arc and overlay.
@@ -239,21 +257,44 @@ function ZonePanel({ children, dataAttr, style }: { children: React.ReactNode; d
   );
 }
 
-function ZoneHeader({ hand, position }: { hand: H2HHand; position?: "top" | "bottom" }) {
+function ZoneHeader({
+  hand,
+  position,
+  dockedScoreColor,
+}: {
+  hand: H2HHand;
+  position?: "top" | "bottom";
+  /** Step 3: three-state color for the docked-score target placeholder.
+   *  Mirrors the existing right-rail ScoreCell logic (winner green / loser
+   *  neutral / tie). Step 4 lands the glide that fills the placeholder;
+   *  the color rendered here is what the glide will land into. */
+  dockedScoreColor: string;
+}) {
   return (
     <div
       data-h2h-overlay-zone-label={position}
       style={{
         padding: "0 6px",
-        height: ZONE_HEADER_HEIGHT_PX,
+        height: ZONE_HEADER_HEIGHT_PX,         // unchanged — strip Y depends on this
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
+        // Step 3: name left + docked-score target right. The name span
+        // truncates with ellipsis when long; the score slot holds its
+        // reserved width (flex:0 0 auto) and the name absorbs whatever
+        // space remains.
+        justifyContent: "space-between",
         flexShrink: 0,
+        gap: 8,
       }}
     >
       <span
         style={{
+          flex: "1 1 auto",
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          textAlign: "left",
           fontSize: 18,
           fontWeight: 900,
           color: "rgba(255,255,255,0.95)",
@@ -263,6 +304,25 @@ function ZoneHeader({ hand, position }: { hand: H2HHand; position?: "top" | "bot
       >
         {hand.displayName}
       </span>
+      {/* Docked-score target. Step 3 reserves flex space only — content
+          is empty. Step 4 fills via the glide that animates from the
+          right-rail ScoreCell into this slot. data-attrs carry the
+          value already so a step-4 motion handler can read it without
+          re-deriving. */}
+      <span
+        data-h2h-overlay-docked-score={position}
+        data-h2h-overlay-docked-score-value={hand.totalFp.toFixed(1)}
+        style={{
+          flex: "0 0 auto",
+          minWidth: DOCKED_SCORE_TARGET_MIN_WIDTH_PX,
+          textAlign: "right",
+          color: dockedScoreColor,
+          fontSize: 18,
+          fontWeight: 900,
+          letterSpacing: -0.3,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      />
     </div>
   );
 }
@@ -566,6 +626,34 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       ? "leading"
       : "trailing";
 
+  // Step 3: docked-score target color per side. Same three-state model
+  // the right-rail ScoreCell uses (winner green / loser neutral / tie
+  // off-white). The targets render empty in step 3 — only the color
+  // ships, ready for the step-4 glide to land a value into.
+  const opponentDockedColor =
+    senderState === "leading" ? WINNING_COLOR
+    : senderState === "tied" ? DELTA_NEUTRAL
+    : TRAILING_COLOR;
+  const userDockedColor =
+    recipientState === "leading" ? WINNING_COLOR
+    : recipientState === "tied" ? DELTA_NEUTRAL
+    : TRAILING_COLOR;
+
+  // Step 3: substantive "WHY" second line, folded into the commentary
+  // block in the freed center column. Picks personality vs tactical
+  // flavor internally; both interpolate {delta} and {name}. The voice
+  // is the pre-voice-pass copy in shared/commentary/chadChallenge.ts —
+  // structure here is final; the bank strings are the voice pass's
+  // responsibility.
+  const resolutionLine = useMemo(
+    () => selectChallengeResolution({
+      myScore: recipient.totalFp,
+      posterScore: sender.totalFp,
+      posterName: challengerName,
+    }),
+    [recipient.totalFp, sender.totalFp, challengerName],
+  );
+
   // Primary CTA per state. Phase 5b commit 3 (2026-05-28): when the
   // caller passes primaryCtaOverride, it replaces the state-derived
   // pick wholesale — `state` still drives headline color/copy. The
@@ -697,7 +785,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       >
         {/* ── TOP STRIP — opponent's lineup ──────────────────────────── */}
         <ZonePanel dataAttr="opponent" style={{ marginBottom: 18 }}>
-          <ZoneHeader hand={sender} position="top" />
+          <ZoneHeader hand={sender} position="top" dockedScoreColor={opponentDockedColor} />
           <ResultsStrip
             cards={sender.cards}
             renderCard={renderCard}
@@ -707,13 +795,18 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           />
         </ZonePanel>
 
-        {/* ── HERO ZONE — 3-col × 2-row grid mirrors the arc battlefield.
-            Columns: [left rail (headline+trash-talk) | hero | right rail (scores)].
-            Rows: [top hero | bottom hero]. Left rail spans both rows.
-            No row 2 separation — same `BATTLEFIELD_ROW_GAP_PX` sliver as
-            the arc; just the two hero rows back-to-back. The arc's
-            absolute-positioned matchup-delta float is omitted on the
-            overlay (no per-matchup delta after the arc resolves). */}
+        {/* ── HERO ZONE — 3-col × 2-row grid.
+            Step 3 (results-page lock): opponent hero removed, commentary
+            inserted in its place spanning [left rail + center] of row 1;
+            user hero stays in row 2 center byte-identically; scores stay
+            in the right-rail ScoreCells (step 4 docks + glides them into
+            the ZoneHeaders). Standalone final-gap float removed — the
+            margin is now folded into the commentary copy via
+            selectHeadline + selectChallengeResolution.
+            Columns: [left rail | center | right rail (scores)] = 100/1fr/80.
+            Rows: explicit HERO_ROW_HEIGHT_CSS each, so dropping the
+            opponent hero does NOT collapse row 1 and pull the user hero
+            up. */}
         <div
           data-h2h-overlay-hero="true"
           style={{
@@ -721,7 +814,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             flex: "0 0 auto",
             display: "grid",
             gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${RIGHT_RAIL_WIDTH_PX}px`,
-            gridTemplateRows: "auto auto",
+            gridTemplateRows: `${HERO_ROW_HEIGHT_CSS} ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
@@ -730,21 +823,20 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             marginBottom: 4,
           }}
         >
-          {/* Left rail spans both rows — holds headline only after the
-              relay-tension Phase 1 commentary collapse. Previously this
-              block was two-block / two-tone (white headline + orange
-              trash-talk); the right column now does the storytelling
-              (Z1 size + Z2 leader glow + per-set delta flash), so the
-              two-tone left-column treatment was competing with the
-              number drama. Copy generator (shared/commentary/chad-
-              Challenge) is unchanged — the trash-talk line is still
-              produced; we just don't render it. Headline stays in
-              `headlineColor` (state-tinted white/green/red), centered
-              within the rail with symmetric padding. */}
+          {/* Row 1: commentary block — spans LEFT RAIL + CENTER (278px at
+              390 viewport). Two stacked lines, centered horizontally
+              within the freed area: state-tinted headline with the
+              margin number folded in (selectHeadline already interpolates
+              `${absDelta}`), and the substantive "WHY" second line from
+              selectChallengeResolution. Step 4 unlocks expanding this
+              to full-width once scores leave the right rail. The headline
+              and resolution colors keep the existing state-tint system
+              — no new palette. */}
           <div
-            data-h2h-overlay-rail="left"
+            data-h2h-overlay-commentary="true"
             style={{
-              gridRow: "1 / span 2",
+              gridRow: 1,
+              gridColumn: "1 / span 2",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
@@ -768,79 +860,41 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             >
               {headline}
             </div>
-          </div>
-
-          {/* Row 1: top hero cell + opp score (anchored to top hero Y). */}
-          <HeroCell card={topSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" />
-
-          {/* Row 2: bottom hero cell + user score (anchored to bottom hero Y). */}
-          <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
-          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" />
-
-          {/* Layout-3 fix (b): final-score GAP floats in the right-rail
-              gap between the two score cells — same position the arc's
-              per-matchup delta occupies via H2HRevealScreen's
-              MidRailContent. The right column reads top→bottom:
-                opponent score / final gap / my score.
-              The three metrics, all right, fixed position. The gap
-              previously had no separate readout at results (the value
-              was baked into the left-rail headline copy, which made
-              it read as if the delta had been moved to the left).
-              The hero zone is already position:relative (line 713), so
-              this absolute child anchors to it. */}
-          <div
-            data-h2h-overlay-final-gap-float="true"
-            style={{
-              position: "absolute",
-              top: "50%",
-              right: 0,
-              width: RIGHT_RAIL_WIDTH_PX,
-              transform: "translateY(-50%)",
-              pointerEvents: "none",
-            }}
-          >
             <div
-              data-h2h-overlay-final-gap="true"
-              data-h2h-overlay-final-gap-value={(recipient.totalFp - sender.totalFp).toFixed(1)}
+              data-h2h-overlay-resolution="true"
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
+                fontSize: 14,
+                fontWeight: 500,
+                color: "rgba(255,255,255,0.78)",
+                letterSpacing: -0.1,
+                lineHeight: 1.3,
+                wordBreak: "break-word",
+                textAlign: "center",
               }}
             >
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  color:
-                    recipient.totalFp > sender.totalFp ? WINNING_COLOR
-                    : recipient.totalFp < sender.totalFp ? TRAILING_COLOR
-                    : DELTA_NEUTRAL,
-                  fontVariantNumeric: "tabular-nums",
-                  textAlign: "center",
-                  lineHeight: 1.1,
-                }}
-              >
-                <div>
-                  {recipient.totalFp - sender.totalFp > 0 ? "+" : ""}
-                  {(recipient.totalFp - sender.totalFp).toFixed(1)}
-                </div>
-                <div
-                  style={{
-                    fontSize: 7,
-                    fontWeight: 700,
-                    color: "rgba(255,255,255,0.4)",
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  final
-                </div>
-              </div>
+              {resolutionLine}
             </div>
           </div>
+
+          {/* Row 1 right rail: sender (opponent) score — stays in rail for
+              step 3. Step 4 docks this into the opponent ZoneHeader via
+              the glide. */}
+          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" />
+
+          {/* Row-2 left-rail spacer. With the opponent HeroCell removed,
+              CSS grid auto-flow would otherwise place the next in-flow
+              item (the user HeroCell) into the first available slot —
+              row 2 col 1 (left rail) — pulling the locked user hero out
+              of the center column. This explicit empty cell parks row
+              2 col 1 so auto-flow puts the user hero into row 2 col 2
+              (center) as required by the no-jump invariant. The user
+              HeroCell stays untouched per the step-3 lock. */}
+          <div aria-hidden="true" style={{ gridRow: 2, gridColumn: 1 }} />
+
+          {/* Row 2: user hero cell (LOCKED — byte-identical X/Y vs prior
+              step) + user score (stays in rail through step 3). */}
+          <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
+          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" />
         </div>
 
         {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────
@@ -857,7 +911,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             onCardTap={handleBottomCardTap}
             revealOrder={recipientRevealOrder}
           />
-          <ZoneHeader hand={recipient} position="bottom" />
+          <ZoneHeader hand={recipient} position="bottom" dockedScoreColor={userDockedColor} />
         </ZonePanel>
 
         {/* ── RESERVED BOTTOM SPACE (holds CTA + countdown) ────────────

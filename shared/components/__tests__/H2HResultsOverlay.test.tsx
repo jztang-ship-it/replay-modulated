@@ -162,8 +162,8 @@ describe("H2HResultsOverlay — state machine + CTAs", () => {
   });
 });
 
-describe("H2HResultsOverlay — headline in left rail (relay-tension commentary collapse)", () => {
-  it("headline renders in the left rail; trash-talk block is intentionally absent", () => {
+describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)", () => {
+  it("headline + resolution render inside the commentary container; left-rail wrapper is gone", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 178.4)}
@@ -172,20 +172,22 @@ describe("H2HResultsOverlay — headline in left rail (relay-tension commentary 
         state="WIN"
       />
     );
-    const leftRail = container.querySelector('[data-h2h-overlay-rail="left"]') as HTMLElement;
-    expect(leftRail).toBeTruthy();
-    const headline = leftRail.querySelector('[data-h2h-overlay-headline="true"]');
+    // Step 3: the [data-h2h-overlay-rail="left"] wrapper was deleted —
+    // its headline role moved into the new commentary container in the
+    // freed row-1 center span.
+    expect(container.querySelector('[data-h2h-overlay-rail="left"]')).toBeNull();
+    const commentary = container.querySelector('[data-h2h-overlay-commentary="true"]') as HTMLElement;
+    expect(commentary).toBeTruthy();
+    const headline = commentary.querySelector('[data-h2h-overlay-headline="true"]');
     expect(headline).toBeTruthy();
     expect((headline?.textContent ?? "").length).toBeGreaterThan(0);
-    // Relay-tension Phase 1 collapsed the two-block commentary to one
-    // block; the orange trash-talk render was retired so it doesn't
-    // compete with the right-column number drama (Z1 size + Z2 leader
-    // glow + per-set delta flash). The chadTrashTalk generator is
-    // unchanged in shared/commentary/chadChallenge — we just stopped
-    // calling it here. Guard the absence so a future re-add is a
-    // deliberate decision, not an accident.
-    const trash = leftRail.querySelector('[data-h2h-overlay-trash-talk="true"]');
-    expect(trash).toBeNull();
+    const resolution = commentary.querySelector('[data-h2h-overlay-resolution="true"]');
+    expect(resolution).toBeTruthy();
+    expect((resolution?.textContent ?? "").length).toBeGreaterThan(0);
+    // Trash-talk block was retired in the relay-tension Phase 1 collapse
+    // and stays retired; the resolution line replaces it as the second
+    // commentary block.
+    expect(container.querySelector('[data-h2h-overlay-trash-talk="true"]')).toBeNull();
   });
 
   it("photo_finish margin bucket headline reads 'Photo finish'", () => {
@@ -325,8 +327,8 @@ describe("H2HResultsOverlay — per-strip flip", () => {
   });
 });
 
-describe("H2HResultsOverlay — hero zone rendering", () => {
-  it("default state: hero zone has 2 cells, both unoccupied", () => {
+describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero removed)", () => {
+  it("default state: hero zone has 1 cell (user/bottom only), unoccupied", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 178.4)}
@@ -335,14 +337,15 @@ describe("H2HResultsOverlay — hero zone rendering", () => {
         state="WIN"
       />
     );
+    // Step 3: the opponent (top) HeroCell was removed; only the user
+    // (bottom) hero cell remains. Step 4 docks the scores from the
+    // right rail into the ZoneHeaders.
     const heroCells = container.querySelectorAll('[data-h2h-overlay-hero-cell="true"]');
-    expect(heroCells.length).toBe(2);
-    for (const cell of Array.from(heroCells)) {
-      expect(cell.getAttribute("data-occupied")).toBe("false");
-    }
+    expect(heroCells.length).toBe(1);
+    expect(heroCells[0].getAttribute("data-occupied")).toBe("false");
   });
 
-  it("selecting a sender card occupies the TOP hero cell only", () => {
+  it("tapping a sender strip card sets data-h2h-overlay-selected-top but renders no top hero cell (top hero removed in step 3)", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
     const { container } = render(
@@ -357,12 +360,16 @@ describe("H2HResultsOverlay — hero zone rendering", () => {
       `[data-h2h-overlay-zone="opponent"] [data-card-id="${sender.cards[3].cardId}"]`
     ) as HTMLElement;
     fireEvent.click(senderCell);
+    const overlay = container.querySelector('[data-h2h-results-overlay="true"]');
+    expect(overlay?.getAttribute("data-h2h-overlay-selected-top")).toBe(sender.cards[3].cardId);
+    // No top hero cell to occupy — the single remaining hero cell is
+    // the user (bottom) hero, which the sender tap doesn't affect.
     const heroCells = container.querySelectorAll('[data-h2h-overlay-hero-cell="true"]');
-    expect(heroCells[0].getAttribute("data-occupied")).toBe("true");
-    expect(heroCells[1].getAttribute("data-occupied")).toBe("false");
+    expect(heroCells.length).toBe(1);
+    expect(heroCells[0].getAttribute("data-occupied")).toBe("false");
   });
 
-  it("selecting a recipient card occupies the BOTTOM hero cell only", () => {
+  it("selecting a recipient card occupies the BOTTOM hero cell (the only hero cell)", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
     const { container } = render(
@@ -378,11 +385,11 @@ describe("H2HResultsOverlay — hero zone rendering", () => {
     ) as HTMLElement;
     fireEvent.click(recipientCell);
     const heroCells = container.querySelectorAll('[data-h2h-overlay-hero-cell="true"]');
-    expect(heroCells[0].getAttribute("data-occupied")).toBe("false");
-    expect(heroCells[1].getAttribute("data-occupied")).toBe("true");
+    expect(heroCells.length).toBe(1);
+    expect(heroCells[0].getAttribute("data-occupied")).toBe("true");
   });
 
-  it("hero card renderer receives `flipped: true`; strip cards receive `flipped: false`", () => {
+  it("bottom hero card renderer receives `flipped: true`; strip cards receive `flipped: false`", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
     const calls: Array<{ cardId: string; flipped: boolean }> = [];
@@ -390,22 +397,24 @@ describe("H2HResultsOverlay — hero zone rendering", () => {
       calls.push({ cardId: card.cardId, flipped: options?.flipped ?? false });
       return <div data-card-stub="true" data-card-id={card.cardId} />;
     });
-    const targetId = sender.cards[1].cardId;
+    const targetId = recipient.cards[1].cardId;
     render(
       <H2HResultsOverlay
         sender={sender}
         recipient={recipient}
         renderCard={renderCard}
         state="WIN"
-        initialTopFlippedCardId={targetId}
+        initialBottomFlippedCardId={targetId}
       />
     );
     const targetCalls = calls.filter(c => c.cardId === targetId);
+    // The recipient card with this id renders BOTH in the user strip
+    // (flipped: false) AND in the bottom hero (flipped: true).
     expect(targetCalls.some(c => c.flipped === true)).toBe(true);
     expect(targetCalls.some(c => c.flipped === false)).toBe(true);
   });
 
-  it("initialTopFlippedCardId + initialBottomFlippedCardId seed both selections", () => {
+  it("initialTopFlippedCardId + initialBottomFlippedCardId both seed selection state; only bottom hero renders", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
     const topId = sender.cards[4].cardId;
@@ -421,12 +430,16 @@ describe("H2HResultsOverlay — hero zone rendering", () => {
       />
     );
     const overlay = container.querySelector('[data-h2h-results-overlay="true"]');
+    // Selection state still tracks both strips so the props remain a
+    // stable contract for callers (e.g. smoke captures, future glide
+    // animations in step 4).
     expect(overlay?.getAttribute("data-h2h-overlay-selected-top")).toBe(topId);
     expect(overlay?.getAttribute("data-h2h-overlay-selected-bottom")).toBe(bottomId);
-    // Both hero cells occupied.
+    // Only the bottom hero cell renders in step 3; it's occupied by
+    // the bottom seed.
     const heroCells = container.querySelectorAll('[data-h2h-overlay-hero-cell="true"]');
+    expect(heroCells.length).toBe(1);
     expect(heroCells[0].getAttribute("data-occupied")).toBe("true");
-    expect(heroCells[1].getAttribute("data-occupied")).toBe("true");
   });
 });
 

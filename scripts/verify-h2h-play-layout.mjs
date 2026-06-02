@@ -1623,60 +1623,33 @@ async function runResultsOverlayViewportSweep(browser, vp) {
   // Layout-3 fix (c): the left commentary block is centered within its
   // column with symmetric padding (not cramped against the left edge).
   const overlayLayout = await page.evaluate(() => {
-    const overlay = document.querySelector("[data-h2h-results-overlay]");
-    const hero = document.querySelector("[data-h2h-overlay-hero]");
-    const finalGap = document.querySelector("[data-h2h-overlay-final-gap-float]");
-    const leftRail = document.querySelector("[data-h2h-overlay-rail='left']");
-    const headline = document.querySelector("[data-h2h-overlay-headline]");
-    const trashTalk = document.querySelector("[data-h2h-overlay-trash-talk]");
+    // Step 3 of the results-page lock: the final-gap float, the left-rail
+    // wrapper, and the trash-talk block are all gone (delta folded into
+    // commentary; headline moved into the new commentary container).
+    // The dead element queries + return fields were removed with the
+    // assertions that consumed them.
     const oppScore = document.querySelectorAll("[data-h2h-overlay-score]")[0];
     const youScore = document.querySelectorAll("[data-h2h-overlay-score]")[1];
     // rail-unify: per-row hero cells, used to assert the score's
     // vertical center sits on the same Y as its hero card row (the
     // automatable half of the lineHeight reconciliation guard — the
     // device-parity check carries the sub-pixel half).
+    //
+    // Step 3 of the results-page lock removed the opponent (top) hero
+    // cell — only the user (bottom) hero remains. The bottom hero is
+    // always the LAST hero cell in DOM order regardless of whether the
+    // top one is still rendered; topHeroCell stays null when only the
+    // bottom exists, which gates the opp rail-unify assertion off via
+    // its existing null-check.
     const heroCells = document.querySelectorAll("[data-h2h-overlay-hero-cell]");
-    const topHeroCell = heroCells[0];
-    const bottomHeroCell = heroCells[1];
+    const topHeroCell = heroCells.length >= 2 ? heroCells[0] : null;
+    const bottomHeroCell = heroCells.length >= 1 ? heroCells[heroCells.length - 1] : null;
     const topHeroCellRect = topHeroCell?.getBoundingClientRect();
     const bottomHeroCellRect = bottomHeroCell?.getBoundingClientRect();
-    const overlayRect = overlay?.getBoundingClientRect();
-    const heroRect = hero?.getBoundingClientRect();
-    const finalGapRect = finalGap?.getBoundingClientRect();
-    const leftRailRect = leftRail?.getBoundingClientRect();
-    const headlineRect = headline?.getBoundingClientRect();
-    const trashTalkRect = trashTalk?.getBoundingClientRect();
     const oppScoreRect = oppScore?.getBoundingClientRect();
     const youScoreRect = youScore?.getBoundingClientRect();
-    const finalGapValueAttr =
-      document.querySelector("[data-h2h-overlay-final-gap]")?.getAttribute(
-        "data-h2h-overlay-final-gap-value",
-      ) ?? null;
-    const headlineCs = headline ? getComputedStyle(headline) : null;
-    const trashTalkCs = trashTalk ? getComputedStyle(trashTalk) : null;
-    const leftRailCs = leftRail ? getComputedStyle(leftRail) : null;
-    // relay-tension gap: final-gap float visibility tripwire.
-    const finalGapCs = finalGap ? getComputedStyle(finalGap) : null;
     return {
       vw: window.innerWidth,
-      overlayRight: overlayRect?.right ?? null,
-      heroLeft: heroRect?.left ?? null,
-      heroRight: heroRect?.right ?? null,
-      heroWidth: heroRect?.width ?? null,
-      finalGapPresent: !!finalGap,
-      finalGapLeft: finalGapRect?.left ?? null,
-      finalGapRight: finalGapRect?.right ?? null,
-      finalGapCenterX: finalGapRect ? finalGapRect.left + finalGapRect.width / 2 : null,
-      finalGapValueAttr,
-      leftRailLeft: leftRailRect?.left ?? null,
-      leftRailRight: leftRailRect?.right ?? null,
-      leftRailWidth: leftRailRect?.width ?? null,
-      leftRailPaddingLeft: leftRailCs?.paddingLeft ?? null,
-      leftRailPaddingRight: leftRailCs?.paddingRight ?? null,
-      headlineLeft: headlineRect?.left ?? null,
-      headlineRight: headlineRect?.right ?? null,
-      headlineTextAlign: headlineCs?.textAlign ?? null,
-      trashTalkTextAlign: trashTalkCs?.textAlign ?? null,
       oppScoreCenterX: oppScoreRect ? oppScoreRect.left + oppScoreRect.width / 2 : null,
       youScoreCenterX: youScoreRect ? youScoreRect.left + youScoreRect.width / 2 : null,
       oppScoreCenterY: oppScoreRect ? oppScoreRect.top + oppScoreRect.height / 2 : null,
@@ -1687,57 +1660,15 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       bottomHeroCenterY: bottomHeroCellRect
         ? bottomHeroCellRect.top + bottomHeroCellRect.height / 2
         : null,
-      // relay-tension gap-fillers: final-gap float vertical center +
-      // visibility. Standing guards against a future regression that
-      // moves the gap-float off the row midpoint or hides it.
-      finalGapCenterY: finalGapRect
-        ? finalGapRect.top + finalGapRect.height / 2
-        : null,
-      finalGapOpacity: finalGapCs?.opacity ?? null,
     };
   });
 
-  // (b) Final gap floats in the right column. Specifically:
-  //   - is present in the DOM
-  //   - its center-x is on the right HALF of the overlay (not in the
-  //     left rail; left rail spans 0..LEFT_RAIL_WIDTH_PX after the
-  //     16px outer padding)
-  //   - its center-x is approximately aligned with both score cells'
-  //     center-x (right column = same vertical axis as scores)
-  //   - its value-attribute reads as a numeric gap
-  record(
-    `${vp.label} Layout-3 (b): final-gap float is present in the overlay`,
-    overlayLayout.finalGapPresent,
-    `present=${overlayLayout.finalGapPresent}`,
-  );
-  if (overlayLayout.finalGapPresent && overlayLayout.heroLeft != null && overlayLayout.heroRight != null) {
-    const heroMid = (overlayLayout.heroLeft + overlayLayout.heroRight) / 2;
-    record(
-      `${vp.label} Layout-3 (b): final-gap center-x is in the right HALF of the hero zone (NOT the left commentary column)`,
-      overlayLayout.finalGapCenterX != null && overlayLayout.finalGapCenterX > heroMid,
-      `finalGapCenterX=${overlayLayout.finalGapCenterX?.toFixed(1)} heroMid=${heroMid.toFixed(1)}`,
-    );
-  }
-  if (
-    overlayLayout.finalGapCenterX != null &&
-    overlayLayout.oppScoreCenterX != null &&
-    overlayLayout.youScoreCenterX != null
-  ) {
-    // The right column = vertical axis of the two score cells.
-    // The final gap should sit on that axis (matching reveal-stage x).
-    const scoreColumnX = (overlayLayout.oppScoreCenterX + overlayLayout.youScoreCenterX) / 2;
-    const xMatchPx = Math.abs(overlayLayout.finalGapCenterX - scoreColumnX);
-    record(
-      `${vp.label} Layout-3 (b): final-gap center-x matches the score-column axis (±8px)`,
-      xMatchPx <= 8,
-      `finalGapCenterX=${overlayLayout.finalGapCenterX.toFixed(1)} scoreColumnX=${scoreColumnX.toFixed(1)} Δ=${xMatchPx.toFixed(1)}`,
-    );
-  }
-  record(
-    `${vp.label} Layout-3 (b): final-gap value attribute is a numeric gap`,
-    overlayLayout.finalGapValueAttr != null && !Number.isNaN(parseFloat(overlayLayout.finalGapValueAttr)),
-    `value="${overlayLayout.finalGapValueAttr}"`,
-  );
+  // Step 3 of the results-page lock: the [data-h2h-overlay-final-gap-float]
+  // standalone delta number was removed — the margin is now folded into
+  // the commentary copy (selectHeadline + selectChallengeResolution).
+  // The Layout-3 (b) block (4 assertions) and the relay-tension gap-filler
+  // pair below it (center-Y + opacity) all referenced that float and are
+  // retired together. Six assertions removed in total.
 
   // rail-unify: the results-surface score number must be vertically
   // centered on its hero card row. This is the automatable half of the
@@ -1772,34 +1703,6 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       `youScoreCenterY=${overlayLayout.youScoreCenterY.toFixed(1)} bottomHeroCenterY=${overlayLayout.bottomHeroCenterY.toFixed(1)} Δ=${dy.toFixed(1)}`,
     );
   }
-
-  // relay-tension gap-fillers: final-gap float vertical centering + visibility.
-  // (1) Center-Y between the top and bottom hero rows — analogous to the
-  //     reveal-side gap-filler. The float should sit at the row midpoint.
-  // (2) Computed opacity > 0 — visibility tripwire.
-  if (
-    overlayLayout.finalGapCenterY != null &&
-    overlayLayout.topHeroCenterY != null &&
-    overlayLayout.bottomHeroCenterY != null
-  ) {
-    const rowMid =
-      (overlayLayout.topHeroCenterY + overlayLayout.bottomHeroCenterY) / 2;
-    const rowSpan = Math.abs(
-      overlayLayout.bottomHeroCenterY - overlayLayout.topHeroCenterY,
-    );
-    const allowance = Math.max(rowSpan * 0.2, 30);
-    const dy = Math.abs(overlayLayout.finalGapCenterY - rowMid);
-    record(
-      `${vp.label} relay-tension gap: results final-gap float center-Y is between the two hero rows (±${allowance.toFixed(0)}px of their midpoint)`,
-      dy <= allowance,
-      `finalGapCenterY=${overlayLayout.finalGapCenterY.toFixed(1)} rowMid=${rowMid.toFixed(1)} Δ=${dy.toFixed(1)} allow=${allowance.toFixed(1)}`,
-    );
-  }
-  record(
-    `${vp.label} relay-tension gap: results final-gap float computed opacity > 0 (visibility tripwire)`,
-    overlayLayout.finalGapOpacity != null && parseFloat(overlayLayout.finalGapOpacity) > 0,
-    `opacity=${overlayLayout.finalGapOpacity}`,
-  );
 
   // ── Relay-tension Phase 1 visual assertions ──────────────────────────
   // Three checks on the overlay's WIN-variant end-state (the standalone
@@ -1987,42 +1890,14 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     `youPopKind="${phase2Snap.youPopKind}"`,
   );
 
-  // (c) Left rail centered + has symmetric padding (not cramped against
-  // the left edge).
-  record(
-    `${vp.label} Layout-3 (c): left-rail headline textAlign === "center"`,
-    overlayLayout.headlineTextAlign === "center",
-    `textAlign="${overlayLayout.headlineTextAlign}"`,
-  );
-  // The Layout-3 (c) trash-talk-textAlign assertion was retired in the
-  // relay-tension Phase 1 commentary collapse — the trash-talk block is
-  // no longer rendered. The headline-textAlign check above carries the
-  // "left rail content is centered" intent for the surviving block.
-  // Symmetric horizontal padding: paddingLeft > 0 AND paddingLeft ===
-  // paddingRight. Pre-fix paddingLeft was 0, paddingRight was 4. Post-
-  // fix both are 8.
-  const parsePx = (v) => (v ? parseFloat(v) : NaN);
-  const pl = parsePx(overlayLayout.leftRailPaddingLeft);
-  const pr = parsePx(overlayLayout.leftRailPaddingRight);
-  record(
-    `${vp.label} Layout-3 (c): left-rail has symmetric horizontal padding > 0 (not cramped against left edge)`,
-    pl > 0 && pr > 0 && Math.abs(pl - pr) <= 1,
-    `paddingLeft=${overlayLayout.leftRailPaddingLeft} paddingRight=${overlayLayout.leftRailPaddingRight}`,
-  );
-  // Sanity: headline must fit within the rail width (not overflow).
-  if (
-    overlayLayout.leftRailLeft != null &&
-    overlayLayout.leftRailRight != null &&
-    overlayLayout.headlineLeft != null &&
-    overlayLayout.headlineRight != null
-  ) {
-    record(
-      `${vp.label} Layout-3 (c): left-rail headline is within rail bounds (no overflow)`,
-      overlayLayout.headlineLeft >= overlayLayout.leftRailLeft - 0.5 &&
-        overlayLayout.headlineRight <= overlayLayout.leftRailRight + 0.5,
-      `rail=[${overlayLayout.leftRailLeft.toFixed(1)},${overlayLayout.leftRailRight.toFixed(1)}] headline=[${overlayLayout.headlineLeft.toFixed(1)},${overlayLayout.headlineRight.toFixed(1)}]`,
-    );
-  }
+  // Step 3 of the results-page lock: the [data-h2h-overlay-rail="left"]
+  // wrapper was deleted — the headline moved into the new
+  // [data-h2h-overlay-commentary] block in the freed row-1 center span.
+  // The Layout-3 (c) trio (left-rail textAlign / symmetric padding / rail-
+  // bounds containment) all queried the removed wrapper and are retired
+  // together. Three assertions removed in total. The headline element
+  // itself still exists, still has textAlign:center, and now lives in
+  // the commentary container.
 
   // Strict §5a / §5b assertion against the overlay.
   const rects = await captureOverlayRects(page);
