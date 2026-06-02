@@ -1696,6 +1696,11 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
               pointerEvents: "none",
               borderRadius: 16,
               background: "rgba(255,255,255,0.12)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              // box-sizing: border-box so the 1px border doesn't add 2px
+              // to the rendered width/height — keeps the panel's outer
+              // rect at the approved 100 × full-battlefield-height.
+              boxSizing: "border-box",
               boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
             }}
           />
