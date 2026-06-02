@@ -109,10 +109,10 @@ describe("api/challenge/create — trigger-detail body→insert mapping", () => 
     expect(payload.near_miss_next_tier).toBeNull();
   });
 
-  it("passes bad_beat anchor through (regression-lock for the Path A null-anchor bug)", async () => {
+  it("passes choke anchor through (regression-lock for the Path A null-anchor bug)", async () => {
     const body = {
       ...BASE_BODY,
-      trigger_type: "bad_beat",
+      trigger_type: "choke",
       anchor_base_player_id: "201942", // DeRozan — the basePlayerId observed in the live prod log
       top_game_tier: null,
       near_miss_gap: null,
@@ -121,7 +121,7 @@ describe("api/challenge/create — trigger-detail body→insert mapping", () => 
     await handler(makeReq(body), makeRes());
     expect(capturedInserts).toHaveLength(1);
     const payload = capturedInserts[0];
-    expect(payload.trigger_type).toBe("bad_beat");
+    expect(payload.trigger_type).toBe("choke");
     expect(payload.anchor_base_player_id).toBe("201942");
     expect(payload.top_game_tier).toBeNull();
     expect(payload.near_miss_gap).toBeNull();

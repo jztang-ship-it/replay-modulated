@@ -131,7 +131,7 @@ export function ResumeShareSurface() {
       // forward the four Phase-5c-S1 trigger-detail fields to the API so
       // an OAuth-resumed challenge carries identical metadata to one
       // created via the normal useChallengeShare path. Without these,
-      // resumed rare_pull / miss / bad_beat / big_score challenges
+      // resumed rare_pull / miss / choke / big_score challenges
       // landed with NULL near_miss_gap / near_miss_next_tier /
       // anchor_base_player_id / top_game_tier — the recipient intro
       // selector then fell back to per-trigger generic copy because the

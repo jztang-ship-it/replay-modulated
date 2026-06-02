@@ -56,7 +56,7 @@ export interface ChallengeCtx {
    *  trigger didn't emit the field) carry null/undefined; recipient
    *  intro degrades to per-trigger generic fallback per the design lock
    *  (docs/h2h-reveal-arc-design.md Phase 5c). */
-  triggerType?: "rare_pull" | "big_score" | "miss" | "bad_beat" | "default";
+  triggerType?: "rare_pull" | "big_score" | "miss" | "choke" | "default";
   nearMissGap?: number | null;
   nearMissNextTier?: string | null;
   anchorBasePlayerId?: string | null;
@@ -88,4 +88,28 @@ export interface ChallengeBackCtx {
   /** The challenge_id the user just beat. Reference only; doesn't gate
    *  any logic. Useful for analytics ("rivalry continuation from X"). */
   originatingChallengeId: string;
+}
+
+/**
+ * Phase 1 trigger split (2026-06-03, docs/challenge-landing-v2-phase1-
+ * trigger-split-lock.md): legacy stored `trigger_type` rows say
+ * `"bad_beat"` because every existing `shared_challenges` row was written
+ * before the rename. Under the new model those rows mean choke. This
+ * single documented alias maps the stored value at the read boundary so
+ * downstream render code sees the renamed key and the union type holds.
+ *
+ * The ONE place this gets called is ChallengeLandingScreen.tsx where the
+ * landing reads `data.trigger_type` from the API and threads it into
+ * `ChallengeCtx.triggerType`. Every recipient-side branch downstream of
+ * the landing reads `challengeCtx.triggerType`, so normalizing once at
+ * the boundary covers them all — no scattered `=== "bad_beat"` checks.
+ *
+ * NO prod data backfill in Phase 1; the alias is sufficient. New writes
+ * are `"choke"` (the renamed key flows straight to the column).
+ */
+export function normalizeTriggerType(
+  stored: string | null | undefined,
+): ChallengeCtx["triggerType"] {
+  if (stored === "bad_beat") return "choke";
+  return (stored ?? undefined) as ChallengeCtx["triggerType"];
 }

@@ -15,7 +15,7 @@
 //   (d) PartsLine renders the picked Line without throwing.
 //
 // Coverage matrix:
-//   bad_beat / big_score / rare_pull × {culture / anchor-only / no-anchor}
+//   choke / big_score / rare_pull × {culture / anchor-only / no-anchor}
 //   miss × {with-gap / generic}
 //   default
 //   legacy (no triggerType)
@@ -147,7 +147,7 @@ function emissionGate(
 // ── Stage 1 (selectRecipientIntro) — anchor-bearing routes ─────────────
 
 describe("Voice frames v1 — Stage 1 anchor-bearing emission", () => {
-  for (const trigger of ["bad_beat", "big_score", "rare_pull"] as const) {
+  for (const trigger of ["choke", "big_score", "rare_pull"] as const) {
     it(`${trigger} × culture-resolves → CULTURE bank emission gates`, () => {
       emissionGate(
         `${trigger}.culture`,
@@ -270,7 +270,7 @@ describe("Voice frames v1 — Stage 1 miss/default/legacy emission", () => {
 // ── Stage 2 (selectRecipientDealNudge) ─────────────────────────────────
 
 describe("Voice frames v1 — Stage 2 (deal nudge) emission across every route", () => {
-  for (const trigger of ["bad_beat", "big_score", "rare_pull"] as const) {
+  for (const trigger of ["choke", "big_score", "rare_pull"] as const) {
     it(`${trigger} × culture → CULTURE nudge gates`, () => {
       emissionGate(
         `nudge.${trigger}.culture`,

@@ -220,7 +220,7 @@ export class SportAdapter {
 
   /** Build the caption stored as `share_headline` on a created challenge.
    *  Delegates to chadShareTrashTalk, which returns a recipient-facing
-   *  dare from one of four trigger-keyed sub-banks (bad_beat / flex /
+   *  dare from one of four trigger-keyed sub-banks (choke / flex /
    *  statement / default). The string flows through to:
    *    - the navigator.share text body (mobile)
    *    - the clipboard payload (desktop)
@@ -234,7 +234,7 @@ export class SportAdapter {
    *
    *  trigger arg drives the sub-bank — recipient copy points at the
    *  same emotional frame the sender JUST saw on their prompt
-   *  (rare_pull/big_score → flex, bad_beat → bad_beat, near_miss or
+   *  (rare_pull/big_score → flex, choke → choke, near_miss or
    *  STARTER → statement, else → default). winTier is a secondary signal
    *  used for comfortable-STARTER wins that come through as
    *  trigger="default".

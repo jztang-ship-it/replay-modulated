@@ -52,16 +52,23 @@ export const LOSS_DETAIL_PRIORITY: DetailId[] = [
 /**
  * Stamps — only fire for truly extraordinary moments.
  * These are separate from the main line. Optional UI treatment.
+ *
+ * Phase 1 trigger split (2026-06-03, docs/challenge-landing-v2-phase1-
+ * trigger-split-lock.md): the "BAD BEAT" facing label is DELETED. The
+ * near_miss + tight-gap case used to emit it here; the system has never
+ * been wired (selectStamp is imported by selectCommentary.ts but not
+ * called), so dropping the entry now is a clean cleanup. If this system
+ * is ever revived, a near-tight-miss case should likely emit a tier-
+ * prefixed MISS stamp via TeamStamp instead (matching the new vocabulary).
  */
-export type Stamp = "CAREER NIGHT" | "ICE COLD" | "BAD BEAT" | "STREAK BROKEN" | "HISTORIC";
+export type Stamp = "CAREER NIGHT" | "ICE COLD" | "STREAK BROKEN" | "HISTORIC";
 
 export function selectStamp(
   archetype: string,
-  gap: number,
+  _gap: number,
   prevStreak: number,
 ): Stamp | null {
   if (archetype === "career_night") return "CAREER NIGHT";
-  if (archetype === "near_miss" && gap <= 2) return "BAD BEAT";
   if (archetype === "collapse" && prevStreak >= 5) return "STREAK BROKEN";
   return null;
 }

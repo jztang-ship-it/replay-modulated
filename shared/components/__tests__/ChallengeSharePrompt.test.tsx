@@ -44,7 +44,7 @@ function withAuth(isAnonymous: boolean, children: React.ReactNode) {
   );
 }
 
-function makeTrigger(trigger: string = "bad_beat"): TriggerResult {
+function makeTrigger(trigger: string = "choke"): TriggerResult {
   return { trigger, headline: "Brutal hand. See if they survive the same slate." } as TriggerResult;
 }
 
@@ -71,7 +71,7 @@ beforeEach(() => {
 describe("R1 — placeholder commentary copy", () => {
   it("appears in the DOM when the prominent strip renders (named trigger)", () => {
     render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("bad_beat")} />
+      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
     expect(screen.getByText(PLACEHOLDER_COPY)).toBeTruthy();
   });
@@ -85,7 +85,7 @@ describe("R1 — placeholder commentary copy", () => {
 
   it("renders for signed-in users too (universal)", () => {
     render(withAuth(false, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("bad_beat")} />
+      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
     expect(screen.getByText(PLACEHOLDER_COPY)).toBeTruthy();
   });
@@ -94,7 +94,7 @@ describe("R1 — placeholder commentary copy", () => {
 describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", () => {
   it("anonymous user taps Challenge a Friend → unified auth surface appears (Google + email; name field hidden pre-auth)", () => {
     render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("bad_beat")} />
+      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
     fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
     // RegisterModal challenge-context pre-auth state per U4-a (2026-05-28
@@ -106,7 +106,7 @@ describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", 
 
   it("does NOT open the legacy NameCaptureModal anon mode (gone post-unification)", () => {
     render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("bad_beat")} />
+      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
     fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
     // The babd079 anon-mode shape was a "Sign in to send" heading with
@@ -122,7 +122,7 @@ describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", 
 describe("U6 — signed-in tap opens NameCaptureModal (unchanged)", () => {
   it("signed-in user taps Challenge a Friend → modal opens in mode='fresh' (input visible, no Google button)", () => {
     render(withAuth(false, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("bad_beat")} />
+      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
     fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
     // NameCaptureModal fresh mode: input visible, no Google button (that

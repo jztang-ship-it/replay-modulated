@@ -62,13 +62,13 @@ describe("selectIntroAnchor — Path A id-resolve precedence", () => {
     expect(anchor?.topGameTier).toBe("record");
   });
 
-  it("bad_beat: Path A id resolves even when not the worst-delta card", () => {
+  it("choke: Path A id resolves even when not the worst-delta card", () => {
     const cards = [
       card({ name: "Hero", basePlayerId: "10", wasHeld: true, actualFp: 50, projectedFp: 40 }), // +10
       card({ name: "Disappointment", basePlayerId: "20", wasHeld: true, actualFp: 5, projectedFp: 40 }), // -35
     ];
     const anchor = selectIntroAnchor({
-      triggerType: "bad_beat",
+      triggerType: "choke",
       senderCards: cards,
       anchorBasePlayerId: "10", // persisted choice overrides derivation
       topGameTier: null,
@@ -94,14 +94,14 @@ describe("selectIntroAnchor — Path A id-resolve precedence", () => {
 });
 
 describe("selectIntroAnchor — derivation fallback per T2", () => {
-  it("bad_beat: worst held actualFp − projectedFp wins (tiebreak salary)", () => {
+  it("choke: worst held actualFp − projectedFp wins (tiebreak salary)", () => {
     const cards = [
       card({ name: "Equal1", basePlayerId: "A", wasHeld: true, actualFp: 10, projectedFp: 30, salary: 40 }), // -20
       card({ name: "Equal2", basePlayerId: "B", wasHeld: true, actualFp: 10, projectedFp: 30, salary: 60 }), // -20, higher salary
       card({ name: "Mild", basePlayerId: "C", wasHeld: true, actualFp: 25, projectedFp: 30, salary: 80 }), // -5
     ];
     const anchor = selectIntroAnchor({
-      triggerType: "bad_beat",
+      triggerType: "choke",
       senderCards: cards,
       anchorBasePlayerId: null,
       topGameTier: null,
@@ -111,10 +111,10 @@ describe("selectIntroAnchor — derivation fallback per T2", () => {
     expect(anchor?.basePlayerId).toBe("B");
   });
 
-  it("bad_beat: null anchor when no held cards", () => {
+  it("choke: null anchor when no held cards", () => {
     const cards = [card({ wasHeld: false }), card({ wasHeld: false })];
     const anchor = selectIntroAnchor({
-      triggerType: "bad_beat",
+      triggerType: "choke",
       senderCards: cards,
       anchorBasePlayerId: null,
       topGameTier: null,
@@ -259,7 +259,7 @@ function fakeAnchor(over: Partial<RecipientIntroAnchor> = {}): RecipientIntroAnc
 
 describe("selectRecipientIntro — anchor-bearing fallback levels", () => {
   it("Level 1 — anchor + culture entry + cultureLine resolves → CULTURE bank", () => {
-    const cultureBank = recipientIntroBank("bad_beat_culture");
+    const cultureBank = recipientIntroBank("choke_culture");
     const anchor = fakeAnchor({
       name: "Harden",
       culture: fakeCulture({
@@ -268,7 +268,7 @@ describe("selectRecipientIntro — anchor-bearing fallback levels", () => {
       }),
     });
     const line = selectRecipientIntro({
-      triggerType: "bad_beat",
+      triggerType: "choke",
       challengerName: "Mike",
       targetScore: 142.5,
       anchor,
@@ -281,12 +281,12 @@ describe("selectRecipientIntro — anchor-bearing fallback levels", () => {
     expect(text).toContain("Harden");
     expect(text).not.toContain("{cultureLine}");
     expect(text).not.toContain("{name}");
-    // Anchor-bearing bad_beat banks all carry the bad_beat stamp.
-    expect(stamps(line).some(s => s.stamp === "bad_beat")).toBe(true);
+    // Anchor-bearing choke banks all carry the choke stamp.
+    expect(stamps(line).some(s => s.stamp === "choke")).toBe(true);
     // targetScore appears in 5 of 6 CULTURE lines — exercised over many
     // runs but skipped here because anti-repeat dedup is nondeterministic
     // on a single call. The voice guardrail (every line carries the
-    // bad_beat stamp + cultureLine) is the load-bearing assertion.
+    // choke stamp + cultureLine) is the load-bearing assertion.
   });
 
   it("Level 2 — anchor present but culture null → NAME bank", () => {
@@ -404,7 +404,7 @@ describe("selectRecipientIntro — miss bucket gap framing", () => {
 });
 
 describe("selectRecipientDealNudge — mirrors trigger routing", () => {
-  it("bad_beat with culture → CULTURE nudge bank", () => {
+  it("choke with culture → CULTURE nudge bank", () => {
     const anchor = fakeAnchor({
       name: "Harden",
       culture: fakeCulture({
@@ -412,7 +412,7 @@ describe("selectRecipientDealNudge — mirrors trigger routing", () => {
       }),
     });
     const line = selectRecipientDealNudge({
-      triggerType: "bad_beat",
+      triggerType: "choke",
       challengerName: "Mike",
       targetScore: 100,
       anchor,
@@ -463,9 +463,9 @@ describe("substitution safety — no orphan placeholders survive", () => {
   // Cycle through each bank key to ensure substitution covers every
   // template token in every bank line.
   const banks: Array<["intro" | "nudge", string]> = [
-    ["intro", "bad_beat_culture"],
-    ["intro", "bad_beat_name"],
-    ["intro", "bad_beat_generic"],
+    ["intro", "choke_culture"],
+    ["intro", "choke_name"],
+    ["intro", "choke_generic"],
     ["intro", "big_score_culture"],
     ["intro", "big_score_name"],
     ["intro", "big_score_generic"],
@@ -475,9 +475,9 @@ describe("substitution safety — no orphan placeholders survive", () => {
     ["intro", "miss_with_gap"],
     ["intro", "miss_generic"],
     ["intro", "default"],
-    ["nudge", "bad_beat_culture"],
-    ["nudge", "bad_beat_name"],
-    ["nudge", "bad_beat_generic"],
+    ["nudge", "choke_culture"],
+    ["nudge", "choke_name"],
+    ["nudge", "choke_generic"],
     ["nudge", "big_score_culture"],
     ["nudge", "big_score_name"],
     ["nudge", "big_score_generic"],

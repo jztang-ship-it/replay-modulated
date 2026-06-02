@@ -1,7 +1,7 @@
 // shared/commentary/__tests__/selectTopSlotFraming.test.ts
 //
 // Coverage for bucket 2 piece B (S1 slot-split restoration — real copy).
-// Routing: HELD_ONE / HELD_TWO_PLUS / NO_HOLDS for bad_beat (post smoke
+// Routing: HELD_ONE / HELD_TWO_PLUS / NO_HOLDS for choke (post smoke
 // revision 2026-05-24); RECORD/CAREER/SEASON for rare_pull.
 // Substitution: {starName} / {starName1} / {starName2} / {statLabel} /
 // {winTierLow} / "{missTier}" sentinel / "{winTier}" sentinel.
@@ -31,16 +31,16 @@ function stampOf(stamp: StampToken["stamp"]): (p: LinePart) => boolean {
   return p => typeof p !== "string" && p.stamp === stamp;
 }
 
-describe("selectTopSlotFraming — bad_beat routing (Q1.1 + smoke revision)", () => {
-  it("bad_beat with exactly 1 held card on BUST → HELD_ONE bank", () => {
-    const heldOneBank = topSlotFramingBank("bad_beat_held_one");
+describe("selectTopSlotFraming — choke routing (Q1.1 + smoke revision)", () => {
+  it("choke with exactly 1 held card on BUST → HELD_ONE bank", () => {
+    const heldOneBank = topSlotFramingBank("choke_held_one");
     const line = selectTopSlotFraming({
-      trigger: "bad_beat",
+      trigger: "choke",
       roster: [{ wasHeld: true }, { wasHeld: false }],
       winTier: "BUST",
       starName: "Wembanyama",
     });
-    expect(line.some(stampOf("bad_beat"))).toBe(true);
+    expect(line.some(stampOf("choke"))).toBe(true);
     // HELD_ONE bank discriminator: single-name lines with {starName}
     // and {winTierLow}. After substitution: "Wembanyama" appears and
     // "Bust" (tier-low) may appear. No {starName2} reference.
@@ -55,17 +55,17 @@ describe("selectTopSlotFraming — bad_beat routing (Q1.1 + smoke revision)", ()
     expect(HELD_ONE_MARKERS.some(m => heldOneBank.some(l => JSON.stringify(l).includes(m)))).toBe(true);
   });
 
-  it("bad_beat with 2+ held cards on ROOKIE → HELD_TWO_PLUS bank", () => {
-    const heldTwoBank = topSlotFramingBank("bad_beat_held_two_plus");
+  it("choke with 2+ held cards on ROOKIE → HELD_TWO_PLUS bank", () => {
+    const heldTwoBank = topSlotFramingBank("choke_held_two_plus");
     const line = selectTopSlotFraming({
-      trigger: "bad_beat",
+      trigger: "choke",
       roster: [{ wasHeld: true }, { wasHeld: true }, { wasHeld: false }],
       winTier: "ROOKIE",
       starName: "Mutombo",
       starName1: "Mutombo",
       starName2: "Webber",
     });
-    expect(line.some(stampOf("bad_beat"))).toBe(true);
+    expect(line.some(stampOf("choke"))).toBe(true);
     const text = strings(line);
     // Sub should fill both name slots without leaving placeholders.
     expect(text).not.toContain("{starName1}");
@@ -78,34 +78,34 @@ describe("selectTopSlotFraming — bad_beat routing (Q1.1 + smoke revision)", ()
     expect(heldTwoBank.every(l => JSON.stringify(l).includes("{starName2}"))).toBe(true);
   });
 
-  it("bad_beat with 0 held cards on BUST → NO_HOLDS bank", () => {
-    const noHoldsBank = topSlotFramingBank("bad_beat_no_holds");
+  it("choke with 0 held cards on BUST → NO_HOLDS bank", () => {
+    const noHoldsBank = topSlotFramingBank("choke_no_holds");
     const line = selectTopSlotFraming({
-      trigger: "bad_beat",
+      trigger: "choke",
       roster: [{ wasHeld: false }, { wasHeld: false }],
       winTier: "BUST",
       starName: "Mutombo",
     });
-    expect(line.some(stampOf("bad_beat"))).toBe(true);
+    expect(line.some(stampOf("choke"))).toBe(true);
     // NO_HOLDS discriminator: "You drew" verb appears in many lines
     // (deliberate vocabulary choice — "drew" not "drafted").
     expect(noHoldsBank.some(l => JSON.stringify(l).includes("You drew"))).toBe(true);
   });
 
-  it("tier gate: bad_beat with held cards on ALL_STAR+ falls back to NO_HOLDS", () => {
-    // The trigger evaluator currently only fires bad_beat on BUST/
+  it("tier gate: choke with held cards on ALL_STAR+ falls back to NO_HOLDS", () => {
+    // The trigger evaluator currently only fires choke on BUST/
     // ROOKIE, but the selector's gate is defensive: at ALL_STAR+ the
     // {winTierLow}-bearing HELD copy ("Rookie scrape on a held card")
     // would read contradictorily, so HELD_ONE/HELD_TWO_PLUS are
     // gated to low tiers only and ALL_STAR+ routes through NO_HOLDS.
-    const noHoldsBank = topSlotFramingBank("bad_beat_no_holds");
+    const noHoldsBank = topSlotFramingBank("choke_no_holds");
     const line = selectTopSlotFraming({
-      trigger: "bad_beat",
+      trigger: "choke",
       roster: [{ wasHeld: true }, { wasHeld: true }],
       winTier: "ALL_STAR",
       starName: "Curry",
     });
-    expect(line.some(stampOf("bad_beat"))).toBe(true);
+    expect(line.some(stampOf("choke"))).toBe(true);
     // Should NOT route to HELD_ONE or HELD_TWO_PLUS — sanity-check by
     // confirming the picked line shape exists in the NO_HOLDS bank.
     const picked = JSON.stringify(line.map(p => {
@@ -117,16 +117,16 @@ describe("selectTopSlotFraming — bad_beat routing (Q1.1 + smoke revision)", ()
     expect(matches).toBe(true);
   });
 
-  it("bad_beat with held cards on STARTER → HELD bank (STARTER counts as low-tier)", () => {
+  it("choke with held cards on STARTER → HELD bank (STARTER counts as low-tier)", () => {
     // STARTER is included in the low-tier gate. Today trigger eval
-    // doesn't fire bad_beat at STARTER, but the gate allows it.
+    // doesn't fire choke at STARTER, but the gate allows it.
     const line = selectTopSlotFraming({
-      trigger: "bad_beat",
+      trigger: "choke",
       roster: [{ wasHeld: true }],
       winTier: "STARTER",
       starName: "Pippen",
     });
-    expect(line.some(stampOf("bad_beat"))).toBe(true);
+    expect(line.some(stampOf("choke"))).toBe(true);
     const text = strings(line);
     expect(text).not.toContain("{starName}");
     expect(text).not.toContain("{winTierLow}");
@@ -219,7 +219,7 @@ describe("selectTopSlotFraming — substitution", () => {
     // {starName}. {starName} didn't read the script.").
     for (let i = 0; i < 60; i++) {
       const line = selectTopSlotFraming({
-        trigger: "bad_beat",
+        trigger: "choke",
         roster: [{ wasHeld: true }],
         winTier: "BUST",
         starName: "Wembanyama",
@@ -232,7 +232,7 @@ describe("selectTopSlotFraming — substitution", () => {
   it("substitutes {starName1} + {starName2} in HELD_TWO_PLUS lines", () => {
     for (let i = 0; i < 30; i++) {
       const line = selectTopSlotFraming({
-        trigger: "bad_beat",
+        trigger: "choke",
         roster: [{ wasHeld: true }, { wasHeld: true }],
         winTier: "ROOKIE",
         starName: "Mutombo",
@@ -253,7 +253,7 @@ describe("selectTopSlotFraming — substitution", () => {
     // ROOKIE → "Rookie"
     for (let i = 0; i < 20; i++) {
       const line = selectTopSlotFraming({
-        trigger: "bad_beat",
+        trigger: "choke",
         roster: [{ wasHeld: true }],
         winTier: "ROOKIE",
         starName: "Mutombo",

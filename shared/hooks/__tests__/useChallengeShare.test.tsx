@@ -124,26 +124,26 @@ describe("useChallengeShare.createChallenge — Phase 5c S1 POST body", () => {
     expect(body.top_game_tier).toBeNull();
   });
 
-  // ── bad_beat: anchor propagates (INVERTED from S1's assertion) ─────────
-  // Phase 5c Path A (2026-06-01): bad_beat now persists anchorBasePlayerId
+  // ── choke: anchor propagates (INVERTED from S1's assertion) ─────────
+  // Phase 5c Path A (2026-06-01): choke now persists anchorBasePlayerId
   // alongside trigger + headline. The S1 version of this test asserted all
-  // four detail fields null on the basis that bad_beat anchor was client-
+  // four detail fields null on the basis that choke anchor was client-
   // side derived in S3 — that assertion is now wrong. evaluateTrigger
   // emits the anchor at create time; the recipient intro reads it as a
   // published fact. The end-to-end emission test below proves the REAL
   // pipeline produces the anchor; this propagation test pins that
   // useChallengeShare correctly forwards a Path-A-shape mock to the body.
-  it("propagates trigger.anchorBasePlayerId to body.anchor_base_player_id for bad_beat", async () => {
+  it("propagates trigger.anchorBasePlayerId to body.anchor_base_player_id for choke", async () => {
     const hook = renderHook(() => useChallengeShare("basketball"));
     const trigger: TriggerResult = {
-      trigger: "bad_beat",
+      trigger: "choke",
       headline: "Brutal hand. See if they survive the same slate.",
       anchorBasePlayerId: "201935", // Harden — held card whose delta landed worst
     };
     const body = await postBodyFromCreate(hook, trigger);
-    expect(body.trigger_type).toBe("bad_beat");
+    expect(body.trigger_type).toBe("choke");
     expect(body.anchor_base_player_id).toBe("201935");
-    // miss + top_game fields stay null on bad_beat (no nearMiss; bad_beat
+    // miss + top_game fields stay null on choke (no nearMiss; choke
     // doesn't carry a top_game_tier).
     expect(body.near_miss_gap).toBeNull();
     expect(body.near_miss_next_tier).toBeNull();
@@ -154,7 +154,7 @@ describe("useChallengeShare.createChallenge — Phase 5c S1 POST body", () => {
   // S1's tests pre-set the mock's anchor field and verified propagation
   // (mock → body). They never verified that evaluateTrigger ACTUALLY
   // EMITS the anchor for a real-shape TriggerInput — which was the gap
-  // that let the bad_beat null-anchor bug ship past green tests. These
+  // that let the choke null-anchor bug ship past green tests. These
   // tests close that gap by running the REAL pipeline: real TriggerInput
   // → real evaluateTrigger → createChallenge → assert the body's
   // anchor_base_player_id is the held card's actual basePlayerId.
@@ -181,7 +181,7 @@ describe("useChallengeShare.createChallenge — Phase 5c S1 POST body", () => {
     BUST: { minFp: 0, multiplier: 0 },
   };
 
-  it("E2E: real bad_beat TriggerInput → evaluateTrigger → POST body's anchor_base_player_id is the worst-delta held card", async () => {
+  it("E2E: real choke TriggerInput → evaluateTrigger → POST body's anchor_base_player_id is the worst-delta held card", async () => {
     const hook = renderHook(() => useChallengeShare("basketball"));
     const roster = [
       tcard({ slotIndex: 0, basePlayerId: "harden", tier: "RED",    actualFp: 30, projectedFp: 50, salary: 65, wasHeld: true  }),
@@ -194,11 +194,11 @@ describe("useChallengeShare.createChallenge — Phase 5c S1 POST body", () => {
     const trigger = evaluateTrigger({
       roster, totalFp: 99, winTier: "BUST", badges: [], winTiersMap: TIERS_E2E,
     });
-    expect(trigger.trigger).toBe("bad_beat");
+    expect(trigger.trigger).toBe("choke");
     expect(trigger.anchorBasePlayerId).toBe("harden"); // worst delta (-20)
     // Now run through createChallenge and assert the POST body carries it.
     const body = await postBodyFromCreate(hook, trigger);
-    expect(body.trigger_type).toBe("bad_beat");
+    expect(body.trigger_type).toBe("choke");
     expect(body.anchor_base_player_id).toBe("harden");
     expect(body.top_game_tier).toBeNull();
     expect(body.near_miss_gap).toBeNull();

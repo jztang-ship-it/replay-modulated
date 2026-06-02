@@ -202,7 +202,7 @@ export function ChallengeSharePrompt({
   // (e.g. "😤 ALL STAR MISS") sourced from triggerResult.nearMissNextTier.
   const TRIGGER_LABEL: Record<string, string> = {
     rare_pull: "⚡ RARE PULL", big_score: "🔥 BIG SCORE",
-    bad_beat: "💀 BAD BEAT",
+    choke: "💀 CHOKE",
   };
   function missChipLabel(missTier?: string): string {
     const t = (missTier ?? "").replace(/_/g, " ").trim().toUpperCase();
@@ -297,7 +297,7 @@ export function ChallengeSharePrompt({
 
   // Default trigger: render a small corner icon only — discoverable for
   // users who want to share a mid hand, but not pushed on them. Named
-  // triggers (rare_pull / big_score / miss / bad_beat) keep the
+  // triggers (rare_pull / big_score / miss / choke) keep the
   // prominent share strip.
   if (!isSpecial) {
     return (

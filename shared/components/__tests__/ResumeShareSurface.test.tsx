@@ -56,7 +56,7 @@ function samplePayload() {
     season: "2425",
     total_fp: 142.3,
     initial_roster_serialized: { cards: [] },
-    trigger_type: "bad_beat",
+    trigger_type: "choke",
     share_headline: "Test caption",
   };
 }

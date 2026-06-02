@@ -1,6 +1,6 @@
 // shared/components/ChallengeLandingScreen.tsx
 import { useEffect, useState } from "react";
-import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
+import { type ChallengeCtx, normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types/index";
 import { track } from "@shared/analytics/analytics";
 import { chDebug } from "@shared/lib/chDebug";
@@ -111,7 +111,12 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
       // Phase 5c S1 (2026-05-31): thread trigger-detail through to the
       // recipient flow. All optional/null-safe — the recipient intro
       // selector handles null values via per-trigger generic fallback.
-      triggerType: data.trigger_type as ChallengeCtx["triggerType"],
+      //
+      // Phase 1 trigger split (2026-06-03): legacy stored rows say
+      // "bad_beat"; normalizeTriggerType aliases that to "choke" at this
+      // single read boundary so every recipient-side branch downstream
+      // sees the renamed key. See challengeTypes.normalizeTriggerType.
+      triggerType: normalizeTriggerType(data.trigger_type),
       nearMissGap: data.near_miss_gap ?? null,
       nearMissNextTier: data.near_miss_next_tier ?? null,
       anchorBasePlayerId: data.anchor_base_player_id ?? null,

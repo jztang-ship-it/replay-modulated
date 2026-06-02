@@ -54,7 +54,7 @@ function pick(arr: string[]): string {
 // tier/name/statLabel gets substituted in.
 
 export type StampToken = {
-  stamp: "bad_beat" | "miss" | "win_tier" | "rare_pull";
+  stamp: "choke" | "miss" | "win_tier" | "rare_pull";
   /** Tier label. Three forms:
    *   - `WinTier` value (e.g. "ALL_STAR") — explicit override, renderer
    *     uses directly.
@@ -354,7 +354,7 @@ export function chadRivalryBackIntro(args: { challengerName: string | null }): s
 // Fires when the user has played a hand and the share prompt is preparing
 // to surface. Voice: outbound, talking TO the poster about the slate
 // they're about to send. Tone graduates by bucket:
-//   - bad_beat:  held strong cards, hand underperformed → share-the-misery
+//   - choke:  held strong cards, hand underperformed → share-the-misery
 //   - flex:      RED/ALL-STAR+/rare_pull → "make them try"
 //   - statement: STARTER+ honest hand → "I dare you"
 //   - default:   everything else → baseline
@@ -364,7 +364,7 @@ export function chadRivalryBackIntro(args: { challengerName: string | null }): s
 // applicable, they replace {name} with the star's name. The lift over
 // generic should feel earned — never random-fact-drop.
 
-const INITIATION_BAD_BEAT: string[] = [
+const INITIATION_CHOKE: string[] = [
   "Held two studs and they brought you a casserole. Send it — someone has to suffer with you.",
   "Premium picks, premium disappointment. Make a friend feel this hand.",
   "You picked the right cards. The basketball didn't read the memo. Pass the slate.",
@@ -434,7 +434,7 @@ const INITIATION_CULTURE_FLEX: string[] = [
   "{name} carried it. Your job now is finding someone whose anchor won't.",
 ];
 
-const INITIATION_CULTURE_BAD_BEAT: string[] = [
+const INITIATION_CULTURE_CHOKE: string[] = [
   "{name} clocked in and left early. Send the slate to someone who needs the same lesson.",
   "Held {name}, got nothing. Pass the slate and let a friend try the same trust fall.",
   "{name} on the marquee, no show on the floor. Find a victim.",
@@ -476,12 +476,12 @@ const INITIATION_RARE_PULL: string[] = [
 
 // ── Selection ────────────────────────────────────────────────────────────
 
-export type InitiationBucket = "bad_beat" | "flex" | "statement" | "default" | "rare_pull";
+export type InitiationBucket = "choke" | "flex" | "statement" | "default" | "rare_pull";
 
 export interface ChallengeInitiationArgs {
   /** Win tier of the hand (BUST | ROOKIE | STARTER | ALL_STAR | MVP | LEGEND). */
   winTier: string;
-  /** Resolved roster — used to detect held R/O cards for bad_beat. */
+  /** Resolved roster — used to detect held R/O cards for choke. */
   roster: Array<{ tier?: string; wasHeld?: boolean }>;
   /** Top-game tier of the star card from recordDetector, if any. */
   topGameTier?: "record" | "career" | "season" | null;
@@ -514,7 +514,7 @@ function achievementLabelFor(tier: "record" | "career" | "season"): string {
 }
 
 /** Maps hand state to the appropriate initiation bucket. Mirrors the
- *  trigger evaluator rules (bad_beat requires 2+ HELD high-tier cards;
+ *  trigger evaluator rules (choke requires 2+ HELD high-tier cards;
  *  flex covers ALL_STAR+ tiers + topGame record/career). rare_pull
  *  preempts everything when starAchievementType is set. */
 function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket {
@@ -524,7 +524,7 @@ function selectInitiationBucket(args: ChallengeInitiationArgs): InitiationBucket
     const heldHigh = args.roster.filter(
       c => c.wasHeld === true && (c.tier === "RED" || c.tier === "ORANGE")
     ).length;
-    if (heldHigh >= 2) return "bad_beat";
+    if (heldHigh >= 2) return "choke";
   }
   if (tier === "ALL_STAR" || tier === "MVP" || tier === "LEGEND") return "flex";
   if (args.topGameTier === "record" || args.topGameTier === "career") return "flex";
@@ -593,7 +593,7 @@ function rarePullCandidates(args: ChallengeInitiationArgs): string[] {
 /** Top-level: returns Chad's initiation line for the just-played hand.
  *  Routing precedence (highest first):
  *    1. rare_pull  — starAchievementType set (preempts all other buckets)
- *    2. culture-aware flex/bad_beat — starName + starHadMeaningfulPerformance
+ *    2. culture-aware flex/choke — starName + starHadMeaningfulPerformance
  *    3. generic bucket via selectInitiationBucket
  */
 export function selectChallengeInitiation(args: ChallengeInitiationArgs): string {
@@ -626,14 +626,14 @@ export function selectChallengeInitiation(args: ChallengeInitiationArgs): string
     if (bucket === "flex" || bucket === "rare_pull") {
       return pickWithAntiRepeat(INITIATION_CULTURE_FLEX).replace(/\{name\}/g, args.starName);
     }
-    if (bucket === "bad_beat") {
-      return pickWithAntiRepeat(INITIATION_CULTURE_BAD_BEAT).replace(/\{name\}/g, args.starName);
+    if (bucket === "choke") {
+      return pickWithAntiRepeat(INITIATION_CULTURE_CHOKE).replace(/\{name\}/g, args.starName);
     }
   }
 
   switch (bucket) {
     case "rare_pull": return pickWithAntiRepeat(INITIATION_FLEX); // final fallback
-    case "bad_beat":  return pickWithAntiRepeat(INITIATION_BAD_BEAT);
+    case "choke":  return pickWithAntiRepeat(INITIATION_CHOKE);
     case "flex":      return pickWithAntiRepeat(INITIATION_FLEX);
     case "statement": return pickWithAntiRepeat(INITIATION_STATEMENT);
     case "default":   return pickWithAntiRepeat(INITIATION_DEFAULT);
@@ -644,7 +644,7 @@ export function selectChallengeInitiation(args: ChallengeInitiationArgs): string
 export function chadInitiationBank(bucket: InitiationBucket): string[] {
   switch (bucket) {
     case "rare_pull": return [...INITIATION_RARE_PULL];
-    case "bad_beat":  return [...INITIATION_BAD_BEAT];
+    case "choke":  return [...INITIATION_CHOKE];
     case "flex":      return [...INITIATION_FLEX];
     case "statement": return [...INITIATION_STATEMENT];
     case "default":   return [...INITIATION_DEFAULT];
@@ -665,9 +665,9 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
 //
 // Sub-bank structure (bucket 2 Q1.1 + Q1.2 LOCKED 2026-05-24, smoke
 // revisions 2026-05-24 evening):
-//   TOP_BAD_BEAT_HELD_ONE       — bad_beat, heldCount === 1, low-tier outcome
-//   TOP_BAD_BEAT_HELD_TWO_PLUS  — bad_beat, heldCount >= 2, low-tier outcome
-//   TOP_BAD_BEAT_NO_HOLDS       — bad_beat, heldCount === 0 (or fallback when
+//   TOP_CHOKE_HELD_ONE       — choke, heldCount === 1, low-tier outcome
+//   TOP_CHOKE_HELD_TWO_PLUS  — choke, heldCount >= 2, low-tier outcome
+//   TOP_CHOKE_NO_HOLDS       — choke, heldCount === 0 (or fallback when
 //                                  HELD banks are tier-gated out)
 //   TOP_MISS                    — miss (any tier missed)
 //   TOP_BIG_SCORE               — big_score trigger (renders win_tier stamp)
@@ -689,43 +689,43 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
 //   "{missTier}"  — sentinel in StampToken.tier for miss
 //   "{winTier}"   — sentinel in StampToken.tier for win_tier
 
-const TOP_BAD_BEAT_HELD_ONE: Line[] = [
-  ["You held {starName} as your conviction pick and walked away with a {winTierLow} scrape — ", { stamp: "bad_beat" }, " — that's a bad beat if I've ever seen one."],
-  ["Premium pick on {starName}, premium result not in the cards — ", { stamp: "bad_beat" }, " — call it what it is."],
-  ["You held {starName} expecting a real night and got the kind that pays in coupons — ", { stamp: "bad_beat" }, " — textbook bad beat."],
-  ["{starName} on your held card. {winTierLow} on the scoreboard. ", { stamp: "bad_beat" }, ". That's the definition."],
-  ["You doubled down on {starName} and the conviction came back as a flat stat line — ", { stamp: "bad_beat" }, " — that's the textbook one."],
-  ["You held {starName} expecting fireworks and got a sparkler — ", { stamp: "bad_beat" }, " — bad beat with a capital B."],
-  [{ stamp: "bad_beat" }, ". You held {starName} as your big play and he came in like the deep bench."],
-  ["A {winTierLow} hand off a held card on {starName}. ", { stamp: "bad_beat" }, ". Pure bad beat."],
-  ["{starName} on the held card, lineup couldn't lift it — ", { stamp: "bad_beat" }, " — what else do you call it."],
-  ["You read it. You held {starName}. {starName} held, result didn't read the script. ", { stamp: "bad_beat" }, ". Bad beat."],
+const TOP_CHOKE_HELD_ONE: Line[] = [
+  ["You held {starName} as your conviction pick and walked away with a {winTierLow} scrape — ", { stamp: "choke" }, " — that's a bad beat if I've ever seen one."],
+  ["Premium pick on {starName}, premium result not in the cards — ", { stamp: "choke" }, " — call it what it is."],
+  ["You held {starName} expecting a real night and got the kind that pays in coupons — ", { stamp: "choke" }, " — textbook bad beat."],
+  ["{starName} on your held card. {winTierLow} on the scoreboard. ", { stamp: "choke" }, ". That's the definition."],
+  ["You doubled down on {starName} and the conviction came back as a flat stat line — ", { stamp: "choke" }, " — that's the textbook one."],
+  ["You held {starName} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — bad beat with a capital B."],
+  [{ stamp: "choke" }, ". You held {starName} as your big play and he came in like the deep bench."],
+  ["A {winTierLow} hand off a held card on {starName}. ", { stamp: "choke" }, ". Pure bad beat."],
+  ["{starName} on the held card, lineup couldn't lift it — ", { stamp: "choke" }, " — what else do you call it."],
+  ["You read it. You held {starName}. {starName} held, result didn't read the script. ", { stamp: "choke" }, ". Bad beat."],
 ];
 
-const TOP_BAD_BEAT_HELD_TWO_PLUS: Line[] = [
-  ["You counted on {starName1} and {starName2}, and walked away with a {winTierLow} scrape — ", { stamp: "bad_beat" }, " — that's a bad beat if I've ever seen one."],
-  ["You stacked {starName1} and {starName2} and they delivered the kind of night that pays in coupons — ", { stamp: "bad_beat" }, " — textbook bad beat."],
-  ["You held {starName1} and {starName2} expecting fireworks and got a sparkler — ", { stamp: "bad_beat" }, " — call it what it is."],
-  ["{starName1} and {starName2} on your held cards, {winTierLow} on the scoreboard. ", { stamp: "bad_beat" }, "."],
-  ["You doubled down on {starName1} and {starName2} and the {winTierLow} came in anyway — ", { stamp: "bad_beat" }, " — that's the textbook one."],
-  [{ stamp: "bad_beat" }, ". You counted on {starName1} AND {starName2} and the lineup still came in like role players."],
-  ["Premium picks on {starName1} and {starName2}, premium result not in the cards — ", { stamp: "bad_beat" }, " — what else do you call it."],
-  ["A {winTierLow} hand off held cards on {starName1} and {starName2}. ", { stamp: "bad_beat" }, ". That's the definition."],
-  ["{starName1} and {starName2} on the held cards, lineup couldn't lift it — ", { stamp: "bad_beat" }, " — bad beat with a capital B."],
-  ["You read it. You held it. {starName1} and {starName2} held, result didn't read the script. ", { stamp: "bad_beat" }, ". Pure bad beat."],
+const TOP_CHOKE_HELD_TWO_PLUS: Line[] = [
+  ["You counted on {starName1} and {starName2}, and walked away with a {winTierLow} scrape — ", { stamp: "choke" }, " — that's a bad beat if I've ever seen one."],
+  ["You stacked {starName1} and {starName2} and they delivered the kind of night that pays in coupons — ", { stamp: "choke" }, " — textbook bad beat."],
+  ["You held {starName1} and {starName2} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — call it what it is."],
+  ["{starName1} and {starName2} on your held cards, {winTierLow} on the scoreboard. ", { stamp: "choke" }, "."],
+  ["You doubled down on {starName1} and {starName2} and the {winTierLow} came in anyway — ", { stamp: "choke" }, " — that's the textbook one."],
+  [{ stamp: "choke" }, ". You counted on {starName1} AND {starName2} and the lineup still came in like role players."],
+  ["Premium picks on {starName1} and {starName2}, premium result not in the cards — ", { stamp: "choke" }, " — what else do you call it."],
+  ["A {winTierLow} hand off held cards on {starName1} and {starName2}. ", { stamp: "choke" }, ". That's the definition."],
+  ["{starName1} and {starName2} on the held cards, lineup couldn't lift it — ", { stamp: "choke" }, " — bad beat with a capital B."],
+  ["You read it. You held it. {starName1} and {starName2} held, result didn't read the script. ", { stamp: "choke" }, ". Pure bad beat."],
 ];
 
-const TOP_BAD_BEAT_NO_HOLDS: Line[] = [
-  ["You drew {starName} as your big play and walked away with a {winTierLow} scrape — ", { stamp: "bad_beat" }, " — that's a bad beat if I've ever seen one."],
-  ["Premium pick on {starName}, premium disappointment from him — ", { stamp: "bad_beat" }, " — call it what it is."],
-  ["You drew the right names for the right slate and the right names had the wrong night — ", { stamp: "bad_beat" }, " — textbook bad beat."],
-  ["{starName} as your headline. {winTierLow} as your finish. ", { stamp: "bad_beat" }, ". That's the definition."],
-  ["You built this lineup around {starName} and {starName} forgot what he was here for — ", { stamp: "bad_beat" }, " — that's the textbook one."],
-  ["You drew {starName} expecting fireworks and got a sparkler — ", { stamp: "bad_beat" }, " — bad beat with a capital B."],
-  [{ stamp: "bad_beat" }, ". You drew {starName} as your big play and he came in like the deep bench."],
-  ["A {winTierLow} hand off a lineup that looked like a winner on paper. ", { stamp: "bad_beat" }, ". Pure bad beat."],
-  ["Stars on paper, role players on the floor — the whole lineup ghosted you — ", { stamp: "bad_beat" }, " — what else do you call it."],
-  ["You read the slate. You picked the right names. The right names didn't read the script. ", { stamp: "bad_beat" }, ". Bad beat."],
+const TOP_CHOKE_NO_HOLDS: Line[] = [
+  ["You drew {starName} as your big play and walked away with a {winTierLow} scrape — ", { stamp: "choke" }, " — that's a bad beat if I've ever seen one."],
+  ["Premium pick on {starName}, premium disappointment from him — ", { stamp: "choke" }, " — call it what it is."],
+  ["You drew the right names for the right slate and the right names had the wrong night — ", { stamp: "choke" }, " — textbook bad beat."],
+  ["{starName} as your headline. {winTierLow} as your finish. ", { stamp: "choke" }, ". That's the definition."],
+  ["You built this lineup around {starName} and {starName} forgot what he was here for — ", { stamp: "choke" }, " — that's the textbook one."],
+  ["You drew {starName} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — bad beat with a capital B."],
+  [{ stamp: "choke" }, ". You drew {starName} as your big play and he came in like the deep bench."],
+  ["A {winTierLow} hand off a lineup that looked like a winner on paper. ", { stamp: "choke" }, ". Pure bad beat."],
+  ["Stars on paper, role players on the floor — the whole lineup ghosted you — ", { stamp: "choke" }, " — what else do you call it."],
+  ["You read the slate. You picked the right names. The right names didn't read the script. ", { stamp: "choke" }, ". Bad beat."],
 ];
 
 const TOP_MISS: Line[] = [
@@ -852,7 +852,7 @@ export function extractStatLabel(
   return label ?? null;
 }
 
-/** Title-case formatter for {winTierLow} substitution into BAD_BEAT
+/** Title-case formatter for {winTierLow} substitution into CHOKE
  *  bank lines (e.g. `ROOKIE → "Rookie"`, `ALL_STAR → "All Star"`).
  *  Distinct from formatTier() at the renderer (which uppercases for
  *  stamp-chip display); this lives at the selector for in-line prose
@@ -865,12 +865,12 @@ function formatWinTierLow(t: string | undefined | null): string {
     .join(" ");
 }
 
-export type TopSlotTrigger = "bad_beat" | "miss" | "big_score" | "rare_pull" | "default";
+export type TopSlotTrigger = "choke" | "miss" | "big_score" | "rare_pull" | "default";
 
 export interface TopSlotFramingArgs {
   /** The fired trigger from the challenge-trigger evaluator. */
   trigger: TopSlotTrigger;
-  /** Resolved roster — used to count held cards for bad_beat routing
+  /** Resolved roster — used to count held cards for choke routing
    *  (Q1.1 + 2026-05-24 smoke split: HELD_ONE / HELD_TWO_PLUS /
    *  NO_HOLDS). */
   roster: Array<{ tier?: string; wasHeld?: boolean }>;
@@ -883,14 +883,14 @@ export interface TopSlotFramingArgs {
    *  `{starName}` still substitute the empty string. */
   starName?: string | null;
   /** First held-card name for `{starName1}` substitution. Used by
-   *  TOP_BAD_BEAT_HELD_TWO_PLUS only. Caller computes per the
+   *  TOP_CHOKE_HELD_TWO_PLUS only. Caller computes per the
    *  anchor-priority + FP-descending rule:
    *  if anchor is in the held set, anchor → starName1; otherwise the
    *  highest-FP held card → starName1. Bucket 2 smoke revision
    *  2026-05-24. */
   starName1?: string | null;
   /** Second held-card name for `{starName2}` substitution. Used by
-   *  TOP_BAD_BEAT_HELD_TWO_PLUS only. Caller computes per the same
+   *  TOP_CHOKE_HELD_TWO_PLUS only. Caller computes per the same
    *  rule: the next highest-FP held card (excluding the one already
    *  used as starName1). */
   starName2?: string | null;
@@ -899,7 +899,7 @@ export interface TopSlotFramingArgs {
    *     only fire on BUST/ROOKIE/STARTER; ALL_STAR+ routes to
    *     NO_HOLDS so the {winTierLow}-bearing copy doesn't read
    *     contradictorily on a big-tier "bad beat").
-   *   - `{winTierLow}` substitution into BAD_BEAT bank lines.
+   *   - `{winTierLow}` substitution into CHOKE bank lines.
    *   - `tier: "{winTier}"` sentinel substitution into win_tier
    *     StampTokens (TOP_BIG_SCORE).
    *  Bucket 2 smoke revision 2026-05-24. */
@@ -934,22 +934,22 @@ export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
   let resolvedAchievementType = args.starAchievementType ?? null;
 
   switch (args.trigger) {
-    case "bad_beat": {
+    case "choke": {
       const heldCount = args.roster.filter(c => c.wasHeld === true).length;
       // Tier-gate filter: HELD_ONE / HELD_TWO_PLUS banks lean on the
       // {winTierLow} contrast ("premium picks, {winTierLow} scrape").
-      // The mechanic breaks if a bad_beat hand also cleared ALL_STAR+
+      // The mechanic breaks if a choke hand also cleared ALL_STAR+
       // — at higher tiers, the NO_HOLDS bank's "right pick, wrong
       // night" framing reads cleaner. Defensive: the trigger evaluator
-      // currently only fires bad_beat on BUST/ROOKIE, so this gate
+      // currently only fires choke on BUST/ROOKIE, so this gate
       // only matters if firing conditions ever loosen.
       const isLowTier = args.winTier === "BUST" || args.winTier === "ROOKIE" || args.winTier === "STARTER";
       if (heldCount === 0 || !isLowTier) {
-        bank = TOP_BAD_BEAT_NO_HOLDS;
+        bank = TOP_CHOKE_NO_HOLDS;
       } else if (heldCount === 1) {
-        bank = TOP_BAD_BEAT_HELD_ONE;
+        bank = TOP_CHOKE_HELD_ONE;
       } else {
-        bank = TOP_BAD_BEAT_HELD_TWO_PLUS;
+        bank = TOP_CHOKE_HELD_TWO_PLUS;
       }
       break;
     }
@@ -1069,7 +1069,7 @@ function substituteLine(line: Line, subs: LineSubstitutions): Line {
 
 /** Expose bank arrays for testing / preview. */
 export type TopSlotBankKey =
-  | "bad_beat_held_one" | "bad_beat_held_two_plus" | "bad_beat_no_holds"
+  | "choke_held_one" | "choke_held_two_plus" | "choke_no_holds"
   | "miss" | "big_score"
   | "rare_pull_record" | "rare_pull_career" | "rare_pull_season"
   | "default";
@@ -1077,9 +1077,9 @@ export type TopSlotBankKey =
 export function topSlotFramingBank(key: TopSlotBankKey): Line[] {
   const bank = (() => {
     switch (key) {
-      case "bad_beat_held_one":      return TOP_BAD_BEAT_HELD_ONE;
-      case "bad_beat_held_two_plus": return TOP_BAD_BEAT_HELD_TWO_PLUS;
-      case "bad_beat_no_holds":      return TOP_BAD_BEAT_NO_HOLDS;
+      case "choke_held_one":      return TOP_CHOKE_HELD_ONE;
+      case "choke_held_two_plus": return TOP_CHOKE_HELD_TWO_PLUS;
+      case "choke_no_holds":      return TOP_CHOKE_NO_HOLDS;
       case "miss":                   return TOP_MISS;
       case "big_score":              return TOP_BIG_SCORE;
       case "rare_pull_record":       return TOP_RARE_PULL_RECORD;
@@ -1358,13 +1358,13 @@ export function chadResolutionBank(outcome: ResolutionOutcome, flavor: Resolutio
 // Four trigger-keyed sub-banks (mirror selectChallengeInitiation's
 // bucket structure — same emotional taxonomy on both sender prompt
 // and recipient share):
-//   bad_beat  — sender stacked R/O cards and got cooked; share-the-pain
+//   choke  — sender stacked R/O cards and got cooked; share-the-pain
 //   flex      — sender hit ALL_STAR+/rare_pull/big_score; brag and dare
 //   statement — sender cleared STARTER honestly OR near-missed next
 //               tier; set the floor, beat it
 //   default   — everything else; cold provocation, play the slate
 
-const SHARE_TT_BAD_BEAT: string[] = [
+const SHARE_TT_CHOKE: string[] = [
   "Held two anchors. Got nothing. Try not to make my mistake.",
   "Stacked the lineup, came up empty. Same cards. Your decisions.",
   "Got cooked on premium picks. The slate's not the problem — find out.",
@@ -1416,7 +1416,7 @@ const SHARE_TT_DEFAULT: string[] = [
   "Don't overthink it. Don't underthink it either. Just play.",
 ];
 
-export type ShareTrashTalkBucket = "bad_beat" | "flex" | "statement" | "default";
+export type ShareTrashTalkBucket = "choke" | "flex" | "statement" | "default";
 
 /** Map trigger (+ winTier as secondary signal) to share-bank bucket.
  *  Mirrors selectInitiationBucket above so sender prompt and recipient
@@ -1428,20 +1428,20 @@ export type ShareTrashTalkBucket = "bad_beat" | "flex" | "statement" | "default"
  *  pool. */
 function shareTrashTalkBucket(trigger?: string, winTier?: string): ShareTrashTalkBucket {
   if (trigger === "rare_pull" || trigger === "big_score") return "flex";
-  if (trigger === "bad_beat") return "bad_beat";
+  if (trigger === "choke") return "choke";
   if (trigger === "miss" || winTier === "STARTER") return "statement";
   return "default";
 }
 
 /** Top-level: returns Chad's recipient-facing trash talk for the share
  *  payload. Trigger-aware (mirrors selectChallengeInitiation) so a
- *  bad_beat share recipient reads "share the pain" copy, a flex share
+ *  choke share recipient reads "share the pain" copy, a flex share
  *  recipient reads "match this if you can" copy, etc. Anti-repeat
  *  shared with other Chad surfaces. */
 export function chadShareTrashTalk(args: { trigger?: string; winTier?: string } = {}): string {
   const bucket = shareTrashTalkBucket(args.trigger, args.winTier);
   switch (bucket) {
-    case "bad_beat":  return pickWithAntiRepeat(SHARE_TT_BAD_BEAT);
+    case "choke":  return pickWithAntiRepeat(SHARE_TT_CHOKE);
     case "flex":      return pickWithAntiRepeat(SHARE_TT_FLEX);
     case "statement": return pickWithAntiRepeat(SHARE_TT_STATEMENT);
     case "default":   return pickWithAntiRepeat(SHARE_TT_DEFAULT);
@@ -1451,7 +1451,7 @@ export function chadShareTrashTalk(args: { trigger?: string; winTier?: string } 
 /** Expose bank arrays for testing / preview. */
 export function chadShareTrashTalkBank(bucket: ShareTrashTalkBucket): string[] {
   switch (bucket) {
-    case "bad_beat":  return [...SHARE_TT_BAD_BEAT];
+    case "choke":  return [...SHARE_TT_CHOKE];
     case "flex":      return [...SHARE_TT_FLEX];
     case "statement": return [...SHARE_TT_STATEMENT];
     case "default":   return [...SHARE_TT_DEFAULT];
@@ -1525,7 +1525,7 @@ export function firstShareInvitationBank(bucket: "hit" | "bust"): string[] {
 //     hand-authored + reviewed). DO NOT invent fresh harsh claims about
 //     real players in these strings — that exposes liability the vetted
 //     bank doesn't.
-//   - bad_beat draws cultureLine from `controversy ∪ underperform`
+//   - choke draws cultureLine from `controversy ∪ underperform`
 //     (the harsher pools); big_score / rare_pull from `overperform ∪
 //     signatureGames`; rare_pull additionally from `milestones ∪
 //     streakLines`.
@@ -1584,10 +1584,10 @@ export interface SelectIntroAnchorArgs {
   sport: string;
 }
 
-type ChallengeCtxTriggerType = "rare_pull" | "big_score" | "miss" | "bad_beat" | "default";
+type ChallengeCtxTriggerType = "rare_pull" | "big_score" | "miss" | "choke" | "default";
 
 /** Path-A-first anchor resolver. Returns null for miss/default (no anchor
- *  concept by T2). For bad_beat / big_score / rare_pull:
+ *  concept by T2). For choke / big_score / rare_pull:
  *    1. Resolve persisted anchorBasePlayerId against senderCards.
  *    2. On null/no-match, fall back to client-side derivation per T2
  *       (the M5/Path-A fallback for legacy or null-column rows).
@@ -1610,7 +1610,7 @@ export function selectIntroAnchor(args: SelectIntroAnchorArgs): RecipientIntroAn
 
   // Derivation fallback (legacy / null-column / id-not-on-roster).
   if (!card) {
-    if (triggerType === "bad_beat") {
+    if (triggerType === "choke") {
       const held = senderCards.filter(c => c.wasHeld === true);
       if (held.length === 0) return null;
       held.sort((a, b) => {
@@ -1676,28 +1676,28 @@ export function selectIntroAnchor(args: SelectIntroAnchorArgs): RecipientIntroAn
 //   win_tier StampTokens leave tier undefined — renderer falls back to
 //     the winTier prop H2HRecipientPlay passes (senderHand.tier).
 
-const INTRO_BAD_BEAT_CULTURE: Line[] = [
-  ["{challengerName} bet the whole hand on {name} and still got buried — ", { stamp: "bad_beat" }, ". {cultureLine} Same six cards are right here."],
-  ["{challengerName} held {name} and watched {targetScore} come up short. ", { stamp: "bad_beat" }, " — {cultureLine} See if you read it cleaner."],
-  ["The conviction pick was {name}, and the conviction was misplaced — ", { stamp: "bad_beat" }, ". {cultureLine} Your hand now."],
-  ["{challengerName} leaned the whole {targetScore} on {name} and it tipped over. ", { stamp: "bad_beat" }, " — {cultureLine}"],
-  [{ stamp: "bad_beat" }, ". {challengerName} trusted {name} and got {targetScore} for it. {cultureLine} You get the better look."],
-  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on — ", { stamp: "bad_beat" }, ". Your shot at the same slate."],
+const INTRO_CHOKE_CULTURE: Line[] = [
+  ["{challengerName} bet the whole hand on {name} and still got buried — ", { stamp: "choke" }, ". {cultureLine} Same six cards are right here."],
+  ["{challengerName} held {name} and watched {targetScore} come up short. ", { stamp: "choke" }, " — {cultureLine} See if you read it cleaner."],
+  ["The conviction pick was {name}, and the conviction was misplaced — ", { stamp: "choke" }, ". {cultureLine} Your hand now."],
+  ["{challengerName} leaned the whole {targetScore} on {name} and it tipped over. ", { stamp: "choke" }, " — {cultureLine}"],
+  [{ stamp: "choke" }, ". {challengerName} trusted {name} and got {targetScore} for it. {cultureLine} You get the better look."],
+  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on — ", { stamp: "choke" }, ". Your shot at the same slate."],
 ];
 
-const INTRO_BAD_BEAT_NAME: Line[] = [
-  ["{challengerName} held {name} and the rest of the hand quit on him — ", { stamp: "bad_beat" }, ", {targetScore} on the board. Beat it."],
-  ["{name} was supposed to be the safe one. ", { stamp: "bad_beat" }, " — {challengerName} settled for {targetScore}."],
-  ["Premium pick, premium letdown. {challengerName} rode {name} to a ", { stamp: "bad_beat" }, " and left you {targetScore} to chase."],
-  [{ stamp: "bad_beat" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed. Same six cards."],
-  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "bad_beat" }, ". Your hand to fix it."],
+const INTRO_CHOKE_NAME: Line[] = [
+  ["{challengerName} held {name} and the rest of the hand quit on him — ", { stamp: "choke" }, ", {targetScore} on the board. Beat it."],
+  ["{name} was supposed to be the safe one. ", { stamp: "choke" }, " — {challengerName} settled for {targetScore}."],
+  ["Premium pick, premium letdown. {challengerName} rode {name} to a ", { stamp: "choke" }, " and left you {targetScore} to chase."],
+  [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed. Same six cards."],
+  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". Your hand to fix it."],
 ];
 
-const INTRO_BAD_BEAT_GENERIC: Line[] = [
-  ["{challengerName} got cooked by his own holds — ", { stamp: "bad_beat" }, ", {targetScore} on the board. Do better."],
-  [{ stamp: "bad_beat" }, ". {challengerName} couldn't drag the same six past {targetScore}. Your turn to try."],
-  ["Looked like a winner on paper for {challengerName}. ", { stamp: "bad_beat" }, " — {targetScore} is what it actually paid."],
-  ["{challengerName} read the slate; the slate didn't read the script — ", { stamp: "bad_beat" }, ", {targetScore} to beat."],
+const INTRO_CHOKE_GENERIC: Line[] = [
+  ["{challengerName} got cooked by his own holds — ", { stamp: "choke" }, ", {targetScore} on the board. Do better."],
+  [{ stamp: "choke" }, ". {challengerName} couldn't drag the same six past {targetScore}. Your turn to try."],
+  ["Looked like a winner on paper for {challengerName}. ", { stamp: "choke" }, " — {targetScore} is what it actually paid."],
+  ["{challengerName} read the slate; the slate didn't read the script — ", { stamp: "choke" }, ", {targetScore} to beat."],
 ];
 
 const INTRO_BIG_SCORE_CULTURE: Line[] = [
@@ -1764,20 +1764,20 @@ const INTRO_DEFAULT: Line[] = [
 
 // ── Recipient Stage 2 banks (Deal nudges — verb-first, shorter) ──────────
 
-const NUDGE_BAD_BEAT_CULTURE: Line[] = [
-  ["{challengerName} already found the trap door. ", { stamp: "bad_beat" }, " — {cultureLine} Your draw."],
+const NUDGE_CHOKE_CULTURE: Line[] = [
+  ["{challengerName} already found the trap door. ", { stamp: "choke" }, " — {cultureLine} Your draw."],
   ["Hold what {challengerName} wishes he had. {cultureLine}"],
-  ["{name} sank {challengerName} once — ", { stamp: "bad_beat" }, ". {cultureLine} Hold smarter."],
+  ["{name} sank {challengerName} once — ", { stamp: "choke" }, ". {cultureLine} Hold smarter."],
 ];
 
-const NUDGE_BAD_BEAT_NAME: Line[] = [
-  ["Hold {name} — {challengerName} did, and ate a ", { stamp: "bad_beat" }, " for it. Your draw to fix it."],
+const NUDGE_CHOKE_NAME: Line[] = [
+  ["Hold {name} — {challengerName} did, and ate a ", { stamp: "choke" }, " for it. Your draw to fix it."],
   ["{challengerName} got cooked by {name}. Pick the holds he should have."],
-  ["Hold what {challengerName} didn't. ", { stamp: "bad_beat" }, " says he guessed wrong."],
+  ["Hold what {challengerName} didn't. ", { stamp: "choke" }, " says he guessed wrong."],
 ];
 
-const NUDGE_BAD_BEAT_GENERIC: Line[] = [
-  ["{challengerName}'s board already broke — ", { stamp: "bad_beat" }, ". Your draw."],
+const NUDGE_CHOKE_GENERIC: Line[] = [
+  ["{challengerName}'s board already broke — ", { stamp: "choke" }, ". Your draw."],
   ["Pick the holds and redeem the slate {challengerName} fumbled."],
   ["Hold sharper than {challengerName} did. That's the whole game."],
 ];
@@ -1906,24 +1906,24 @@ export function selectRecipientIntro(args: SelectRecipientIntroArgs): Line {
     });
   }
 
-  // Anchor-bearing triggers: bad_beat / big_score / rare_pull.
+  // Anchor-bearing triggers: choke / big_score / rare_pull.
   const anchor = args.anchor;
   let bank: Line[];
   let cultureLine = "";
 
   if (!anchor) {
-    bank = t === "bad_beat" ? INTRO_BAD_BEAT_GENERIC
+    bank = t === "choke" ? INTRO_CHOKE_GENERIC
       : t === "big_score" ? INTRO_BIG_SCORE_GENERIC
       : INTRO_RARE_PULL_GENERIC;
   } else {
     const resolved = anchor.culture ? getCultureLine(anchor, t) : null;
     if (anchor.culture && resolved) {
       cultureLine = resolved;
-      bank = t === "bad_beat" ? INTRO_BAD_BEAT_CULTURE
+      bank = t === "choke" ? INTRO_CHOKE_CULTURE
         : t === "big_score" ? INTRO_BIG_SCORE_CULTURE
         : INTRO_RARE_PULL_CULTURE;
     } else {
-      bank = t === "bad_beat" ? INTRO_BAD_BEAT_NAME
+      bank = t === "choke" ? INTRO_CHOKE_NAME
         : t === "big_score" ? INTRO_BIG_SCORE_NAME
         : INTRO_RARE_PULL_NAME;
     }
@@ -1973,18 +1973,18 @@ export function selectRecipientDealNudge(args: SelectRecipientDealNudgeArgs): Li
   let cultureLine = "";
 
   if (!anchor) {
-    bank = t === "bad_beat" ? NUDGE_BAD_BEAT_GENERIC
+    bank = t === "choke" ? NUDGE_CHOKE_GENERIC
       : t === "big_score" ? NUDGE_BIG_SCORE_GENERIC
       : NUDGE_RARE_PULL_GENERIC;
   } else {
     const resolved = anchor.culture ? getCultureLine(anchor, t) : null;
     if (anchor.culture && resolved) {
       cultureLine = resolved;
-      bank = t === "bad_beat" ? NUDGE_BAD_BEAT_CULTURE
+      bank = t === "choke" ? NUDGE_CHOKE_CULTURE
         : t === "big_score" ? NUDGE_BIG_SCORE_CULTURE
         : NUDGE_RARE_PULL_CULTURE;
     } else {
-      bank = t === "bad_beat" ? NUDGE_BAD_BEAT_NAME
+      bank = t === "choke" ? NUDGE_CHOKE_NAME
         : t === "big_score" ? NUDGE_BIG_SCORE_NAME
         : NUDGE_RARE_PULL_NAME;
     }
@@ -2027,7 +2027,7 @@ function getCultureLine(anchor: RecipientIntroAnchor, triggerType: ChallengeCtxT
   const sigLines = (c.signatureGames ?? []).map(g => g.line).filter((l): l is string => !!l);
   let pool: string[] = [];
 
-  if (triggerType === "bad_beat") {
+  if (triggerType === "choke") {
     pool = [
       ...(Array.isArray(ca.controversy) ? ca.controversy : []),
       ...(Array.isArray(ca.underperform) ? ca.underperform : []),
@@ -2091,7 +2091,7 @@ function substituteRecipientLine(line: Line, subs: RecipientLineSubstitutions): 
 
 /** Expose recipient banks for testing / preview. */
 export type RecipientIntroBankKey =
-  | "bad_beat_culture" | "bad_beat_name" | "bad_beat_generic"
+  | "choke_culture" | "choke_name" | "choke_generic"
   | "big_score_culture" | "big_score_name" | "big_score_generic"
   | "rare_pull_culture" | "rare_pull_name" | "rare_pull_generic"
   | "miss_with_gap" | "miss_generic" | "default";
@@ -2099,9 +2099,9 @@ export type RecipientIntroBankKey =
 export function recipientIntroBank(key: RecipientIntroBankKey): Line[] {
   const bank = (() => {
     switch (key) {
-      case "bad_beat_culture":  return INTRO_BAD_BEAT_CULTURE;
-      case "bad_beat_name":     return INTRO_BAD_BEAT_NAME;
-      case "bad_beat_generic":  return INTRO_BAD_BEAT_GENERIC;
+      case "choke_culture":  return INTRO_CHOKE_CULTURE;
+      case "choke_name":     return INTRO_CHOKE_NAME;
+      case "choke_generic":  return INTRO_CHOKE_GENERIC;
       case "big_score_culture": return INTRO_BIG_SCORE_CULTURE;
       case "big_score_name":    return INTRO_BIG_SCORE_NAME;
       case "big_score_generic": return INTRO_BIG_SCORE_GENERIC;
@@ -2117,7 +2117,7 @@ export function recipientIntroBank(key: RecipientIntroBankKey): Line[] {
 }
 
 export type RecipientNudgeBankKey =
-  | "bad_beat_culture" | "bad_beat_name" | "bad_beat_generic"
+  | "choke_culture" | "choke_name" | "choke_generic"
   | "big_score_culture" | "big_score_name" | "big_score_generic"
   | "rare_pull_culture" | "rare_pull_name" | "rare_pull_generic"
   | "miss" | "default";
@@ -2125,9 +2125,9 @@ export type RecipientNudgeBankKey =
 export function recipientDealNudgeBank(key: RecipientNudgeBankKey): Line[] {
   const bank = (() => {
     switch (key) {
-      case "bad_beat_culture":  return NUDGE_BAD_BEAT_CULTURE;
-      case "bad_beat_name":     return NUDGE_BAD_BEAT_NAME;
-      case "bad_beat_generic":  return NUDGE_BAD_BEAT_GENERIC;
+      case "choke_culture":  return NUDGE_CHOKE_CULTURE;
+      case "choke_name":     return NUDGE_CHOKE_NAME;
+      case "choke_generic":  return NUDGE_CHOKE_GENERIC;
       case "big_score_culture": return NUDGE_BIG_SCORE_CULTURE;
       case "big_score_name":    return NUDGE_BIG_SCORE_NAME;
       case "big_score_generic": return NUDGE_BIG_SCORE_GENERIC;

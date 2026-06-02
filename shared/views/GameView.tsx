@@ -1275,7 +1275,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // value that was active at cache time. If the cache was populated
   // BEFORE the trigger arrived (gameState/winTier/springSettled flip
   // true first, then evaluateTrigger fires a tick later — common
-  // ordering on big_score/miss/rare_pull/bad_beat hands), the cache
+  // ordering on big_score/miss/rare_pull/choke hands), the cache
   // would hold baseCopy and short-circuit forever. The key ref forces
   // a recompute when the trigger value the cache was computed against
   // no longer matches the current trigger.
@@ -1393,7 +1393,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // Trigger-aware TOP-slot framing override (standalone play only —
     // challenge recipients see ChallengeComparisonScreen with its own
     // Chad lines). When a named trigger fires
-    // (rare_pull/big_score/miss/bad_beat), the post-reveal TOP slot
+    // (rare_pull/big_score/miss/choke), the post-reveal TOP slot
     // delegates to selectTopSlotFraming — TOP-slot hand-celebration
     // copy with inline trigger stamps (DEAL/DRAW-style chips rendered
     // mid-sentence). Returned `primary` is a Line (Array<string |
@@ -1432,7 +1432,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       const lastNameOf = (c: any): string | null =>
         c ? (String(c.name ?? "").trim().split(/\s+/).pop() ?? c.name ?? "") : null;
       const anchorLast = lastNameOf(anchor);
-      // Derive {starName1} / {starName2} for TOP_BAD_BEAT_HELD_TWO_PLUS.
+      // Derive {starName1} / {starName2} for TOP_CHOKE_HELD_TWO_PLUS.
       // Rule per bucket 2 smoke revision 2026-05-24: if anchor is one
       // of the held cards, anchor → starName1 regardless of FP order
       // (headline-priority). Then FP-descending among the remaining
@@ -1454,15 +1454,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         trigger: tt.trigger as TopSlotTrigger,
         roster: rosterRef.current as Array<{ tier?: string; wasHeld?: boolean }>,
         starAchievementType: tt.topGameTier ?? null,
-        // For bad_beat: the trigger result doesn't carry
-        // anchorBasePlayerId today, and bad_beat is semantically about
-        // the user's held picks anyway. Use the headline held card
-        // (starName1, derived from sortedHeld[0] above) as starName so
-        // HELD_ONE bank lines don't render empty {starName}. Fallback
-        // to anchorLast for defensive safety. For other triggers
-        // (big_score / miss / rare_pull) the anchor-derived starName
-        // is correct (Bug #1 fix, bucket 2 piece B smoke 2026-05-25).
-        starName: tt.trigger === "bad_beat" ? (starName1 ?? anchorLast) : anchorLast,
+        // For choke: the trigger result doesn't carry anchorBasePlayerId
+        // today, and choke is semantically about the user's held picks
+        // anyway. Use the headline held card (starName1, derived from
+        // sortedHeld[0] above) as starName so HELD_ONE bank lines don't
+        // render empty {starName}. Fallback to anchorLast for defensive
+        // safety. For other triggers (big_score / miss / rare_pull) the
+        // anchor-derived starName is correct (Bug #1 fix, bucket 2 piece
+        // B smoke 2026-05-25). Phase 1 trigger split (2026-06-03):
+        // renamed bad_beat → choke; behavior unchanged.
+        starName: tt.trigger === "choke" ? (starName1 ?? anchorLast) : anchorLast,
         starName1,
         starName2,
         winTier: (winTier ?? null) as any,
@@ -2559,8 +2560,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   const tierMult = winTiersMap[winTier as WinTierKey]?.multiplier ?? 0;
                   const streakMult = getStreakMultiplier(streak);
                   const showStreakFactor = streakMult > 1;
+                  // Phase 1 trigger split (2026-06-03): renamed bad_beat
+                  // → choke. challengeTrigger.trigger now emits "choke"
+                  // (live evaluator post-rename); TeamStampKind union now
+                  // accepts "choke" instead of "bad_beat".
                   const stampKind =
-                    challengeTrigger?.trigger === "bad_beat" ? "bad_beat" :
+                    challengeTrigger?.trigger === "choke" ? "choke" :
                     challengeTrigger?.trigger === "miss" ? "miss" :
                     null;
                   return (
@@ -3121,7 +3126,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
       {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
           NAMED trigger is evaluated (rare_pull / big_score / miss /
-          bad_beat / rivalry_back) and the user is not in FTUE. The
+          choke / rivalry_back) and the user is not in FTUE. The
           `trigger !== "default"` exclusion matches the commentary-
           override gate at line 1261 — without it, every hand fires a
           share prompt regardless of whether anything share-worthy
