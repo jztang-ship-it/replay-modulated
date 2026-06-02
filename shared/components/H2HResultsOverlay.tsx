@@ -128,6 +128,13 @@ export interface H2HResultsOverlayProps {
    *  regular prop and lift the state-derived logic into the recipient
    *  wrapper, avoiding the override pattern compounding. */
   primaryCtaOverride?: { label: string; handler?: () => void };
+  /** Step-4 glide / C1: per-side flag telling the docked-score targets
+   *  in the ZoneHeaders to render their glyph. When undefined, both
+   *  sides stay EMPTY (the post-name-fix default — this commit is a
+   *  no-op on the live screen). C4 will flip these to true at the
+   *  glide's terminal frame so the populated glyph lands seamlessly
+   *  on the same box the empty slot reserved. */
+  dockedScoreSettled?: { opponent: boolean; user: boolean };
 }
 
 /** Cross-fade duration. */
@@ -156,12 +163,25 @@ const HERO_CARD_MAX_WIDTH = "min(145px, 32vw)"; // matches arc's BATTLEFIELD_CAR
 // user hero in row 2 retains the exact X/Y it had before.
 const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed(6)})`;
 
-// Step 3: docked-score target minimum width inside each ZoneHeader.
+// Docked-score target minimum width inside each ZoneHeader.
 // Reserves right-aligned space for the score that will glide in at
-// step 4. Widest realistic total "999.9" at fontSize 18, fontWeight 900,
-// tabular-nums, letterSpacing -0.3 measures ~52px; 60 pads for metric
-// variance across iOS/Android renderers.
-const DOCKED_SCORE_TARGET_MIN_WIDTH_PX = 60;
+// step 4.
+//
+// C1 (step-4 prep): bumped 60 → 68 to satisfy the rect-identity
+// guarantee for the dormant populate path. C1 lifts the slot's font
+// to match H2HScoreRail.ScoreCell at rest (fontSize 22, fontWeight 950,
+// tabular-nums) so a glide clone lands on a pixel-identical box. At
+// those values a populated 5-char score (e.g. "182.4") measures
+// 64.33px wide in headless Chromium at viewport 390 — the previous
+// 60 floor let populated content expand the bounding box from
+// 60×24 (empty) to 64.33×24, shifting the right-anchored slot's left
+// edge by ~4.3px between empty and populated. 68 covers the measured
+// 64.33 with ~3.7px headroom for sub-pixel renderer variance across
+// iOS/Android, while staying well under the name's available band
+// (the name span's `maxWidth: calc(100% - 2 * (PX + 8))` re-derives
+// from this constant — at 332-wide headers, name max stays 180,
+// comfortably wider than every realistic display name).
+const DOCKED_SCORE_TARGET_MIN_WIDTH_PX = 68;
 
 // Hand-strip cell sizing — matches H2HRevealScreen's HandStrip exactly so
 // strips look identical between arc and overlay.
@@ -261,6 +281,7 @@ function ZoneHeader({
   hand,
   position,
   dockedScoreColor,
+  settled,
 }: {
   hand: H2HHand;
   position?: "top" | "bottom";
@@ -269,6 +290,13 @@ function ZoneHeader({
    *  neutral / tie). Step 4 lands the glide that fills the placeholder;
    *  the color rendered here is what the glide will land into. */
   dockedScoreColor: string;
+  /** Step-4 glide / C1: when true the docked-score target renders its
+   *  glyph (hand.totalFp.toFixed(1)); when false the slot stays empty
+   *  exactly as today. C1 is the styling lock — the populate path is
+   *  dormant until C4 flips the flag. Default propagated from the
+   *  overlay's `dockedScoreSettled` prop, which is undefined today and
+   *  therefore defaults both sides to false (no-op). */
+  settled: boolean;
 }) {
   // Outer + name recipe MUST match H2HBoardShell.ZoneHeader on the
   // reveal side verbatim — padding "0 6px", height ZONE_HEADER_HEIGHT_PX,
@@ -322,15 +350,28 @@ function ZoneHeader({
       </span>
       {/* Docked-score target. Absolutely positioned so it paints over
           the row's right edge without consuming flex space — the name
-          stays centered independent of it. EMPTY in this step (content
-          omitted); step 4 fills via the glide that animates from the
-          right-rail ScoreCell into this slot. data-attrs carry the
-          value so step 4's motion handler can read it without
-          re-deriving. pointer-events:none so an absent glyph never
-          intercepts taps meant for content below. */}
+          stays centered independent of it.
+          C1 styling lock (step-4 glide prep): font and color values
+          mirror H2HScoreRail.ScoreCell's inner glyph AT REST so a
+          gliding clone lands on a pixel-identical box. The runtime
+          scale transform that ScoreCell applies on top of these values
+          is NOT copied here — the docked terminal is the rest box only.
+          Tabular numerals + explicit fontSize/fontWeight/lineHeight
+          mean the glyph box is concrete and reproducible; nothing
+          relies on inherited / browser-default values.
+          Empty vs populated is controlled by the `settled` prop —
+          when false (today's default), the slot reserves its min-width
+          and otherwise renders nothing. When true, the glyph renders
+          inside the same span. The span box itself (position:absolute
+          + top:0/bottom:0 + min-width:60) is rect-identical in both
+          cases — the C1 test proves this so step-4 can place a glide
+          clone here without measuring at runtime.
+          data-attrs preserved so step 4's motion handler can read the
+          target value without re-deriving from props. */}
       <span
         data-h2h-overlay-docked-score={position}
         data-h2h-overlay-docked-score-value={hand.totalFp.toFixed(1)}
+        data-h2h-overlay-docked-score-settled={settled ? "true" : "false"}
         style={{
           position: "absolute",
           right: 6,                            // aligns with header padding
@@ -341,13 +382,17 @@ function ZoneHeader({
           justifyContent: "flex-end",
           minWidth: DOCKED_SCORE_TARGET_MIN_WIDTH_PX,
           color: dockedScoreColor,
-          fontSize: 18,
-          fontWeight: 900,
-          letterSpacing: -0.3,
+          // Matches H2HScoreRail.ScoreCell inner glyph at rest:
+          fontSize: 22,
+          fontWeight: 950,
+          lineHeight: 1.05,
+          letterSpacing: -0.5,
           fontVariantNumeric: "tabular-nums",
           pointerEvents: "none",
         }}
-      />
+      >
+        {settled ? hand.totalFp.toFixed(1) : null}
+      </span>
     </div>
   );
 }
@@ -576,6 +621,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     senderRevealOrder,
     recipientRevealOrder,
     primaryCtaOverride,
+    dockedScoreSettled,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -810,7 +856,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       >
         {/* ── TOP STRIP — opponent's lineup ──────────────────────────── */}
         <ZonePanel dataAttr="opponent" style={{ marginBottom: 18 }}>
-          <ZoneHeader hand={sender} position="top" dockedScoreColor={opponentDockedColor} />
+          <ZoneHeader hand={sender} position="top" dockedScoreColor={opponentDockedColor} settled={dockedScoreSettled?.opponent ?? false} />
           <ResultsStrip
             cards={sender.cards}
             renderCard={renderCard}
@@ -936,7 +982,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             onCardTap={handleBottomCardTap}
             revealOrder={recipientRevealOrder}
           />
-          <ZoneHeader hand={recipient} position="bottom" dockedScoreColor={userDockedColor} />
+          <ZoneHeader hand={recipient} position="bottom" dockedScoreColor={userDockedColor} settled={dockedScoreSettled?.user ?? false} />
         </ZonePanel>
 
         {/* ── RESERVED BOTTOM SPACE (holds CTA + countdown) ────────────
