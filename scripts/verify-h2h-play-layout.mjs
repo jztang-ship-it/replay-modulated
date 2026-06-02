@@ -1630,21 +1630,8 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     // assertions that consumed them.
     const oppScore = document.querySelectorAll("[data-h2h-overlay-score]")[0];
     const youScore = document.querySelectorAll("[data-h2h-overlay-score]")[1];
-    // rail-unify: per-row hero cells, used to assert the score's
-    // vertical center sits on the same Y as its hero card row (the
-    // automatable half of the lineHeight reconciliation guard — the
-    // device-parity check carries the sub-pixel half).
-    //
-    // Step 3 of the results-page lock removed the opponent (top) hero
-    // cell — only the user (bottom) hero remains. The bottom hero is
-    // always the LAST hero cell in DOM order regardless of whether the
-    // top one is still rendered; topHeroCell stays null when only the
-    // bottom exists, which gates the opp rail-unify assertion off via
-    // its existing null-check.
-    const heroCells = document.querySelectorAll("[data-h2h-overlay-hero-cell]");
-    const topHeroCell = heroCells.length >= 2 ? heroCells[0] : null;
-    const bottomHeroCell = heroCells.length >= 1 ? heroCells[heroCells.length - 1] : null;
-    const topHeroCellRect = topHeroCell?.getBoundingClientRect();
+    // bottom (user) hero is the only hero cell in step 3 — heroCells[0].
+    const bottomHeroCell = document.querySelectorAll("[data-h2h-overlay-hero-cell]")[0];
     const bottomHeroCellRect = bottomHeroCell?.getBoundingClientRect();
     const oppScoreRect = oppScore?.getBoundingClientRect();
     const youScoreRect = youScore?.getBoundingClientRect();
@@ -1654,9 +1641,6 @@ async function runResultsOverlayViewportSweep(browser, vp) {
       youScoreCenterX: youScoreRect ? youScoreRect.left + youScoreRect.width / 2 : null,
       oppScoreCenterY: oppScoreRect ? oppScoreRect.top + oppScoreRect.height / 2 : null,
       youScoreCenterY: youScoreRect ? youScoreRect.top + youScoreRect.height / 2 : null,
-      topHeroCenterY: topHeroCellRect
-        ? topHeroCellRect.top + topHeroCellRect.height / 2
-        : null,
       bottomHeroCenterY: bottomHeroCellRect
         ? bottomHeroCellRect.top + bottomHeroCellRect.height / 2
         : null,
@@ -1681,17 +1665,11 @@ async function runResultsOverlayViewportSweep(browser, vp) {
   // mode). The sub-pixel-shift question that the harness can't see
   // is gated separately by the device-parity check called out in the
   // refactor lock.
-  if (
-    overlayLayout.oppScoreCenterY != null &&
-    overlayLayout.topHeroCenterY != null
-  ) {
-    const dy = Math.abs(overlayLayout.oppScoreCenterY - overlayLayout.topHeroCenterY);
-    record(
-      `${vp.label} rail-unify: opponent score center-Y matches top hero row center-Y (±2px)`,
-      dy <= 2,
-      `oppScoreCenterY=${overlayLayout.oppScoreCenterY.toFixed(1)} topHeroCenterY=${overlayLayout.topHeroCenterY.toFixed(1)} Δ=${dy.toFixed(1)}`,
-    );
-  }
+  //
+  // Step 3 of the results-page lock removed the opponent (top) hero
+  // cell, so the opp rail-unify check (opp score vs top hero row) was
+  // retired — there's no top hero to align against. The user-side
+  // check below is the only rail-unify assertion that fires.
   if (
     overlayLayout.youScoreCenterY != null &&
     overlayLayout.bottomHeroCenterY != null
