@@ -689,43 +689,49 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
 //   "{missTier}"  — sentinel in StampToken.tier for miss
 //   "{winTier}"   — sentinel in StampToken.tier for win_tier
 
+// Phase 2a voice re-tone (2026-06-03, lock: docs/challenge-landing-v2-phase2a-
+// voice-and-generator-lock.md). TOP_CHOKE_* fires on the SENDER's own results
+// screen — so it stays send-friendly self-roast per §3a's safety valve
+// (savage recipient lines live in INTRO_CHOKE_*, not here). Also drops every
+// literal "bad beat" string: a CHOKE-stamped line saying "bad beat" in prose
+// was the Phase-1-deferred prose bug; the stamp + label now agree.
 const TOP_CHOKE_HELD_ONE: Line[] = [
-  ["You held {starName} as your conviction pick and walked away with a {winTierLow} scrape — ", { stamp: "choke" }, " — that's a bad beat if I've ever seen one."],
-  ["Premium pick on {starName}, premium result not in the cards — ", { stamp: "choke" }, " — call it what it is."],
-  ["You held {starName} expecting a real night and got the kind that pays in coupons — ", { stamp: "choke" }, " — textbook bad beat."],
-  ["{starName} on your held card. {winTierLow} on the scoreboard. ", { stamp: "choke" }, ". That's the definition."],
-  ["You doubled down on {starName} and the conviction came back as a flat stat line — ", { stamp: "choke" }, " — that's the textbook one."],
-  ["You held {starName} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — bad beat with a capital B."],
-  [{ stamp: "choke" }, ". You held {starName} as your big play and he came in like the deep bench."],
-  ["A {winTierLow} hand off a held card on {starName}. ", { stamp: "choke" }, ". Pure bad beat."],
-  ["{starName} on the held card, lineup couldn't lift it — ", { stamp: "choke" }, " — what else do you call it."],
-  ["You read it. You held {starName}. {starName} held, result didn't read the script. ", { stamp: "choke" }, ". Bad beat."],
+  ["You held {starName} as your conviction and the conviction came up empty — ", { stamp: "choke" }, " — {winTierLow} on the board, loaded hand, no spine."],
+  ["Premium pick on {starName}, premium fold around him — ", { stamp: "choke" }, " — that's what choking a loaded hand looks like."],
+  ["You held {starName} for the anchor and the rest of the slate flinched — ", { stamp: "choke" }, " — {winTierLow} when the math said better."],
+  ["{starName} on your held card. {winTierLow} on the scoreboard. ", { stamp: "choke" }, ". The hand had it; the hands didn't."],
+  ["You doubled down on {starName} and the conviction came back flat — ", { stamp: "choke" }, " — own it and pass the receipt."],
+  ["You held {starName} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — loaded draw, hollow result."],
+  [{ stamp: "choke" }, ". You held {starName} as your big play and the play never showed up."],
+  ["A {winTierLow} hand off a held card on {starName}. ", { stamp: "choke" }, ". Premium build, premium fold."],
+  ["{starName} on the held card, lineup couldn't lift it — ", { stamp: "choke" }, " — that's the stamp earning itself."],
+  ["You read it. You held {starName}. The reads didn't translate. ", { stamp: "choke" }, ". Pure fold."],
 ];
 
 const TOP_CHOKE_HELD_TWO_PLUS: Line[] = [
-  ["You counted on {starName1} and {starName2}, and walked away with a {winTierLow} scrape — ", { stamp: "choke" }, " — that's a bad beat if I've ever seen one."],
-  ["You stacked {starName1} and {starName2} and they delivered the kind of night that pays in coupons — ", { stamp: "choke" }, " — textbook bad beat."],
-  ["You held {starName1} and {starName2} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — call it what it is."],
-  ["{starName1} and {starName2} on your held cards, {winTierLow} on the scoreboard. ", { stamp: "choke" }, "."],
-  ["You doubled down on {starName1} and {starName2} and the {winTierLow} came in anyway — ", { stamp: "choke" }, " — that's the textbook one."],
+  ["You counted on {starName1} and {starName2}, and walked away {winTierLow} — ", { stamp: "choke" }, " — two loaded picks, no follow-through."],
+  ["You stacked {starName1} and {starName2} and the stack flinched — ", { stamp: "choke" }, " — full-blown choke on a loaded hand."],
+  ["You held {starName1} and {starName2} expecting fireworks and the room went quiet — ", { stamp: "choke" }, " — premium fold."],
+  ["{starName1} and {starName2} on your held cards, {winTierLow} on the scoreboard. ", { stamp: "choke" }, ". The slate gave you the studs; the studs gave you nothing."],
+  ["You doubled down on {starName1} and {starName2} and the {winTierLow} came in anyway — ", { stamp: "choke" }, " — own it and ship the receipt."],
   [{ stamp: "choke" }, ". You counted on {starName1} AND {starName2} and the lineup still came in like role players."],
-  ["Premium picks on {starName1} and {starName2}, premium result not in the cards — ", { stamp: "choke" }, " — what else do you call it."],
-  ["A {winTierLow} hand off held cards on {starName1} and {starName2}. ", { stamp: "choke" }, ". That's the definition."],
-  ["{starName1} and {starName2} on the held cards, lineup couldn't lift it — ", { stamp: "choke" }, " — bad beat with a capital B."],
-  ["You read it. You held it. {starName1} and {starName2} held, result didn't read the script. ", { stamp: "choke" }, ". Pure bad beat."],
+  ["Premium picks on {starName1} and {starName2}, premium fold — ", { stamp: "choke" }, " — that's what the stamp is for."],
+  ["A {winTierLow} hand off held cards on {starName1} and {starName2}. ", { stamp: "choke" }, ". Loaded hand, no spine."],
+  ["{starName1} and {starName2} on the held cards, lineup couldn't lift it — ", { stamp: "choke" }, " — call it stack-and-fold."],
+  ["You read it. You held it. {starName1} and {starName2} held; the rest folded. ", { stamp: "choke" }, ". Pure stack-and-choke."],
 ];
 
 const TOP_CHOKE_NO_HOLDS: Line[] = [
-  ["You drew {starName} as your big play and walked away with a {winTierLow} scrape — ", { stamp: "choke" }, " — that's a bad beat if I've ever seen one."],
-  ["Premium pick on {starName}, premium disappointment from him — ", { stamp: "choke" }, " — call it what it is."],
-  ["You drew the right names for the right slate and the right names had the wrong night — ", { stamp: "choke" }, " — textbook bad beat."],
-  ["{starName} as your headline. {winTierLow} as your finish. ", { stamp: "choke" }, ". That's the definition."],
-  ["You built this lineup around {starName} and {starName} forgot what he was here for — ", { stamp: "choke" }, " — that's the textbook one."],
-  ["You drew {starName} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — bad beat with a capital B."],
-  [{ stamp: "choke" }, ". You drew {starName} as your big play and he came in like the deep bench."],
-  ["A {winTierLow} hand off a lineup that looked like a winner on paper. ", { stamp: "choke" }, ". Pure bad beat."],
-  ["Stars on paper, role players on the floor — the whole lineup ghosted you — ", { stamp: "choke" }, " — what else do you call it."],
-  ["You read the slate. You picked the right names. The right names didn't read the script. ", { stamp: "choke" }, ". Bad beat."],
+  ["You drew {starName} as your big play and walked away {winTierLow} — ", { stamp: "choke" }, " — the slate had it; the draw didn't follow through."],
+  ["Premium pick on {starName}, premium disappointment around him — ", { stamp: "choke" }, " — full-cabinet fold."],
+  ["You drew the right names for the right slate and the right names had the wrong night — ", { stamp: "choke" }, " — that's a draw-side choke."],
+  ["{starName} as your headline. {winTierLow} as your finish. ", { stamp: "choke" }, ". The draw was right; the result wasn't."],
+  ["You built this lineup around {starName} and {starName} forgot what he was here for — ", { stamp: "choke" }, " — premium fold."],
+  ["You drew {starName} expecting fireworks and got a sparkler — ", { stamp: "choke" }, " — receipt's printed."],
+  [{ stamp: "choke" }, ". You drew {starName} as your big play and the play stayed in the locker."],
+  ["A {winTierLow} hand off a lineup that looked like a winner on paper. ", { stamp: "choke" }, ". Loaded build, hollow result."],
+  ["Stars on paper, role players on the floor — the whole lineup folded around you — ", { stamp: "choke" }, " — own the fold."],
+  ["You read the slate. You picked the right names. The right names didn't translate. ", { stamp: "choke" }, ". Premium fold."],
 ];
 
 const TOP_MISS: Line[] = [
@@ -898,7 +904,7 @@ export interface TopSlotFramingArgs {
    *   - tier-gate filter for HELD_ONE / HELD_TWO_PLUS (these banks
    *     only fire on BUST/ROOKIE/STARTER; ALL_STAR+ routes to
    *     NO_HOLDS so the {winTierLow}-bearing copy doesn't read
-   *     contradictorily on a big-tier "bad beat").
+   *     contradictorily on a big-tier choke).
    *   - `{winTierLow}` substitution into CHOKE bank lines.
    *   - `tier: "{winTier}"` sentinel substitution into win_tier
    *     StampTokens (TOP_BIG_SCORE).
@@ -1676,28 +1682,34 @@ export function selectIntroAnchor(args: SelectIntroAnchorArgs): RecipientIntroAn
 //   win_tier StampTokens leave tier undefined — renderer falls back to
 //     the winTier prop H2HRecipientPlay passes (senderHand.tier).
 
+// Phase 2a voice re-tone (2026-06-03, lock: docs/challenge-landing-v2-phase2a-
+// voice-and-generator-lock.md). Recipient-facing intros land the §3a savage
+// register — name the choke, needle the SENDER personally ("talked himself
+// into," "would you?"), provoke the recipient to accept. §3 still locks the
+// PLAYER ({name}) — choke language attaches to {challengerName}'s decision,
+// never the player on the card. §2 length + clean rules hold.
 const INTRO_CHOKE_CULTURE: Line[] = [
-  ["{challengerName} bet the whole hand on {name} and still got buried — ", { stamp: "choke" }, ". {cultureLine} Same six cards are right here."],
-  ["{challengerName} held {name} and watched {targetScore} come up short. ", { stamp: "choke" }, " — {cultureLine} See if you read it cleaner."],
-  ["The conviction pick was {name}, and the conviction was misplaced — ", { stamp: "choke" }, ". {cultureLine} Your hand now."],
-  ["{challengerName} leaned the whole {targetScore} on {name} and it tipped over. ", { stamp: "choke" }, " — {cultureLine}"],
-  [{ stamp: "choke" }, ". {challengerName} trusted {name} and got {targetScore} for it. {cultureLine} You get the better look."],
-  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on — ", { stamp: "choke" }, ". Your shot at the same slate."],
+  ["{challengerName} held {name} and still bricked it — ", { stamp: "choke" }, ", {targetScore} flat. {cultureLine} Same six are yours — read it cleaner."],
+  ["{challengerName} talked himself into {name} and got buried for it — ", { stamp: "choke" }, ", {targetScore}. {cultureLine} Prove you'd have read it cleaner, or admit you'd have choked the same."],
+  ["The conviction pick was {name}. The conviction was the problem. ", { stamp: "choke" }, " — {targetScore} on the board. {cultureLine} Your turn to actually pull it off."],
+  ["{challengerName} leaned the whole {targetScore} on {name} and watched it tip over. ", { stamp: "choke" }, " — {cultureLine} Same hand says you'd have done it cleaner. Show your work."],
+  [{ stamp: "choke" }, ". {challengerName} trusted {name} for {targetScore} and the trust was the trap. {cultureLine} Better look incoming — don't blow it the same way."],
+  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on and never recovered from. ", { stamp: "choke" }, ". You think you'd have held smarter — prove it."],
 ];
 
 const INTRO_CHOKE_NAME: Line[] = [
-  ["{challengerName} held {name} and the rest of the hand quit on him — ", { stamp: "choke" }, ", {targetScore} on the board. Beat it."],
-  ["{name} was supposed to be the safe one. ", { stamp: "choke" }, " — {challengerName} settled for {targetScore}."],
-  ["Premium pick, premium letdown. {challengerName} rode {name} to a ", { stamp: "choke" }, " and left you {targetScore} to chase."],
-  [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed. Same six cards."],
-  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". Your hand to fix it."],
+  ["{challengerName} held {name} and choked the rest of the slate around it — ", { stamp: "choke" }, ", {targetScore} flat. Beat it or admit you'd have done the same."],
+  ["{name} was supposed to be the safe one. {challengerName} settled for {targetScore} and a ", { stamp: "choke" }, ". You're not better than that — prove me wrong."],
+  ["Premium pick, premium fold. {challengerName} rode {name} into a ", { stamp: "choke" }, " and left you {targetScore} to either clear or match."],
+  [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed up. Same six. Show me you'd have held different."],
+  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". The only way to look smarter is to actually be smarter."],
 ];
 
 const INTRO_CHOKE_GENERIC: Line[] = [
-  ["{challengerName} got cooked by his own holds — ", { stamp: "choke" }, ", {targetScore} on the board. Do better."],
-  [{ stamp: "choke" }, ". {challengerName} couldn't drag the same six past {targetScore}. Your turn to try."],
-  ["Looked like a winner on paper for {challengerName}. ", { stamp: "choke" }, " — {targetScore} is what it actually paid."],
-  ["{challengerName} read the slate; the slate didn't read the script — ", { stamp: "choke" }, ", {targetScore} to beat."],
+  ["{challengerName} choked {targetScore} with a loaded hand — ", { stamp: "choke" }, ". The only worse look is scrolling past without trying."],
+  [{ stamp: "choke" }, ". {challengerName} couldn't drag the same six past {targetScore}. Either you can or you can't — find out."],
+  ["Looked like a winner on paper for {challengerName}. It paid {targetScore}. ", { stamp: "choke" }, " — same hand, your move, no excuses."],
+  ["{challengerName} read the slate; the hands didn't read the room — ", { stamp: "choke" }, ", {targetScore} to beat. Prove you'd hold steadier."],
 ];
 
 const INTRO_BIG_SCORE_CULTURE: Line[] = [
@@ -1764,22 +1776,25 @@ const INTRO_DEFAULT: Line[] = [
 
 // ── Recipient Stage 2 banks (Deal nudges — verb-first, shorter) ──────────
 
+// Phase 2a voice re-tone (2026-06-03): Stage 2 nudges run shorter (F4) but
+// still carry a take. §3a register: needle the sender's decision, dare the
+// recipient to do better. Players ({name}) stay untouched.
 const NUDGE_CHOKE_CULTURE: Line[] = [
-  ["{challengerName} already found the trap door. ", { stamp: "choke" }, " — {cultureLine} Your draw."],
-  ["Hold what {challengerName} wishes he had. {cultureLine}"],
-  ["{name} sank {challengerName} once — ", { stamp: "choke" }, ". {cultureLine} Hold smarter."],
+  ["{challengerName} already found the trap door. ", { stamp: "choke" }, " — {cultureLine} Hold like you've got a spine."],
+  ["Hold what {challengerName} talked himself out of. {cultureLine}"],
+  ["{name} sank {challengerName} once — ", { stamp: "choke" }, ". {cultureLine} Don't repeat the choke."],
 ];
 
 const NUDGE_CHOKE_NAME: Line[] = [
-  ["Hold {name} — {challengerName} did, and ate a ", { stamp: "choke" }, " for it. Your draw to fix it."],
-  ["{challengerName} got cooked by {name}. Pick the holds he should have."],
-  ["Hold what {challengerName} didn't. ", { stamp: "choke" }, " says he guessed wrong."],
+  ["Hold {name} — {challengerName} did, and ", { stamp: "choke" }, " was waiting for him. Show how the same hand survives a steadier grip."],
+  ["{challengerName} guessed wrong on {name} and ate a ", { stamp: "choke" }, " for it. Pick the holds he didn't have the nerve to pick."],
+  ["Hold what {challengerName} flinched on. ", { stamp: "choke" }, " says he blinked first."],
 ];
 
 const NUDGE_CHOKE_GENERIC: Line[] = [
-  ["{challengerName}'s board already broke — ", { stamp: "choke" }, ". Your draw."],
-  ["Pick the holds and redeem the slate {challengerName} fumbled."],
-  ["Hold sharper than {challengerName} did. That's the whole game."],
+  ["{challengerName}'s board already broke — ", { stamp: "choke" }, ". Don't break the same way."],
+  ["Pick the holds {challengerName} fumbled. Show some spine."],
+  ["Hold sharper than {challengerName} did, or join him in the ", { stamp: "choke" }, " column."],
 ];
 
 const NUDGE_BIG_SCORE_CULTURE: Line[] = [

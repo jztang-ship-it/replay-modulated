@@ -36,6 +36,23 @@ Sport-specific *vocabulary, lore, and examples* live in the per-sport voice modu
 
 ---
 
+## 3a. Challenge-surface user needling (challenge surfaces only)
+
+**Deliberate amendment, 2026-06-03**, per `docs/challenge-landing-v2-phase2a-voice-and-generator-lock.md`. §3 above is a defamation rail for REAL PUBLIC FIGURES (the players named in culture lines) and stays 100% intact. What this subsection loosens is the *separate* "never get personal with the user" instinct — and the users (sender + recipient) are NOT public figures.
+
+On challenge initiation, recipient intro / landing, and resolution surfaces, Chad MAY needle the **sender** and **recipient** personally — their decisions, their competence, their nerve ("you'd have choked the same," "talked himself into it"). This is a deliberate exception to the general "needle the play, not the person" instinct, made because acceptance is driven by provocation ("I'd never blow that").
+
+**Unchanged and still LOCKED:**
+- Real players keep the full §3 protection. No player gets called a choker; choke language attaches to the user's decision, never to the player on the card.
+- §2 language rules hold (no profanity, no violence metaphors, nothing that wouldn't run in a beer commercial).
+- "Not overly offensive" — the spice is provocation about decisions, not insult about the person.
+
+**Safety valve — surface routing:** the savage line lives on the *recipient's* view (sender never sees it); the sender's own prompt stays send-friendly self-roast. The savage-vs-send-friendly split is what makes the amplified register safe to ship — the sender doesn't see "you'd have choked the same," they see "had the studs and choked it. Misery loves company — go find some."
+
+This amendment lives in §7 (the applied register) as well: the choke recipient banks are written to this ceiling. See §7 below.
+
+---
+
 ## 4. Frame rules (selection banks vs. culture entries)
 
 Culture entries are 3rd-person ABOUT a player (generated from the per-sport voice module). **Frames** are the hand-authored selection-bank lines in `chadChallenge.ts` that wrap a runtime-chosen `{cultureLine}`. They follow §2–3 PLUS:
@@ -76,29 +93,31 @@ Paste-ready `Line[]`. Tokens and `StampToken` shapes match the current selector 
 
 ### Stage 1 — `INTRO_*`
 
+**Phase 2a re-tone (2026-06-03, lock: `docs/challenge-landing-v2-phase2a-voice-and-generator-lock.md`):** the previous sympathetic bank ("buried," "couldn't drag the same six past") missed the §3a register — and called the stamped result a "bad beat" in prose while the stamp says CHOKE. Re-tone names the choke explicitly, needles the sender personally (per §3a), and provokes the recipient. Bank constants also renamed `INTRO_BAD_BEAT_* → INTRO_CHOKE_*`.
+
 ```ts
-const INTRO_BAD_BEAT_CULTURE: Line[] = [
-  ["{challengerName} bet the whole hand on {name} and still got buried — ", { stamp: "bad_beat" }, ". {cultureLine} Same six cards are right here."],
-  ["{challengerName} held {name} and watched {targetScore} come up short. ", { stamp: "bad_beat" }, " — {cultureLine} See if you read it cleaner."],
-  ["The conviction pick was {name}, and the conviction was misplaced — ", { stamp: "bad_beat" }, ". {cultureLine} Your hand now."],
-  ["{challengerName} leaned the whole {targetScore} on {name} and it tipped over. ", { stamp: "bad_beat" }, " — {cultureLine}"],
-  [{ stamp: "bad_beat" }, ". {challengerName} trusted {name} and got {targetScore} for it. {cultureLine} You get the better look."],
-  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on — ", { stamp: "bad_beat" }, ". Your shot at the same slate."],
+const INTRO_CHOKE_CULTURE: Line[] = [
+  ["{challengerName} held {name} and still bricked it — ", { stamp: "choke" }, ", {targetScore} flat. {cultureLine} Same six are yours — read it cleaner."],
+  ["{challengerName} talked himself into {name} and got buried for it — ", { stamp: "choke" }, ", {targetScore}. {cultureLine} Prove you'd have read it cleaner, or admit you'd have choked the same."],
+  ["The conviction pick was {name}. The conviction was the problem. ", { stamp: "choke" }, " — {targetScore} on the board. {cultureLine} Your turn to actually pull it off."],
+  ["{challengerName} leaned the whole {targetScore} on {name} and watched it tip over. ", { stamp: "choke" }, " — {cultureLine} Same hand says you'd have done it cleaner. Show your work."],
+  [{ stamp: "choke" }, ". {challengerName} trusted {name} for {targetScore} and the trust was the trap. {cultureLine} Better look incoming — don't blow it the same way."],
+  ["{cultureLine} That's the {name} {challengerName} hung {targetScore} on and never recovered from. ", { stamp: "choke" }, ". You think you'd have held smarter — prove it."],
 ];
 
-const INTRO_BAD_BEAT_NAME: Line[] = [
-  ["{challengerName} held {name} and the rest of the hand quit on him — ", { stamp: "bad_beat" }, ", {targetScore} on the board. Beat it."],
-  ["{name} was supposed to be the safe one. ", { stamp: "bad_beat" }, " — {challengerName} settled for {targetScore}."],
-  ["Premium pick, premium letdown. {challengerName} rode {name} to a ", { stamp: "bad_beat" }, " and left you {targetScore} to chase."],
-  [{ stamp: "bad_beat" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed. Same six cards."],
-  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "bad_beat" }, ". Your hand to fix it."],
+const INTRO_CHOKE_NAME: Line[] = [
+  ["{challengerName} held {name} and choked the rest of the slate around it — ", { stamp: "choke" }, ", {targetScore} flat. Beat it or admit you'd have done the same."],
+  ["{name} was supposed to be the safe one. {challengerName} settled for {targetScore} and a ", { stamp: "choke" }, ". You're not better than that — prove me wrong."],
+  ["Premium pick, premium fold. {challengerName} rode {name} into a ", { stamp: "choke" }, " and left you {targetScore} to either clear or match."],
+  [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed up. Same six. Show me you'd have held different."],
+  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". The only way to look smarter is to actually be smarter."],
 ];
 
-const INTRO_BAD_BEAT_GENERIC: Line[] = [
-  ["{challengerName} got cooked by his own holds — ", { stamp: "bad_beat" }, ", {targetScore} on the board. Do better."],
-  [{ stamp: "bad_beat" }, ". {challengerName} couldn't drag the same six past {targetScore}. Your turn to try."],
-  ["Looked like a winner on paper for {challengerName}. ", { stamp: "bad_beat" }, " — {targetScore} is what it actually paid."],
-  ["{challengerName} read the slate; the slate didn't read the script — ", { stamp: "bad_beat" }, ", {targetScore} to beat."],
+const INTRO_CHOKE_GENERIC: Line[] = [
+  ["{challengerName} choked {targetScore} with a loaded hand — ", { stamp: "choke" }, ". The only worse look is scrolling past without trying."],
+  [{ stamp: "choke" }, ". {challengerName} couldn't drag the same six past {targetScore}. Either you can or you can't — find out."],
+  ["Looked like a winner on paper for {challengerName}. It paid {targetScore}. ", { stamp: "choke" }, " — same hand, your move, no excuses."],
+  ["{challengerName} read the slate; the hands didn't read the room — ", { stamp: "choke" }, ", {targetScore} to beat. Prove you'd hold steadier."],
 ];
 
 const INTRO_BIG_SCORE_CULTURE: Line[] = [
@@ -167,22 +186,22 @@ const INTRO_DEFAULT: Line[] = [
 ### Stage 2 — `NUDGE_*`
 
 ```ts
-const NUDGE_BAD_BEAT_CULTURE: Line[] = [
-  ["{challengerName} already found the trap door. ", { stamp: "bad_beat" }, " — {cultureLine} Your draw."],
-  ["Hold what {challengerName} wishes he had. {cultureLine}"],
-  ["{name} sank {challengerName} once — ", { stamp: "bad_beat" }, ". {cultureLine} Hold smarter."],
+const NUDGE_CHOKE_CULTURE: Line[] = [
+  ["{challengerName} already found the trap door. ", { stamp: "choke" }, " — {cultureLine} Hold like you've got a spine."],
+  ["Hold what {challengerName} talked himself out of. {cultureLine}"],
+  ["{name} sank {challengerName} once — ", { stamp: "choke" }, ". {cultureLine} Don't repeat the choke."],
 ];
 
-const NUDGE_BAD_BEAT_NAME: Line[] = [
-  ["Hold {name} — {challengerName} did, and ate a ", { stamp: "bad_beat" }, " for it. Your draw to fix it."],
-  ["{challengerName} got cooked by {name}. Pick the holds he should have."],
-  ["Hold what {challengerName} didn't. ", { stamp: "bad_beat" }, " says he guessed wrong."],
+const NUDGE_CHOKE_NAME: Line[] = [
+  ["Hold {name} — {challengerName} did, and ", { stamp: "choke" }, " was waiting for him. Show how the same hand survives a steadier grip."],
+  ["{challengerName} guessed wrong on {name} and ate a ", { stamp: "choke" }, " for it. Pick the holds he didn't have the nerve to pick."],
+  ["Hold what {challengerName} flinched on. ", { stamp: "choke" }, " says he blinked first."],
 ];
 
-const NUDGE_BAD_BEAT_GENERIC: Line[] = [
-  ["{challengerName}'s board already broke — ", { stamp: "bad_beat" }, ". Your draw."],
-  ["Pick the holds and redeem the slate {challengerName} fumbled."],
-  ["Hold sharper than {challengerName} did. That's the whole game."],
+const NUDGE_CHOKE_GENERIC: Line[] = [
+  ["{challengerName}'s board already broke — ", { stamp: "choke" }, ". Don't break the same way."],
+  ["Pick the holds {challengerName} fumbled. Show some spine."],
+  ["Hold sharper than {challengerName} did, or join him in the ", { stamp: "choke" }, " column."],
 ];
 
 const NUDGE_BIG_SCORE_CULTURE: Line[] = [
