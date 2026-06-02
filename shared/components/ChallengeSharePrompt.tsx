@@ -254,6 +254,11 @@ export function ChallengeSharePrompt({
     // (anonymous → Google → resume) would write snapshots with
     // holdsRecorded:true over all-false wasHeld, defeating the phase.
     const enrichedInitialRoster = enrichInitialRosterForChallenge(initialRoster, roster);
+    // Phase 0 Commit 2 (2026-06-02): also capture the four Phase-5c-S1
+    // trigger-detail fields so the resumed POST body matches the normal
+    // useChallengeShare path exactly. Without these, OAuth-resumed
+    // challenges landed with NULL trigger-detail and the recipient intro
+    // selector fell back to generic per-trigger copy.
     writePendingChallengeShare({
       hand_id: handId ?? crypto.randomUUID(),
       sport,
@@ -262,6 +267,10 @@ export function ChallengeSharePrompt({
       initial_roster_serialized: serializeRoster(enrichedInitialRoster),
       trigger_type: triggerResult.trigger,
       share_headline: shareHeadline ?? triggerResult.headline ?? "",
+      near_miss_gap: triggerResult.nearMissGap ?? null,
+      near_miss_next_tier: triggerResult.nearMissNextTier ?? null,
+      anchor_base_player_id: triggerResult.anchorBasePlayerId ?? null,
+      top_game_tier: triggerResult.topGameTier ?? null,
     });
   };
   const authModal = authModalOpen && (

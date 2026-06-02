@@ -49,6 +49,19 @@ export interface PendingChallengeSharePayload {
   initial_roster_serialized: Record<string, unknown>;
   trigger_type: string;
   share_headline: string;
+  /** Phase 0 challenge-snapshot-enrichment Commit 2 (2026-06-02): the
+   *  four Phase-5c-S1 trigger-detail fields captured pre-redirect so an
+   *  OAuth-resumed challenge is born with identical metadata to one
+   *  created via the normal useChallengeShare path. Mirrors the POST
+   *  body shape in useChallengeShare.createChallenge — `?? null`-safe;
+   *  populated only when evaluateTrigger emitted them. The API
+   *  (api/challenge/create.ts:31, :59-62) treats them as optional and
+   *  writes NULL when absent, so a legacy resume payload from a session
+   *  that pre-dated this capture stays compatible. */
+  near_miss_gap?: number | null;
+  near_miss_next_tier?: string | null;
+  anchor_base_player_id?: string | null;
+  top_game_tier?: string | null;
   /** ms epoch — used for staleness validation. */
   created_at: number;
 }
@@ -114,6 +127,15 @@ export function ResumeShareSurface() {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+      // Phase 0 challenge-snapshot-enrichment Commit 2 (2026-06-02):
+      // forward the four Phase-5c-S1 trigger-detail fields to the API so
+      // an OAuth-resumed challenge carries identical metadata to one
+      // created via the normal useChallengeShare path. Without these,
+      // resumed rare_pull / miss / bad_beat / big_score challenges
+      // landed with NULL near_miss_gap / near_miss_next_tier /
+      // anchor_base_player_id / top_game_tier — the recipient intro
+      // selector then fell back to per-trigger generic copy because the
+      // fields the lock-T2 selectors read were missing.
       const body = {
         hand_id: pending.hand_id,
         sport: pending.sport,
@@ -123,6 +145,10 @@ export function ResumeShareSurface() {
         challenger_name: displayName,
         trigger_type: pending.trigger_type,
         share_headline: pending.share_headline,
+        near_miss_gap: pending.near_miss_gap ?? null,
+        near_miss_next_tier: pending.near_miss_next_tier ?? null,
+        anchor_base_player_id: pending.anchor_base_player_id ?? null,
+        top_game_tier: pending.top_game_tier ?? null,
       };
       const resp = await fetch("/api/challenge/create", {
         method: "POST",

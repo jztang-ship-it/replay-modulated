@@ -160,6 +160,76 @@ describe("ResumeShareSurface mount behavior", () => {
     expect(sessionStorage.getItem(PENDING_SHARE_KEY)).toBeNull();
   });
 
+  // Phase 0 Commit 2 (2026-06-02) — resume-path trigger-detail parity.
+  // The normal useChallengeShare.createChallenge POST forwards four
+  // Phase-5c-S1 detail fields (near_miss_gap, near_miss_next_tier,
+  // anchor_base_player_id, top_game_tier). Before this commit, the
+  // resume path lost them — OAuth-resumed challenges landed with NULL
+  // trigger-detail and the recipient intro selector fell back to
+  // generic per-trigger copy. Test: a resumed payload carrying the four
+  // fields POSTs them through verbatim.
+  it("forwards Phase-5c-S1 trigger-detail fields on Send challenge POST (rare_pull anchor + topGameTier)", async () => {
+    writePendingChallengeShare({
+      hand_id: "hand-rare",
+      sport: "basketball",
+      season: "2425",
+      total_fp: 285.5,
+      initial_roster_serialized: { cards: [] },
+      trigger_type: "rare_pull",
+      share_headline: "You pulled a legendary game",
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      anchor_base_player_id: "p_jokic",
+      top_game_tier: "record",
+    });
+    render(withAuth({ isAnonymous: false, user: signedInUser }, (
+      <ResumeShareSurface />
+    )));
+    fireEvent.click(screen.getByRole("button", { name: /send challenge/i }));
+    await waitFor(() => {
+      const calls = (globalThis.fetch as any).mock.calls as Array<[string, RequestInit]>;
+      const createCall = calls.find(([url]) => String(url) === "/api/challenge/create");
+      expect(createCall).toBeTruthy();
+    });
+    const calls = (globalThis.fetch as any).mock.calls as Array<[string, RequestInit]>;
+    const createCall = calls.find(([url]) => String(url) === "/api/challenge/create")!;
+    const body = JSON.parse(String(createCall[1].body));
+    expect(body.trigger_type).toBe("rare_pull");
+    expect(body.anchor_base_player_id).toBe("p_jokic");
+    expect(body.top_game_tier).toBe("record");
+    // miss-only fields stay null on a rare_pull trigger (mirrors the
+    // normal-path POST shape where unset detail fields go as null).
+    expect(body.near_miss_gap).toBeNull();
+    expect(body.near_miss_next_tier).toBeNull();
+  });
+
+  it("legacy pre-Commit-2 payload (no trigger-detail captured) POSTs the four fields as null", async () => {
+    // A pending payload from a session that pre-dated Commit 2 wouldn't
+    // have captured the four fields. The POST body must still include
+    // them — as null — so the API row is created with explicit NULLs
+    // (matching the normal-path shape). api/challenge/create.ts:59-62
+    // already treats missing fields as null; pinning the wire shape
+    // keeps the contract explicit and the row identical to today's
+    // normal-path "default" trigger.
+    writePendingChallengeShare(samplePayload());
+    render(withAuth({ isAnonymous: false, user: signedInUser }, (
+      <ResumeShareSurface />
+    )));
+    fireEvent.click(screen.getByRole("button", { name: /send challenge/i }));
+    await waitFor(() => {
+      const calls = (globalThis.fetch as any).mock.calls as Array<[string, RequestInit]>;
+      const createCall = calls.find(([url]) => String(url) === "/api/challenge/create");
+      expect(createCall).toBeTruthy();
+    });
+    const calls = (globalThis.fetch as any).mock.calls as Array<[string, RequestInit]>;
+    const createCall = calls.find(([url]) => String(url) === "/api/challenge/create")!;
+    const body = JSON.parse(String(createCall[1].body));
+    expect(body.near_miss_gap).toBeNull();
+    expect(body.near_miss_next_tier).toBeNull();
+    expect(body.anchor_base_player_id).toBeNull();
+    expect(body.top_game_tier).toBeNull();
+  });
+
   it("on Send challenge tap, fires POST and clears sessionStorage", async () => {
     writePendingChallengeShare(samplePayload());
     render(withAuth({ isAnonymous: false, user: signedInUser }, (
