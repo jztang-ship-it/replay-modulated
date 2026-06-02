@@ -1654,8 +1654,52 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         gridTemplateRows: "auto auto",
         rowGap: BATTLEFIELD_ROW_GAP_PX,
         width: "100%",
+        // Stacking context for the reveal score panel below. Without
+        // it the panel's z-index:-1 escapes toward `body` and the
+        // panel disappears under the page gradient. `isolation:isolate`
+        // is a stacking-only property — zero layout impact, so the
+        // numbers-rect proof and the no-jump strip parity contract
+        // both survive untouched.
+        isolation: "isolate",
       }}
     >
+          {/* Step 2 of the results-page lock — reveal-side score-cluster
+              backing panel. The two right-rail totals + the delta float
+              + the (transient) momentum tag were reading as floating in
+              air; this panel gives them a surface to rest on without
+              changing where they sit. Sized 100px wide × full
+              battlefield height, centered on the 80px right rail via
+              right: -10. Paints BEHIND the in-flow ScoreCells and the
+              absolute floats via z-index:-1 + the isolation:isolate
+              above. The alternative z-order (panel z-index:0 + score
+              wrappers above in natural paint order) would require
+              putting z-index on the score wrappers — which lives in
+              H2HScoreRail.tsx and would leak into the overlay surface;
+              we keep this change reveal-only by sinking the panel
+              instead. No backdrop-filter: would smear the hero-card
+              motion behind it, muddy the leader-glow contrast, and
+              behave inconsistently across browsers / stacking contexts.
+              No border: the rounded soft-shadowed surface reads as a
+              surface the numbers rest on rather than a box that
+              contains them. Static decoration — reduced-motion has
+              nothing to gate. */}
+          <div
+            data-h2h-reveal-score-panel="true"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              right: -10,
+              width: 100,
+              zIndex: -1,
+              pointerEvents: "none",
+              borderRadius: 16,
+              background: "rgba(255,255,255,0.06)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
+            }}
+          />
+
           {/* Left rail — empty on the arc. Spans both hero rows so the
               overlay's headline + trash-talk land at the same vertical
               bounds. */}
