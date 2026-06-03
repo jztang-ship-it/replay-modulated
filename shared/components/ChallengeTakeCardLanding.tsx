@@ -67,6 +67,15 @@ export interface ChallengeLandingData {
   near_miss_next_tier?: string | null;
   anchor_base_player_id?: string | null;
   top_game_tier?: "record" | "career" | "season" | null;
+  /** Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+   *  ac4b032). The /api/headline-authored line stored at create time.
+   *  When present, the TAKE renders this verbatim (uppercase via CSS)
+   *  instead of takeCard.take. When null/undefined (legacy rows or any
+   *  generation failure), the TAKE falls back to the take card output
+   *  exactly as it did pre-Phase-3.2. The client NEVER writes a bank
+   *  pick into this field, so the fallback is the only path that can
+   *  surface a take-card string here. */
+  authored_headline?: string | null;
 }
 
 interface Props {
@@ -435,7 +444,15 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           textTransform: "uppercase",
         }}
       >
-        {takeCard.take}
+        {/* Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-
+            lock.md, ac4b032): render the /api/headline-authored line
+            when present; fall back to the take card generator's TAKE
+            field when null/undefined. textTransform:uppercase above
+            renders both at the same visual register. The client never
+            writes a bank pick into authored_headline, so the take-
+            card fallback path is the ONLY way a non-authored string
+            can land here. */}
+        {data.authored_headline || takeCard.take}
         {trigger !== "default" && (
           <>
             {" "}

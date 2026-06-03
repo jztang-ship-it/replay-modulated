@@ -58,6 +58,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     near_miss_next_tier: data.near_miss_next_tier ?? null,
     anchor_base_player_id: data.anchor_base_player_id ?? null,
     top_game_tier: data.top_game_tier ?? null,
+    // Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+    // ac4b032). The /api/headline-authored line stored at create time.
+    // NULL on legacy rows (pre-migration 013) and on any row where
+    // /api/headline returned null (timeout, validator, sentinel, error)
+    // and the client correctly skipped writing a bank pick into this
+    // field. The landing renders this as the TAKE when present and
+    // falls back to takeCard.take otherwise.
+    authored_headline: data.authored_headline ?? null,
     card_url: `https://replayifs.com/api/share/card?challenge_id=${data.challenge_id}`,
   });
 }

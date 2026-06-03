@@ -140,20 +140,37 @@ export function ChallengeSharePrompt({
   const [isCraftingHeadline, setIsCraftingHeadline] = useState(false);
 
   /** Phase 3 step 1: fetch an authored headline (via /api/headline) or
-   *  fall back to the bank-pick `shareHeadline` prop. Returns the string
-   *  that should land in the create POST's share_headline field AND the
-   *  OAuth-resume sessionStorage payload's share_headline field.
+   *  fall back to the bank-pick `shareHeadline` prop. Returns BOTH:
+   *    - effective: the string for `share_headline` (authored OR bank
+   *                 fallback). Powers the OG share-card, native share-
+   *                 sheet text, and the sender's outgoing message.
+   *    - authored:  the strictly-validated /api/headline output, OR null
+   *                 on every failure path (default trigger, network
+   *                 error, validator-null, timeout, sentinel). Persisted
+   *                 into the new `authored_headline` column so the
+   *                 landing's TAKE can render it without ever rendering
+   *                 a bank pick.
+   *
+   *  Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+   *  ac4b032): the split is the load-bearing rule — a bank string must
+   *  NEVER reach the on-page TAKE. Keeping authored separate from the
+   *  effective fallback means a careless write into share_headline can't
+   *  leak through.
    *
    *  Skip-and-fall-back paths:
    *    - buildCommentaryFacts returns kind:"skip" (default trigger) →
-   *      use the bank pick verbatim, do not POST.
+   *      use the bank pick verbatim, authored=null, do not POST.
    *    - api/headline returns null (timeout, validator-null, sentinel) →
-   *      use the bank pick verbatim. Create is never blocked.
+   *      use the bank pick verbatim, authored=null. Create is never
+   *      blocked.
    *
    *  The bank pick (`shareHeadline` prop, computed in GameView via
    *  `chadShareTrashTalk`) is the floor — Phase 3 is "strictly additive,
    *  never worse than today." */
-  async function settleHeadline(): Promise<string> {
+  async function settleHeadline(): Promise<{
+    effective: string;
+    authored: string | null;
+  }> {
     const fallback = shareHeadline ?? triggerResult.headline ?? "";
     const factsResult = buildCommentaryFacts({
       surface: "challenge_headline",
@@ -181,12 +198,12 @@ export function ChallengeSharePrompt({
       nearMissGap: triggerResult.nearMissGap ?? null,
       nearMissNextTier: triggerResult.nearMissNextTier ?? null,
     });
-    if (factsResult.kind === "skip") return fallback;
+    if (factsResult.kind === "skip") return { effective: fallback, authored: null };
 
     setIsCraftingHeadline(true);
     try {
       const authored = await fetchAuthoredHeadline(factsResult.facts);
-      return authored ?? fallback;
+      return { effective: authored ?? fallback, authored };
     } finally {
       setIsCraftingHeadline(false);
     }
@@ -226,11 +243,12 @@ export function ChallengeSharePrompt({
   async function continueShareAfterName(nameOverride?: string) {
     track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
     // Phase 3 step 1: settle the headline BEFORE the create POST so the
-    // authored string lands in the row's share_headline column (where
-    // both the landing AND the OG share card read from). When api/
-    // headline returns null OR the trigger is `default`, fall back to
-    // today's chadShareTrashTalk bank pick — create is never blocked.
-    const effectiveHeadline = await settleHeadline();
+    // authored string lands on the row. Phase 3.2: the settle now
+    // returns BOTH the effective (authored OR bank) and the strictly-
+    // authored (or null) values. effective → share_headline (OG card +
+    // share preview); authored → authored_headline (the column the
+    // landing's TAKE reads). Create is never blocked.
+    const { effective: effectiveHeadline, authored: authoredHeadline } = await settleHeadline();
     let cid = challengeId;
     if (!cid) {
       cid = await createChallenge({
@@ -247,6 +265,7 @@ export function ChallengeSharePrompt({
         challengerName: nameOverride ?? getNickname() ?? "Anonymous",
         serializeRoster,
         shareHeadline: effectiveHeadline,
+        authoredHeadline,
         // Pass the pre-evaluated trigger through so the DB row's
         // trigger_type matches what fired on the prompt. Without this,
         // useChallengeShare's re-evaluation misses topGameTier and
@@ -257,9 +276,9 @@ export function ChallengeSharePrompt({
     if (!cid) return;
     const url = `${window.location.origin}/${sport}/challenge/${cid}`;
     // Share text mirrors what landed in share_headline so the recipient
-    // sees the same line on the share preview, the landing, and the OG
-    // card. effectiveHeadline already incorporates the bank-pick
-    // fallback for null / default-trigger cases.
+    // sees the same line on the share preview, the OG card, and the
+    // sender's outgoing message. effectiveHeadline already incorporates
+    // the bank-pick fallback for null / default-trigger cases.
     await shareChallenge(effectiveHeadline, url, "");
     if (!navigator.share) {
       setCopied(true);
@@ -319,12 +338,13 @@ export function ChallengeSharePrompt({
   const handlePersistBeforeGoogleRedirect = async () => {
     // Phase 3 step 1: settle the headline BEFORE the sessionStorage
     // write. The OAuth-resume path (ResumeShareSurface.handlePostChallenge)
-    // reads `share_headline` from sessionStorage and posts it verbatim
-    // to /api/challenge/create — if we wrote the bank pick here, the
-    // resume path would degrade to today's behavior even when /api/
-    // headline could have authored a line. RegisterModal.handleGoogle
-    // now awaits this hook so the redirect doesn't fire mid-fetch.
-    const effectiveHeadline = await settleHeadline();
+    // reads share_headline + authored_headline from sessionStorage and
+    // posts them verbatim to /api/challenge/create — if we wrote the
+    // bank pick into both here, the resume path would degrade to today's
+    // behavior even when /api/headline could have authored a line.
+    // RegisterModal.handleGoogle awaits this hook so the redirect doesn't
+    // fire mid-fetch.
+    const { effective: effectiveHeadline, authored: authoredHeadline } = await settleHeadline();
 
     // Phase 0 challenge-snapshot-enrichment (2026-06-02): mirror the
     // useChallengeShare create-path enrichment here. The sessionStorage
@@ -346,6 +366,9 @@ export function ChallengeSharePrompt({
       initial_roster_serialized: serializeRoster(enrichedInitialRoster),
       trigger_type: triggerResult.trigger,
       share_headline: effectiveHeadline,
+      // Phase 3.2: persist the authored value (or null) so the resume
+      // path POSTs it into authored_headline on the create row.
+      authored_headline: authoredHeadline,
       near_miss_gap: triggerResult.nearMissGap ?? null,
       near_miss_next_tier: triggerResult.nearMissNextTier ?? null,
       anchor_base_player_id: triggerResult.anchorBasePlayerId ?? null,

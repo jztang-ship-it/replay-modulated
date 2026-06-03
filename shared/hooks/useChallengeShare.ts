@@ -33,6 +33,14 @@ export interface CreateChallengeArgs {
    *  used instead of evaluateTrigger().headline so big-game / season-reel
    *  copy lands on the landing page + share card. */
   shareHeadline?: string;
+  /** Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+   *  ac4b032). The validated authored line from /api/headline, OR null
+   *  when generation failed and the caller fell back to the bank pick.
+   *  Persisted into the new `authored_headline` column (NOT
+   *  `share_headline`) so the accept page's TAKE never renders a
+   *  bank string. Caller responsibility: pass the raw fetchAuthored
+   *  Headline return value verbatim — null on every failure path. */
+  authoredHeadline?: string | null;
   /** Pre-evaluated trigger from the caller. REQUIRED (Phase 5c S1,
    *  2026-05-31): re-evaluating inside this hook would lose the
    *  topGameTier + starBasePlayerId context that only the call site has
@@ -115,6 +123,10 @@ export function useChallengeShare(sportKey: string) {
         near_miss_next_tier: trigger.nearMissNextTier ?? null,
         anchor_base_player_id: trigger.anchorBasePlayerId ?? null,
         top_game_tier: trigger.topGameTier ?? null,
+        // Phase 3.2: authored line lands in its own column so the
+        // landing's TAKE can distinguish "authored available" from
+        // "fell back to bank pick." Null = render takeCard.take.
+        authored_headline: args.authoredHeadline ?? null,
       };
       const resp = await fetch("/api/challenge/create", {
         method: "POST",

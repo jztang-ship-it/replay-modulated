@@ -62,6 +62,14 @@ export interface PendingChallengeSharePayload {
   near_miss_next_tier?: string | null;
   anchor_base_player_id?: string | null;
   top_game_tier?: string | null;
+  /** Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+   *  ac4b032). The /api/headline-authored line captured pre-redirect.
+   *  Null when generation failed (timeout, validator-null, sentinel,
+   *  default trigger) — in which case the resumed POST writes null to
+   *  the authored_headline column and the landing falls back to the
+   *  take card. Distinct from share_headline (which still carries the
+   *  bank pick for the OG card / native share text). */
+  authored_headline?: string | null;
   /** ms epoch — used for staleness validation. */
   created_at: number;
 }
@@ -149,6 +157,10 @@ export function ResumeShareSurface() {
         near_miss_next_tier: pending.near_miss_next_tier ?? null,
         anchor_base_player_id: pending.anchor_base_player_id ?? null,
         top_game_tier: pending.top_game_tier ?? null,
+        // Phase 3.2: forward the pre-redirect authored capture so the
+        // OAuth-resumed create row carries the same authored_headline a
+        // signed-in user's row would.
+        authored_headline: pending.authored_headline ?? null,
       };
       const resp = await fetch("/api/challenge/create", {
         method: "POST",

@@ -43,6 +43,13 @@ interface ChallengeData {
   near_miss_next_tier?: string | null;
   anchor_base_player_id?: string | null;
   top_game_tier?: "record" | "career" | "season" | null;
+  /** Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+   *  ac4b032). Authored line from /api/headline at create time. NULL
+   *  on legacy rows (pre-migration 013) and on rows where generation
+   *  failed (client correctly skips writing a bank pick into this
+   *  field). The take-card-landing's TAKE renders this when present
+   *  and falls back to takeCard.take otherwise. */
+  authored_headline?: string | null;
 }
 
 interface Props {

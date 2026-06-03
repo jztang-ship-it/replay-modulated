@@ -8,7 +8,7 @@ import { verifyAuth } from "../hand/_lib/auth.js";
 // where client + server were suspected of being out of sync). Bump this
 // string when you change the detail-field handling and you want a clean
 // log-grep boundary.
-const CREATE_VERSION = "phase5c-S1-bumped-2026-06-01";
+const CREATE_VERSION = "phase3.2-authored-headline-2026-06-04";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
@@ -29,6 +29,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // valid rows with NULL trigger-detail). Columns added by
     // supabase/migrations/012_shared_challenges_trigger_detail.sql.
     near_miss_gap, near_miss_next_tier, anchor_base_player_id, top_game_tier,
+    // Phase 3.2 (lock: docs/challenge-landing-v2-phase3.2-...-lock.md,
+    // ac4b032). authored_headline is the /api/headline output stored
+    // ONLY when generation succeeded — never the chadShareTrashTalk
+    // bank fallback. Distinct from share_headline (which still carries
+    // bank picks for the OG card / native share text). The landing
+    // renders authored_headline when present and falls back to the take
+    // card otherwise. Column added by migration 013.
+    authored_headline,
   } = req.body ?? {};
 
   if (!sport || !season || target_score == null || !initial_roster) {
@@ -60,6 +68,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     near_miss_next_tier: near_miss_next_tier ?? null,
     anchor_base_player_id: anchor_base_player_id ?? null,
     top_game_tier: top_game_tier ?? null,
+    // Phase 3.2: persist authored_headline ONLY when the client
+    // captured a non-empty string from /api/headline. A non-string,
+    // empty-string, or whitespace-only value normalizes to NULL so a
+    // bank pick (which the client never POSTs into this field but a
+    // careless edit might) cannot reach the landing's TAKE.
+    authored_headline:
+      typeof authored_headline === "string" && authored_headline.trim().length > 0
+        ? authored_headline.trim()
+        : null,
   };
 
   const { data, error } = await supabaseAdmin

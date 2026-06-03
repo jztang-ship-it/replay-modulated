@@ -1188,3 +1188,132 @@ describe("ChallengeTakeCardLanding — Phase 2e conditional held-list block (cut
     expect(matches.length).toBe(1);
   });
 });
+
+// ── Phase 3.2 — authored_headline wiring on the TAKE ──────────────────────
+// Lock: docs/challenge-landing-v2-phase3.2-wire-authored-headline-to-take-
+// lock.md (commit ac4b032). The visible top headline on the accept page is
+// the take-card's <h1 data-testid="take-headline">. Phase 3 wrote authored
+// lines into share_headline, which the accept-page TAKE never read — so
+// authored output silently bypassed the surface the lock was supposed to
+// retire. Phase 3.2 splits the wire: authored_headline lands on its own
+// column, and the TAKE renders it when present and falls back to the take
+// card's TAKE field when null.
+
+import { chadShareTrashTalkBank } from "../../commentary/chadChallenge";
+
+describe("ChallengeTakeCardLanding — Phase 3.2 authored_headline wiring on the TAKE", () => {
+  it("renders authored_headline as the TAKE when present (instead of takeCard.take)", () => {
+    const authored = "Lakers' road trip stalls in Portland";
+    render(
+      <ChallengeTakeCardLanding
+        data={{
+          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
+          authored_headline: authored,
+        }}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const h1 = screen.getByTestId("take-headline");
+    // textContent compares against the source string (CSS uppercases at
+    // render time only; the DOM string is the original casing).
+    expect(h1.textContent).toContain(authored);
+  });
+
+  it("authored_headline=null → renders takeCard.take (today's behavior unchanged)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={{
+          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
+          authored_headline: null,
+        }}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const h1 = screen.getByTestId("take-headline");
+    // The default Embiid+Vucevic fixture has mid-zone ratios → anchor-
+    // truth = generic → take card picks from TAKES.choke. The exact line
+    // is seed-dependent; what matters is it ISN'T the (absent) authored
+    // line — i.e. text content is the take card's TAKE, not an authored
+    // ESPN-register line. We assert the take card's TAKE banks contain
+    // the rendered string.
+    const text = (h1.textContent ?? "").toUpperCase();
+    const choke = ["SOMEBODY WASTED THIS HAND", "THESE CARDS SHOULD NOT HAVE LOST",
+                   "THIS HAND HAD A WINNING SHAPE", "THE STARS WERE THERE. THE SCORE WASN'T."];
+    expect(choke.some(c => text.startsWith(c))).toBe(true);
+  });
+
+  it("authored_headline omitted (legacy row, pre-migration) → renders takeCard.take", () => {
+    // Same as null but the field isn't in the payload at all — exercises
+    // the optional-field-absent path.
+    const data = makeData({ trigger: "choke", heldPair: ["emb", "voo"] });
+    // No authored_headline key set on data; pass as-is.
+    render(
+      <ChallengeTakeCardLanding
+        data={data}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const h1 = screen.getByTestId("take-headline");
+    expect(h1.textContent).toBeTruthy();
+    // No authored ESPN-register string accidentally rendered.
+    expect(h1.textContent).not.toMatch(/road trip stalls/i);
+  });
+
+  it("badge / held-list / evidence-line / dare / CTA all unchanged when authored renders", () => {
+    // Phase 3.2 lock: "No other take-card change." The h1 swap MUST NOT
+    // disturb any other surface. Render with authored present and assert
+    // every other test-id is still where it was.
+    render(
+      <ChallengeTakeCardLanding
+        data={{
+          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
+          authored_headline: "Lakers' road trip stalls in Portland",
+        }}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("badge-row")).toBeTruthy();
+    expect(screen.getByTestId("usp-subheadline")).toBeTruthy();
+    expect(screen.getByTestId("starting-hand")).toBeTruthy();
+    expect(screen.getByTestId("evidence-line")).toBeTruthy();
+    expect(screen.getByTestId("dare-line")).toBeTruthy();
+    expect(screen.getByTestId("accept-cta")).toBeTruthy();
+  });
+
+  it("RULE PROOF — every chadShareTrashTalk bank string never reaches the TAKE", () => {
+    // The load-bearing Phase 3.2 invariant: a bank pick (which is what
+    // share_headline degrades to on /api/headline failure) must NEVER be
+    // rendered as the TAKE. The architectural guarantee is that the
+    // client only writes authored values into authored_headline — bank
+    // picks land in share_headline, which the TAKE doesn't read. This
+    // test demonstrates the rule structurally: when authored_headline
+    // is null (the only path a bank-pick scenario would take), the
+    // rendered TAKE is from TAKES.choke / 2d / 2e banks, not from
+    // SHARE_TT_CHOKE. Iterates the bank to prove none of those strings
+    // ever appears in the TAKE.
+    render(
+      <ChallengeTakeCardLanding
+        data={{
+          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
+          authored_headline: null,
+        }}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const takeText = (screen.getByTestId("take-headline").textContent ?? "").toUpperCase();
+    const bank = chadShareTrashTalkBank("choke").map(s => s.toUpperCase());
+    for (const bankString of bank) {
+      expect(takeText).not.toContain(bankString);
+    }
+  });
+});
