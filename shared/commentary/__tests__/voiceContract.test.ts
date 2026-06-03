@@ -155,6 +155,40 @@ describe("buildVoiceContract — Phase 3.3 Rule 3 (per-trigger flavor)", () => {
   });
 });
 
+describe("buildVoiceContract — Phase 3.3 rare_pull deep dive", () => {
+  it("ships a dedicated rare_pull section with hook=rare event, subject=hand+star", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("TRIGGER DEEP DIVE — RARE_PULL");
+    // The hook is the rare event itself.
+    expect(system).toContain("rare event");
+    expect(system).toContain("hand + the held star + the rare event");
+    // Register is nostalgia + celebration + handoff to recipient.
+    expect(system).toContain("nostalgia");
+    expect(system).toContain("celebration");
+  });
+
+  it("includes the user's three rare_pull gold-standard examples verbatim", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("YOU PULLED THE JORDAN GAME. NOW WHAT?");
+    expect(system).toContain("JORDAN WALKED BACK INTO THE BUILDING.");
+    expect(system).toContain("YOU GOT A WADE CAREER NIGHT. MATCH IT.");
+  });
+
+  it("calls out rare_pull anti-patterns (NBA-recap framings) verbatim", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("WADE LIGHTS UP UTAH FOR 50");
+    expect(system).toContain("JORDAN VS WASHINGTON IN '96");
+    expect(system).toContain("SHAQ DROPS 41 IN A LAKERS WIN");
+  });
+
+  it("reminds rare_pull's anti-anachronism is anchored to the season provided", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("ANTI-ANACHRONISM reminder for rare_pull");
+    expect(system).toContain("later championships");
+    expect(system).toContain("would go on to win");
+  });
+});
+
 describe("buildVoiceContract — format + anti-anachronism + season substitution", () => {
   it("substitutes {season} into the anti-anachronism rule", () => {
     const { system } = buildVoiceContract({ ...WADE_FACTS, season: "9596" });

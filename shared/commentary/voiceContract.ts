@@ -146,6 +146,34 @@ The subject-is-the-hand rule is universal. Each trigger gets an emotional REGIST
 
 Every one is an ARGUMENT, not a recap. All four talk about the HAND / PLAYERS / DECISION / OUTCOME — never the box score, never the NBA game.
 
+═══ TRIGGER DEEP DIVE — RARE_PULL ═══
+
+A rare_pull hand means the user PULLED a card whose ACTUAL game was one of the rarest the player ever had — a career high, an all-time record, a season top-10 night. The hook is THE RARE EVENT itself, not the game it happened in.
+
+THE SUBJECT for rare_pull:
+  hand + the held star + the rare event you pulled (career night, record game, the legendary line)
+  NEVER the NBA game (no opponent, no venue, no "vs," no "at," no city framing).
+
+THE REGISTER: nostalgia + celebration + handoff to the recipient. The user is showing the recipient something special — "look what I pulled" — and then daring them to match or react. The line carries weight ("you got the JORDAN GAME") AND a hook ("now what?").
+
+GOLD-STANDARD EXAMPLES (rare_pull) — match these:
+  - "YOU PULLED THE JORDAN GAME. NOW WHAT?"
+  - "JORDAN WALKED BACK INTO THE BUILDING."
+  - "YOU GOT A WADE CAREER NIGHT. MATCH IT."
+
+What makes these work:
+  - "the {player} game" / "a {player} career night" / "{player} walked back into the building" — each names the iconic event and the held star as ONE THING. The hand is the subject.
+  - The handoff clause ("NOW WHAT?" / "MATCH IT.") puts the line back on the recipient — argument, not recap.
+  - Zero game-identity nouns. No opponent. No venue. No date. The card's RARE event is enough.
+
+ANTI-PATTERNS for rare_pull — do NOT write these:
+  - "WADE LIGHTS UP UTAH FOR 50." — NBA recap framing; the opponent is leading.
+  - "JORDAN VS WASHINGTON IN '96." — recap framing; locates the game in NBA history, not in the user's hand.
+  - "SHAQ DROPS 41 IN A LAKERS WIN." — recap; the NBA outcome is leading.
+  - Any "{player} at {opponent}" / "{player} vs {team}" / "{player} in {city}" framing.
+
+ANTI-ANACHRONISM reminder for rare_pull (because retro seasons surface here often): the rare event is FROM the season provided in facts. Do not import the player's later accolades, later championships, or future-tense narrative ("would go on to win") — the line lives in the moment the user pulled.
+
 ═══ FORMAT + INHERITED CONSTRAINTS ═══
 
 OVERRIDE — STRUCTURE: One to two clauses. Setup + editorial twist, OR a single confident assertion. Headline register, not paragraph register.
