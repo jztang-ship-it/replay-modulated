@@ -50,11 +50,11 @@ function input(over: Partial<TakeCardInput> = {}): TakeCardInput {
   };
 }
 
-describe("generateChallengeTakeCard — 6-field shape", () => {
+describe("generateChallengeTakeCard — 7-field shape (Phase 2e takeNamedAnchor)", () => {
   const triggers: TakeCardTrigger[] = ["rare_pull", "big_score", "choke", "miss", "default"];
 
   for (const trigger of triggers) {
-    it(`${trigger}: all six fields present, no stray {tokens}`, () => {
+    it(`${trigger}: all seven fields present, no stray {tokens}`, () => {
       const card = generateChallengeTakeCard(input({
         trigger,
         nearMissGap: trigger === "miss" ? 4 : null,
@@ -71,6 +71,7 @@ describe("generateChallengeTakeCard — 6-field shape", () => {
       expect(card.evidenceLine.length, "evidenceLine must be non-empty").toBeGreaterThan(0);
       expect(card.dare.length, "dare must be non-empty").toBeGreaterThan(0);
       expect(card.ctaText.length, "ctaText must be non-empty").toBeGreaterThan(0);
+      expect(typeof card.takeNamedAnchor, "takeNamedAnchor must be boolean").toBe("boolean");
       for (const field of [card.take, card.subHeadline, card.evidenceLine, card.dare, card.ctaText]) {
         expect(/\{\w+\}/.test(field), `stray token in: ${field}`).toBe(false);
       }
@@ -965,6 +966,128 @@ describe("generateChallengeTakeCard — CTA family lock", () => {
           .toMatch(/BEAT|MATCH/);
       }
     }
+  });
+});
+
+describe("generateChallengeTakeCard — Phase 2e takeNamedAnchor flag (block-cut signal)", () => {
+  // The flag the landing reads to gate the DENZEL'S LINE block.
+  // TRUE when the take's bank names the anchor (vindicated/blamed/
+  // culture-vindicated/culture-blamed). FALSE for generic, non-choke
+  // triggers, and legacy.
+
+  it("VINDICATED (non-culture) → takeNamedAnchor=true", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      anchorName: "Kobe",
+      anchorCulture: null,
+      heldCards: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50, tier: "RED" },
+        { name: "Kidd", actualFp: 12, projectedFp: 35, tier: "PURPLE" },
+      ],
+    }));
+    expect(card.takeNamedAnchor).toBe(true);
+  });
+
+  it("BLAMED (non-culture) → takeNamedAnchor=true", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      anchorName: "Kobe",
+      anchorCulture: null,
+      heldCards: [
+        { name: "Kobe", actualFp: 18, projectedFp: 50, tier: "RED" },
+        { name: "Kidd", actualFp: 25, projectedFp: 35, tier: "PURPLE" },
+      ],
+    }));
+    expect(card.takeNamedAnchor).toBe(true);
+  });
+
+  it("CULTURE-VINDICATED → takeNamedAnchor=true", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba", "Mamba"] },
+      heldCards: [
+        { name: "Kobe Bryant", actualFp: 47, projectedFp: 50, tier: "RED" },
+        { name: "Jason Kidd",  actualFp: 12, projectedFp: 35, tier: "RED" },
+      ],
+    }));
+    expect(card.takeNamedAnchor).toBe(true);
+  });
+
+  it("CULTURE-BLAMED → takeNamedAnchor=true", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba", "Mamba"] },
+      heldCards: [
+        { name: "Kobe Bryant", actualFp: 18, projectedFp: 50, tier: "RED" },
+        { name: "Jason Kidd",  actualFp: 25, projectedFp: 35, tier: "RED" },
+      ],
+    }));
+    expect(card.takeNamedAnchor).toBe(true);
+  });
+
+  it("GENERIC choke (MID zone) → takeNamedAnchor=false", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      anchorName: "Kobe",
+      anchorCulture: null,
+      heldCards: [
+        { name: "Kobe", actualFp: 38, projectedFp: 50, tier: "RED" }, // MID
+        { name: "Kidd", actualFp: 26, projectedFp: 35, tier: "PURPLE" }, // MID
+      ],
+    }));
+    expect(card.takeNamedAnchor).toBe(false);
+  });
+
+  it("LEGACY choke (holdsRecorded:false) → takeNamedAnchor=false", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      holdsRecorded: false,
+      anchorName: "Kobe",
+      anchorCulture: { nicknames: ["Mamba"] }, // ignored on legacy
+      heldCards: [],
+    }));
+    expect(card.takeNamedAnchor).toBe(false);
+  });
+
+  it("MISS (any gap) → takeNamedAnchor=false", () => {
+    for (const gap of [4, 11]) {
+      const card = generateChallengeTakeCard(input({
+        trigger: "miss",
+        nearMissGap: gap,
+        nearMissNextTier: "ALL_STAR",
+      }));
+      expect(card.takeNamedAnchor, `miss gap=${gap} should not name anchor`).toBe(false);
+    }
+  });
+
+  it("BIG_SCORE → takeNamedAnchor=false", () => {
+    const card = generateChallengeTakeCard(input({ trigger: "big_score" }));
+    expect(card.takeNamedAnchor).toBe(false);
+  });
+
+  it("RARE_PULL → takeNamedAnchor=false", () => {
+    const card = generateChallengeTakeCard(input({ trigger: "rare_pull" }));
+    expect(card.takeNamedAnchor).toBe(false);
+  });
+
+  it("DEFAULT → takeNamedAnchor=false", () => {
+    const card = generateChallengeTakeCard(input({ trigger: "default", anchorName: null }));
+    expect(card.takeNamedAnchor).toBe(false);
+  });
+
+  it("DETERMINISM — takeNamedAnchor is stable across repeated calls (vindicated)", () => {
+    const args = input({
+      trigger: "choke",
+      anchorName: "Kobe",
+      heldCards: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50, tier: "RED" },
+        { name: "Kidd", actualFp: 12, projectedFp: 35, tier: "PURPLE" },
+      ],
+    });
+    expect(generateChallengeTakeCard(args).takeNamedAnchor).toBe(true);
+    expect(generateChallengeTakeCard(args).takeNamedAnchor).toBe(true);
   });
 });
 

@@ -403,7 +403,14 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   const lineOwnerLabel = namedChallenger
     ? `${data.challenger_name.trim().toUpperCase()}'S LINE`
     : "THE LINE";
-  const showHeldList = takeCard.heldCards.length > 0;
+  // Phase 2e conditional block render — cut when the take already names
+  // the anchor (vindicated/blamed/culture-flavored); kept when the take
+  // is generic and the block carries the only text-level attribution of
+  // who was held. Confirmed via the generic-no-culture 2×2 screenshot
+  // review: block-OFF on the generic path reads naked ("the stars"
+  // without antecedent), block-OFF on the named-anchor path reads
+  // cleaner (take already named someone; cards carry the rest).
+  const showHeldList = takeCard.heldCards.length > 0 && !takeCard.takeNamedAnchor;
 
   return (
     <div data-testid="challenge-take-card-landing">

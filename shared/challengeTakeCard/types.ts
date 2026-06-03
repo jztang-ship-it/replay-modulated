@@ -145,4 +145,15 @@ export interface ChallengeTakeCard {
   /** The button — from the tight CTA family. Never "Accept Challenge"
    *  / "Start Game" / "Beat Score" (the V2 anti-patterns). */
   ctaText: string;
+  /** Phase 2e — TRUE when the take's bank already names the anchor
+   *  player (vindicated / blamed / culture-vindicated / culture-blamed).
+   *  FALSE when the take is generic ("THESE CARDS SHOULD NOT HAVE LOST")
+   *  or a non-choke trigger. The landing reads this to gate the
+   *  DENZEL'S LINE block render: when the take names someone, the
+   *  block becomes redundant with the cards' HOLD-badged names and
+   *  the take's own argument → hide it. When the take is generic,
+   *  the block carries the only text-level "who was held" attribution
+   *  → keep it (cutting it makes the page read naked — confirmed via
+   *  the generic-no-culture 2×2 screenshot review). */
+  takeNamedAnchor: boolean;
 }

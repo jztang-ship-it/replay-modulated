@@ -340,6 +340,10 @@ export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCa
     evidenceLine,
     dare:        substitute(dareTemplate, dict).trim(),
     ctaText:     ctaText.trim(),
+    // Phase 2e — expose the routing flag for the landing to gate the
+    // DENZEL'S LINE block. Already computed above for stakes routing;
+    // now also surfaced on the contract.
+    takeNamedAnchor,
   };
 
   // Post-substitution token-stray guard. If any prose field still

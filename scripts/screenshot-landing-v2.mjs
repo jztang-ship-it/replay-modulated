@@ -57,6 +57,7 @@ const ctx = await browser.newContext({
 // DENZEL'S LINE block. The block is removed via DOM mutation (no
 // shipped prop for hiding it; this is a one-off screenshot test).
 const SEE_IT_CAPTURES = [
+  // Culture-rich 2×2 (Kobe anchor — take NAMES the anchor via nickname)
   {
     name: "choke_culture_rich__cultureLine_ON__block_ON",
     caseKey: "choke_culture_rich",
@@ -72,6 +73,29 @@ const SEE_IT_CAPTURES = [
   {
     name: "choke_culture_rich__cultureLine_ON__block_OFF",
     caseKey: "choke_culture_rich",
+    showCultureLine: true,
+    hideHeldList: true,
+  },
+  // Generic-no-culture 2×2 (synthetic IDs, MID ratios — take is GENERIC,
+  // names no one). Tests the hypothesis that block-OFF reads "naked" on
+  // the generic path. Note: showCultureLine has NO visual effect here
+  // (no anchorCulture → no knownFor to render); the dimension is
+  // captured for matrix symmetry, not behavioral comparison.
+  {
+    name: "choke_generic_no_culture__cultureLine_ON__block_ON",
+    caseKey: "choke_generic_no_culture",
+    showCultureLine: true,
+    hideHeldList: false,
+  },
+  {
+    name: "choke_generic_no_culture__cultureLine_OFF__block_OFF",
+    caseKey: "choke_generic_no_culture",
+    showCultureLine: false,
+    hideHeldList: true,
+  },
+  {
+    name: "choke_generic_no_culture__cultureLine_ON__block_OFF",
+    caseKey: "choke_generic_no_culture",
     showCultureLine: true,
     hideHeldList: true,
   },
