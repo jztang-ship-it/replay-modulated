@@ -33,7 +33,15 @@ mkdirSync(OUT_DIR, { recursive: true });
 
 const ORIGIN = process.env.LANDING_V2_ORIGIN ?? "http://localhost:5173";
 const VIEWPORT = { width: WIDTH, height: HEIGHT };
-const CASES = ["choke", "miss", "big_score", "rare_pull", "default", "legacy_choke"];
+const CASES = [
+  "choke",                // Phase 2d: anchor-DELIVERED ("EMBIID WASN'T THE PROBLEM")
+  "choke_anchor_tanked",  // Phase 2d: anchor-TANKED ("EVEN EMBIID COULDN'T SAVE IT")
+  "miss",
+  "big_score",
+  "rare_pull",
+  "default",
+  "legacy_choke",
+];
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({

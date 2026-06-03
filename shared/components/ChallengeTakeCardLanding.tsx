@@ -86,6 +86,11 @@ interface SnapshotCard {
   slotIndex?: number;
   wasHeld?: boolean;
   actualFp?: number;
+  /** Phase 2d — needed to thread anchor-truth ratio into the generator.
+   *  Persisted by the adapter post-enrichment; defaults to 0 on legacy
+   *  rows (the holdsRecorded:false gate routes those to generic before
+   *  the ratio is computed). */
+  projectedFp?: number;
 }
 
 interface RosterSnapshot {
@@ -191,28 +196,39 @@ interface HandCardProps {
   isHeld: boolean;
 }
 
+// Phase 2d: held cards saturated, unheld muted — but ALL six get their
+// TIER color. The 2c treatment of "unheld = near-black" read as
+// "disabled," not "cards you'll also get." The new contrast is
+// saturated-vs-muted within the same tier hue, so all six read as the
+// real hand being dealt; the HOLD badge + saturation gap still marks
+// the held subset.
+
 function HandCard({ card, isHeld }: HandCardProps) {
   const accent = TIER_ACCENT[card.tier] ?? "#9CA3AF";
+  // muted = same hue, lower saturation/opacity. Keeping accent-derived
+  // background + border, dialing alpha down so the card reads as the
+  // same tier color, just dimmer.
+  const background = isHeld ? `${accent}26` : `${accent}10`;
+  const border = isHeld ? `2px solid ${accent}` : `1px solid ${accent}55`;
+  const opacity = isHeld ? 1 : 0.68;
   return (
     <div
       data-testid={isHeld ? "hand-card-held" : "hand-card-plain"}
       data-was-held={isHeld ? "true" : "false"}
+      data-tier-accent={accent}
       style={{
         position: "relative",
-        background: isHeld ? `${accent}22` : "rgba(255,255,255,0.03)",
-        border: isHeld ? `2px solid ${accent}` : `1px solid ${accent}55`,
+        background,
+        border,
         borderRadius: 10,
         padding: "10px 12px",
         minWidth: 108,
         flex: "0 1 auto",
         textAlign: "center",
-        opacity: isHeld ? 1 : 0.55,
+        opacity,
         boxShadow: isHeld ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
       }}
     >
-      {/* HOLD badge — held cards only. Replaces the 2b actualFp chip.
-          The marker still tells the recipient WHICH cards the sender
-          locked in, without spoiling the outcome. */}
       {isHeld && (
         <div
           data-testid="hold-badge"
@@ -242,7 +258,7 @@ function HandCard({ card, isHeld }: HandCardProps) {
           color: accent,
           textTransform: "uppercase",
           marginBottom: 4,
-          opacity: isHeld ? 1 : 0.7,
+          opacity: isHeld ? 1 : 0.85,
         }}
       >
         {card.tier}
@@ -257,7 +273,6 @@ function HandCard({ card, isHeld }: HandCardProps) {
       >
         {card.name}
       </div>
-      {/* Salary + team — kept on every card per the 2c lock. */}
       <div
         style={{
           fontSize: 10,
@@ -287,7 +302,12 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   const heldCardsForGenerator = holdsRecorded
     ? cards
         .filter(c => c.wasHeld === true)
-        .map(c => ({ name: c.name, actualFp: c.actualFp ?? 0, tier: c.tier }))
+        .map(c => ({
+          name: c.name,
+          actualFp: c.actualFp ?? 0,
+          projectedFp: c.projectedFp ?? 0,
+          tier: c.tier,
+        }))
     : [];
 
   const takeCardInput: TakeCardInput = {
@@ -307,38 +327,25 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   };
   const takeCard = generateChallengeTakeCard(takeCardInput);
 
-  // For the labeled held list: "John held: X, Y". Use challengerName
-  // when real; "Held:" (no name) otherwise.
-  const heldLabel = namedChallenger ? `${data.challenger_name} held:` : "Held:";
+  // Phase 2d: structured "DENZEL'S LINE / HOLD: X / Y" evidence block —
+  // vertical, label-led, reads as an exhibit rather than narration. Uses
+  // possessive form of the sender's name when present; falls back to
+  // "THE LINE" when anonymous.
+  const lineOwnerLabel = namedChallenger
+    ? `${data.challenger_name.trim().toUpperCase()}'S LINE`
+    : "THE LINE";
   const showHeldList = takeCard.heldCards.length > 0;
 
   return (
     <div data-testid="challenge-take-card-landing">
-      {/* In-flow BADGE — sits inline above the TAKE, normal flow, no
-          translate or absolute. Drops out entirely for default. */}
-      {trigger !== "default" && (
-        <div
-          data-testid="badge-row"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 14,
-          }}
-        >
-          <InFlowBadge
-            trigger={trigger}
-            missTier={data.near_miss_next_tier}
-            topGameTier={data.top_game_tier}
-          />
-        </div>
-      )}
-
-      {/* TAKE — largest type at the top, the claim. The bank lines
-          are authored in caps; text-transform forces the substituted
-          {challengerName} into caps too so "MIKE THINKS THIS HAND IS
-          SAFE" reads as one consistent voice (per the lock's example
-          "JOHN THINKS THIS HAND IS SAFE"). */}
+      {/* TAKE — largest type at the top, the claim. The Phase-2d
+          layout moves the stamp INLINE at the end of the headline (it
+          flows after the headline text wherever the wrap lands, not
+          stacked above and not absolutely positioned). Inline-block
+          on the badge means it sits at the end of the last line of
+          the heading regardless of how the take wraps.
+          textTransform forces substituted tokens (e.g. {anchorName} or
+          {challengerName}) into caps for one-voice presentation. */}
       <h1
         data-testid="take-headline"
         style={{
@@ -353,6 +360,21 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         }}
       >
         {takeCard.take}
+        {trigger !== "default" && (
+          <>
+            {" "}
+            <span
+              data-testid="badge-row"
+              style={{ display: "inline-block", verticalAlign: "middle" }}
+            >
+              <InFlowBadge
+                trigger={trigger}
+                missTier={data.near_miss_next_tier}
+                topGameTier={data.top_game_tier}
+              />
+            </span>
+          </>
+        )}
       </h1>
 
       {/* USP / subHeadline — "Same starting hand. Different decisions."
@@ -396,37 +418,92 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         })}
       </div>
 
-      {/* HELD LIST — labeled "X held: A, B". Omitted entirely when
-          heldCards is [] (legacy / no holds). Structured list, not
-          prose. */}
+      {/* HELD LIST — Phase 2d structured evidence block.
+            "DENZEL'S LINE
+             HOLD: Kobe Bryant
+                   Jason Kidd"
+          Vertical, label-led. The line owner labels the exhibit; the
+          HOLD label introduces the cards. Each held name on its own
+          row, indented to align under the HOLD label. Replaces the 2c
+          prose "Denzel held: X, Y" form.
+          Omitted entirely when heldCards is [] (legacy / no holds). */}
       {showHeldList && (
         <div
           data-testid="held-list"
           style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "rgba(255,255,255,0.7)",
-            marginBottom: 8,
-            textAlign: "center",
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: 14,
           }}
         >
-          <span style={{ color: "rgba(255,255,255,0.45)" }}>{heldLabel}</span>{" "}
-          <span style={{ color: "#EAF0FF" }}>{takeCard.heldCards.join(", ")}</span>
+          <div
+            style={{
+              display: "inline-block",
+              textAlign: "left",
+              fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
+            }}
+          >
+            <div
+              data-testid="line-owner"
+              style={{
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: 1.4,
+                color: "rgba(255,177,74,0.85)",
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
+              {lineOwnerLabel}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 900,
+                  letterSpacing: 1.2,
+                  color: "rgba(255,255,255,0.55)",
+                  textTransform: "uppercase",
+                }}
+              >
+                HOLD:
+              </span>
+              <div>
+                {takeCard.heldCards.map((name, i) => (
+                  <div
+                    key={`${name}-${i}`}
+                    data-testid="held-name"
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: "#EAF0FF",
+                      lineHeight: 1.25,
+                    }}
+                  >
+                    {name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* EVIDENCE LINE — the hand total. In correction, it's the
-          stakes; in competition, it's the wall. Same data, mode-aware
-          framing (built by the generator). */}
+      {/* EVIDENCE LINE — Phase 2d plain-language stakes. NO raw FP.
+          Correction → "KOBE AND KIDD. BUSTED." (fused, generic choke)
+          or just "BUSTED." (when anchor-aware take names the anchor).
+          Competition → "UNBEATEN" / "{N} TRIED. {N} FAILED."
+          Neutral → "A NUMBER ON THE BOARD. BEAT IT." */}
       <div
         data-testid="evidence-line"
         style={{
-          fontSize: 16,
+          fontSize: 18,
           fontWeight: 900,
           color: "#FFB14A",
           fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
-          letterSpacing: 0.4,
+          letterSpacing: 0.6,
           textAlign: "center",
+          textTransform: "uppercase",
           marginBottom: 24,
         }}
       >
@@ -476,19 +553,29 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         {alreadyAttempted ? "Play Again" : takeCard.ctaText}
       </button>
 
-      {/* Attribution + stats — minor below the CTA. */}
-      <div
-        data-testid="attribution"
-        style={{
-          fontSize: 11,
-          color: "rgba(255,255,255,0.35)",
-          textAlign: "center",
-        }}
-      >
-        {namedChallenger && <span>from {data.challenger_name}</span>}
-        {namedChallenger && statsLine && <span> · </span>}
-        {statsLine && <span>{statsLine}</span>}
-      </div>
+      {/* Attribution + stats — Phase 2d sender rule: exactly ONE sender
+          mention per landing. Normally the "DENZEL'S LINE" block in the
+          evidence section is the mention; legacy rows (holdsRecorded:false
+          → showHeldList:false → no MIKE'S LINE block) would otherwise
+          have zero mentions, so on legacy we re-instate the bottom
+          "from {sender}" line as the sole attribution. The fallback
+          fires ONLY when showHeldList is false AND we have a real name —
+          anonymous legacy stays nameless (correct: there's no name to
+          attribute). */}
+      {((!showHeldList && namedChallenger) || statsLine) && (
+        <div
+          data-testid="attribution"
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.35)",
+            textAlign: "center",
+          }}
+        >
+          {!showHeldList && namedChallenger && <span>from {data.challenger_name}</span>}
+          {!showHeldList && namedChallenger && statsLine && <span> · </span>}
+          {statsLine && <span>{statsLine}</span>}
+        </div>
+      )}
     </div>
   );
 }

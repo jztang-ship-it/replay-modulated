@@ -127,6 +127,102 @@ export const TAKES: Record<TakeCardTrigger, TakeBank> = {
   },
 };
 
+// ── Phase 2d: anchor-aware choke TAKEs (anchor-truth branching) ────────
+//
+// When the choke trigger fires, the generator compares each held card's
+// actualFp/projectedFp to decide which framing is HONEST to the data:
+//
+//   anchor DELIVERED (ratio >= DELIVERED_RATIO) AND ≥1 other held card
+//   TANKED (ratio < TANKED_RATIO) → indict the others, vindicate the anchor
+//     → TAKES_CHOKE_ANCHOR_VINDICATED
+//
+//   anchor TANKED (ratio < TANKED_RATIO) → indict the anchor
+//     → TAKES_CHOKE_ANCHOR_BLAMED
+//
+//   ambiguous (mid-zone or both delivered or both tanked, no clear split)
+//     → fall through to the generic TAKES.choke ("THESE CARDS SHOULD NOT
+//        HAVE LOST" — safe, always true)
+//
+// Legacy / no-anchor / single-held / anchor not in heldCards → also
+// generic. The anchor-aware claim must NEVER contradict the data.
+//
+// DELIVERED_RATIO = 0.90: within 10% of projection counts as "showed up."
+// TANKED_RATIO = 0.60: under 60% of projection is the clearly-bad-night
+// floor. The mid-zone [0.60, 0.90) deliberately maps to "no honest take"
+// → generic claim. Tight thresholds prevent overclaim at the edges.
+
+export const DELIVERED_RATIO = 0.90;
+export const TANKED_RATIO = 0.60;
+
+export const TAKES_CHOKE_ANCHOR_VINDICATED: TakeBank = {
+  named: [
+    "{anchorName} WASN'T THE PROBLEM",
+    "{anchorName} DID HIS PART",
+    "DON'T BLAME {anchorName}",
+    "{anchorName} SHOWED UP. THE REST DIDN'T.",
+  ],
+  noName: [
+    "{anchorName} WASN'T THE PROBLEM",
+    "{anchorName} DID HIS PART",
+    "DON'T BLAME {anchorName}",
+    "{anchorName} SHOWED UP. THE REST DIDN'T.",
+  ],
+};
+
+export const TAKES_CHOKE_ANCHOR_BLAMED: TakeBank = {
+  named: [
+    "EVEN {anchorName} COULDN'T SAVE IT",
+    "{anchorName} FORGOT TO SHOW UP",
+    "{anchorName} WAS THE ONE THAT MISSED",
+    "BUILT AROUND {anchorName}. {anchorName} BLINKED.",
+  ],
+  noName: [
+    "EVEN {anchorName} COULDN'T SAVE IT",
+    "{anchorName} FORGOT TO SHOW UP",
+    "{anchorName} WAS THE ONE THAT MISSED",
+    "BUILT AROUND {anchorName}. {anchorName} BLINKED.",
+  ],
+};
+
+// ── Phase 2d: plain-language stakes (the new evidenceLine vocabulary) ──
+//
+// Raw FP is GONE from the landing. The evidenceLine is now a stakes word
+// a stranger understands: BUSTED / BARELY SURVIVED / ONE DECISION SHORT /
+// CAME UP SHORT / UNBEATEN / {N} TRIED. {N} FAILED. / A NUMBER ON THE
+// BOARD. BEAT IT.
+//
+// Tier-keyed CORRECTION stakes — choke fires only on BUST/ROOKIE finals,
+// so we only need the two cuts. Threshold is the season's ROOKIE_MIN cut
+// (the "did you make money" line). 2425 canonical thresholds: ROOKIE 173 /
+// STARTER 203. Hardcoded — the modal season cuts; a one-FP edge case
+// reading "BARELY SURVIVED" when it was technically BUST is acceptable
+// imprecision (the stakes word is the LEAD, not a forensic tier label).
+
+export const BUST_FP_CEILING = 173;
+export const ROOKIE_FP_CEILING = 203;
+
+export const STAKES_BUSTED = "BUSTED";
+export const STAKES_BARELY_SURVIVED = "BARELY SURVIVED";
+export const STAKES_MISS_NARROW = "ONE DECISION SHORT";
+export const STAKES_MISS_WIDE = "CAME UP SHORT";
+export const STAKES_NEUTRAL = "A NUMBER ON THE BOARD. BEAT IT.";
+
+// Competition stakes — attempt-count keyed social proof.
+// 0–1 attempts → UNBEATEN. 2+ / 0 winners → "{N} TRIED. {N} FAILED."
+// 2+ / ≥1 winner → "BEEN BEATEN. DO IT AGAIN."
+export const STAKES_UNBEATEN = "UNBEATEN";
+
+export function buildStakesCompetition(
+  attemptCount: number | null | undefined,
+  winnerCount: number | null | undefined,
+): string {
+  const attempts = attemptCount ?? 0;
+  const winners = winnerCount ?? 0;
+  if (attempts <= 1) return STAKES_UNBEATEN;
+  if (winners === 0) return `${attempts} TRIED. ${attempts} FAILED.`;
+  return "BEEN BEATEN. DO IT AGAIN.";
+}
+
 // ── miss "one decision" overclaim gate ────────────────────────────────
 //
 // The lock §4 miss rule fires at gap ≤ 5% of next tier's minFp — up to
@@ -292,7 +388,7 @@ export const DARES: Record<TakeCardMode, Record<TakeCardTrigger, string[]>> = {
 // patterns, guarded by BANNED_CTAS below).
 
 export const CTAS: Record<TakeCardMode, string[]> = {
-  correction: ["PROVE YOUR LINE", "FIX THE HAND", "PLAY YOUR LINE"],
+  correction: ["PROVE YOUR LINE", "FIX THE HAND", "PLAY YOUR LINE", "DO IT BETTER"],
   competition: ["BEAT THAT LINE", "CAN YOU MATCH IT", "BEAT THE NUMBER"],
   neutral: ["PLAY YOUR LINE", "TAKE THE SAME HAND"],
 };

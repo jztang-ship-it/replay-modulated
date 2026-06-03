@@ -10,6 +10,8 @@ import { generateChallengeTakeCard, deriveMode } from "../generateChallengeTakeC
 import {
   TAKES,
   TAKES_MISS_WIDE_GAP,
+  TAKES_CHOKE_ANCHOR_VINDICATED,
+  TAKES_CHOKE_ANCHOR_BLAMED,
   MISS_ONE_DECISION_THRESHOLD_FP,
   DARES,
   CTAS,
@@ -19,6 +21,11 @@ import {
 } from "../templates";
 import type { TakeCardInput, TakeCardTrigger } from "../types";
 
+// Default held-card ratios land in the MID zone (~0.74) — neither
+// "delivered" (>=0.90) nor "tanked" (<0.60) — so the default anchor
+// classification is "generic" and existing tests pin the generic
+// TAKES.choke bank. 2d-specific tests override actualFp/projectedFp to
+// route into the vindicated/blamed branches explicitly.
 function input(over: Partial<TakeCardInput> = {}): TakeCardInput {
   return {
     trigger: "choke",
@@ -27,8 +34,8 @@ function input(over: Partial<TakeCardInput> = {}): TakeCardInput {
     winTier: "BUST",
     holdsRecorded: true,
     heldCards: [
-      { name: "Vucevic", actualFp: 18.5, tier: "PURPLE" },
-      { name: "Embiid",  actualFp: 22.0, tier: "RED" },
+      { name: "Vucevic", actualFp: 18.5, projectedFp: 25, tier: "PURPLE" },
+      { name: "Embiid",  actualFp: 22.0, projectedFp: 30, tier: "RED" },
     ],
     anchorName: "Vucevic",
     nearMissGap: null,
@@ -268,8 +275,8 @@ describe("generateChallengeTakeCard — heldCards (structured, legacy gate)", ()
       trigger: "choke",
       holdsRecorded: true,
       heldCards: [
-        { name: "Vucevic", actualFp: 18.5, tier: "PURPLE" },
-        { name: "Embiid",  actualFp: 22.0, tier: "RED" },
+        { name: "Vucevic", actualFp: 18.5, projectedFp: 25, tier: "PURPLE" },
+        { name: "Embiid",  actualFp: 22.0, projectedFp: 30, tier: "RED" },
       ],
     }));
     expect(card.heldCards).toEqual(["Vucevic", "Embiid"]);
@@ -289,7 +296,7 @@ describe("generateChallengeTakeCard — heldCards (structured, legacy gate)", ()
       trigger: "choke",
       holdsRecorded: false,
       heldCards: [
-        { name: "ShouldNotAppear", actualFp: 0, tier: "RED" },
+        { name: "ShouldNotAppear", actualFp: 0, projectedFp: 0, tier: "RED" },
       ],
     }));
     expect(card.heldCards).toEqual([]);
@@ -299,59 +306,331 @@ describe("generateChallengeTakeCard — heldCards (structured, legacy gate)", ()
     const card = generateChallengeTakeCard(input({
       trigger: "choke",
       heldCards: [
-        { name: "Vucevic", actualFp: 18.5, tier: "PURPLE" },
-        { name: "   ",     actualFp: 0,    tier: "RED" },
-        { name: "",        actualFp: 0,    tier: "RED" },
-        { name: "Embiid",  actualFp: 22.0, tier: "RED" },
+        { name: "Vucevic", actualFp: 18.5, projectedFp: 25, tier: "PURPLE" },
+        { name: "   ",     actualFp: 0,    projectedFp: 0,  tier: "RED" },
+        { name: "",        actualFp: 0,    projectedFp: 0,  tier: "RED" },
+        { name: "Embiid",  actualFp: 22.0, projectedFp: 30, tier: "RED" },
       ],
     }));
     expect(card.heldCards).toEqual(["Vucevic", "Embiid"]);
   });
 });
 
-describe("generateChallengeTakeCard — evidenceLine (mode-aware framing)", () => {
-  it("correction → hand total as stakes ('157.9 FP on the board')", () => {
-    const card = generateChallengeTakeCard(input({ trigger: "choke", targetScore: 157.9 }));
-    expect(card.evidenceLine).toBe("157.9 FP on the board");
-  });
+describe("generateChallengeTakeCard — Phase 2d plain-language stakes (NO raw FP)", () => {
+  // Stakes-mapping gates. Each evidenceLine asserts the plain-language
+  // word a stranger can read — never the raw FP number.
 
-  it("competition with unbeaten attempts → wall framing ('238.7 FP · {n} attempts, still unbeaten')", () => {
+  it("choke + target < BUST ceiling (173) → BUSTED stakes", () => {
     const card = generateChallengeTakeCard(input({
-      trigger: "big_score",
-      targetScore: 238.7,
-      attemptCount: 5,
-      winnerCount: 0,
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: null, // force generic so no fuse
+      holdsRecorded: false, // force generic + no fuse
+      heldCards: [],
     }));
-    expect(card.evidenceLine).toBe("238.7 FP · 5 attempts, still unbeaten");
+    expect(card.evidenceLine).toBe("BUSTED");
   });
 
-  it("competition with 1 unbeaten attempt → singular framing", () => {
+  it("choke + target in ROOKIE band (173–202) → BARELY SURVIVED stakes", () => {
     const card = generateChallengeTakeCard(input({
-      trigger: "big_score",
-      targetScore: 232.5,
-      attemptCount: 1,
-      winnerCount: 0,
+      trigger: "choke",
+      targetScore: 188.0,
+      anchorName: null,
+      holdsRecorded: false,
+      heldCards: [],
     }));
-    expect(card.evidenceLine).toBe("232.5 FP · 1 attempt, still standing");
+    expect(card.evidenceLine).toBe("BARELY SURVIVED");
   });
 
-  it("competition with no attempts yet → bare wall framing ('… · the wall')", () => {
+  it("miss narrow gap (≤7) → ONE DECISION SHORT stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "miss",
+      nearMissGap: 4,
+      nearMissNextTier: "ALL_STAR",
+      targetScore: 218.0,
+    }));
+    expect(card.evidenceLine).toBe("ONE DECISION SHORT");
+  });
+
+  it("miss wide gap (>7) → CAME UP SHORT stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "miss",
+      nearMissGap: 11,
+      nearMissNextTier: "LEGEND",
+      targetScore: 260.0,
+    }));
+    expect(card.evidenceLine).toBe("CAME UP SHORT");
+  });
+
+  it("competition 0 attempts → UNBEATEN stakes", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "big_score",
-      targetScore: 232.5,
       attemptCount: 0,
       winnerCount: 0,
     }));
-    expect(card.evidenceLine).toBe("232.5 FP · the wall");
+    expect(card.evidenceLine).toBe("UNBEATEN");
   });
 
-  it("neutral (default) → hand total with 'to beat' framing", () => {
+  it("competition 1 attempt / 0 winners → UNBEATEN stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "big_score",
+      attemptCount: 1,
+      winnerCount: 0,
+    }));
+    expect(card.evidenceLine).toBe("UNBEATEN");
+  });
+
+  it("competition 2+ attempts / 0 winners → '{N} TRIED. {N} FAILED.' stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "big_score",
+      attemptCount: 5,
+      winnerCount: 0,
+    }));
+    expect(card.evidenceLine).toBe("5 TRIED. 5 FAILED.");
+  });
+
+  it("competition 2+ attempts / 1+ winners → 'BEEN BEATEN. DO IT AGAIN.' stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "big_score",
+      attemptCount: 5,
+      winnerCount: 2,
+    }));
+    expect(card.evidenceLine).toBe("BEEN BEATEN. DO IT AGAIN.");
+  });
+
+  it("neutral (default) → 'A NUMBER ON THE BOARD. BEAT IT.' stakes", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "default",
-      targetScore: 184.5,
       anchorName: null,
     }));
-    expect(card.evidenceLine).toBe("184.5 FP to beat");
+    expect(card.evidenceLine).toBe("A NUMBER ON THE BOARD. BEAT IT.");
+  });
+
+  // The core 2d guard — no raw FP number EVER reaches the rendered fields.
+  // This is the spoiler/noise rule: "165.5 FP" is meaningless to a
+  // first-timer; the stakes word leads.
+  it("NO raw FP anywhere in take/evidenceLine/dare across all triggers × 50 ids", () => {
+    const triggers: TakeCardTrigger[] = ["rare_pull", "big_score", "choke", "miss", "default"];
+    // Match digits followed (anywhere) by " FP" — the canonical FP-number
+    // surface from the 2c "X.X FP on the board" form. Includes optional
+    // decimals; case-insensitive.
+    const fpNumberRe = /\d+(?:\.\d+)?\s*FP\b/i;
+    for (const trigger of triggers) {
+      for (let i = 0; i < 50; i++) {
+        const card = generateChallengeTakeCard(input({
+          trigger,
+          challengeId: `ch_no_fp_${trigger}_${i}`,
+          targetScore: 200 + i,
+          attemptCount: i % 7,
+          winnerCount: i % 3,
+          nearMissGap: trigger === "miss" ? (i % 13) : null,
+          nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
+          anchorName: trigger === "default" ? null : "Vucevic",
+        }));
+        for (const field of [card.take, card.evidenceLine, card.dare]) {
+          expect(fpNumberRe.test(field), `raw FP leaked into ${trigger} #${i}: ${field}`).toBe(false);
+        }
+      }
+    }
+  });
+});
+
+describe("generateChallengeTakeCard — Phase 2d anchor-truth branching (choke)", () => {
+  // The lock's core correctness gate: the anchor claim must be TRUE to
+  // the data. "X WASN'T THE PROBLEM" must NOT fire when X tanked; "EVEN
+  // X COULDN'T SAVE IT" must NOT fire when X delivered.
+
+  function chokeHand(overrides: {
+    anchorName: string | null;
+    held: Array<{ name: string; actualFp: number; projectedFp: number }>;
+  }): TakeCardInput {
+    return input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: overrides.anchorName,
+      holdsRecorded: true,
+      heldCards: overrides.held.map(h => ({ ...h, tier: "RED" })),
+    });
+  }
+
+  // Bank-level shape check — banks contain the substitution token so
+  // routing is observable.
+  it("vindicated bank: every entry references {anchorName}", () => {
+    for (const line of [...TAKES_CHOKE_ANCHOR_VINDICATED.named, ...TAKES_CHOKE_ANCHOR_VINDICATED.noName]) {
+      expect(line).toContain("{anchorName}");
+    }
+  });
+
+  it("blamed bank: every entry references {anchorName}", () => {
+    for (const line of [...TAKES_CHOKE_ANCHOR_BLAMED.named, ...TAKES_CHOKE_ANCHOR_BLAMED.noName]) {
+      expect(line).toContain("{anchorName}");
+    }
+  });
+
+  it("VINDICATED: anchor delivered + other tanked → take vindicates anchor", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe",
+      held: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50 }, // 0.94 DELIVERED
+        { name: "Kidd", actualFp: 12, projectedFp: 35 }, // 0.34 TANKED
+      ],
+    }));
+    expect(card.take).toMatch(/WASN'T THE PROBLEM|DID HIS PART|DON'T BLAME|SHOWED UP\. THE REST/i);
+    expect(card.take.toUpperCase()).toContain("KOBE");
+  });
+
+  it("BLAMED: anchor tanked → take blames anchor", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe",
+      held: [
+        { name: "Kobe", actualFp: 18, projectedFp: 50 }, // 0.36 TANKED
+        { name: "Kidd", actualFp: 28, projectedFp: 35 }, // 0.80 MID
+      ],
+    }));
+    expect(card.take).toMatch(/EVEN .* COULDN'T SAVE|FORGOT TO SHOW|WAS THE ONE THAT MISSED|BLINKED/i);
+    expect(card.take.toUpperCase()).toContain("KOBE");
+  });
+
+  it("TRUTH GUARD: anchor delivered but no other tanked → falls to GENERIC (no false 'wasn't the problem')", () => {
+    // Both delivered (no contrast) → no honest "anchor wasn't the
+    // problem" claim. Must fall to generic.
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe",
+      held: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50 }, // 0.94 DELIVERED
+        { name: "Kidd", actualFp: 33, projectedFp: 35 }, // 0.94 DELIVERED
+      ],
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("WASN'T THE PROBLEM");
+    expect(card.take.toUpperCase()).not.toContain("COULDN'T SAVE");
+  });
+
+  it("TRUTH GUARD: anchor in MID zone (neither delivered nor tanked) → falls to GENERIC", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe",
+      held: [
+        { name: "Kobe", actualFp: 36, projectedFp: 50 }, // 0.72 MID
+        { name: "Kidd", actualFp: 10, projectedFp: 35 }, // 0.286 TANKED
+      ],
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("KOBE");
+  });
+
+  it("TRUTH GUARD: anchorName not present in heldCards → falls to GENERIC", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Jordan", // not in held set
+      held: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50 }, // 0.94 DELIVERED
+        { name: "Kidd", actualFp: 12, projectedFp: 35 }, // 0.34 TANKED
+      ],
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("JORDAN");
+  });
+
+  it("TRUTH GUARD: single held card → falls to GENERIC (no 'other' to indict)", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe",
+      held: [{ name: "Kobe", actualFp: 47, projectedFp: 50 }], // DELIVERED but solo
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("WASN'T THE PROBLEM");
+  });
+
+  it("LEGACY GUARD: holdsRecorded:false → GENERIC take, no anchor name leak", () => {
+    // Critical: the actualFp=0 default on legacy rows would otherwise
+    // classify a hypothetical anchor as "tanked" (ratio 0). The gate on
+    // holdsRecorded:true prevents this false claim. Pass anchorName +
+    // populated heldCards (the defensive scenario) and confirm we still
+    // fall to generic.
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      holdsRecorded: false,
+      anchorName: "Kobe",
+      heldCards: [
+        { name: "Kobe", actualFp: 0, projectedFp: 50, tier: "RED" },
+      ],
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("KOBE");
+    expect(card.take.toUpperCase()).not.toContain("COULDN'T SAVE");
+    expect(card.take.toUpperCase()).not.toContain("WASN'T THE PROBLEM");
+  });
+
+  it("anchor token substitution: vindicated take renders anchor name UPPERCASE, never a stray {anchorName}", () => {
+    for (let i = 0; i < 10; i++) {
+      const card = generateChallengeTakeCard(chokeHand({
+        anchorName: "Kobe",
+        held: [
+          { name: "Kobe", actualFp: 47, projectedFp: 50 },
+          { name: "Kidd", actualFp: 12, projectedFp: 35 },
+        ],
+      }));
+      expect(card.take).not.toMatch(/\{anchorName\}/);
+      expect(card.take).toContain("KOBE");
+    }
+  });
+
+  it("DETERMINISM preserved across the anchor branching (same input → same card)", () => {
+    const args = chokeHand({
+      anchorName: "Kobe",
+      held: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50 },
+        { name: "Kidd", actualFp: 12, projectedFp: 35 },
+      ],
+    });
+    const a = generateChallengeTakeCard(args);
+    const b = generateChallengeTakeCard(args);
+    expect(a).toEqual(b);
+  });
+});
+
+describe("generateChallengeTakeCard — Phase 2d fused choke evidence ('NAME AND NAME. BUSTED.')", () => {
+  // The lock's default fused form: when the choke take is GENERIC (no
+  // anchor split), the evidenceLine fuses the two held names with the
+  // stakes word ("Kobe and Kidd. Busted."). When the anchor split fires,
+  // the take already names the anchor; the evidenceLine is just the
+  // stakes word.
+
+  it("generic choke + 2 held → evidenceLine fuses names + stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: null, // force generic
+      holdsRecorded: true,
+      heldCards: [
+        { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },     // MID
+        { name: "Kidd", actualFp: 22, projectedFp: 30, tier: "PURPLE" },  // MID
+      ],
+    }));
+    expect(card.evidenceLine).toBe("KOBE AND KIDD. BUSTED.");
+  });
+
+  it("anchor-vindicated take → evidenceLine is just the stakes (anchor named in take)", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: "Kobe",
+      holdsRecorded: true,
+      heldCards: [
+        { name: "Kobe", actualFp: 47, projectedFp: 50, tier: "RED" },     // DELIVERED
+        { name: "Kidd", actualFp: 12, projectedFp: 35, tier: "PURPLE" },  // TANKED
+      ],
+    }));
+    expect(card.evidenceLine).toBe("BUSTED");
+  });
+
+  it("legacy choke (0 held) → evidenceLine is just the stakes (no names to fuse)", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      targetScore: 142.0,
+      holdsRecorded: false,
+      heldCards: [],
+      anchorName: null,
+    }));
+    expect(card.evidenceLine).toBe("BUSTED");
   });
 });
 
@@ -418,11 +697,17 @@ describe("generateChallengeTakeCard — CTA family lock", () => {
   // energy) or big_score on "PLAY YOUR LINE" (no competition energy).
   // Post-fix banks split clean: correction is FIX/PROVE/PLAY,
   // competition is BEAT/MATCH, neutral is PLAY/TAKE.
-  it("correction CTAs assert FIX/PROVE/PLAY energy only — no MATCH or BEAT leak", () => {
+  // Phase 2d adds "DO IT BETTER" to the correction bank — same
+  // FIX/PROVE/PLAY energy spectrum, names the correction.
+  it("correction CTAs assert FIX/PROVE/PLAY/DO BETTER energy only — no MATCH or BEAT leak", () => {
     for (const cta of CTAS.correction) {
-      expect(cta).toMatch(/PROVE|FIX|PLAY YOUR LINE/);
+      expect(cta).toMatch(/PROVE|FIX|PLAY YOUR LINE|DO IT BETTER/);
       expect(cta).not.toMatch(/BEAT|MATCH/);
     }
+  });
+
+  it("correction CTAs include the Phase 2d 'DO IT BETTER' entry", () => {
+    expect(CTAS.correction).toContain("DO IT BETTER");
   });
 
   it("competition CTAs assert BEAT/MATCH energy only — no PROVE/FIX/TAKE leak", () => {
@@ -436,7 +721,7 @@ describe("generateChallengeTakeCard — CTA family lock", () => {
     expect(CTAS.neutral).toEqual(["PLAY YOUR LINE", "TAKE THE SAME HAND"]);
   });
 
-  it("every correction-mode emission across 50 ids × {choke, miss} hits a FIX/PROVE/PLAY CTA", () => {
+  it("every correction-mode emission across 50 ids × {choke, miss} hits a FIX/PROVE/PLAY/DO BETTER CTA", () => {
     for (const trigger of ["choke", "miss"] as const) {
       for (let i = 0; i < 50; i++) {
         const card = generateChallengeTakeCard(input({
@@ -446,7 +731,7 @@ describe("generateChallengeTakeCard — CTA family lock", () => {
           nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
         }));
         expect(card.ctaText, `${trigger} #${i} CTA drifted from correction energy: ${card.ctaText}`)
-          .toMatch(/PROVE|FIX|PLAY YOUR LINE/);
+          .toMatch(/PROVE|FIX|PLAY YOUR LINE|DO IT BETTER/);
       }
     }
   });

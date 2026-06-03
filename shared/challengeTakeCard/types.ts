@@ -37,6 +37,12 @@ export type TakeCardMode = "correction" | "competition" | "neutral";
 export interface HeldCardForTakeCard {
   name: string;
   actualFp: number;
+  /** Phase 2d — anchor-truth ratio is actualFp / projectedFp. The
+   *  generator gates the anchor-aware take on holdsRecorded:true (legacy
+   *  rows produce empty heldCards regardless of input), so a missing
+   *  projectedFp on a non-legacy row is a snapshot integrity bug, not a
+   *  ratio-of-undefined risk. */
+  projectedFp: number;
   tier: string;
 }
 

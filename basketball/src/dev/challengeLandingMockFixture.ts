@@ -95,7 +95,14 @@ function rosterSnapshot(cards: SnapshotCard[], holdsRecorded: boolean): Record<s
 
 // ── Fixture cases ──────────────────────────────────────────────────────
 
-export type LandingMockCase = "choke" | "miss" | "big_score" | "rare_pull" | "default" | "legacy_choke";
+export type LandingMockCase =
+  | "choke"
+  | "choke_anchor_tanked"
+  | "miss"
+  | "big_score"
+  | "rare_pull"
+  | "default"
+  | "legacy_choke";
 
 interface LandingMockFixture {
   /** ChallengeData shape, ready to pass into ChallengeTakeCardLanding's
@@ -120,9 +127,12 @@ const baseAttribution = {
 };
 
 export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> = {
-  // Choke — sender held Embiid + Vucevic, busted 142.0. The hero case
-  // for V2: held cards prominent + their actualFp chips, CHOKE stamp
-  // adjacent to outcome, "talked himself into a loaded hand" hook.
+  // Choke — ANCHOR DELIVERED case (Phase 2d anchor-vindicated path).
+  // Embiid is the anchor; he showed up (47/50 = 0.94 ratio, DELIVERED);
+  // Vucevic tanked (17/35 = 0.49 ratio, TANKED). The take should read
+  // "EMBIID WASN'T THE PROBLEM" / "DON'T BLAME EMBIID" / etc. — the
+  // anchor-vindicated bank. Plain stakes: target 142.0 < 173 → BUSTED.
+  // Evidence line: just "BUSTED." (take already names anchor, no fuse).
   choke: {
     data: {
       challenge_id: "ch_mock_choke",
@@ -133,11 +143,38 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
       initial_roster: rosterSnapshot(
         baseSix({
           heldPair: ["emb", "voo"],
-          heldOutcomes: { emb: 22.0, voo: 18.5 },
+          heldOutcomes: { emb: 47.0, voo: 17.0 },
         }),
         true,
       ),
-      anchor_base_player_id: "voo",
+      anchor_base_player_id: "emb",
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: "Unbeaten so far · 2 attempts",
+    alreadyAttempted: false,
+  },
+
+  // Choke — ANCHOR TANKED case (Phase 2d anchor-blamed path). Embiid
+  // is the anchor; he tanked (18/50 = 0.36 ratio, TANKED). The take
+  // should read "EVEN EMBIID COULDN'T SAVE IT" / etc. — the
+  // anchor-blamed bank. Same target → BUSTED stakes.
+  choke_anchor_tanked: {
+    data: {
+      challenge_id: "ch_mock_choke_anchor_tanked",
+      created_by: "u_mike",
+      ...baseAttribution,
+      target_score: 142.0,
+      trigger_type: "choke",
+      initial_roster: rosterSnapshot(
+        baseSix({
+          heldPair: ["emb", "voo"],
+          heldOutcomes: { emb: 18.0, voo: 24.0 },
+        }),
+        true,
+      ),
+      anchor_base_player_id: "emb",
       near_miss_gap: null,
       near_miss_next_tier: null,
       top_game_tier: null,
