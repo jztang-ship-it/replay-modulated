@@ -34,8 +34,10 @@ mkdirSync(OUT_DIR, { recursive: true });
 const ORIGIN = process.env.LANDING_V2_ORIGIN ?? "http://localhost:5173";
 const VIEWPORT = { width: WIDTH, height: HEIGHT };
 const CASES = [
-  "choke",                // Phase 2d: anchor-DELIVERED ("EMBIID WASN'T THE PROBLEM")
-  "choke_anchor_tanked",  // Phase 2d: anchor-TANKED ("EVEN EMBIID COULDN'T SAVE IT")
+  "choke",                       // Phase 2d: anchor-DELIVERED, synthetic ID → 2d fallback take
+  "choke_anchor_tanked",         // Phase 2d: anchor-TANKED, synthetic ID → 2d fallback take
+  "choke_culture_rich",          // Phase 2e: Kobe DELIVERED + Kidd TANKED → culture-vindicated ("MAMBA …")
+  "choke_generic_no_culture",    // Phase 2e: MID-zone + no culture → generic take + "HELD THE STARS." prefix
   "miss",
   "big_score",
   "rare_pull",

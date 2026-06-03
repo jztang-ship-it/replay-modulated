@@ -824,6 +824,17 @@ export interface CultureShape {
   teamContext?: string[];
   draftAndPath?: string[];
   formerTeam?: string[];
+  // Phase 2e — Challenge Landing V2 culture pass
+  /** Single-line image summary. Used by the optional supporting culture line
+   *  on the challenge landing. NEVER injected as a substitution token in
+   *  take banks — the take uses {nickname} only. Free-form prose. */
+  knownFor?: string;
+  /** Parallel curated list of LANDING-SAFE controversy entries. The raw
+   *  controversy[] field carries §3-radioactive mixed with gold (Arenas
+   *  gun-incident, etc.); 2e's fail-closed rule is that the take/supporting
+   *  line reads from controversySafe ONLY. Ships EMPTY (zero flagged lines)
+   *  → mechanism is inert until user-ratified curation populates it. */
+  controversySafe?: string[];
 }
 
 const _cultureDb: Record<string, Record<string, CultureShape>> = {

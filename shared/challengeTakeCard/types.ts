@@ -1,3 +1,5 @@
+import type { CultureShape } from "@shared/commentary/selectCommentary";
+
 // shared/challengeTakeCard/types.ts
 //
 // Phase 2c take-card generator — TAKE → EVIDENCE → DARE output contract.
@@ -44,6 +46,12 @@ export interface HeldCardForTakeCard {
    *  ratio-of-undefined risk. */
   projectedFp: number;
   tier: string;
+  /** Phase 2e — the landing reads basePlayerId + team off the held cards
+   *  to call lookupCulture() and resolve anchorCulture on TakeCardInput.
+   *  The generator itself never touches these fields. Optional so prior
+   *  test fixtures stay compatible. */
+  basePlayerId?: string;
+  team?: string;
 }
 
 /** Inputs to {@link generateChallengeTakeCard}. The caller (the landing)
@@ -82,6 +90,18 @@ export interface TakeCardInput {
   /** Determinism seed (per the 2a contract — preserved through the
    *  2c reshape). Same challengeId → identical card on every call. */
   challengeId: string;
+  /** Phase 2e — anchor's resolved culture, or null when:
+   *  - no anchor (holdsRecorded:false, anchor not in heldCards, etc.)
+   *  - the anchor's tier is BLUE/GREEN/WHITE (tier-gated out by
+   *    lookupCulture)
+   *  - the anchor has no culture DB entry (synthetic IDs, unrecognized
+   *    basePlayerId)
+   *  Resolved by the LANDING via lookupCulture(anchorName, sport, tier,
+   *  seed, basePlayerId, team); generator stays sport-agnostic and pure.
+   *  When non-null + iconic nickname present, the take routes to the
+   *  culture-flavored bank ("MAMBA DID HIS PART"). When null, falls
+   *  through to the 2d non-culture bank ("EMBIID DID HIS PART"). */
+  anchorCulture?: CultureShape | null;
 }
 
 /** The 2c output — six fields. All strings are FULLY substituted at

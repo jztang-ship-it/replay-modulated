@@ -267,8 +267,8 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
   });
 });
 
-describe("ChallengeTakeCardLanding — Phase 2d plain-language stakes (NO FP)", () => {
-  it("correction (choke, generic) → fused '{NAMES}. BUSTED.' stakes", () => {
+describe("ChallengeTakeCardLanding — Phase 2e conditional choke evidence", () => {
+  it("correction (choke, generic, 2 held) → 'HELD THE STARS. BUSTED.' prefix (no held-name fuse)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 142.0 })}
@@ -277,9 +277,10 @@ describe("ChallengeTakeCardLanding — Phase 2d plain-language stakes (NO FP)", 
         onAccept={() => {}}
       />
     );
-    // Default makeData ratios are MID → anchor-truth = generic → fused
-    // evidence line "EMBIID AND VUCEVIC. BUSTED."
-    expect(screen.getByTestId("evidence-line").textContent).toBe("EMBIID AND VUCEVIC. BUSTED.");
+    // Default makeData ratios are MID → anchor-truth = generic → 2e
+    // conditional prefix fires "HELD THE STARS. BUSTED." (replaces the
+    // 2d name-fusion "EMBIID AND VUCEVIC. BUSTED.").
+    expect(screen.getByTestId("evidence-line").textContent).toBe("HELD THE STARS. BUSTED.");
   });
 
   it("competition (big_score) → '{N} TRIED. {N} FAILED.' stakes when 2+ attempts / 0 winners", () => {
@@ -413,6 +414,190 @@ describe("ChallengeTakeCardLanding — Phase 2d anchor-truth wiring (component �
     expect(take.toUpperCase()).not.toContain("EMBIID");
     expect(take.toUpperCase()).not.toContain("WASN'T THE PROBLEM");
     expect(take.toUpperCase()).not.toContain("COULDN'T SAVE");
+  });
+});
+
+describe("ChallengeTakeCardLanding — Phase 2e culture-flavored take + supporting line + de-dup", () => {
+  // The component wires lookupCulture(name, sport, tier, seed, basePlayerId,
+  // team). The makeData synthetic basePlayerIds (emb/voo/etc.) won't hit
+  // the basketball culture DB → lookupCulture returns null → generator
+  // falls to 2d non-culture banks. Use a Kobe fixture with the REAL
+  // basePlayerId "977" to exercise the culture-flavored path end-to-end.
+
+  function makeCultureRichData(heldOutcomes: Record<string, number> = { kobe: 47, kidd: 12 }): ChallengeLandingData {
+    return {
+      challenge_id: "ch_culture_kobe",
+      created_by: "u_creator",
+      challenger_name: "Mike",
+      target_score: 142.0,
+      sport: "basketball",
+      season: "2425",
+      trigger_type: "choke",
+      share_headline: "",
+      initial_roster: {
+        v: 1,
+        sport: "basketball",
+        holdsRecorded: true,
+        cards: [
+          { id: "kobe", basePlayerId: "977", personKey: "977", cardId: "kobe_c",
+            name: "Kobe Bryant", team: "LAL", season: "2425", position: "G",
+            photoCode: null, salary: 95, tier: "RED", slotIndex: 0,
+            projectedFp: 50, wasHeld: true, actualFp: heldOutcomes.kobe ?? 47 },
+          { id: "kidd", basePlayerId: "467", personKey: "467", cardId: "kidd_c",
+            name: "Jason Kidd", team: "DAL", season: "2425", position: "G",
+            photoCode: null, salary: 60, tier: "RED", slotIndex: 1,
+            projectedFp: 35, wasHeld: true, actualFp: heldOutcomes.kidd ?? 12 },
+          { id: "bro", basePlayerId: "bro", personKey: "bro", cardId: "bro_c",
+            name: "Brown", team: "BOS", season: "2425", position: "F",
+            photoCode: null, salary: 55, tier: "PURPLE", slotIndex: 2,
+            projectedFp: 30, wasHeld: false, actualFp: 0 },
+          { id: "cur", basePlayerId: "cur", personKey: "cur", cardId: "cur_c",
+            name: "Curry", team: "GSW", season: "2425", position: "G",
+            photoCode: null, salary: 75, tier: "RED", slotIndex: 3,
+            projectedFp: 42, wasHeld: false, actualFp: 0 },
+          { id: "bag", basePlayerId: "bag", personKey: "bag", cardId: "bag_c",
+            name: "Bagley", team: "WAS", season: "2425", position: "F",
+            photoCode: null, salary: 35, tier: "BLUE", slotIndex: 4,
+            projectedFp: 18, wasHeld: false, actualFp: 0 },
+          { id: "hol", basePlayerId: "hol", personKey: "hol", cardId: "hol_c",
+            name: "Holiday", team: "BOS", season: "2425", position: "G",
+            photoCode: null, salary: 25, tier: "GREEN", slotIndex: 5,
+            projectedFp: 14, wasHeld: false, actualFp: 0 },
+        ],
+      },
+      roster_size: 6,
+      attempt_count: 2,
+      winner_count: 0,
+      best_score: null,
+      best_user_name: null,
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      anchor_base_player_id: "977",
+      top_game_tier: null,
+    };
+  }
+
+  it("culture-rich anchor (Kobe, vindicated) → take uses a Kobe nickname (Mamba family)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeCultureRichData()}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const take = screen.getByTestId("take-headline").textContent ?? "";
+    // Iconic nicknames from bryant_977: BLACK MAMBA, MAMBA, VINO, KB24,
+    // MAMBA MENTALITY. The seeded pick lands on one of these.
+    expect(take).toMatch(/BLACK MAMBA|MAMBA|VINO|KB24|MAMBA MENTALITY/);
+    expect(take).not.toMatch(/\{nickname\}/);
+    expect(take).not.toMatch(/\{anchorName\}/);
+  });
+
+  it("culture-rich anchor (Kobe, blamed) → take blames the Mamba family", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeCultureRichData({ kobe: 18, kidd: 25 })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const take = screen.getByTestId("take-headline").textContent ?? "";
+    expect(take).toMatch(/BLACK MAMBA|MAMBA|VINO|KB24|MAMBA MENTALITY/);
+    expect(take).toMatch(/WENT QUIET|FORGOT TO SHOW|BLINKED|BUILT AROUND/);
+  });
+
+  it("culture-poor anchor (synthetic 'emb' basePlayerId) → falls to 2d 'EMBIID …' bank, no broken token", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({
+          trigger: "choke",
+          heldPair: ["emb", "voo"],
+          anchor: "emb",
+          heldOutcomes: { emb: 47, voo: 12 },
+        })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const take = screen.getByTestId("take-headline").textContent ?? "";
+    expect(take.toUpperCase()).toContain("EMBIID");
+    expect(take).not.toMatch(/\{nickname\}/);
+    expect(take).not.toMatch(/\{anchorName\}/);
+  });
+
+  it("DE-DUP: stakes line never contains the held player NAMES (the 2d → 2e cut)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const evidence = screen.getByTestId("evidence-line").textContent ?? "";
+    expect(evidence.toUpperCase()).not.toContain("EMBIID");
+    expect(evidence.toUpperCase()).not.toContain("VUCEVIC");
+    // The DENZEL'S LINE block still lists them — that's the one mention.
+    const heldNames = screen.getAllByTestId("held-name").map(n => n.textContent);
+    expect(heldNames).toContain("Embiid");
+    expect(heldNames).toContain("Vucevic");
+  });
+
+  it("supporting culture line — OFF by default (the lock-spec'd default)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeCultureRichData()}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.queryByTestId("supporting-culture-line")).toBeNull();
+  });
+
+  it("supporting culture line — ON renders knownFor below the take (the see-it-then-decide path)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeCultureRichData()}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+        showCultureLine={true}
+      />
+    );
+    const line = screen.queryByTestId("supporting-culture-line");
+    expect(line).not.toBeNull();
+    // Kobe's knownFor mentions Jordan and the bridge to LeBron's era.
+    expect(line!.textContent).toMatch(/champion|All-Star|Jordan|LeBron/);
+  });
+
+  it("supporting culture line — ON but NO culture (synthetic ID) → not rendered, no crash", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+        showCultureLine={true}
+      />
+    );
+    expect(screen.queryByTestId("supporting-culture-line")).toBeNull();
+  });
+
+  it("supporting culture line — ON + legacy (holdsRecorded:false) → not rendered (no anchor resolution)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: null, holdsRecorded: false, anchor: null })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+        showCultureLine={true}
+      />
+    );
+    expect(screen.queryByTestId("supporting-culture-line")).toBeNull();
   });
 });
 

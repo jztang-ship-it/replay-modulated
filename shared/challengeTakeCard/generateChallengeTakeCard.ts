@@ -27,11 +27,14 @@ import type {
   TakeCardMode,
   TakeCardTrigger,
 } from "./types";
+import type { CultureShape } from "@shared/commentary/selectCommentary";
 import {
   TAKES,
   TAKES_MISS_WIDE_GAP,
   TAKES_CHOKE_ANCHOR_VINDICATED,
   TAKES_CHOKE_ANCHOR_BLAMED,
+  TAKES_CHOKE_CULTURE_VINDICATED,
+  TAKES_CHOKE_CULTURE_BLAMED,
   DELIVERED_RATIO,
   TANKED_RATIO,
   MISS_ONE_DECISION_THRESHOLD_FP,
@@ -43,6 +46,8 @@ import {
   STAKES_MISS_NARROW,
   STAKES_MISS_WIDE,
   STAKES_NEUTRAL,
+  STAKES_PREFIX_HELD_STARS_PLURAL,
+  STAKES_PREFIX_HELD_STARS_SINGULAR,
   BUST_FP_CEILING,
   ROOKIE_FP_CEILING,
   buildStakesCompetition,
@@ -104,15 +109,23 @@ interface SubstitutionDict {
    *  (the routing already requires anchorName for the anchor banks, so an
    *  empty string here means the generic bank was picked instead). */
   anchorName: string;
+  /** Phase 2e — culture-flavored TAKE banks substitute {nickname} when
+   *  the anchor has a culture entry with an iconic nickname. Resolved-
+   *  nickname when present + uppercased; "" when no culture / no iconic
+   *  nickname (routing falls through to the 2d anchorName banks before
+   *  ever picking from a culture bank, so an empty dict value here is
+   *  defense-in-depth, not the actual flow). */
+  nickname: string;
 }
 
-function buildDict(input: TakeCardInput): SubstitutionDict {
+function buildDict(input: TakeCardInput, nickname: string): SubstitutionDict {
   return {
     challengerName: input.challengerName?.trim() ?? "",
     targetScore: input.targetScore.toFixed(1),
     nearMissGap: input.nearMissGap != null ? String(Math.round(input.nearMissGap)) : "",
     nearMissNextTier: formatTierLabel(input.nearMissNextTier),
     anchorName: input.anchorName?.trim().toUpperCase() ?? "",
+    nickname,
   };
 }
 
@@ -203,45 +216,89 @@ function buildPlainStakes(input: TakeCardInput, mode: TakeCardMode): string {
   return STAKES_NEUTRAL;
 }
 
-/** Phase 2d — fused choke evidence ("KOBE AND KIDD. BUSTED."). Only
- *  applies when the take is the GENERIC choke claim (not an anchor-
- *  vindicated/blamed take, which already names the anchor). Lists the
- *  first two held names; falls through to plain stakes for 0–1 held. */
-function fuseChokeEvidence(
+/** Phase 2e — iconic nickname pick. Returns the first nickname in the
+ *  culture's `nicknames[]` that passes the iconic-nickname filter
+ *  (length ≥ 4, not equal to the player's first or last name — same
+ *  rule lookupCulture uses for PURPLE-tier gating). Falls back to "" if
+ *  no iconic nickname exists; routing layer treats "" as "no culture
+ *  flavor available" and falls through to the 2d non-culture bank.
+ *
+ *  Deterministic across the seed: when multiple iconic nicknames exist,
+ *  the seed picks one ("Black Mamba" vs "Mamba" vs "Vino" for Kobe). */
+function pickIconicNickname(
+  culture: CultureShape | null | undefined,
+  anchorName: string | null | undefined,
+  challengeId: string,
+): string {
+  const nicks = culture?.nicknames ?? [];
+  if (nicks.length === 0 || !anchorName) return "";
+  const parts = anchorName.trim().split(/\s+/);
+  const first = (parts[0] ?? "").toLowerCase();
+  const last = (parts[parts.length - 1] ?? "").toLowerCase();
+  const iconic = nicks.filter(n => {
+    if (n.length < 4) return false;
+    const lower = n.toLowerCase();
+    return lower !== first && lower !== last;
+  });
+  if (iconic.length === 0) return "";
+  return seededPick(iconic, challengeId, "take-nickname").toUpperCase();
+}
+
+/** Phase 2e — conditional stakes evidence line. When the take NAMES the
+ *  anchor (vindicated/blamed/culture-flavored), the take carries the
+ *  talent indictment → bare stakes ("BUSTED.") reads honest. When the
+ *  take is GENERIC ("THESE CARDS SHOULD NOT HAVE LOST"), the bare form
+ *  reads flat alongside it → prefix the stakes with "HELD THE STARS."
+ *  so the talent-vs-failure tension lives somewhere on the page.
+ *  Drops the prefix entirely on 0-held (legacy) — can't credit "stars
+ *  held" when none were. */
+function buildEvidenceLineChoke(
   input: TakeCardInput,
   stakesWord: string,
-  anchorTruth: AnchorTruth,
+  takeNamedAnchor: boolean,
 ): string {
-  if (anchorTruth !== "generic") return stakesWord; // take already names the anchor
-  if (input.trigger !== "choke") return stakesWord;
-  if (!input.holdsRecorded) return stakesWord;
-  if (input.heldCards.length < 2) return stakesWord;
-  const [a, b] = input.heldCards;
-  const first = a!.name.trim().toUpperCase();
-  const second = b!.name.trim().toUpperCase();
-  return `${first} AND ${second}. ${stakesWord}.`;
+  if (takeNamedAnchor) return `${stakesWord}.`;
+  const heldCount = input.holdsRecorded ? input.heldCards.length : 0;
+  if (heldCount === 0) return `${stakesWord}.`;
+  const prefix =
+    heldCount === 1 ? STAKES_PREFIX_HELD_STARS_SINGULAR : STAKES_PREFIX_HELD_STARS_PLURAL;
+  return `${prefix}. ${stakesWord}.`;
 }
 
 export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCard {
   const mode = deriveMode(input.trigger);
-  const dict = buildDict(input);
   const seed = input.challengeId;
 
-  // TAKE routing — choke gets anchor-truth branching (Phase 2d); miss
-  // keeps the 2c overclaim gate; everything else uses the standard
-  // trigger-keyed bank. The named/noName routing layers on top.
+  // TAKE routing — choke gets anchor-truth branching (Phase 2d) + a
+  // culture-flavored overlay (Phase 2e) when an iconic nickname is
+  // available. Miss keeps the 2c overclaim gate; everything else uses
+  // the standard trigger-keyed bank. The named/noName routing layers
+  // on top.
   //
-  // anchor-truth (choke only):
-  //   vindicated → TAKES_CHOKE_ANCHOR_VINDICATED
-  //   blamed     → TAKES_CHOKE_ANCHOR_BLAMED
-  //   generic    → TAKES.choke (the safe always-true claim)
+  // 2e routing:
+  //   choke + vindicated + iconic nickname → TAKES_CHOKE_CULTURE_VINDICATED
+  //   choke + vindicated + no nickname     → TAKES_CHOKE_ANCHOR_VINDICATED
+  //   choke + blamed + iconic nickname     → TAKES_CHOKE_CULTURE_BLAMED
+  //   choke + blamed + no nickname         → TAKES_CHOKE_ANCHOR_BLAMED
+  //   choke + generic                      → TAKES.choke
+  //   miss wide                            → TAKES_MISS_WIDE_GAP
+  //   everything else                      → TAKES[trigger]
   const anchorTruth = input.trigger === "choke" ? classifyAnchorTruth(input) : "generic";
+  const nickname =
+    input.trigger === "choke" && anchorTruth !== "generic"
+      ? pickIconicNickname(input.anchorCulture, input.anchorName, seed)
+      : "";
+  const dict = buildDict(input, nickname);
+  const hasCultureFlavor = nickname.length > 0;
 
   let takeBank;
+  let takeNamedAnchor = false;
   if (input.trigger === "choke" && anchorTruth === "vindicated") {
-    takeBank = TAKES_CHOKE_ANCHOR_VINDICATED;
+    takeBank = hasCultureFlavor ? TAKES_CHOKE_CULTURE_VINDICATED : TAKES_CHOKE_ANCHOR_VINDICATED;
+    takeNamedAnchor = true;
   } else if (input.trigger === "choke" && anchorTruth === "blamed") {
-    takeBank = TAKES_CHOKE_ANCHOR_BLAMED;
+    takeBank = hasCultureFlavor ? TAKES_CHOKE_CULTURE_BLAMED : TAKES_CHOKE_ANCHOR_BLAMED;
+    takeNamedAnchor = true;
   } else if (input.trigger === "miss" && (input.nearMissGap ?? 0) > MISS_ONE_DECISION_THRESHOLD_FP) {
     takeBank = TAKES_MISS_WIDE_GAP;
   } else {
@@ -257,9 +314,15 @@ export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCa
   // CTA: mode-keyed.
   const ctaText = seededPick(CTAS[mode], seed, "cta");
 
-  // EVIDENCE: Phase 2d plain-language stakes. NO raw FP appears.
+  // EVIDENCE: Phase 2d plain-language stakes + Phase 2e conditional
+  // prefix (generic take only). NO raw FP appears. NO held names fused
+  // into the stakes line — the DENZEL'S LINE block lists them; the take
+  // names the anchor (when applicable). De-dup'd.
   const stakesWord = buildPlainStakes(input, mode);
-  const evidenceLine = fuseChokeEvidence(input, stakesWord, anchorTruth);
+  const evidenceLine =
+    input.trigger === "choke"
+      ? buildEvidenceLineChoke(input, stakesWord, takeNamedAnchor)
+      : stakesWord;
 
   // heldCards: structured list, NOT prose. Empty when holdsRecorded is
   // false — the landing's labeled held block omits entirely.

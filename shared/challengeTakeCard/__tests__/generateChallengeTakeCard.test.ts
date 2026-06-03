@@ -12,6 +12,8 @@ import {
   TAKES_MISS_WIDE_GAP,
   TAKES_CHOKE_ANCHOR_VINDICATED,
   TAKES_CHOKE_ANCHOR_BLAMED,
+  TAKES_CHOKE_CULTURE_VINDICATED,
+  TAKES_CHOKE_CULTURE_BLAMED,
   MISS_ONE_DECISION_THRESHOLD_FP,
   DARES,
   CTAS,
@@ -328,7 +330,8 @@ describe("generateChallengeTakeCard — Phase 2d plain-language stakes (NO raw F
       holdsRecorded: false, // force generic + no fuse
       heldCards: [],
     }));
-    expect(card.evidenceLine).toBe("BUSTED");
+    // Phase 2e — choke evidence wraps with trailing period.
+    expect(card.evidenceLine).toBe("BUSTED.");
   });
 
   it("choke + target in ROOKIE band (173–202) → BARELY SURVIVED stakes", () => {
@@ -339,7 +342,7 @@ describe("generateChallengeTakeCard — Phase 2d plain-language stakes (NO raw F
       holdsRecorded: false,
       heldCards: [],
     }));
-    expect(card.evidenceLine).toBe("BARELY SURVIVED");
+    expect(card.evidenceLine).toBe("BARELY SURVIVED.");
   });
 
   it("miss narrow gap (≤7) → ONE DECISION SHORT stakes", () => {
@@ -587,28 +590,46 @@ describe("generateChallengeTakeCard — Phase 2d anchor-truth branching (choke)"
   });
 });
 
-describe("generateChallengeTakeCard — Phase 2d fused choke evidence ('NAME AND NAME. BUSTED.')", () => {
-  // The lock's default fused form: when the choke take is GENERIC (no
-  // anchor split), the evidenceLine fuses the two held names with the
-  // stakes word ("Kobe and Kidd. Busted."). When the anchor split fires,
-  // the take already names the anchor; the evidenceLine is just the
-  // stakes word.
+describe("generateChallengeTakeCard — Phase 2e conditional choke evidence (de-dup + prefix)", () => {
+  // 2e drops the 2d name fuse ("KOBE AND KIDD. BUSTED.") — the held
+  // names already appear in the DENZEL'S LINE block + HOLD badges, so
+  // listing them in the stakes line was the third repetition. Replaced
+  // with a conditional prefix:
+  //   take NAMES anchor (vindicated/blamed/culture)    → bare "BUSTED."
+  //   take is GENERIC + ≥2 held                        → "HELD THE STARS. BUSTED."
+  //   take is GENERIC + 1 held                         → "HELD THE STAR. BUSTED."
+  //   take is GENERIC + 0 held (legacy)                → "BUSTED."
+  // Talent-vs-failure tension lives in the prefix when the take can't
+  // carry it (generic path).
 
-  it("generic choke + 2 held → evidenceLine fuses names + stakes", () => {
+  it("GENERIC choke + 2 held → evidenceLine prefixed 'HELD THE STARS. BUSTED.'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "choke",
       targetScore: 142.0,
-      anchorName: null, // force generic
+      anchorName: null, // force generic — no anchor split
       holdsRecorded: true,
       heldCards: [
         { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },     // MID
         { name: "Kidd", actualFp: 22, projectedFp: 30, tier: "PURPLE" },  // MID
       ],
     }));
-    expect(card.evidenceLine).toBe("KOBE AND KIDD. BUSTED.");
+    expect(card.evidenceLine).toBe("HELD THE STARS. BUSTED.");
   });
 
-  it("anchor-vindicated take → evidenceLine is just the stakes (anchor named in take)", () => {
+  it("GENERIC choke + 1 held → evidenceLine singular prefix 'HELD THE STAR. BUSTED.'", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: null,
+      holdsRecorded: true,
+      heldCards: [
+        { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },
+      ],
+    }));
+    expect(card.evidenceLine).toBe("HELD THE STAR. BUSTED.");
+  });
+
+  it("ANCHOR-VINDICATED take → evidenceLine is BARE stakes (take already names the anchor)", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "choke",
       targetScore: 142.0,
@@ -619,10 +640,25 @@ describe("generateChallengeTakeCard — Phase 2d fused choke evidence ('NAME AND
         { name: "Kidd", actualFp: 12, projectedFp: 35, tier: "PURPLE" },  // TANKED
       ],
     }));
-    expect(card.evidenceLine).toBe("BUSTED");
+    expect(card.evidenceLine).toBe("BUSTED.");
+    expect(card.evidenceLine).not.toContain("HELD THE STAR");
   });
 
-  it("legacy choke (0 held) → evidenceLine is just the stakes (no names to fuse)", () => {
+  it("ANCHOR-BLAMED take → evidenceLine is BARE stakes", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: "Kobe",
+      holdsRecorded: true,
+      heldCards: [
+        { name: "Kobe", actualFp: 18, projectedFp: 50, tier: "RED" },     // TANKED
+        { name: "Kidd", actualFp: 25, projectedFp: 35, tier: "PURPLE" },  // MID
+      ],
+    }));
+    expect(card.evidenceLine).toBe("BUSTED.");
+  });
+
+  it("LEGACY choke (0 held) → evidenceLine is BARE stakes (nothing to credit)", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "choke",
       targetScore: 142.0,
@@ -630,7 +666,188 @@ describe("generateChallengeTakeCard — Phase 2d fused choke evidence ('NAME AND
       heldCards: [],
       anchorName: null,
     }));
-    expect(card.evidenceLine).toBe("BUSTED");
+    expect(card.evidenceLine).toBe("BUSTED.");
+    expect(card.evidenceLine).not.toContain("HELD THE STAR");
+  });
+
+  // De-dup guard: the names of the held players must NEVER appear in
+  // the stakes line — that's the 2d → 2e fix.
+  it("DE-DUP: stakes line never contains held player names (no 2d-style fuse)", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: null,
+      holdsRecorded: true,
+      heldCards: [
+        { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },
+        { name: "Kidd", actualFp: 22, projectedFp: 30, tier: "PURPLE" },
+      ],
+    }));
+    expect(card.evidenceLine.toUpperCase()).not.toContain("KOBE");
+    expect(card.evidenceLine.toUpperCase()).not.toContain("KIDD");
+  });
+});
+
+describe("generateChallengeTakeCard — Phase 2e culture-flavored anchor takes", () => {
+  // Layered on top of 2d anchor-truth. When the anchor has a CultureShape
+  // with an iconic nickname, the take uses {nickname}. No culture / no
+  // iconic nickname → falls through to 2d non-culture anchor banks.
+  // Fail-safe: NEVER emit a broken {nickname} token.
+
+  function chokeHand(overrides: {
+    anchorName: string | null;
+    anchorCulture?: TakeCardInput["anchorCulture"];
+    held: Array<{ name: string; actualFp: number; projectedFp: number }>;
+  }): TakeCardInput {
+    return input({
+      trigger: "choke",
+      targetScore: 142.0,
+      anchorName: overrides.anchorName,
+      anchorCulture: overrides.anchorCulture ?? null,
+      holdsRecorded: true,
+      heldCards: overrides.held.map(h => ({ ...h, tier: "RED" })),
+    });
+  }
+
+  it("CULTURE-VINDICATED: anchor delivered + other tanked + nickname → 'MAMBA …' take", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba", "Mamba", "Vino"] },
+      held: [
+        { name: "Kobe Bryant", actualFp: 47, projectedFp: 50 }, // DELIVERED
+        { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 }, // TANKED
+      ],
+    }));
+    // Culture vindicated bank lines all contain {nickname}; substituted
+    // it must contain one of: BLACK MAMBA / MAMBA / VINO.
+    expect(card.take).toMatch(/BLACK MAMBA|MAMBA|VINO/);
+    expect(card.take).toMatch(/DID HIS PART|DON'T BLAME|SHOWED UP|YOU DON'T WASTE/);
+    expect(card.take).not.toMatch(/\{nickname\}/);
+    expect(card.take).not.toMatch(/\{anchorName\}/);
+  });
+
+  it("CULTURE-BLAMED: anchor tanked + nickname → 'EVEN MAMBA …' take", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba", "Mamba", "Vino"] },
+      held: [
+        { name: "Kobe Bryant", actualFp: 18, projectedFp: 50 }, // TANKED
+        { name: "Jason Kidd",  actualFp: 25, projectedFp: 35 }, // MID
+      ],
+    }));
+    expect(card.take).toMatch(/BLACK MAMBA|MAMBA|VINO/);
+    expect(card.take).toMatch(/WENT QUIET|FORGOT TO SHOW|BLINKED|BUILT AROUND/);
+    expect(card.take).not.toMatch(/\{nickname\}/);
+  });
+
+  it("FALLBACK — no culture → 2d anchor bank ('KOBE WASN'T THE PROBLEM')", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: null,
+      held: [
+        { name: "Kobe Bryant", actualFp: 47, projectedFp: 50 },
+        { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 },
+      ],
+    }));
+    expect(card.take.toUpperCase()).toContain("KOBE BRYANT");
+    expect(card.take).toMatch(/WASN'T THE PROBLEM|DID HIS PART|DON'T BLAME|SHOWED UP/);
+    expect(card.take).not.toMatch(/\{nickname\}/);
+  });
+
+  it("FALLBACK — culture with NO iconic nickname → 2d anchor bank (no broken token)", () => {
+    // Nicknames present but all match first/last name → not iconic → falls
+    // to 2d behavior. Critical: must NOT emit "{nickname}" as a stray.
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Kobe", "Bryant", "Kob"] }, // all non-iconic
+      held: [
+        { name: "Kobe Bryant", actualFp: 47, projectedFp: 50 },
+        { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 },
+      ],
+    }));
+    expect(card.take).not.toMatch(/\{nickname\}/);
+    expect(card.take.toUpperCase()).toContain("KOBE BRYANT");
+  });
+
+  it("FAIL-SAFE — empty nicknames array → 2d fallback, no broken {nickname} token", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: [] },
+      held: [
+        { name: "Kobe Bryant", actualFp: 47, projectedFp: 50 },
+        { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 },
+      ],
+    }));
+    expect(card.take).not.toMatch(/\{nickname\}/);
+    expect(card.take.toUpperCase()).toContain("KOBE BRYANT");
+  });
+
+  it("GENERIC anchor-truth (MID zone) → culture nickname does NOT fire (only vindicated/blamed branches use culture)", () => {
+    const card = generateChallengeTakeCard(chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba", "Mamba"] },
+      held: [
+        { name: "Kobe Bryant", actualFp: 38, projectedFp: 50 }, // 0.76 MID
+        { name: "Jason Kidd",  actualFp: 26, projectedFp: 35 }, // 0.74 MID
+      ],
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("MAMBA");
+  });
+
+  it("LEGACY (holdsRecorded:false) → no culture flavor, take generic, no name leak", () => {
+    const card = generateChallengeTakeCard(input({
+      trigger: "choke",
+      holdsRecorded: false,
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba"] }, // ignored on legacy
+      heldCards: [],
+    }));
+    expect(card.take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
+    expect(card.take.toUpperCase()).not.toContain("MAMBA");
+    expect(card.take.toUpperCase()).not.toContain("KOBE");
+  });
+
+  it("DETERMINISM — culture-flavored same input → same card", () => {
+    const args = chokeHand({
+      anchorName: "Kobe Bryant",
+      anchorCulture: { nicknames: ["Black Mamba", "Mamba", "Vino"] },
+      held: [
+        { name: "Kobe Bryant", actualFp: 47, projectedFp: 50 },
+        { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 },
+      ],
+    });
+    const a = generateChallengeTakeCard(args);
+    const b = generateChallengeTakeCard(args);
+    expect(a).toEqual(b);
+  });
+
+  // Bank hygiene — culture banks must always reference {nickname}.
+  it("BANK SHAPE — every culture-flavored entry references {nickname}", () => {
+    for (const line of [...TAKES_CHOKE_CULTURE_VINDICATED.named, ...TAKES_CHOKE_CULTURE_VINDICATED.noName]) {
+      expect(line).toContain("{nickname}");
+    }
+    for (const line of [...TAKES_CHOKE_CULTURE_BLAMED.named, ...TAKES_CHOKE_CULTURE_BLAMED.noName]) {
+      expect(line).toContain("{nickname}");
+    }
+  });
+
+  // No raw FP guard preserved through 2e additions.
+  it("NO RAW FP across culture-flavored emissions × 50 seeds", () => {
+    const fpRe = /\d+(?:\.\d+)?\s*FP\b/i;
+    for (let i = 0; i < 50; i++) {
+      const card = generateChallengeTakeCard(chokeHand({
+        anchorName: "Kobe Bryant",
+        anchorCulture: { nicknames: ["Black Mamba", "Mamba", "Vino"] },
+        held: [
+          { name: "Kobe Bryant", actualFp: 47, projectedFp: 50 },
+          { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 },
+        ],
+      }));
+      for (const field of [card.take, card.evidenceLine, card.dare]) {
+        expect(fpRe.test(field), `2e culture #${i} leaked raw FP: ${field}`).toBe(false);
+      }
+    }
   });
 });
 

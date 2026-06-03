@@ -98,6 +98,8 @@ function rosterSnapshot(cards: SnapshotCard[], holdsRecorded: boolean): Record<s
 export type LandingMockCase =
   | "choke"
   | "choke_anchor_tanked"
+  | "choke_culture_rich"
+  | "choke_generic_no_culture"
   | "miss"
   | "big_score"
   | "rare_pull"
@@ -171,6 +173,80 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
         baseSix({
           heldPair: ["emb", "voo"],
           heldOutcomes: { emb: 18.0, voo: 24.0 },
+        }),
+        true,
+      ),
+      anchor_base_player_id: "emb",
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: "Unbeaten so far · 2 attempts",
+    alreadyAttempted: false,
+  },
+
+  // Phase 2e — CULTURE-RICH anchor. Uses Kobe Bryant's REAL basePlayerId
+  // (977 → key bryant_977) so the landing's lookupCulture call hits the
+  // basketball culture DB and returns Kobe's culture with iconic
+  // nicknames ["Black Mamba", "Mamba", "Vino", "KB24", "Mamba Mentality"].
+  // Anchor = Kobe (DELIVERED, 47/50 = 0.94); other held = Kidd (TANKED,
+  // 13/35 = 0.37) → anchor-vindicated. With a nickname available, the
+  // generator routes to TAKES_CHOKE_CULTURE_VINDICATED → "MAMBA DID HIS
+  // PART" / "DON'T BLAME BLACK MAMBA" / etc.
+  choke_culture_rich: {
+    data: {
+      challenge_id: "ch_mock_choke_culture_rich",
+      created_by: "u_mike",
+      ...baseAttribution,
+      target_score: 142.0,
+      trigger_type: "choke",
+      initial_roster: rosterSnapshot(
+        [
+          // Slot 0 — Kobe (RED, the anchor, DELIVERED)
+          {
+            id: "kobe", basePlayerId: "977", personKey: "977", cardId: "kobe_c",
+            name: "Kobe Bryant", team: "LAL", season: "2425", position: "G",
+            photoCode: null, salary: 95, tier: "RED", slotIndex: 0,
+            projectedFp: 50, wasHeld: true, actualFp: 47.0,
+          },
+          // Slot 1 — Kidd (RED, held, TANKED — the "other" indicted)
+          {
+            id: "kidd", basePlayerId: "467", personKey: "467", cardId: "kidd_c",
+            name: "Jason Kidd", team: "DAL", season: "2425", position: "G",
+            photoCode: null, salary: 60, tier: "RED", slotIndex: 1,
+            projectedFp: 35, wasHeld: true, actualFp: 13.0,
+          },
+          // Discards — use the other base-six entries verbatim
+          ...baseSix({}).slice(2),
+        ],
+        true,
+      ),
+      anchor_base_player_id: "977",
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: "Unbeaten so far · 2 attempts",
+    alreadyAttempted: false,
+  },
+
+  // Phase 2e — GENERIC anchor, NO culture. Synthetic IDs (no DB match)
+  // + MID-zone ratios (both held in [0.60, 0.90), neither delivered nor
+  // tanked) → anchor-truth = generic → take = "THESE CARDS SHOULD NOT
+  // HAVE LOST" + evidence = "HELD THE STARS. BUSTED." This is the path
+  // where the bare-stakes form would read flat; the conditional prefix
+  // earns its keep here. The user's explicit screenshot ask.
+  choke_generic_no_culture: {
+    data: {
+      challenge_id: "ch_mock_choke_generic",
+      created_by: "u_mike",
+      ...baseAttribution,
+      target_score: 142.0,
+      trigger_type: "choke",
+      initial_roster: rosterSnapshot(
+        baseSix({
+          heldPair: ["emb", "voo"],
+          heldOutcomes: { emb: 38.0, voo: 26.0 }, // 0.76 MID, 0.74 MID
         }),
         true,
       ),

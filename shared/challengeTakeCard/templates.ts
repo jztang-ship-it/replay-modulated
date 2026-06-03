@@ -184,6 +184,71 @@ export const TAKES_CHOKE_ANCHOR_BLAMED: TakeBank = {
   ],
 };
 
+// ── Phase 2e: culture-flavored choke TAKEs (anchor + nickname) ─────────
+//
+// Layered ON TOP of 2d's vindicated/blamed routing. When the anchor has
+// an iconic nickname in its culture DB entry, the take swaps in the
+// nickname instead of the legal name ("MAMBA DID HIS PART" vs "KOBE
+// BRYANT DID HIS PART"). This solves the 2d triple-named-player feel —
+// the take reads as an argument about the player's IMAGE, not a third
+// listing of the same proper noun (badges + DENZEL'S LINE block already
+// have the legal name).
+//
+// Fallback: when no culture OR no iconic nickname, generator falls
+// through to TAKES_CHOKE_ANCHOR_VINDICATED / TAKES_CHOKE_ANCHOR_BLAMED
+// (2d behavior). NEVER emits a broken {nickname} token.
+//
+// Author-without-articles rule: nicknames substitute as proper nouns —
+// "MAMBA DID HIS PART" works without "THE"; "THE MAMBA DID HIS PART"
+// would break for nicknames like "PENNY" or "TMAC". Bank lines use
+// {nickname} unprefixed.
+
+export const TAKES_CHOKE_CULTURE_VINDICATED: TakeBank = {
+  named: [
+    "{nickname} DID HIS PART",
+    "DON'T BLAME {nickname}",
+    "{nickname} SHOWED UP. THE REST DIDN'T.",
+    "YOU DON'T WASTE A {nickname} HAND",
+  ],
+  noName: [
+    "{nickname} DID HIS PART",
+    "DON'T BLAME {nickname}",
+    "{nickname} SHOWED UP. THE REST DIDN'T.",
+    "YOU DON'T WASTE A {nickname} HAND",
+  ],
+};
+
+export const TAKES_CHOKE_CULTURE_BLAMED: TakeBank = {
+  named: [
+    "EVEN {nickname} WENT QUIET",
+    "{nickname} FORGOT TO SHOW UP",
+    "{nickname} BLINKED",
+    "BUILT AROUND {nickname}. STILL LOST.",
+  ],
+  noName: [
+    "EVEN {nickname} WENT QUIET",
+    "{nickname} FORGOT TO SHOW UP",
+    "{nickname} BLINKED",
+    "BUILT AROUND {nickname}. STILL LOST.",
+  ],
+};
+
+// ── Phase 2e: stakes prefix for the GENERIC-take path ──────────────────
+//
+// The 2d generic choke take ("THESE CARDS SHOULD NOT HAVE LOST") doesn't
+// name the anchor; the bare stakes word ("BUSTED.") reads flat alongside
+// it. 2e adds a credit-anchoring prefix when the take is generic AND ≥1
+// held — "HELD THE STARS. BUSTED." — so the talent-vs-failure tension
+// lives on the page. When the take NAMES the anchor (vindicated/blamed/
+// culture-flavored), the prefix is dropped (the take already carries
+// the indictment); evidence is just bare stakes.
+//
+// The 1-held case uses the singular form. The 0-held legacy case skips
+// the prefix entirely (no holds to credit).
+
+export const STAKES_PREFIX_HELD_STARS_PLURAL = "HELD THE STARS";
+export const STAKES_PREFIX_HELD_STARS_SINGULAR = "HELD THE STAR";
+
 // ── Phase 2d: plain-language stakes (the new evidenceLine vocabulary) ──
 //
 // Raw FP is GONE from the landing. The evidenceLine is now a stakes word

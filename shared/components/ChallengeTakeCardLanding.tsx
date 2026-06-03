@@ -43,6 +43,8 @@ import { generateChallengeTakeCard } from "@shared/challengeTakeCard/generateCha
 import type { TakeCardInput, TakeCardTrigger } from "@shared/challengeTakeCard/types";
 import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
+import { lookupCulture } from "@shared/commentary/selectCommentary";
+import type { CultureShape } from "@shared/commentary/selectCommentary";
 
 // ── Data shape coming in from the shell ────────────────────────────────
 
@@ -73,6 +75,12 @@ interface Props {
   statsLine: string | null;
   alreadyAttempted: boolean;
   onAccept: () => void;
+  /** Phase 2e — optional supporting culture line below the take.
+   *  OFF by default per the lock §"Optional supporting culture line" —
+   *  the localhost loop screenshots it ON to decide keep/cut. Renders
+   *  the anchor's knownFor (always) or a controversySafe pick (when
+   *  curated; ships empty). Drops cleanly when no culture available. */
+  showCultureLine?: boolean;
 }
 
 // ── Snapshot card shape (Phase 0 enrichment fields) ────────────────────
@@ -286,18 +294,70 @@ function HandCard({ card, isHeld }: HandCardProps) {
   );
 }
 
+// ── Phase 2e culture helpers ───────────────────────────────────────────
+
+/** FNV-1a 32-bit hash of the challengeId — same scheme the generator
+ *  uses for the deterministic seed. Returned as a JS number for the
+ *  lookupCulture PURPLE-tier 30% gate. The gate is keyed off `seed/13`
+ *  so any stable integer derived from the challenge works. */
+function stableSeedFromId(challengeId: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < challengeId.length; i++) {
+    h ^= challengeId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/** Pick the supporting culture line. knownFor takes precedence (always
+ *  safe — single line, image summary). Falls back to the first entry in
+ *  controversySafe (curated landing-safe lines; ships empty so this
+ *  never fires until user-ratified curation populates the list).
+ *  Returns null when no line is available. */
+function pickSupportingCultureLine(culture: CultureShape | null): string | null {
+  if (!culture) return null;
+  if (culture.knownFor && culture.knownFor.trim().length > 0) return culture.knownFor.trim();
+  const safe = culture.controversySafe ?? [];
+  if (safe.length > 0 && safe[0] && safe[0].trim().length > 0) return safe[0].trim();
+  return null;
+}
+
 // ── The component ─────────────────────────────────────────────────────
 
-export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, onAccept }: Props) {
+export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, onAccept, showCultureLine = false }: Props) {
   const trigger = (normalizeTriggerType(data.trigger_type) ?? "default") as TakeCardTrigger;
   const snapshot = (data.initial_roster ?? {}) as RosterSnapshot;
   const cards: SnapshotCard[] = snapshot.cards ?? [];
   const holdsRecorded = snapshot.holdsRecorded === true;
   const namedChallenger = isRealName(data.challenger_name);
 
-  const anchorName = data.anchor_base_player_id
-    ? (cards.find(c => c.basePlayerId === data.anchor_base_player_id)?.name ?? null)
+  // Locate the anchor card up-front — the lookup hits both anchorName and
+  // anchorCulture branches. Find by basePlayerId match against the snapshot.
+  const anchorCard = data.anchor_base_player_id
+    ? (cards.find(c => c.basePlayerId === data.anchor_base_player_id) ?? null)
     : null;
+  const anchorName = anchorCard?.name ?? null;
+
+  // Phase 2e — culture lookup on the anchor. Gated by holdsRecorded
+  // (don't resolve culture for legacy rows; the generator's anchor-truth
+  // branch would route to generic anyway). lookupCulture handles the
+  // tier gate internally (BLUE/GREEN/WHITE → null; PURPLE iconic+30%).
+  // Returns null cleanly when no entry → generator falls through to 2d
+  // anchor banks (or further to generic). No broken {nickname} token.
+  const anchorCulture: CultureShape | null =
+    holdsRecorded && anchorCard
+      ? lookupCulture(
+          anchorCard.name,
+          data.sport,
+          anchorCard.tier,
+          // Seed the PURPLE 30% gate off the challengeId so different
+          // challenges with PURPLE anchors get different gate outcomes.
+          // RED/ORANGE bypass this gate entirely.
+          stableSeedFromId(data.challenge_id),
+          anchorCard.basePlayerId,
+          anchorCard.team,
+        )
+      : null;
 
   const heldCardsForGenerator = holdsRecorded
     ? cards
@@ -307,6 +367,8 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           actualFp: c.actualFp ?? 0,
           projectedFp: c.projectedFp ?? 0,
           tier: c.tier,
+          basePlayerId: c.basePlayerId,
+          team: c.team,
         }))
     : [];
 
@@ -324,8 +386,15 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
     attemptCount: data.attempt_count,
     winnerCount: data.winner_count,
     challengeId: data.challenge_id,
+    anchorCulture,
   };
   const takeCard = generateChallengeTakeCard(takeCardInput);
+
+  // Phase 2e — optional supporting culture line. Prefers knownFor (always
+  // safe — single-line image summary); falls back to controversySafe[0]
+  // (ships empty → never fires until curation). Drops cleanly when
+  // showCultureLine is false OR no culture / no usable line.
+  const supportingCultureLine = showCultureLine ? pickSupportingCultureLine(anchorCulture) : null;
 
   // Phase 2d: structured "DENZEL'S LINE / HOLD: X / Y" evidence block —
   // vertical, label-led, reads as an exhibit rather than narration. Uses
@@ -376,6 +445,28 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           </>
         )}
       </h1>
+
+      {/* Phase 2e — OPTIONAL supporting culture line. Off by default;
+          shipped behind `showCultureLine` prop. Drops in below the
+          headline, above the USP. Mixed-case prose (the take is the
+          uppercase argument; this is the image). Reads as a quote /
+          texture, not another header. The localhost loop screenshots
+          both states to decide keep/cut. */}
+      {supportingCultureLine && (
+        <div
+          data-testid="supporting-culture-line"
+          style={{
+            fontSize: 13,
+            fontStyle: "italic",
+            color: "rgba(234,240,255,0.75)",
+            lineHeight: 1.4,
+            margin: "0 0 14px",
+            maxWidth: 560,
+          }}
+        >
+          {supportingCultureLine}
+        </div>
+      )}
 
       {/* USP / subHeadline — "Same starting hand. Different decisions."
           Real visual weight per the lock §"Same starting hand — make
