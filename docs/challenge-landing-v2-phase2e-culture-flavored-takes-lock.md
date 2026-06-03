@@ -163,3 +163,34 @@ token); the de-dup'd stakes line (no names) + retained block. The two see-it dec
 flavored take, does the DENZEL'S LINE block still earn its place. Then PROD: a real Kobe-anchor
 choke reads with image-flavored attitude, the page is no more cluttered than 2d (ideally
 less — names de-duped), no broken tokens on culture-poor anchors.
+
+---
+
+## Postscript — known divergences (added during 2e build)
+
+This section is appended after the lock was written, to keep the design record honest
+about places where the SHIPPED implementation differs from the lock language.
+
+### ORANGE-tier gate: lock says "conditionally," code treats it like RED
+
+The lock §"Architecture" says:
+> for the **anchor/star only** (RED/ORANGE — culture is already tier-gated: RED always,
+> ORANGE conditionally, lower none …)
+
+The shipped `lookupCulture` at `shared/commentary/selectCommentary.ts:891` does NOT gate
+ORANGE conditionally. The early-return at lines 899–900 only blocks `BLUE / GREEN / WHITE`;
+the PURPLE-specific iconic+~30% gate at lines 936–942 covers PURPLE. ORANGE falls through
+to "always return culture if present" — same as RED.
+
+The 2e build did NOT introduce a separate ORANGE gate. The shared `lookupCulture` shipping
+behavior was preserved to avoid changing a path other consumers (`chadChallenge.ts`'s
+recipient-intro `getCultureLine` consumer; `selectCommentary` itself) depend on.
+
+**When to revisit:** if culture starts firing on undeserving ORANGE cards in PROD — e.g. a
+role-player at the ORANGE-tier floor produces a flavored take that overclaims their image —
+add the ORANGE conditional to `lookupCulture` (probably mirroring the PURPLE iconic-nickname
+requirement without the 30% probabilistic gate, or a salary-tier check). Track via PROD
+sample; not a Day-1 fix.
+
+**Scope when revisited:** the change lives in `lookupCulture`, not in the 2e generator. All
+2e consumers (take generation + the supporting culture line) inherit the new gate for free.

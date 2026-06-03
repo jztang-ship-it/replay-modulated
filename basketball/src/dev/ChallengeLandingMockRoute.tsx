@@ -4,7 +4,13 @@
 // Mounts ChallengeTakeCardLanding with fixture data so the localhost
 // visual loop can iterate on phone-width without going PROD.
 //
-// URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|legacy_choke>
+// URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|legacy_choke|choke_culture_rich|choke_generic_no_culture>
+//                                                &showCultureLine=1
+//
+// Phase 2e — additional URL params:
+//   ?showCultureLine=1   passes showCultureLine={true} to the landing
+//                        so the localhost loop can compare the
+//                        knownFor italic prose ON vs OFF state.
 //
 // Wrapped in the same dark-bg + safe padding chrome the real
 // ChallengeLandingScreen shell provides, so the rendered hierarchy
@@ -15,9 +21,17 @@
 import { ChallengeTakeCardLanding } from "@shared/components/ChallengeTakeCardLanding";
 import { LANDING_MOCK_FIXTURES, getMockCaseFromUrl } from "./challengeLandingMockFixture";
 
+function getBoolParam(name: string): boolean {
+  if (typeof window === "undefined") return false;
+  const sp = new URLSearchParams(window.location.search);
+  const raw = sp.get(name);
+  return raw === "1" || raw === "true";
+}
+
 export default function ChallengeLandingMockRoute() {
   const caseKey = getMockCaseFromUrl();
   const fixture = LANDING_MOCK_FIXTURES[caseKey];
+  const showCultureLine = getBoolParam("showCultureLine");
 
   return (
     <div
@@ -60,20 +74,24 @@ export default function ChallengeLandingMockRoute() {
           color: "rgba(255,255,255,0.4)",
         }}
       >
-        DEV mock · case=<code>{caseKey}</code> · try:{" "}
-        {(["choke", "miss", "big_score", "rare_pull", "default", "legacy_choke"] as const).map((c) => (
-          <a
-            key={c}
-            href={`?case=${c}`}
-            style={{
-              color: c === caseKey ? "#FFB14A" : "rgba(255,177,74,0.6)",
-              marginRight: 8,
-              textDecoration: c === caseKey ? "underline" : "none",
-            }}
-          >
-            {c}
-          </a>
-        ))}
+        DEV mock · case=<code>{caseKey}</code>{showCultureLine ? " · showCultureLine=ON" : ""} · try:{" "}
+        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "legacy_choke"] as const).map((c) => {
+          const next = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+          next.set("case", c);
+          return (
+            <a
+              key={c}
+              href={`?${next.toString()}`}
+              style={{
+                color: c === caseKey ? "#FFB14A" : "rgba(255,177,74,0.6)",
+                marginRight: 8,
+                textDecoration: c === caseKey ? "underline" : "none",
+              }}
+            >
+              {c}
+            </a>
+          );
+        })}
       </div>
 
       <ChallengeTakeCardLanding
@@ -81,6 +99,7 @@ export default function ChallengeLandingMockRoute() {
         statsLine={fixture.statsLine}
         alreadyAttempted={fixture.alreadyAttempted}
         onAccept={() => { console.warn("[challenge-landing-mock] onAccept clicked (dev no-op)"); }}
+        showCultureLine={showCultureLine}
       />
     </div>
   );

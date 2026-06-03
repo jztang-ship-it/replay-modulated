@@ -51,6 +51,32 @@ const ctx = await browser.newContext({
   deviceScaleFactor: 2,
 });
 
+// Phase 2e see-it comparison captures — culture-rich anchor with the
+// two see-it-decision toggles flipped, so the user can compare ON/OFF
+// for the optional supporting culture line AND with/without the
+// DENZEL'S LINE block. The block is removed via DOM mutation (no
+// shipped prop for hiding it; this is a one-off screenshot test).
+const SEE_IT_CAPTURES = [
+  {
+    name: "choke_culture_rich__cultureLine_ON__block_ON",
+    caseKey: "choke_culture_rich",
+    showCultureLine: true,
+    hideHeldList: false,
+  },
+  {
+    name: "choke_culture_rich__cultureLine_OFF__block_OFF",
+    caseKey: "choke_culture_rich",
+    showCultureLine: false,
+    hideHeldList: true,
+  },
+  {
+    name: "choke_culture_rich__cultureLine_ON__block_OFF",
+    caseKey: "choke_culture_rich",
+    showCultureLine: true,
+    hideHeldList: true,
+  },
+];
+
 console.log(`capturing at ${WIDTH}×${HEIGHT}`);
 for (const caseKey of CASES) {
   const page = await ctx.newPage();
@@ -61,6 +87,28 @@ for (const caseKey of CASES) {
   const out = resolve(OUT_DIR, `${caseKey}.png`);
   await page.screenshot({ path: out, fullPage: true });
   console.log(`captured ${caseKey} → ${out}`);
+  await page.close();
+}
+
+for (const cap of SEE_IT_CAPTURES) {
+  const page = await ctx.newPage();
+  const params = new URLSearchParams({ case: cap.caseKey });
+  if (cap.showCultureLine) params.set("showCultureLine", "1");
+  const url = `${ORIGIN}/basketball/dev/challenge-landing-mock?${params.toString()}`;
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.waitForSelector("[data-testid='challenge-take-card-landing']", { timeout: 5000 });
+  if (cap.hideHeldList) {
+    // DOM mutation: remove the DENZEL'S LINE block client-side. No
+    // shipped prop for hiding it (block is part of the V2 layout
+    // contract). Cut-test is a one-off see-it screenshot.
+    await page.evaluate(() => {
+      document.querySelector("[data-testid='held-list']")?.remove();
+    });
+  }
+  await page.waitForTimeout(400);
+  const out = resolve(OUT_DIR, `${cap.name}.png`);
+  await page.screenshot({ path: out, fullPage: true });
+  console.log(`captured ${cap.name} → ${out}`);
   await page.close();
 }
 
