@@ -82,14 +82,55 @@ const PHRASE_DENYLIST: readonly string[] = [
   "bankruptcy", "bankrupt",
 ];
 
-/** Tokens we explicitly allow even though they'd otherwise match the
- *  3-letter-uppercase team-code regex in the validator. FP is a stat
- *  abbreviation; MVP / DPOY / ROY are award acronyms; ESPN / NBA / NFL /
- *  MLB are league/network names. None imply a team affiliation, so
- *  they're safe even when not in the facts. */
-const TEAM_TOKEN_WHITELIST: ReadonlySet<string> = new Set([
-  "FP", "MVP", "DPOY", "ROY", "ESPN", "NBA", "NFL", "MLB", "GOAT",
+/** Known NBA team codes (3-letter, current + common historical). The
+ *  validator's purpose is to catch the model INVENTING a team identity
+ *  that isn't in facts — "Lakers stumble against MILWAUKEE" when the
+ *  facts said nothing about Milwaukee. Phase 3.3 writes headlines in
+ *  ALL-CAPS hand-subject register, so the previous `[A-Z]{3,5}` regex
+ *  tripped on every common English word ("YOU," "HELD," "THIS," etc.).
+ *
+ *  Inverting the check: only trip when the matched token IS a known
+ *  team code AND is NOT in the facts' allowed set. Non-team uppercase
+ *  words (pronouns, prepositions, verbs, player names) are silently
+ *  ignored — the team-not-in-facts guard remains as strict as before
+ *  for ACTUAL team-name invention.
+ *
+ *  Set includes: current 30 NBA teams + historical codes the model is
+ *  likely to reach for on retro seasons (NJN, SEA, VAN, NOH, KCK, BAL,
+ *  CHO, NOP, BRK). When the facts already carry a team via
+ *  anchor.team / anchor.opponent, that team is allowed even if it's
+ *  in this set. */
+const NBA_TEAM_CODES: ReadonlySet<string> = new Set([
+  // Current 30 teams
+  "ATL", "BOS", "BKN", "CHA", "CHI", "CLE", "DAL", "DEN", "DET", "GSW",
+  "HOU", "IND", "LAC", "LAL", "MEM", "MIA", "MIL", "MIN", "NOP", "NYK",
+  "OKC", "ORL", "PHI", "PHX", "POR", "SAC", "SAS", "TOR", "UTA", "WAS",
+  // Historical / alt codes the model may reach for on retro seasons
+  "NJN", "SEA", "VAN", "NOH", "KCK", "BAL", "CHO", "BRK", "WSB", "NJN",
+  // Common alternate-style team abbreviations
+  "GS", "NO", "NY", "LA",
 ]);
+
+/** Pull short ALL-CAPS tokens from anchor.name + anchor.nicknames so
+ *  the validator allows player references the prompt is expected to
+ *  write. (Belt-and-suspenders: even after the team-code inversion
+ *  above, an anchor named "DEN" or similar would otherwise trip on the
+ *  team-code set. Adding the anchor's name tokens to the allowed set
+ *  handles that edge case.) */
+function extractAnchorTokens(facts: CommentaryFacts): Set<string> {
+  const out = new Set<string>();
+  if (!facts.anchor) return out;
+  const candidates: string[] = [];
+  if (facts.anchor.name) candidates.push(facts.anchor.name);
+  for (const n of facts.anchor.nicknames ?? []) candidates.push(n);
+  for (const candidate of candidates) {
+    for (const token of candidate.split(/\s+|[-—_'"]/)) {
+      const t = token.replace(/[^A-Za-z]/g, "").toUpperCase();
+      if (t.length >= 3 && t.length <= 5) out.add(t);
+    }
+  }
+  return out;
+}
 
 /** Default tier when the facts didn't carry one. Used as the routing
  *  key by llmRouter (KV namespace splits decisions per tier) — STARTER
@@ -127,17 +168,22 @@ export function validateHeadline(
     if (re.test(lc)) return { ok: false, reason: `denylist:${phrase}` };
   }
 
-  // Not-in-facts team/opponent rejection. Collect every 3-letter
-  // ALL-CAPS token; reject if any is NOT in the allowed set (anchor's
-  // own team OR the opponent) and NOT a whitelisted non-team token.
+  // Not-in-facts team-INVENTION rejection. Phase 3.3 inversion: only
+  // trip on tokens that are actually KNOWN NBA team codes — the prior
+  // `[A-Z]{3,5}` heuristic was too greedy for the all-caps headline
+  // register the new VOICE_CONTRACT produces (rejected "YOU," "HELD,"
+  // "THIS" as if they were team codes). The guard's PURPOSE is
+  // unchanged: stop the model from naming a team that isn't in facts.
   const allowed = new Set<string>();
   if (facts.anchor?.team) allowed.add(facts.anchor.team.toUpperCase());
   if (facts.anchor?.opponent) allowed.add(facts.anchor.opponent.toUpperCase());
+  for (const t of extractAnchorTokens(facts)) allowed.add(t);
 
-  const teamTokens = text.match(/\b[A-Z]{3,4}\b/g) ?? [];
-  for (const t of teamTokens) {
-    if (TEAM_TOKEN_WHITELIST.has(t)) continue;
-    if (!allowed.has(t)) return { ok: false, reason: `team_not_in_facts:${t}` };
+  const upperTokens = text.match(/\b[A-Z]{2,5}\b/g) ?? [];
+  for (const t of upperTokens) {
+    if (!NBA_TEAM_CODES.has(t)) continue;
+    if (allowed.has(t)) continue;
+    return { ok: false, reason: `team_not_in_facts:${t}` };
   }
 
   return { ok: true, headline: text };

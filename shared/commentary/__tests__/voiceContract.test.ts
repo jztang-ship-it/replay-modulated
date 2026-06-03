@@ -1,13 +1,15 @@
 // shared/commentary/__tests__/voiceContract.test.ts
 //
-// Phase 3 step 2 — deterministic tests on the prompt assembler. Voice
-// quality is reviewed (eval loop + on-glass), not unit-asserted; these
-// tests pin the things the validator and the lock require to be present:
-// season substitution (anti-anachronism), verdict appearing in the
-// brief, facts-only rendering (no leak of non-facts content), and
-// inheritance of the §3 / accuracy / trademark segments.
+// Phase 3.3 — gates on the rewritten VOICE_CONTRACT (lock: docs/
+// challenge-landing-v2-phase3.3-headline-subject-is-the-hand-lock.md).
+// The neutral-surface "DO NOT NAME THE ANCHOR" block + the DO-NOT-
+// INVENT-A-CULPRIT block from 2.1 are replaced by three universal
+// rules: subject is the hand (Rule 1), name-don't-blame (Rule 2),
+// per-trigger flavor (Rule 3). The new tests pin those rules + the
+// headline-scoped game-context omission. Voice quality is reviewed,
+// not unit-asserted.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildVoiceContract, buildUserPrompt } from "../voiceContract";
 import type { CommentaryFacts } from "../commentaryFacts";
 
@@ -33,7 +35,7 @@ const WADE_FACTS: CommentaryFacts = {
   },
 };
 
-describe("buildVoiceContract — system prompt composition", () => {
+describe("buildVoiceContract — inherited segments unchanged", () => {
   it("inherits the basketball register, factual accuracy, trademark, §3, gold-standard segments verbatim", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("═══ CHAD'S VOICE — REPLAYMOD COMMENTARY STANDARD ═══");
@@ -43,77 +45,6 @@ describe("buildVoiceContract — system prompt composition", () => {
     expect(system).toContain("═══ GOLD-STANDARD EXAMPLES");
   });
 
-  it("appends the headline-specific surface layer with overrides", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("═══ SURFACE: CHALLENGE HEADLINE");
-    expect(system).toContain("OVERRIDE — STRUCTURE:");
-    expect(system).toContain("OVERRIDE — LENGTH:");
-    expect(system).toContain("OVERRIDE — OUTPUT FORMAT:");
-  });
-
-  it("substitutes {season} into the anti-anachronism rule", () => {
-    const { system } = buildVoiceContract({ ...WADE_FACTS, season: "9596" });
-    expect(system).toContain("game is from season 9596");
-    expect(system).not.toMatch(/\{season\}/);
-  });
-
-  it("OBEY THE VERDICT rule explicitly enumerates credited / blamed / neutral", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("\"credited\"");
-    expect(system).toContain("\"blamed\"");
-    expect(system).toContain("\"neutral\"");
-  });
-
-  it("step 2.1 final: neutral rule states the simple binding 'DO NOT NAME THE ANCHOR' rule explicitly", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    // Earlier iterations tried explicit-verb lists (stopped/stifled/...)
-    // and stat-line-pattern lists ({N} not enough). The model leaked
-    // through both. The final binding rule is the simple one: DO NOT
-    // NAME THE ANCHOR on neutral. Test pins the phrasing so future
-    // edits don't accidentally soften it.
-    expect(system).toContain("DO NOT NAME THE ANCHOR");
-    expect(system).toContain("THE SIMPLE BINDING RULE");
-    expect(system).toContain("Lakers can't get out of their own way against Houston");
-  });
-
-  it("step 2.1 final: neutral rule cites the specific anti-patterns from real model outputs", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    // Specific failure modes lifted verbatim from prior smoke runs so
-    // the model sees the exact patterns to avoid.
-    expect(system).toContain("Kobe's 24 not enough to carry the load");
-    expect(system).toContain("despite Kobe's 26");
-    expect(system).toContain("Portland stifles Kobe");
-  });
-
-  it("step 2.1 round 2: anti-anachronism rule lists arena-evocative phrases explicitly", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    // The model invented "the Garden" + "the Capital" as venue-shorthand
-    // when only specific-arena-brands were blocked. The stricter rule
-    // enumerates the common evocative phrases.
-    expect(system).toContain("the Garden");
-    expect(system).toContain("the Forum");
-    expect(system).toContain("the Capital");
-    expect(system).toContain("MSG");
-    expect(system).toContain("venue rule is ABSOLUTE");
-  });
-
-  it("step 2.1: DO NOT INVENT A CULPRIT rule covers both the named-culprit + game-context cases", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("DO NOT INVENT A CULPRIT");
-    expect(system).toContain("opponent didn't tank");
-    expect(system).toContain("Game 1");
-    // The anti-pattern from the step-2 smoke is cited verbatim.
-    expect(system).toContain("Spurs choked away Game 1");
-  });
-
-  it("step 2.1: RENDER ONLY PROVIDED FACTS rule explicitly bans game-context / playoff invention", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("playoffs");
-    expect(system).toContain("regular-season");
-    // The miss anti-pattern from the step-2 smoke is cited.
-    expect(system).toContain("playoff basketball");
-  });
-
   it("does NOT include the culture-entry JSON output instruction", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).not.toContain("Return ONLY a JSON array of objects");
@@ -121,16 +52,8 @@ describe("buildVoiceContract — system prompt composition", () => {
 
   it("does NOT include the field-structural-rules tail (basePlayerId, nicknames, ...)", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    // The culture-entry tail enumerates output JSON fields; the headline
-    // surface returns a plain string and must not see that block.
     expect(system).not.toContain("═══ FIELD STRUCTURAL RULES ═══");
     expect(system).not.toContain("salaryTier: max | star");
-  });
-
-  it("explicitly tells the model to return a plain string, no JSON, no prefix", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toMatch(/Return ONE plain string\. No JSON\./);
-    expect(system).toContain("No \"Headline:\" prefix");
   });
 
   it("falls back to basketball segments + warns on unknown sport", () => {
@@ -142,7 +65,126 @@ describe("buildVoiceContract — system prompt composition", () => {
   });
 });
 
-describe("buildUserPrompt — facts brief assembly", () => {
+describe("buildVoiceContract — Phase 3.3 banner + Rule 1 (subject is the hand)", () => {
+  it("opens with the lock's banner — sports arguments, not sports journalism", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("Challenge headlines are not sports journalism");
+    expect(system).toContain("Challenge headlines are sports arguments");
+    expect(system).toContain("subject is always the fantasy hand");
+  });
+
+  it("cites the lock's anti-recap example verbatim (the 3.2 LAKERS vs MILWAUKEE failure)", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("LAKERS STUMBLE AT HOME AGAINST MILWAUKEE");
+  });
+
+  it("Rule 1 declares game-identity inputs are WITHHELD from the surface", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("RULE 1 — THE SUBJECT IS THE HAND");
+    expect(system).toContain("game-identity inputs are intentionally WITHHELD");
+    // The priority of subject must be present so the model has the ladder.
+    expect(system).toContain("held players → the decision → the outcome → the claim");
+  });
+});
+
+describe("buildVoiceContract — Phase 3.3 Rule 2 (name-don't-blame)", () => {
+  it("Rule 2 declares naming-is-not-blaming", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("RULE 2 — NAME PLAYERS. NEVER BLAME THEM.");
+    expect(system).toContain("Naming is not blaming");
+  });
+
+  it("includes the GOOD list verbatim from the lock", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("KOBE AND CP3. STILL BUSTED.");
+    expect(system).toContain("THE MAMBA COULDN'T SAVE THIS.");
+    expect(system).toContain("YOU HELD KOBE. WHAT HAPPENED?");
+    expect(system).toContain("TWO STARS. ZERO EXCUSES.");
+  });
+
+  it("includes the BANNED list verbatim from the lock", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("KOBE CHOKED.");
+    expect(system).toContain("CP3 FAILED.");
+    expect(system).toContain("KOBE SOLD THE HAND.");
+  });
+
+  it("draws the GOOD-vs-BANNED boundary explicitly ('EVEN {star} COULDN'T SAVE IT' is allowed)", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("EVEN {star} COULDN'T SAVE IT");
+    expect(system).toContain("CHOKED / FAILED / SOLD IT / WENT QUIET / COULDN'T DELIVER");
+  });
+
+  it("explicitly retires the 2.1 'don't name the anchor' framing", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    // 2.1 wording must be gone.
+    expect(system).not.toContain("DO NOT NAME THE ANCHOR");
+    expect(system).not.toContain("THE SIMPLE BINDING RULE");
+    // And the rewrite makes the replacement explicit so a future
+    // regression to 2.1 wording is visible at review time.
+    expect(system).toContain("REPLACES any earlier \"don't name the anchor\"");
+  });
+});
+
+describe("buildVoiceContract — Phase 3.3 Rule 3 (per-trigger flavor)", () => {
+  it("Rule 3 declares universal philosophy + per-trigger emotional register", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("RULE 3 — UNIVERSAL PHILOSOPHY, PER-TRIGGER FLAVOR");
+  });
+
+  it("lists each trigger with its flavor + at least one example claim verbatim", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    // choke → accusation
+    expect(system).toContain("choke");
+    expect(system).toContain("ACCUSATION");
+    expect(system).toContain("STILL BUSTED");
+    // miss → regret
+    expect(system).toContain("miss");
+    expect(system).toContain("REGRET");
+    expect(system).toContain("ONE DECISION AWAY");
+    expect(system).toContain("LEFT MVP ON THE TABLE");
+    // big_score → challenge
+    expect(system).toContain("big_score");
+    expect(system).toContain("CHALLENGE");
+    expect(system).toContain("238.7 FP. GOOD LUCK");
+    // rare_pull → nostalgia
+    expect(system).toContain("rare_pull");
+    expect(system).toContain("NOSTALGIA");
+    expect(system).toContain("JORDAN WALKED BACK INTO THE BUILDING");
+    expect(system).toContain("YOU GOT THE JORDAN GAME. NOW WHAT?");
+  });
+});
+
+describe("buildVoiceContract — format + anti-anachronism + season substitution", () => {
+  it("substitutes {season} into the anti-anachronism rule", () => {
+    const { system } = buildVoiceContract({ ...WADE_FACTS, season: "9596" });
+    expect(system).toContain("game is from season 9596");
+    expect(system).not.toMatch(/\{season\}/);
+  });
+
+  it("anti-anachronism rule still lists arena-evocative phrases (carried from 2.1)", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("the Garden");
+    expect(system).toContain("the Forum");
+    expect(system).toContain("MSG");
+    expect(system).toContain("venue rule is ABSOLUTE");
+  });
+
+  it("explicitly tells the model to return a plain string, no JSON, no prefix", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toMatch(/Return ONE plain string\. No JSON\./);
+    expect(system).toContain("No \"Headline:\" prefix");
+  });
+
+  it("retains the STRUCTURE / LENGTH / OUTPUT FORMAT overrides", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("OVERRIDE — STRUCTURE:");
+    expect(system).toContain("OVERRIDE — LENGTH:");
+    expect(system).toContain("OVERRIDE — OUTPUT FORMAT:");
+  });
+});
+
+describe("buildUserPrompt — top-level fields + anchor block presence", () => {
   it("renders every required surface field", () => {
     const user = buildUserPrompt(WADE_FACTS);
     expect(user).toContain("SURFACE: challenge_headline");
@@ -153,13 +195,11 @@ describe("buildUserPrompt — facts brief assembly", () => {
     expect(user).toContain("WIN_TIER: ALL_STAR");
   });
 
-  it("renders the anchor block when present", () => {
+  it("renders anchor identity (name / team / tier) + culture (nicknames / knownFor) + statLine + topReason", () => {
     const user = buildUserPrompt(WADE_FACTS);
     expect(user).toContain("name: Dwyane Wade");
     expect(user).toContain("team: MIA");
-    expect(user).toContain("opponent: UTA");
-    expect(user).toContain("home_away: H");
-    expect(user).toContain("date: 2009-02-22");
+    expect(user).toContain("tier: RED");
     expect(user).toContain("nicknames: Flash, D-Wade");
     expect(user).toContain("knownFor: Three-time NBA champion");
     expect(user).toContain("statLine: 48 pts, 10 reb, 8 ast, 4 stl, 6 blk");
@@ -194,16 +234,35 @@ describe("buildUserPrompt — facts brief assembly", () => {
     const user = buildUserPrompt(WADE_FACTS);
     expect(user.trimEnd().endsWith("ONE line. Plain string. No quotes, no prefix.")).toBe(true);
   });
-
-  it("does NOT leak non-facts content (no opponent invented when facts omits it)", () => {
-    const facts: CommentaryFacts = {
-      ...WADE_FACTS,
-      anchor: { ...WADE_FACTS.anchor!, opponent: "" },
-    };
-    const user = buildUserPrompt(facts);
-    expect(user).not.toContain("opponent:");
-  });
 });
 
-// vi import for the warn-spy test
-import { vi } from "vitest";
+describe("buildUserPrompt — Phase 3.3 headline-scoped game-context omission", () => {
+  it("OMITS opponent / home_away / date for the challenge_headline surface", () => {
+    const user = buildUserPrompt(WADE_FACTS);
+    expect(user).not.toMatch(/^\s*opponent:/m);
+    expect(user).not.toMatch(/^\s*home_away:/m);
+    expect(user).not.toMatch(/^\s*date:/m);
+    // The values themselves must not leak via another label either.
+    expect(user).not.toContain("UTA");
+    expect(user).not.toContain("2009-02-22");
+  });
+
+  it("INCLUDES opponent / home_away / date for the post_hand commentary surface", () => {
+    // Regression guard: the omission is SCOPED to the headline path.
+    // The commentary surface (future phase) keeps game context.
+    const user = buildUserPrompt({ ...WADE_FACTS, surface: "post_hand" });
+    expect(user).toContain("opponent: UTA");
+    expect(user).toContain("home_away: H");
+    expect(user).toContain("date: 2009-02-22");
+  });
+
+  it("still includes player identity + stats + culture on the headline surface", () => {
+    // The omission is real-game-IDENTITY only — held players, stat
+    // line, culture stay. Test that the cut is targeted.
+    const user = buildUserPrompt(WADE_FACTS);
+    expect(user).toContain("name: Dwyane Wade");
+    expect(user).toContain("tier: RED");
+    expect(user).toContain("statLine:");
+    expect(user).toContain("nicknames:");
+  });
+});

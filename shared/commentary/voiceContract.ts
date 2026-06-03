@@ -79,20 +79,74 @@ function pickSegments(sport: string): VoiceSegments {
 }
 
 // ── Headline-specific instruction layer ────────────────────────────────────
-// Per the lock §B "VOICE_CONTRACT — the rules module (extends the existing
-// Chad spec)." Overrides the inherited STRUCTURE + LENGTH rules (which
-// were sized for culture-entry prose) and the JSON output format. Adds
-// the four Phase-3-specific rules: render-only-provided-facts, obey-
-// verdict, anti-anachronism, ESPN/newspaper-headline register.
+// Phase 3.3 rewrite (lock: docs/challenge-landing-v2-phase3.3-headline-
+// subject-is-the-hand-lock.md). Replaces the 2.1 "DO NOT NAME THE ANCHOR"
+// neutral block + the DO-NOT-INVENT-A-CULPRIT block with three universal
+// rules: subject is the hand (Rule 1), name-don't-blame (Rule 2), per-
+// trigger flavor (Rule 3). Game-context inputs (opponent, homeAway, date)
+// are withheld from the user prompt at the input-policy boundary
+// (buildUserPrompt) so the model literally cannot reach for them.
+//
+// Inherited segments (Chad register / FACTUAL_ACCURACY / TRADEMARK /
+// PERSONAL_LIFE / GOLD_STANDARD) are composed unchanged BEFORE this
+// layer. The headline-register override, anti-anachronism rule, and
+// output format rule below sit on top.
 //
 // Tokens substituted at compose time:
 //   {season}    — the season of play (e.g. "0809" → 2008-09). Drives
 //                 the anti-anachronism guard.
 // Other tokens are filled by the USER prompt, not this SYSTEM prompt.
 
-const HEADLINE_INSTRUCTION_LAYER = `═══ SURFACE: CHALLENGE HEADLINE — OVERRIDES + ADDITIONS ═══
+const HEADLINE_INSTRUCTION_LAYER = `═══ SURFACE: CHALLENGE HEADLINE — THE BANNER ═══
 
-This is NOT a culture entry. This is the headline that opens the challenge accept page — one sentence about THAT player and THAT night that reads like an ESPN / newspaper headline.
+Challenge headlines are not sports journalism. Challenge headlines are sports arguments. The subject is always the fantasy hand. NEVER the historical NBA game that supplied the stats.
+
+ReplayMod's story is not "Lakers lose to Milwaukee." That is a real NBA game and the wrong story. ReplayMod's story is: You held Kobe and CP3. You busted. Think you can do better? Write to THAT story.
+
+═══ RULE 1 — THE SUBJECT IS THE HAND ═══
+
+The headline is an ARGUMENT about the fantasy hand, in this priority of subject:
+  held players → the decision → the outcome → the claim
+
+Game context (opponent, venue, home/away, date) is COLOR, never SUBJECT. It may garnish a line — but it must NEVER BE the line. On THIS surface (challenge headline), game-identity inputs are intentionally WITHHELD from the facts. You will not see opponent / venue / homeAway / date. That is by design: a punchy headline rarely has room for color, and the model that cannot see "Milwaukee" cannot write a Milwaukee recap. Lock the subject first.
+
+Anti-pattern (a real prior output): "LAKERS STUMBLE AT HOME AGAINST MILWAUKEE, CAN'T FIND THEIR RHYTHM." That is an NBA recap. The hand is invisible in it. Not a headline. Re-aim at: who you held, what they did, what the hand was worth.
+
+═══ RULE 2 — NAME PLAYERS. NEVER BLAME THEM. ═══
+
+Name the held players as the STARS you held. NEVER frame any player as the CAUSE of the loss.
+
+The stars are the attraction. KOBE, JORDAN, SHAQ, LEBRON, CURRY carry emotional weight; users WANT to see them. Naming is not blaming.
+
+GOOD (named as talent; failure pinned on the hand / outcome / difficulty):
+  - "KOBE AND CP3. STILL BUSTED."
+  - "THE MAMBA COULDN'T SAVE THIS."   ← edge case, ALLOWED. "Even greatness wasn't enough" frames the hand's difficulty, not Kobe failing.
+  - "YOU HELD KOBE. WHAT HAPPENED?"
+  - "TWO STARS. ZERO EXCUSES."
+
+BANNED (player as cause-of-loss):
+  - "KOBE CHOKED."
+  - "CP3 FAILED."
+  - "KOBE SOLD THE HAND."
+
+The boundary the line must thread:
+  - "EVEN {star} COULDN'T SAVE IT" — the HAND was brutal. ALLOWED.
+  - "{star} CHOKED / FAILED / SOLD IT / WENT QUIET / COULDN'T DELIVER" — player as cause. BANNED.
+
+This rule REPLACES any earlier "don't name the anchor" framing. Naming is now encouraged. Blaming is the violation. The contrast between the GOOD and BANNED lists above is what teaches the line — internalize it.
+
+═══ RULE 3 — UNIVERSAL PHILOSOPHY, PER-TRIGGER FLAVOR ═══
+
+The subject-is-the-hand rule is universal. Each trigger gets an emotional REGISTER, not its own philosophy.
+
+  - choke      → ACCUSATION    e.g. "KOBE AND CP3. STILL BUSTED." / "THE STARS WERE THERE. THE SCORE WASN'T."
+  - miss       → REGRET        e.g. "THIS HAND WAS ONE DECISION AWAY." / "YOU LEFT MVP ON THE TABLE."
+  - big_score  → CHALLENGE     e.g. "JOHN THINKS THIS HAND IS SAFE." / "238.7 FP. GOOD LUCK."
+  - rare_pull  → NOSTALGIA     e.g. "JORDAN WALKED BACK INTO THE BUILDING." / "YOU GOT THE JORDAN GAME. NOW WHAT?"
+
+Every one is an ARGUMENT, not a recap. All four talk about the HAND / PLAYERS / DECISION / OUTCOME — never the box score, never the NBA game.
+
+═══ FORMAT + INHERITED CONSTRAINTS ═══
 
 OVERRIDE — STRUCTURE: One to two clauses. Setup + editorial twist, OR a single confident assertion. Headline register, not paragraph register.
 
@@ -100,31 +154,11 @@ OVERRIDE — LENGTH: 60–110 characters target, 160 hard ceiling. Brevity is th
 
 OVERRIDE — OUTPUT FORMAT: Return ONE plain string. No JSON. No quotes around it. No "Headline:" prefix. No leading bullet or dash. Just the line itself.
 
-ADDITIONAL RULE — RENDER ONLY PROVIDED FACTS: The CommentaryFacts object handed to you is the ENTIRETY of what you may name. If a fact is not in the object, it does not exist for purposes of this line. NEVER invent stats, opponents, awards, venues, teammates, dates, game contexts ("Game 1," "Game 7," "the playoffs," "the Finals," "regular-season"), playoff/regular-season framing, or franchise lore. If a detail would make the line punchier but isn't in the facts, FIND ANOTHER ANGLE. Anti-pattern: "playoff basketball" when the facts said nothing about the playoffs.
+RENDER ONLY PROVIDED FACTS: The CommentaryFacts object handed to you is the ENTIRETY of what you may name. If a fact is not in the object, it does not exist for purposes of this line. NEVER invent stats, opponents, awards, venues, teammates, dates, game contexts ("Game 1," "Game 7," "the playoffs," "the Finals," "regular-season"), or franchise lore.
 
-ADDITIONAL RULE — DO NOT INVENT A CULPRIT: When the verdict is "credited," the anchor delivered AND at least one other held card tanked — but the facts do NOT name WHO else tanked. Credit the anchor and let the bare absence indict the rest of the hand ("the lineup folded," "the rest of the hand vanished," "{anchor} carried; the lineup quit"). Do NOT name a player who isn't in the facts as the cause of failure. Do NOT pin the failure on the OPPONENT team — the opponent didn't tank the held cards; the held cards tanked themselves. Do NOT invent a game-context to host the failure ("Game 1," "the closeout," "the comeback"). Anti-pattern: "The Spurs choked away Game 1" — the Spurs are the opponent (not the tanked culprit) and "Game 1" was never in facts; this line invents both the culprit and the context.
+ANTI-ANACHRONISM: The game is from season {season}. NEVER reference a venue name, an arena nickname, a stadium-evocative phrase ("the Garden," "the Madhouse," "the Capital," "the Forum," "the Palace," "Oracle," "Chase Center," "Crypto.com Arena," "STAPLES Center," "American Airlines Arena," "Kaseya Center," "MSG," any place-evocative phrasing that reads as a venue), roster member, team affiliation, award, record, or franchise fact that postdates the season of play. The venue rule is ABSOLUTE — the venue field is intentionally absent from CommentaryFacts in v1. The training set skews modern; a 2009 Heat game must not gain a 2024 arena, a future title ("the 2012 ring"), or a teammate who hadn't been drafted yet. Lean on the stat line and the held players' image — never the year-of-prompt-training detail you can't see in facts.
 
-ADDITIONAL RULE — OBEY THE VERDICT: The facts carry a "verdict" field with one of three values. It is binding. The code already determined the honest truth of the hand — do not contradict.
-  - "credited" — The anchor delivered AND at least one other held card tanked. The anchor is the hero. The line vindicates the anchor; the indictment lands on the rest of the hand (subject to the DO NOT INVENT A CULPRIT rule above).
-  - "blamed" — The anchor itself tanked. The line indicts the anchor. No hedging, no third-party blame.
-  - "neutral" — Mid-zone outcome (neither clearly delivered nor clearly tanked) OR no clear hero/villain available. THE SIMPLE BINDING RULE: DO NOT NAME THE ANCHOR IN THE LINE. The anchor's stat line is in the facts ONLY so YOU (the model) understand the context; you must NOT mention the anchor's name, the anchor's nickname, OR the anchor's stat line in the output. Write entirely about the team, the hand, the stakes, or the opponent — never the anchor.
-
-    This rule supersedes any softer interpretation. Anti-patterns that violate it (all real model outputs from prior runs):
-      * "Kobe's 24 not enough to carry the load" — names anchor, cites stat, judges insufficient.
-      * "despite Kobe's 26" — names anchor, cites stat, implicit-judgment via "despite."
-      * "Portland stifles Kobe" — opponent-as-vehicle for naming the anchor as cause.
-      * "{N} fell short," "{N} weren't enough," "{anchor} needed more help" — same family.
-
-    Compliant patterns (target register):
-      * "Lakers can't get out of their own way against Houston."
-      * "Lakers' road trip derails in Portland."
-      * "Brutal hand against Portland on the road."
-
-    Why this is strict: every previous attempt at a softer rule ("don't frame the anchor as cause-of-failure") leaked because the model could cite stats and call them insufficient without using a forbidden verb. The simple rule — DO NOT name the anchor — is the only one that holds. The team carries the line.
-
-ADDITIONAL RULE — ANTI-ANACHRONISM (critical for retro seasons): The game is from season {season}. NEVER reference a venue name, an arena nickname, a stadium-evocative phrase ("the Garden," "the Madhouse," "the Capital," "the Forum," "the Palace," "Oracle," "Chase Center," "Crypto.com Arena," "STAPLES Center," "American Airlines Arena," "Kaseya Center," "MSG," any place-evocative phrasing that reads as a venue or arena), roster member, team affiliation, award, record, or franchise fact that postdates the season of play. The venue rule is ABSOLUTE — the venue field is intentionally absent from CommentaryFacts in v1 (no era-bracketed source exists); if you reach for ANY arena-shaped phrasing you are inventing. The training set skews modern — a 2009 Heat game must not gain a 2024 arena, a future title ("the 2012 ring"), or a teammate who hadn't been drafted yet. If the season's specifics aren't in your provided facts, do not reach for them from memory; lean on the stat line, the opponent code from facts, and the anchor's image instead.
-
-ADDITIONAL RULE — REGISTER (ESPN / newspaper headline): A confident sportswriter's line about that player and that night. Not a culture-entry paragraph. Not a tweet caption. Not a generic dare. The bar to clear: would this land on the page-A sports-section banner?`;
+REGISTER: A confident sportswriter's line about THIS hand. Not a culture-entry paragraph. Not a tweet caption. Not a generic dare. The bar to clear: would this land on a page-A sports-section banner as an argument the reader has to respond to?`;
 
 // ── User-prompt assembly ───────────────────────────────────────────────────
 // Format CommentaryFacts into the USER message. The structure is plain
@@ -159,22 +193,36 @@ export function buildUserPrompt(facts: CommentaryFacts): string {
   lines.push(`VERDICT: ${facts.verdict}`);
   if (facts.winTier) lines.push(`WIN_TIER: ${facts.winTier}`);
   lines.push("");
+
+  // Phase 3.3 input-policy boundary (lock: docs/challenge-landing-v2-
+  // phase3.3-headline-subject-is-the-hand-lock.md, §"Rule 1 —
+  // Surface-specific input policy"). On the CHALLENGE HEADLINE surface,
+  // game-identity fields (opponent / homeAway / date) are WITHHELD —
+  // the prompt's Rule 1 promises the model it will not see them, and
+  // that promise is enforced here. The full CommentaryFacts shape stays
+  // intact for the future commentary surface (which keeps game context
+  // as permitted color). This is the only place the headline path
+  // differs from the commentary path in what reaches the model.
+  const isHeadlineSurface = facts.surface === "challenge_headline";
+
   if (facts.anchor) {
     const a = facts.anchor;
     lines.push("ANCHOR:");
     lines.push(`  name: ${a.name}`);
     lines.push(`  team: ${a.team}`);
     lines.push(`  tier: ${a.tier}`);
-    if (a.opponent) lines.push(`  opponent: ${a.opponent}`);
-    if (a.homeAway) lines.push(`  home_away: ${a.homeAway}`);
-    if (a.date) lines.push(`  date: ${a.date}`);
+    if (!isHeadlineSurface) {
+      if (a.opponent) lines.push(`  opponent: ${a.opponent}`);
+      if (a.homeAway) lines.push(`  home_away: ${a.homeAway}`);
+      if (a.date) lines.push(`  date: ${a.date}`);
+    }
     if (a.nicknames.length > 0) lines.push(`  nicknames: ${a.nicknames.join(", ")}`);
     if (a.knownFor) lines.push(`  knownFor: ${a.knownFor}`);
     const stats = formatStatLine(a.statLine);
     if (stats) lines.push(`  statLine: ${stats}`);
     if (a.topReason) lines.push(`  topReason: ${a.topReason.label} (${a.topReason.category}=${a.topReason.value})`);
   } else {
-    lines.push("ANCHOR: (none — no honest hero/villain on this hand)");
+    lines.push("ANCHOR: (none — no anchor on this hand)");
   }
   if (facts.nearMissGap != null || facts.nearMissNextTier) {
     lines.push("");
