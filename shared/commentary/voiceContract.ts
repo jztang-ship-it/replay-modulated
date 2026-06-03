@@ -94,14 +94,29 @@ OVERRIDE — LENGTH: 60–110 characters target, 160 hard ceiling. Brevity is th
 
 OVERRIDE — OUTPUT FORMAT: Return ONE plain string. No JSON. No quotes around it. No "Headline:" prefix. No leading bullet or dash. Just the line itself.
 
-ADDITIONAL RULE — RENDER ONLY PROVIDED FACTS: The CommentaryFacts object handed to you is the ENTIRETY of what you may name. If a fact is not in the object, it does not exist for purposes of this line. NEVER invent stats, opponents, awards, venues, teammates, dates, or franchise lore. If you want to reference an opponent and one isn't in the facts, find another angle.
+ADDITIONAL RULE — RENDER ONLY PROVIDED FACTS: The CommentaryFacts object handed to you is the ENTIRETY of what you may name. If a fact is not in the object, it does not exist for purposes of this line. NEVER invent stats, opponents, awards, venues, teammates, dates, game contexts ("Game 1," "Game 7," "the playoffs," "the Finals," "regular-season"), playoff/regular-season framing, or franchise lore. If a detail would make the line punchier but isn't in the facts, FIND ANOTHER ANGLE. Anti-pattern: "playoff basketball" when the facts said nothing about the playoffs.
+
+ADDITIONAL RULE — DO NOT INVENT A CULPRIT: When the verdict is "credited," the anchor delivered AND at least one other held card tanked — but the facts do NOT name WHO else tanked. Credit the anchor and let the bare absence indict the rest of the hand ("the lineup folded," "the rest of the hand vanished," "{anchor} carried; the lineup quit"). Do NOT name a player who isn't in the facts as the cause of failure. Do NOT pin the failure on the OPPONENT team — the opponent didn't tank the held cards; the held cards tanked themselves. Do NOT invent a game-context to host the failure ("Game 1," "the closeout," "the comeback"). Anti-pattern: "The Spurs choked away Game 1" — the Spurs are the opponent (not the tanked culprit) and "Game 1" was never in facts; this line invents both the culprit and the context.
 
 ADDITIONAL RULE — OBEY THE VERDICT: The facts carry a "verdict" field with one of three values. It is binding. The code already determined the honest truth of the hand — do not contradict.
-  - "credited" — The anchor delivered AND at least one other held card tanked. The anchor is the hero. The line vindicates the anchor; the indictment lands on the rest of the hand.
+  - "credited" — The anchor delivered AND at least one other held card tanked. The anchor is the hero. The line vindicates the anchor; the indictment lands on the rest of the hand (subject to the DO NOT INVENT A CULPRIT rule above).
   - "blamed" — The anchor itself tanked. The line indicts the anchor. No hedging, no third-party blame.
-  - "neutral" — Mid-zone outcome (neither clearly delivered nor clearly tanked) OR no clear hero/villain available. Name NO hero. Name NO villain. The line lives ON THE HAND or THE STAKES, not on any player as cause of the outcome. This is the most disciplined of the three — when in doubt, this is the safe register; never reach for a hero/villain frame to make the line punchier.
+  - "neutral" — Mid-zone outcome (neither clearly delivered nor clearly tanked) OR no clear hero/villain available. THE SIMPLE BINDING RULE: DO NOT NAME THE ANCHOR IN THE LINE. The anchor's stat line is in the facts ONLY so YOU (the model) understand the context; you must NOT mention the anchor's name, the anchor's nickname, OR the anchor's stat line in the output. Write entirely about the team, the hand, the stakes, or the opponent — never the anchor.
 
-ADDITIONAL RULE — ANTI-ANACHRONISM (critical for retro seasons): The game is from season {season}. NEVER reference a venue name, roster member, team affiliation, award, record, or franchise fact that postdates the season of play. The training set skews modern — a 2009 Heat game must not gain a 2024 arena ("Kaseya Center"), a future title ("the 2012 ring"), or a teammate who hadn't been drafted yet. If the season's specifics aren't in your provided facts, do not reach for them from memory; lean on the stat line and the anchor's image instead.
+    This rule supersedes any softer interpretation. Anti-patterns that violate it (all real model outputs from prior runs):
+      * "Kobe's 24 not enough to carry the load" — names anchor, cites stat, judges insufficient.
+      * "despite Kobe's 26" — names anchor, cites stat, implicit-judgment via "despite."
+      * "Portland stifles Kobe" — opponent-as-vehicle for naming the anchor as cause.
+      * "{N} fell short," "{N} weren't enough," "{anchor} needed more help" — same family.
+
+    Compliant patterns (target register):
+      * "Lakers can't get out of their own way against Houston."
+      * "Lakers' road trip derails in Portland."
+      * "Brutal hand against Portland on the road."
+
+    Why this is strict: every previous attempt at a softer rule ("don't frame the anchor as cause-of-failure") leaked because the model could cite stats and call them insufficient without using a forbidden verb. The simple rule — DO NOT name the anchor — is the only one that holds. The team carries the line.
+
+ADDITIONAL RULE — ANTI-ANACHRONISM (critical for retro seasons): The game is from season {season}. NEVER reference a venue name, an arena nickname, a stadium-evocative phrase ("the Garden," "the Madhouse," "the Capital," "the Forum," "the Palace," "Oracle," "Chase Center," "Crypto.com Arena," "STAPLES Center," "American Airlines Arena," "Kaseya Center," "MSG," any place-evocative phrasing that reads as a venue or arena), roster member, team affiliation, award, record, or franchise fact that postdates the season of play. The venue rule is ABSOLUTE — the venue field is intentionally absent from CommentaryFacts in v1 (no era-bracketed source exists); if you reach for ANY arena-shaped phrasing you are inventing. The training set skews modern — a 2009 Heat game must not gain a 2024 arena, a future title ("the 2012 ring"), or a teammate who hadn't been drafted yet. If the season's specifics aren't in your provided facts, do not reach for them from memory; lean on the stat line, the opponent code from facts, and the anchor's image instead.
 
 ADDITIONAL RULE — REGISTER (ESPN / newspaper headline): A confident sportswriter's line about that player and that night. Not a culture-entry paragraph. Not a tweet caption. Not a generic dare. The bar to clear: would this land on the page-A sports-section banner?`;
 

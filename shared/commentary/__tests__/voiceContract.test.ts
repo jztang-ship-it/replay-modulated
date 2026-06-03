@@ -64,6 +64,56 @@ describe("buildVoiceContract — system prompt composition", () => {
     expect(system).toContain("\"neutral\"");
   });
 
+  it("step 2.1 final: neutral rule states the simple binding 'DO NOT NAME THE ANCHOR' rule explicitly", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    // Earlier iterations tried explicit-verb lists (stopped/stifled/...)
+    // and stat-line-pattern lists ({N} not enough). The model leaked
+    // through both. The final binding rule is the simple one: DO NOT
+    // NAME THE ANCHOR on neutral. Test pins the phrasing so future
+    // edits don't accidentally soften it.
+    expect(system).toContain("DO NOT NAME THE ANCHOR");
+    expect(system).toContain("THE SIMPLE BINDING RULE");
+    expect(system).toContain("Lakers can't get out of their own way against Houston");
+  });
+
+  it("step 2.1 final: neutral rule cites the specific anti-patterns from real model outputs", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    // Specific failure modes lifted verbatim from prior smoke runs so
+    // the model sees the exact patterns to avoid.
+    expect(system).toContain("Kobe's 24 not enough to carry the load");
+    expect(system).toContain("despite Kobe's 26");
+    expect(system).toContain("Portland stifles Kobe");
+  });
+
+  it("step 2.1 round 2: anti-anachronism rule lists arena-evocative phrases explicitly", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    // The model invented "the Garden" + "the Capital" as venue-shorthand
+    // when only specific-arena-brands were blocked. The stricter rule
+    // enumerates the common evocative phrases.
+    expect(system).toContain("the Garden");
+    expect(system).toContain("the Forum");
+    expect(system).toContain("the Capital");
+    expect(system).toContain("MSG");
+    expect(system).toContain("venue rule is ABSOLUTE");
+  });
+
+  it("step 2.1: DO NOT INVENT A CULPRIT rule covers both the named-culprit + game-context cases", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("DO NOT INVENT A CULPRIT");
+    expect(system).toContain("opponent didn't tank");
+    expect(system).toContain("Game 1");
+    // The anti-pattern from the step-2 smoke is cited verbatim.
+    expect(system).toContain("Spurs choked away Game 1");
+  });
+
+  it("step 2.1: RENDER ONLY PROVIDED FACTS rule explicitly bans game-context / playoff invention", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("playoffs");
+    expect(system).toContain("regular-season");
+    // The miss anti-pattern from the step-2 smoke is cited.
+    expect(system).toContain("playoff basketball");
+  });
+
   it("does NOT include the culture-entry JSON output instruction", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).not.toContain("Return ONLY a JSON array of objects");

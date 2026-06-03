@@ -44,8 +44,13 @@ import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
 /** Hard server-side cap on the entire generation step. 2.5s sits between
  *  the ~600ms Haiku-warm typical and the 10s Vercel Hobby function
  *  ceiling. The timeout race exists so a model API hang doesn't blow
- *  the function — it's a defense, not a deadline. */
-const HEADLINE_TIMEOUT_MS = 2500;
+ *  the function — it's a defense, not a deadline.
+ *
+ *  Overridable via HEADLINE_TIMEOUT_MS env var so the smoke harness can
+ *  set a more generous budget (e.g. 8000ms) without changing the
+ *  production UX target. Production never sets this var; falls through
+ *  to the 2.5s default. */
+const HEADLINE_TIMEOUT_MS = Number(process.env.HEADLINE_TIMEOUT_MS) || 2500;
 
 /** Hard ceiling on the rendered headline. The lock targets ~60-110 chars
  *  ("ESPN / newspaper headline" register); 160 leaves enough headroom

@@ -37,6 +37,15 @@ delete process.env.UPSTASH_REDIS_REST_TOKEN;
 delete process.env.KV_REST_API_URL;
 delete process.env.KV_REST_API_TOKEN;
 
+// Anthropic API latency is variable (1-3s typical, occasional spike).
+// Production's 2.5s timeout is correct for the user-perceived "crafting"
+// spinner; the harness's budget is correctness, not UX. 8s gives plenty
+// of headroom so transient API spikes don't surface as fake failures.
+// Read by api/headline.ts at HEADLINE_TIMEOUT_MS init.
+if (!process.env.HEADLINE_TIMEOUT_MS) {
+  process.env.HEADLINE_TIMEOUT_MS = "8000";
+}
+
 const repoRoot = path.resolve(new URL(".", import.meta.url).pathname, "..");
 const handlerMod = await import(path.join(repoRoot, "api/headline.ts"));
 const fixturesMod = await import(path.join(repoRoot, "basketball/src/dev/headlineMockFixture.ts"));
@@ -151,6 +160,15 @@ if (!process.env.GROQ_API_KEY) {
   console.log("note: GROQ_API_KEY not set — composite scores will be skipped");
 }
 
+// Stash Groq + DeepSeek keys so we can unset them around the handler
+// call (suppresses the router's background cross-check calls — those
+// fire the full ~2KB system prompt through Groq+DeepSeek per fixture
+// and burst the 12k TPM cap by fixture 8). The explicit grader call
+// below uses the stashed Groq key. Net Groq usage drops from
+// ~9×2 = ~18 cross-check calls to 0 cross-checks + 9 grader calls.
+const GROQ_KEY = process.env.GROQ_API_KEY;
+const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY;
+
 for (const key of CASES) {
   const fx = fixtures[key];
   if (!fx) {
@@ -163,10 +181,16 @@ for (const key of CASES) {
   if (fx.evalHint) console.log(`evalHint: ${fx.evalHint}`);
   console.log(`bankPick: ${fx.bankPick}`);
 
+  // Suppress router cross-checks for THIS fixture's handler call only;
+  // restore immediately after so the grader call sees the keys.
+  delete process.env.GROQ_API_KEY;
+  delete process.env.DEEPSEEK_API_KEY;
   const { req, res } = makeReqRes({ facts: fx.facts });
   const start = Date.now();
   await handler(req, res);
   const ms = Date.now() - start;
+  if (GROQ_KEY) process.env.GROQ_API_KEY = GROQ_KEY;
+  if (DEEPSEEK_KEY) process.env.DEEPSEEK_API_KEY = DEEPSEEK_KEY;
 
   const headline = res.payload?.headline ?? null;
   const reason = res.payload?.reason;
