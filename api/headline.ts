@@ -285,16 +285,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (err) {
     console.error("[api/headline] generator threw:", err instanceof Error ? err.message : err);
+    console.log("[api/headline] null reason=generator_error");
     return res.status(200).json({ headline: null, reason: "generator_error" });
   }
 
   if (raw === null) {
+    console.log("[api/headline] null reason=timeout");
     return res.status(200).json({ headline: null, reason: "timeout" });
   }
   if (raw.trim() === APOLOGY_SENTINEL) {
     // Don't drop the backgroundWork promise — let it finish so any
     // partial grading still lands.
     if (generated?.backgroundWork) waitUntil(generated.backgroundWork);
+    console.log("[api/headline] null reason=apology_sentinel");
     return res.status(200).json({ headline: null, reason: "apology_sentinel" });
   }
 
@@ -307,6 +310,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (generated?.backgroundWork) waitUntil(generated.backgroundWork);
 
   if (!v.ok) {
+    // Phase 3 diagnostic (lock: docs/challenge-landing-v2-phase3.2-...md).
+    // The reason field is already on the JSON body; Vercel access logs
+    // record only the status, not the body. This console.log surfaces
+    // WHICH null-path fired in the function logs so the next prod test
+    // tells us whether the validator, timeout, or sentinel is the cause
+    // of the bank-pick fallback persisting on real choke rows. The raw
+    // model output is included so a team-not-in-facts rejection shows
+    // exactly which team code the model reached for.
+    console.log(`[api/headline] null reason=validation:${v.reason} raw=${JSON.stringify(raw)}`);
     return res.status(200).json({ headline: null, reason: `validation:${v.reason}` });
   }
 
