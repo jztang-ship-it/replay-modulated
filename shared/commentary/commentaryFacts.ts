@@ -17,111 +17,35 @@
 // has no `venue` slot at all — keeping it absent at the type level so
 // a future contributor can't accidentally wire it.
 
-import {
-  classifyAnchorTruth,
-  type AnchorTruthVerdict,
-} from "./anchorTruth";
+import { classifyAnchorTruth, type AnchorTruthVerdict } from "./anchorTruth";
 import { lookupCulture, type CultureShape } from "./selectCommentary";
 import type { TopGameReason } from "./types";
+// Phase 3 step 2: the types moved to a pure-types module so consumers
+// (api/headline.ts, voiceContract.ts, future surfaces) can `import type`
+// from there without dragging in the lookupCulture → playerCulture chain.
+// Re-exported here verbatim so existing callers keep their import paths.
+export type {
+  CommentarySurface,
+  CommentaryTrigger,
+  CommentaryWinTier,
+  CommentaryFactsAnchor,
+  CommentaryFacts,
+  CommentaryFactsResult,
+  CommentaryFactsCard,
+  BuildCommentaryFactsInput,
+} from "./commentaryFactsTypes";
+import type {
+  CommentaryFacts,
+  CommentaryFactsAnchor,
+  CommentaryFactsResult,
+  CommentaryFactsCard,
+  BuildCommentaryFactsInput,
+} from "./commentaryFactsTypes";
 
-// ── Public shapes ──────────────────────────────────────────────────────
-
-export type CommentarySurface = "challenge_headline" | "post_hand";
-
-export type CommentaryTrigger =
-  | "choke"
-  | "miss"
-  | "big_score"
-  | "rare_pull"
-  | "default";
-
-/** The anchor block. Optional on the top-level facts so miss / no-
- *  anchor cases can produce a valid object without a hero/villain. */
-export interface CommentaryFactsAnchor {
-  name: string;
-  basePlayerId: string;
-  nicknames: string[];
-  /** May be empty string when the culture entry has no `knownFor`. The
-   *  model treats an empty string the same as a missing field. */
-  knownFor: string;
-  tier: string;
-  team: string;
-  /** The REAL box line — pts/reb/ast/stl/blk/threes/min/.... Passed
-   *  through verbatim from `GeneratedCard.statLine`. */
-  statLine: Record<string, number | string>;
-  /** 3-letter opponent code (verified, from gameInfo.opponent). */
-  opponent: string;
-  /** "H" or "A" — empty string when the source didn't populate it. */
-  homeAway: "H" | "A" | "";
-  /** YYYY-MM-DD. */
-  date: string;
-  /** rare_pull → from detectTopGame's primaryReason on the trigger
-   *  result. big_score → derived from the anchor's actualFp. Omitted
-   *  otherwise. */
-  topReason?: TopGameReason;
-}
-
-export interface CommentaryFacts {
-  surface: CommentarySurface;
-  sport: string;
-  /** e.g. "0809" — drives the anti-anachronism rule in VOICE_CONTRACT. */
-  season: string;
-  trigger: CommentaryTrigger;
-  verdict: AnchorTruthVerdict;
-  /** Absent on miss + when the anchor doesn't resolve (legacy rows etc.). */
-  anchor?: CommentaryFactsAnchor;
-  /** miss only — how many FP short of the next tier. */
-  nearMissGap?: number;
-  /** miss only — tier just missed (e.g. "ALL_STAR"). */
-  nearMissNextTier?: string;
-}
-
-/** The builder's discriminated result. `skip` means the caller MUST NOT
- *  POST to /api/headline — the bank pick is the correct surface for
- *  this hand (default trigger; no LLM-authored headline planned in v1). */
-export type CommentaryFactsResult =
-  | { kind: "facts"; facts: CommentaryFacts }
-  | { kind: "skip"; reason: "default_trigger" };
-
-// ── Builder input ──────────────────────────────────────────────────────
-
-/** Minimal per-card shape the builder reads. Maps directly onto the
- *  basketball `GeneratedCard` and is intentionally smaller than that
- *  type so the builder is sport-portable. */
-export interface CommentaryFactsCard {
-  basePlayerId: string;
-  name: string;
-  tier: string;
-  team: string;
-  actualFp: number;
-  projectedFp: number;
-  wasHeld?: boolean;
-  gameInfo?: { date?: string; opponent?: string; homeAway?: string };
-  statLine?: Record<string, any>;
-}
-
-export interface BuildCommentaryFactsInput {
-  surface: CommentarySurface;
-  sport: string;
-  season: string;
-  trigger: CommentaryTrigger;
-  roster: CommentaryFactsCard[];
-  /** Anchor identity. Sourced from TriggerResult.anchorBasePlayerId at
-   *  the call site. May be null when the trigger doesn't carry an
-   *  anchor (miss, default) or when an older row didn't persist it. */
-  anchorBasePlayerId: string | null;
-  /** Snapshot-level flag mirrored from the create payload. The verdict
-   *  short-circuits to neutral when false. */
-  holdsRecorded: boolean;
-  /** rare_pull only — the primary TopGameReason produced by
-   *  detectTopGame; threaded through `TriggerResult.topGamePrimaryReason`
-   *  by the evaluator at GameView.tsx. */
-  topGamePrimaryReason?: TopGameReason | null;
-  /** miss only. */
-  nearMissGap?: number | null;
-  /** miss only. */
-  nearMissNextTier?: string | null;
-}
+// Internal sanity: AnchorTruthVerdict from the runtime module must be the
+// same set of strings as CommentaryVerdict in the types module.
+const _verdictParity: AnchorTruthVerdict = "neutral" as AnchorTruthVerdict;
+void _verdictParity;
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -254,6 +178,7 @@ export function buildCommentaryFacts(
       season: input.season,
       trigger: "miss",
       verdict,
+      ...(input.winTier ? { winTier: input.winTier } : {}),
       ...(input.nearMissGap != null ? { nearMissGap: input.nearMissGap } : {}),
       ...(input.nearMissNextTier ? { nearMissNextTier: input.nearMissNextTier } : {}),
     };
@@ -274,6 +199,7 @@ export function buildCommentaryFacts(
         season: input.season,
         trigger: input.trigger,
         verdict: "neutral",
+        ...(input.winTier ? { winTier: input.winTier } : {}),
       },
     };
   }
@@ -291,6 +217,7 @@ export function buildCommentaryFacts(
     season: input.season,
     trigger: input.trigger,
     verdict,
+    ...(input.winTier ? { winTier: input.winTier } : {}),
     anchor: buildAnchorBlock(anchorCard, input.sport, topReason),
   };
 

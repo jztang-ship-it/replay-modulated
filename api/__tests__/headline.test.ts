@@ -1,24 +1,42 @@
 /**
  * api/__tests__/headline.test.ts
  *
- * Phase 3 step 1 gates for the headline endpoint (lock: docs/challenge-
+ * Phase 3 step 2 gates for the headline endpoint (lock: docs/challenge-
  * landing-v2-phase3-authored-voice-engine-lock.md §"Test / acceptance
  * gates"). Pins:
  *   - Validators (length, denylist, stray tokens, team-not-in-facts, empty).
  *   - Timeout race + apology-sentinel detection.
  *   - Body shape rejection (missing fields, smuggled venue, default trigger).
- *   - Auth gate.
+ *   - Live generation via routeCommentary (mocked) → "router" source.
+ *   - waitUntil wiring (the backgroundWork Promise from the router is
+ *     handed to @vercel/functions waitUntil so grading lands in KV).
  *
- * The stub generator output is asserted only for its recognizable form
- * (so future devs see the stub marker on screenshots) — voice quality
- * is reviewed, never asserted (lock §"Test gates" item 5).
+ * Voice quality is reviewed (eval loop + on-glass), NOT unit-asserted.
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+// ── Module-level mocks (set up BEFORE importing the handler) ───────────────
+//
+// vi.hoisted ensures these registrations run before the dynamic import
+// below. The handler module captures these mocked exports at import time.
+
+const { mockRouteCommentary, mockWaitUntil } = vi.hoisted(() => ({
+  mockRouteCommentary: vi.fn(),
+  mockWaitUntil: vi.fn(),
+}));
+
+vi.mock("../_lib/router/llmRouter.js", () => ({
+  routeCommentary: mockRouteCommentary,
+}));
+
+vi.mock("@vercel/functions", () => ({
+  waitUntil: mockWaitUntil,
+}));
 
 const mod = await import("../headline.js");
 const handler = mod.default;
-const { validateHeadline, withTimeout, generateHeadlineStub } = mod;
+const { validateHeadline, withTimeout, generateHeadline } = mod;
 
 // Build a Vercel-style req/res pair.
 function makeReqRes(body: any, method = "POST") {
@@ -51,6 +69,7 @@ function factsRarePullWade(): any {
     season: "0809",
     trigger: "rare_pull",
     verdict: "credited",
+    winTier: "ALL_STAR",
     anchor: {
       name: "Dwyane Wade",
       basePlayerId: "2548",
@@ -67,6 +86,14 @@ function factsRarePullWade(): any {
   };
 }
 
+beforeEach(() => {
+  mockRouteCommentary.mockReset();
+  mockWaitUntil.mockReset();
+  // Default the env so buildRouterConfig doesn't throw. Individual
+  // tests can override / delete to exercise the throw branch.
+  process.env.COMMENTARY_API_KEY = "test-anthropic-key";
+});
+
 describe("api/headline — method gate", () => {
   it("rejects non-POST with 405", async () => {
     const { req, res } = makeReqRes({ facts: factsRarePullWade() }, "GET");
@@ -75,7 +102,12 @@ describe("api/headline — method gate", () => {
   });
 
   it("does NOT require auth in v1 (anonymous OAuth-resume path needs it)", async () => {
-    // No Authorization header on the request; endpoint must accept it.
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Wade hangs 48 on CHI, again.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
     const { req, res } = makeReqRes({ facts: factsRarePullWade() });
     await handler(req, res);
     expect(res.statusCode).toBe(200);
@@ -115,29 +147,109 @@ describe("api/headline — body shape rejection", () => {
   });
 });
 
-describe("api/headline — stub generator + success path", () => {
-  it("returns the stubbed headline through the validator on a clean facts payload", async () => {
+describe("api/headline — live generation success path", () => {
+  it("returns the model's headline through the validator on clean output", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Wade hangs 48 on CHI on his birthday.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
     const { req, res } = makeReqRes({ facts: factsRarePullWade() });
     await handler(req, res);
     expect(res.statusCode).toBe(200);
-    expect(res.payload.headline).toMatch(/\[STUB\] Dwyane Wade · rare_pull · credited/);
-    expect(res.payload.source).toBe("stub");
+    expect(res.payload.headline).toBe("Wade hangs 48 on CHI on his birthday.");
+    expect(res.payload.source).toBe("router");
   });
 
-  it("stub for no-anchor miss case still validates (no team tokens to check)", async () => {
-    const facts: any = {
-      surface: "challenge_headline",
-      sport: "basketball",
-      season: "2425",
-      trigger: "miss",
-      verdict: "neutral",
-      nearMissGap: 7,
-      nearMissNextTier: "ALL_STAR",
-    };
-    const { req, res } = makeReqRes({ facts });
+  it("threads winTier from facts onto the router tier argument", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Clean line.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
+    const { req, res } = makeReqRes({ facts: { ...factsRarePullWade(), winTier: "MVP" } });
     await handler(req, res);
     expect(res.statusCode).toBe(200);
-    expect(res.payload.headline).toMatch(/\[STUB\] no-anchor · miss · neutral/);
+    // 3rd arg of routeCommentary is the tier.
+    expect(mockRouteCommentary).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      "MVP",
+      expect.any(Object),
+    );
+  });
+
+  it("defaults to STARTER tier when facts omit winTier", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Clean line.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
+    const noTier = factsRarePullWade();
+    delete noTier.winTier;
+    const { req, res } = makeReqRes({ facts: noTier });
+    await handler(req, res);
+    expect(mockRouteCommentary).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      "STARTER",
+      expect.any(Object),
+    );
+  });
+
+  it("passes the backgroundWork promise to waitUntil so grading survives response-send", async () => {
+    const bgWork = Promise.resolve();
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Clean line.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+      backgroundWork: bgWork,
+    });
+    const { req, res } = makeReqRes({ facts: factsRarePullWade() });
+    await handler(req, res);
+    expect(mockWaitUntil).toHaveBeenCalledWith(bgWork);
+  });
+});
+
+describe("api/headline — apology sentinel & validation failures", () => {
+  it("treats the apology sentinel as failure → headline:null + apology_sentinel reason", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Off night. The numbers don't lie.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
+    const { req, res } = makeReqRes({ facts: factsRarePullWade() });
+    await handler(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.payload.headline).toBeNull();
+    expect(res.payload.reason).toBe("apology_sentinel");
+  });
+
+  it("returns null with validation reason on team-not-in-facts violation", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Wade goes off at NYK.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
+    const { req, res } = makeReqRes({ facts: factsRarePullWade() });
+    await handler(req, res);
+    expect(res.payload.headline).toBeNull();
+    expect(res.payload.reason).toMatch(/validation:team_not_in_facts/);
+  });
+
+  it("returns generator_error when env is missing (no Anthropic key)", async () => {
+    delete process.env.COMMENTARY_API_KEY;
+    const { req, res } = makeReqRes({ facts: factsRarePullWade() });
+    await handler(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.payload.headline).toBeNull();
+    expect(res.payload.reason).toBe("generator_error");
   });
 });
 
@@ -175,12 +287,10 @@ describe("validateHeadline — output guards", () => {
   });
 
   it("allows clean text that contains a substring of a banned phrase but not the word", () => {
-    // "diet" is not "died"; word-boundary match should pass.
     expect(validateHeadline("Wade kept the diet tight", facts).ok).toBe(true);
   });
 
   it("rejects team codes not present in facts (anchor.team / opponent)", () => {
-    // facts has MIA + CHI; NYK is not allowed.
     const r = validateHeadline("Wade goes off at NYK", facts);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toMatch(/team_not_in_facts/);
@@ -212,47 +322,40 @@ describe("withTimeout — Promise.race behavior", () => {
   });
 
   it("clears the timer after a fast resolve (no leaked handles)", async () => {
-    // We can't directly observe the timer being cleared, but we can
-    // assert that a second call with a long timeout doesn't keep the
-    // test runner alive longer than the resolve.
     const start = Date.now();
     await withTimeout(Promise.resolve("done"), 60_000);
     expect(Date.now() - start).toBeLessThan(500);
   });
 });
 
-describe("generateHeadlineStub — recognizable stub", () => {
-  it("includes [STUB] marker + name + trigger + verdict", async () => {
-    const out = await generateHeadlineStub(factsRarePullWade());
-    expect(out).toContain("[STUB]");
-    expect(out).toContain("Dwyane Wade");
-    expect(out).toContain("rare_pull");
-    expect(out).toContain("credited");
+describe("generateHeadline — composes VOICE_CONTRACT + routes", () => {
+  it("passes a non-empty system + user prompt into routeCommentary", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "x",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
+    await generateHeadline(factsRarePullWade());
+    expect(mockRouteCommentary).toHaveBeenCalledOnce();
+    const [system, user] = mockRouteCommentary.mock.calls[0];
+    expect(system).toContain("═══ CHAD'S VOICE");
+    expect(system).toContain("═══ SURFACE: CHALLENGE HEADLINE");
+    expect(system).toContain("game is from season 0809");
+    expect(user).toContain("SEASON: 0809");
+    expect(user).toContain("VERDICT: credited");
+    expect(user).toContain("name: Dwyane Wade");
   });
 
-  it("falls back to 'no-anchor' when no anchor block is present", async () => {
-    const facts: any = {
-      surface: "challenge_headline",
-      sport: "basketball",
-      season: "2425",
-      trigger: "miss",
-      verdict: "neutral",
-    };
-    const out = await generateHeadlineStub(facts);
-    expect(out).toContain("no-anchor");
-  });
-});
-
-describe("api/headline — apology sentinel surfaces as failure", () => {
-  it("validator catches the apology sentinel even if the generator returns it", () => {
-    // Step 2 will replace the stub with routeCommentary, which CAN return
-    // the apology sentinel when every model errors (recon §1). The
-    // validator must reject it so the client falls back to the bank pick.
-    const r = validateHeadline(
-      "Off night. The numbers don't lie.",
-      factsRarePullWade(),
-    );
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.reason).toBe("apology_sentinel");
+  it("returns the router's commentary verbatim as `raw`", async () => {
+    mockRouteCommentary.mockResolvedValueOnce({
+      commentary: "Wade does the thing.",
+      tone: "observational",
+      modelUsed: "claude-haiku-4-5",
+      source: "router",
+    });
+    const r = await generateHeadline(factsRarePullWade());
+    expect(r.raw).toBe("Wade does the thing.");
+    expect(r.modelUsed).toBe("claude-haiku-4-5");
   });
 });

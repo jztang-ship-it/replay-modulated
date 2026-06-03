@@ -1,15 +1,15 @@
 // api/headline.ts
 //
-// Phase 3 step 1 (lock: docs/challenge-landing-v2-phase3-authored-voice-
-// engine-lock.md). The challenge headline endpoint — generator STUBBED,
-// failure/validation plumbing REAL. Step 2 swaps generateHeadlineStub()
-// for a real routeCommentary call composing VOICE_CONTRACT + facts; the
-// timeout/sentinel/validator pipeline downstream is built now so that
-// swap is a one-function change.
+// Phase 3 step 2 (lock: docs/challenge-landing-v2-phase3-authored-voice-
+// engine-lock.md). The challenge headline endpoint with LIVE generation.
+// Step 1 built the failure/validation plumbing around a stub; this swap
+// replaces the stub with a real routeCommentary call composing
+// VOICE_CONTRACT + the POSTed facts. Every guard around the call is
+// unchanged — they now guard real model output.
 //
 // Wire contract (POST):
 //   request:  { facts: CommentaryFacts }
-//   response: 200 { headline: string|null, source?: "stub", reason?: string }
+//   response: 200 { headline: string|null, source?: "router", reason?: string }
 //             400 { error: "..." }   // body shape rejected
 //             405 { error: "POST required" }
 //
@@ -17,73 +17,39 @@
 // fall back to today's chadShareTrashTalk bank pick. Create is NEVER
 // blocked on the headline (lock §"Fallback").
 //
-// Auth: NONE in v1. The endpoint runs a stubbed generator with zero
-// cost; the OAuth-resume side-channel needs to call it before the user
-// has a session (per the lock's "settle before writePending" rule).
-// Step 2 introduces real model calls — when it does, rate-limiting
-// (per-IP via Upstash KV; the router's KV namespace is already wired)
-// closes the abuse window without re-introducing the auth wall here.
+// Auth: NONE in v1. The OAuth-resume side-channel needs to call this
+// before the user has a session. Rate-limiting (per-IP via Upstash KV;
+// the router's KV namespace is already wired) is the separate fast-
+// follow that closes the abuse window — NOT part of this commit.
 //
-// IMPORTANT — bundle hygiene: this file deliberately does NOT import
-// from `shared/commentary/commentaryFacts` or `selectCommentary`. Those
-// modules transitively pull in `basketball/src/utils/playerCulture.ts`
-// (8000+ lines) into the serverless bundle. The facts arrive over the
-// wire as JSON; the body type below is a structural mirror. The client
-// owns the build via `shared/commentary/commentaryFacts.ts`.
+// IMPORTANT — bundle hygiene: this file imports VOICE_CONTRACT but NOT
+// the full commentaryFacts builder. The types live in a pure-types
+// module (commentaryFactsTypes.ts) so the typecheck does not traverse
+// selectCommentary → playerCulture.ts (8000+ lines). The facts arrive
+// over the wire as JSON; the client (shared/commentary/commentaryFacts.ts)
+// owns the build.
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-
-// ── Local mirror of CommentaryFacts (wire shape only — no runtime coupling) ─
-
-type AnchorTruthVerdict = "credited" | "blamed" | "neutral";
-
-type CommentarySurface = "challenge_headline" | "post_hand";
-
-type CommentaryTrigger = "choke" | "miss" | "big_score" | "rare_pull" | "default";
-
-interface TopGameReasonWire {
-  category: string;
-  label: string;
-  value: number;
-  rank?: number;
-}
-
-interface CommentaryFactsAnchorWire {
-  name: string;
-  basePlayerId: string;
-  nicknames: string[];
-  knownFor: string;
-  tier: string;
-  team: string;
-  statLine: Record<string, number | string>;
-  opponent: string;
-  homeAway: "H" | "A" | "";
-  date: string;
-  topReason?: TopGameReasonWire;
-}
-
-interface CommentaryFactsWire {
-  surface: CommentarySurface;
-  sport: string;
-  season: string;
-  trigger: CommentaryTrigger;
-  verdict: AnchorTruthVerdict;
-  anchor?: CommentaryFactsAnchorWire;
-  nearMissGap?: number;
-  nearMissNextTier?: string;
-}
+import { waitUntil } from "@vercel/functions";
+import type {
+  CommentaryFacts,
+  CommentaryWinTier,
+} from "../shared/commentary/commentaryFactsTypes.js";
+import { buildVoiceContract } from "../shared/commentary/voiceContract.js";
+import { routeCommentary } from "./_lib/router/llmRouter.js";
+import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
 
 // ── Knobs ──────────────────────────────────────────────────────────────────
 
-/** Hard server-side cap on the entire generation step (including any
- *  network call to a model in step 2). Step 1 stubs generation but
- *  exercises the race so the plumbing is proved. 2.5s sits between the
- *  ~600ms Haiku-warm typical and the 10s Vercel Hobby function ceiling. */
+/** Hard server-side cap on the entire generation step. 2.5s sits between
+ *  the ~600ms Haiku-warm typical and the 10s Vercel Hobby function
+ *  ceiling. The timeout race exists so a model API hang doesn't blow
+ *  the function — it's a defense, not a deadline. */
 const HEADLINE_TIMEOUT_MS = 2500;
 
 /** Hard ceiling on the rendered headline. The lock targets ~60-110 chars
  *  ("ESPN / newspaper headline" register); 160 leaves enough headroom
- *  for the step-2 voice without inviting bank-style paragraphs. */
+ *  for confident sportswriter phrasing without inviting paragraphs. */
 const HEADLINE_MAX_LENGTH = 160;
 
 /** The llmRouter's hard-coded last-resort string when every model
@@ -118,12 +84,12 @@ const PHRASE_DENYLIST: readonly string[] = [
  *  they're safe even when not in the facts. */
 const TEAM_TOKEN_WHITELIST: ReadonlySet<string> = new Set([
   "FP", "MVP", "DPOY", "ROY", "ESPN", "NBA", "NFL", "MLB", "GOAT",
-  // Phase 3 step 1 only: the stubbed generator emits "[STUB]" as a
-  // recognizable marker. Removed when step 2 replaces the stub with a
-  // real model call. Listed here so the validator doesn't flag the
-  // marker token itself as a stray team code.
-  "STUB",
 ]);
+
+/** Default tier when the facts didn't carry one. Used as the routing
+ *  key by llmRouter (KV namespace splits decisions per tier) — STARTER
+ *  is the most common hand result and a neutral fallback. */
+const DEFAULT_TIER: PayoutTier = "STARTER";
 
 // ── Validators ─────────────────────────────────────────────────────────────
 
@@ -132,10 +98,11 @@ type ValidationResult =
   | { ok: false; reason: string };
 
 /** Run all output guards in order; return { ok:false, reason } on first
- *  fail so the response carries a single diagnostic. */
+ *  fail so the response carries a single diagnostic. Operates on the
+ *  facts wire shape so this file has no runtime dep on commentaryFacts.ts. */
 export function validateHeadline(
   rawText: string,
-  facts: CommentaryFactsWire,
+  facts: CommentaryFacts,
 ): ValidationResult {
   const text = String(rawText ?? "").trim();
   if (text.length === 0) return { ok: false, reason: "empty" };
@@ -171,16 +138,70 @@ export function validateHeadline(
   return { ok: true, headline: text };
 }
 
-// ── Stubbed generation (step 1) ────────────────────────────────────────────
+// ── Live generation (step 2) ───────────────────────────────────────────────
 
-/** Returns a fixed, recognizable string so the whole pipeline is provable
- *  before any model is in the loop. Step 2 replaces with a real
- *  routeCommentary call composing VOICE_CONTRACT + per-sport voice pack
- *  + the facts; the timeout/sentinel/validator scaffolding around it
- *  stays unchanged. */
-export async function generateHeadlineStub(facts: CommentaryFactsWire): Promise<string> {
-  const name = facts.anchor?.name ?? "no-anchor";
-  return `[STUB] ${name} · ${facts.trigger} · ${facts.verdict}`;
+/** Build the RouterConfig from process.env. The keys' provenance:
+ *    COMMENTARY_API_KEY — HISTORICAL NAME, value IS the Anthropic API
+ *    key (rename commit 938df9b kept the value, swapped the env-var
+ *    label). Don't be misled by the name.
+ *    GROQ_API_KEY       — Groq's OpenAI-compatible endpoint key. Drives
+ *    the background grader + the cross-checker challenger round.
+ *    DEEPSEEK_API_KEY   — DeepSeek's OpenAI-compatible endpoint key.
+ *    Used as the secondary challenger on cycles where it's drawn.
+ *
+ *  Throws when the Anthropic key is missing — without it the router
+ *  can't even ship the apology sentinel. The handler catches the throw
+ *  and returns headline:null. */
+function buildRouterConfig(): RouterConfig {
+  const anthropicApiKey = process.env.COMMENTARY_API_KEY;
+  if (!anthropicApiKey) {
+    throw new Error("COMMENTARY_API_KEY not configured (this is the Anthropic key)");
+  }
+  return {
+    namespace: "replaymod",
+    defaultPrimary: "claude-haiku-4-5",
+    anthropicApiKey,
+    groqApiKey: process.env.GROQ_API_KEY,
+    deepseekApiKey: process.env.DEEPSEEK_API_KEY,
+    patchWindowMs: 1500,
+  };
+}
+
+/** Map CommentaryWinTier → PayoutTier. The strings are the same set
+ *  today; the cast is structural. Defaults to STARTER when absent — see
+ *  DEFAULT_TIER comment. */
+function tierFromFacts(facts: CommentaryFacts): PayoutTier {
+  if (facts.winTier) return facts.winTier as PayoutTier;
+  return DEFAULT_TIER;
+}
+
+/** Phase 3 step 2 generation: compose VOICE_CONTRACT, call route
+ *  Commentary, return the model's commentary plus the optional
+ *  background-grading promise. routeCommentary swallows model errors
+ *  internally and returns the apology-sentinel on full failure — the
+ *  caller (handler / harness) detects the sentinel and treats it as a
+ *  null headline. */
+export interface GenerateHeadlineResult {
+  /** Raw model output. May be the apology sentinel — caller must check. */
+  raw: string;
+  /** Grading promise — pass to waitUntil() in the handler, await in
+   *  the harness, ignore in tests. */
+  backgroundWork?: Promise<void>;
+  /** Which model the router used (telemetry only — not part of the
+   *  client-visible response). */
+  modelUsed?: string;
+}
+
+export async function generateHeadline(facts: CommentaryFacts): Promise<GenerateHeadlineResult> {
+  const { system, user } = buildVoiceContract(facts);
+  const tier = tierFromFacts(facts);
+  const config = buildRouterConfig();
+  const result = await routeCommentary(system, user, tier, config);
+  return {
+    raw: result.commentary,
+    backgroundWork: result.backgroundWork,
+    modelUsed: result.modelUsed,
+  };
 }
 
 /** Promise.race against a fixed timeout. Returns the promise's value or
@@ -198,7 +219,7 @@ export function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
 
 // ── Input shape validation ─────────────────────────────────────────────────
 
-function isValidFactsBody(body: any): body is { facts: CommentaryFactsWire } {
+function isValidFactsBody(body: any): body is { facts: CommentaryFacts } {
   if (!body || typeof body !== "object") return false;
   const f = body.facts;
   if (!f || typeof f !== "object") return false;
@@ -235,15 +256,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "default trigger does not use /api/headline" });
   }
 
-  // Generator — stubbed. Surrounded by REAL failure plumbing:
+  // Live generation surrounded by REAL failure plumbing:
   //   1. Promise.race against HEADLINE_TIMEOUT_MS — null on timeout.
   //   2. Apology-sentinel detection — treats the llmRouter's
   //      "Off night..." fallback as a failure, not a result.
   //   3. Output validators — length, denylist, stray tokens, team check.
-  //   Any failure → return { headline: null, reason }.
+  //   4. waitUntil(backgroundWork) — Vercel keeps the function alive
+  //      past response so background grading lands in KV. Skipped when
+  //      the generator threw (env not configured, etc.) since there
+  //      would be no work to wait for.
+  //   Any failure → return { headline: null, reason } so the client
+  //   falls back to the bank pick.
+  let generated: GenerateHeadlineResult | null = null;
   let raw: string | null;
   try {
-    raw = await withTimeout(generateHeadlineStub(facts), HEADLINE_TIMEOUT_MS);
+    const generation = generateHeadline(facts);
+    const result = await withTimeout(generation, HEADLINE_TIMEOUT_MS);
+    if (result === null) {
+      raw = null;
+    } else {
+      generated = result;
+      raw = result.raw;
+    }
   } catch (err) {
     console.error("[api/headline] generator threw:", err instanceof Error ? err.message : err);
     return res.status(200).json({ headline: null, reason: "generator_error" });
@@ -253,13 +287,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ headline: null, reason: "timeout" });
   }
   if (raw.trim() === APOLOGY_SENTINEL) {
+    // Don't drop the backgroundWork promise — let it finish so any
+    // partial grading still lands.
+    if (generated?.backgroundWork) waitUntil(generated.backgroundWork);
     return res.status(200).json({ headline: null, reason: "apology_sentinel" });
   }
 
   const v = validateHeadline(raw, facts);
+
+  // Pass the background grading promise to waitUntil REGARDLESS of
+  // validation outcome — grading is async telemetry, useful even when
+  // the line itself was rejected (we still want the model's score for
+  // routing decisions).
+  if (generated?.backgroundWork) waitUntil(generated.backgroundWork);
+
   if (!v.ok) {
     return res.status(200).json({ headline: null, reason: `validation:${v.reason}` });
   }
 
-  return res.status(200).json({ headline: v.headline, source: "stub" });
+  return res.status(200).json({ headline: v.headline, source: "router" });
 }

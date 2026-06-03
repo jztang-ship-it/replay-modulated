@@ -1,21 +1,33 @@
 // basketball/src/dev/headlineMockFixture.ts
 //
-// Hand-edited CommentaryFacts fixtures for the Phase 3 step 1 smoke
-// route. Each case mirrors a real production hand shape so the stubbed
-// /api/headline response (and step 2's real authored output) can be
-// eyeballed beside today's bank pick.
+// Hand-edited CommentaryFacts fixtures for the Phase 3 smoke route +
+// eval loop. Five primary cases mirror real production hand shapes;
+// four retro adversarial cases probe the anti-anachronism and obey-
+// verdict rules under pressure (the model wants to reach for modern
+// arena names, post-game awards, future ring counts).
+//
+// Each fixture carries winTier (Phase 3 step 2 — threaded into the
+// router's per-tier KV key + the grader's "Result tier:" context line).
 //
 // DEV-only; the route mount in App.tsx gates on import.meta.env.DEV so
-// the whole tree dead-code-eliminates from prod builds.
+// the whole tree dead-code-eliminates from prod builds. The eval
+// harness (scripts/smoke-headline.mjs) imports this same file directly
+// from Node so the fixture set is the single source of truth.
 
 import type { CommentaryFacts } from "@shared/commentary/commentaryFacts";
 
 export type HeadlineMockCase =
+  // Primary five (the production hand shapes — also the gates in step 1)
   | "rare_pull"          // Wade career-high (the real production row)
-  | "choke_credited"     // anchor vindicated — Kobe delivered, Kidd tanked
-  | "choke_neutral"      // Kobe mid-zone — the bug that started Phase 3
-  | "big_score"          // Curry 65 FP
-  | "miss";              // 7 FP short of ALL-STAR — no anchor
+  | "choke_credited"     // anchor vindicated — Kobe delivered, other tanked
+  | "choke_neutral"      // Kobe mid-zone — the Phase-3 reason-for-existing
+  | "big_score"          // Curry 65 FP, modern season
+  | "miss"               // 7 FP short of ALL-STAR — no anchor
+  // Retro adversarial set — anti-anachronism + verdict-discipline probes
+  | "retro_shaq_0001"    // Shaq 2000-01 Lakers — pre-Heat/Suns/Cavs/Celtics arc
+  | "retro_jordan_9596"  // Jordan 95-96 (4 rings at the time, not 6)
+  | "retro_arenas_0607"  // Arenas 06-07 (pre-injury, pre-controversy era)
+  | "retro_kobe_neutral_0708"; // Kobe 07-08 mid-zone (verdict discipline)
 
 interface HeadlineMockFixture {
   label: string;
@@ -23,6 +35,10 @@ interface HeadlineMockFixture {
   /** What today's chadShareTrashTalk bank picks for this trigger — shown
    *  alongside the endpoint's output so the comparison is on-screen. */
   bankPick: string;
+  /** Per-fixture eval hint — what specifically this case is checking.
+   *  Shown in the smoke harness output and helps reviewers know what
+   *  to look for when reading the model's headline. */
+  evalHint?: string;
 }
 
 export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixture> = {
@@ -34,6 +50,7 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       season: "0809",
       trigger: "rare_pull",
       verdict: "credited",
+      winTier: "MVP",
       anchor: {
         name: "Dwyane Wade",
         basePlayerId: "2548",
@@ -49,6 +66,7 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       },
     },
     bankPick: "Set the high. See if you can touch it.",
+    evalHint: "Should name Wade + 50 pts + UTA. No mention of Kaseya Center (modern); 0809 Heat played at American Airlines Arena.",
   },
 
   choke_credited: {
@@ -59,6 +77,7 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       season: "2425",
       trigger: "choke",
       verdict: "credited",
+      winTier: "BUST",
       anchor: {
         name: "Kobe Bryant",
         basePlayerId: "977",
@@ -73,16 +92,18 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       },
     },
     bankPick: "Brutal hand. See if they survive the same slate.",
+    evalHint: "Anchor vindicated — Kobe is hero, not villain. Line indicts the rest of the hand without naming the others (no anchor for them in facts).",
   },
 
   choke_neutral: {
-    label: "choke · Kobe mid-zone (the Phase-3 bug)",
+    label: "choke · Kobe mid-zone (the Phase-3 reason-for-existing)",
     facts: {
       surface: "challenge_headline",
       sport: "basketball",
       season: "0809",
       trigger: "choke",
       verdict: "neutral",
+      winTier: "BUST",
       anchor: {
         name: "Kobe Bryant",
         basePlayerId: "977",
@@ -97,6 +118,7 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       },
     },
     bankPick: "Brutal hand. See if they survive the same slate.",
+    evalHint: "CRITICAL: verdict=neutral. Must NOT name Kobe as hero (no MAMBA DELIVERED) or villain (no MAMBA FORGOT). Line lives on the hand or the stakes — not on a player as cause.",
   },
 
   big_score: {
@@ -107,6 +129,7 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       season: "2425",
       trigger: "big_score",
       verdict: "credited",
+      winTier: "ALL_STAR",
       anchor: {
         name: "Stephen Curry",
         basePlayerId: "201939",
@@ -122,6 +145,7 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       },
     },
     bankPick: "You hit ALL-STAR. Same slate. Beat them.",
+    evalHint: "Modern season — Chase Center is OK as written, but cleanest is no venue at all (v1 rule: venue not provided in facts).",
   },
 
   miss: {
@@ -132,10 +156,123 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       season: "2425",
       trigger: "miss",
       verdict: "neutral",
+      winTier: "STARTER",
       nearMissGap: 7,
       nearMissNextTier: "ALL_STAR",
     },
     bankPick: "Almost. So close. Try the same slate.",
+    evalHint: "No anchor — line is about the hand / the gap. Must NOT invent a player to credit or blame.",
+  },
+
+  // ── Retro adversarial fixtures ───────────────────────────────────────────
+  // Probe the anti-anachronism + obey-verdict rules under the most likely
+  // failure conditions. Reviewers should read these knowing what trap the
+  // model is being walked toward.
+
+  retro_shaq_0001: {
+    label: "retro · Shaq 2000-01 Lakers (anti-anachronism)",
+    facts: {
+      surface: "challenge_headline",
+      sport: "basketball",
+      season: "0001",
+      trigger: "big_score",
+      verdict: "credited",
+      winTier: "MVP",
+      anchor: {
+        name: "Shaquille O'Neal",
+        basePlayerId: "406",
+        nicknames: ["Shaq", "The Big Diesel", "Shaq Diesel", "The Big Aristotle", "Superman"],
+        knownFor: "Most physically dominant center of his era — four rings, three Finals MVPs, 15-time All-Star.",
+        tier: "RED",
+        team: "LAL",
+        statLine: { pts: 41, reb: 18, ast: 5, blk: 5, min: 42 },
+        opponent: "POR",
+        homeAway: "H",
+        date: "2001-05-19",
+      },
+    },
+    bankPick: "You hit MVP. Same slate. Beat them.",
+    evalHint: "0001 season Lakers played at STAPLES Center, NOT Crypto.com Arena. Shaq had ONE ring at this point (not four). Heat/Suns/Cavs/Celtics tenures hadn't happened. Watch for any of those leaks.",
+  },
+
+  retro_jordan_9596: {
+    label: "retro · Jordan 95-96 Bulls (4 rings ≠ 6)",
+    facts: {
+      surface: "challenge_headline",
+      sport: "basketball",
+      season: "9596",
+      trigger: "rare_pull",
+      verdict: "credited",
+      winTier: "LEGEND",
+      anchor: {
+        name: "Michael Jordan",
+        basePlayerId: "893",
+        nicknames: ["MJ", "Air Jordan", "His Airness", "Black Cat"],
+        knownFor: "Six-time NBA champion, the GOAT in most conversations, the verb in sneaker culture.",
+        tier: "RED",
+        team: "CHI",
+        statLine: { pts: 53, reb: 8, ast: 4, stl: 4, min: 38 },
+        opponent: "WAS",
+        homeAway: "A",
+        date: "1996-04-05",
+        topReason: { category: "pts", value: 53, label: "53 pts (season top-5)" },
+      },
+    },
+    bankPick: "You pulled a legendary game. Challenge someone to beat this.",
+    evalHint: "95-96 season: Jordan had 3 rings (returning from baseball, 6th about to be won). The knownFor field SAYS six-time — model must still write to the season's truth. Watch for '6 rings' / 'final ring' / Wizards reference (still 5+ years away).",
+  },
+
+  retro_arenas_0607: {
+    label: "retro · Arenas 06-07 Wizards (pre-controversy, pre-injury)",
+    facts: {
+      surface: "challenge_headline",
+      sport: "basketball",
+      season: "0607",
+      trigger: "rare_pull",
+      verdict: "credited",
+      winTier: "MVP",
+      anchor: {
+        name: "Gilbert Arenas",
+        basePlayerId: "2240",
+        nicknames: ["Agent Zero", "Hibachi", "Gilbertology"],
+        knownFor: "The gunslinger who dropped 60 on Kobe, then brought actual guns to work.",
+        tier: "RED",
+        team: "WAS",
+        statLine: { pts: 60, reb: 8, ast: 8, stl: 1, min: 49 },
+        opponent: "LAL",
+        homeAway: "A",
+        date: "2006-12-17",
+        topReason: { category: "pts", value: 60, label: "60 pts (career)" },
+      },
+    },
+    bankPick: "You pulled a legendary game. Challenge someone to beat this.",
+    evalHint: "December 2006: Arenas was still pre-injury, pre-locker-room-gun incident (2009). knownFor mentions guns — the §3 denylist must block any line that surfaces that (or 'arrest', 'suspension' references). Also: post-Wizards career didn't happen yet.",
+  },
+
+  retro_kobe_neutral_0708: {
+    label: "retro · Kobe 07-08 mid-zone (verdict-discipline probe)",
+    facts: {
+      surface: "challenge_headline",
+      sport: "basketball",
+      season: "0708",
+      trigger: "choke",
+      verdict: "neutral",
+      winTier: "BUST",
+      anchor: {
+        name: "Kobe Bryant",
+        basePlayerId: "977",
+        nicknames: ["Black Mamba", "Mamba", "Vino", "Kobe", "KB24", "Mamba Mentality"],
+        knownFor: "Five-time NBA champion, 18-time All-Star, the closest spiritual successor to Jordan.",
+        tier: "RED",
+        team: "LAL",
+        statLine: { pts: 26, reb: 5, ast: 4, min: 38 },
+        opponent: "HOU",
+        homeAway: "H",
+        date: "2008-02-26",
+      },
+    },
+    bankPick: "Brutal hand. See if they survive the same slate.",
+    evalHint: "Second mid-zone Kobe case (different season + opponent) so the verdict-discipline check isn't single-fixture luck. Same rule: must NOT name Kobe as hero or villain. Also: 0708 Kobe had FOUR rings (5th came in 2009-10), and his knownFor's '5-time champ' is a lie if the model reaches for it from facts.",
   },
 };
 

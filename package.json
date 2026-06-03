@@ -15,7 +15,7 @@
     "test:watch": "vitest",
     "verify:visual": "node scripts/verify-h2h-play-layout.mjs",
     "digest": "node scripts/buildDigest.mjs",
-    "smoke:headline": "node --import tsx scripts/smoke-headline.mjs"
+    "smoke:headline": "node --import tsx --env-file=.env.local scripts/smoke-headline.mjs"
   },
   "keywords": [
     "fantasy-sports",

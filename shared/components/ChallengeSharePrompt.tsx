@@ -11,6 +11,7 @@ import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
 import {
   buildCommentaryFacts,
   type CommentaryTrigger,
+  type CommentaryWinTier,
 } from "@shared/commentary/commentaryFacts";
 import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
@@ -159,6 +160,10 @@ export function ChallengeSharePrompt({
       sport,
       season,
       trigger: triggerResult.trigger as CommentaryTrigger,
+      // Phase 3 step 2: thread the sender's hand result tier so the
+      // router can route per-tier (KV key includes tier) and the
+      // grader's "Result tier:" context line is honest.
+      winTier: winTier as CommentaryWinTier,
       roster: roster.map(c => ({
         basePlayerId: String((c as any).basePlayerId ?? ""),
         name: String((c as any).name ?? ""),

@@ -288,3 +288,48 @@ describe("buildCommentaryFacts — surface tag passes through", () => {
     expect(r.facts.surface).toBe("post_hand");
   });
 });
+
+describe("buildCommentaryFacts — winTier passthrough (Phase 3 step 2)", () => {
+  it("threads winTier onto facts when provided (big_score with anchor)", () => {
+    const r = buildCommentaryFacts(input({
+      trigger: "big_score",
+      winTier: "ALL_STAR",
+      anchorBasePlayerId: "977",
+    }));
+    if (r.kind !== "facts") throw new Error("expected facts");
+    expect(r.facts.winTier).toBe("ALL_STAR");
+  });
+
+  it("threads winTier onto facts on miss (no anchor)", () => {
+    const r = buildCommentaryFacts(input({
+      trigger: "miss",
+      winTier: "STARTER",
+      anchorBasePlayerId: null,
+      nearMissGap: 7,
+      nearMissNextTier: "ALL_STAR",
+    }));
+    if (r.kind !== "facts") throw new Error("expected facts");
+    expect(r.facts.winTier).toBe("STARTER");
+  });
+
+  it("threads winTier onto facts when anchor doesn't resolve (no-anchor branch)", () => {
+    const r = buildCommentaryFacts(input({
+      trigger: "choke",
+      winTier: "BUST",
+      anchorBasePlayerId: "ghost",
+    }));
+    if (r.kind !== "facts") throw new Error("expected facts");
+    expect(r.facts.winTier).toBe("BUST");
+  });
+
+  it("omits winTier from facts when caller doesn't pass it", () => {
+    const r = buildCommentaryFacts(input({
+      trigger: "rare_pull",
+      anchorBasePlayerId: "2548",
+      roster: [card({ basePlayerId: "2548", name: "Dwyane Wade" })],
+      topGamePrimaryReason: { category: "pts", value: 48, label: "48 pts" },
+    }));
+    if (r.kind !== "facts") throw new Error("expected facts");
+    expect(r.facts.winTier).toBeUndefined();
+  });
+});

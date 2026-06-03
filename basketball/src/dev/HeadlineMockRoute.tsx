@@ -28,11 +28,17 @@ interface PostResult {
 }
 
 const ALL_CASES: HeadlineMockCase[] = [
+  // Primary five
   "rare_pull",
   "choke_credited",
   "choke_neutral",
   "big_score",
   "miss",
+  // Retro adversarial set (Phase 3 step 2)
+  "retro_shaq_0001",
+  "retro_jordan_9596",
+  "retro_arenas_0607",
+  "retro_kobe_neutral_0708",
 ];
 
 export default function HeadlineMockRoute() {
