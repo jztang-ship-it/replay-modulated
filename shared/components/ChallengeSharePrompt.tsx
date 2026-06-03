@@ -8,6 +8,11 @@ import { getNickname, setNickname } from "@shared/utils/playerIdentity";
 import { isRealName } from "@shared/utils/isRealName";
 import { track } from "@shared/analytics/analytics";
 import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
+import {
+  buildCommentaryFacts,
+  type CommentaryTrigger,
+} from "@shared/commentary/commentaryFacts";
+import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
@@ -126,6 +131,62 @@ export function ChallengeSharePrompt({
   // removed per U3 of the unification lock.
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  // Phase 3 step 1 (lock: docs/challenge-landing-v2-phase3-authored-voice-
+  // engine-lock.md). True during the /api/headline POST so the CTA can
+  // surface a brief "crafting headline…" state. Resolves in 0.6–1.5s for
+  // the stubbed generator; step 2's real model call lands in the same
+  // window.
+  const [isCraftingHeadline, setIsCraftingHeadline] = useState(false);
+
+  /** Phase 3 step 1: fetch an authored headline (via /api/headline) or
+   *  fall back to the bank-pick `shareHeadline` prop. Returns the string
+   *  that should land in the create POST's share_headline field AND the
+   *  OAuth-resume sessionStorage payload's share_headline field.
+   *
+   *  Skip-and-fall-back paths:
+   *    - buildCommentaryFacts returns kind:"skip" (default trigger) →
+   *      use the bank pick verbatim, do not POST.
+   *    - api/headline returns null (timeout, validator-null, sentinel) →
+   *      use the bank pick verbatim. Create is never blocked.
+   *
+   *  The bank pick (`shareHeadline` prop, computed in GameView via
+   *  `chadShareTrashTalk`) is the floor — Phase 3 is "strictly additive,
+   *  never worse than today." */
+  async function settleHeadline(): Promise<string> {
+    const fallback = shareHeadline ?? triggerResult.headline ?? "";
+    const factsResult = buildCommentaryFacts({
+      surface: "challenge_headline",
+      sport,
+      season,
+      trigger: triggerResult.trigger as CommentaryTrigger,
+      roster: roster.map(c => ({
+        basePlayerId: String((c as any).basePlayerId ?? ""),
+        name: String((c as any).name ?? ""),
+        tier: String((c as any).tier ?? ""),
+        team: String((c as any).team ?? ""),
+        actualFp: Number((c as any).actualFp ?? 0),
+        projectedFp: Number((c as any).projectedFp ?? 0),
+        wasHeld: (c as any).wasHeld === true,
+        gameInfo: (c as any).gameInfo,
+        statLine: (c as any).statLine,
+      })),
+      anchorBasePlayerId: triggerResult.anchorBasePlayerId ?? null,
+      holdsRecorded: true,
+      topGamePrimaryReason: triggerResult.topGamePrimaryReason ?? null,
+      nearMissGap: triggerResult.nearMissGap ?? null,
+      nearMissNextTier: triggerResult.nearMissNextTier ?? null,
+    });
+    if (factsResult.kind === "skip") return fallback;
+
+    setIsCraftingHeadline(true);
+    try {
+      const authored = await fetchAuthoredHeadline(factsResult.facts);
+      return authored ?? fallback;
+    } finally {
+      setIsCraftingHeadline(false);
+    }
+  }
+
   function onCtaTap() {
     // Anonymous user: unified auth surface in challenge context (U2/U4).
     // Path α (email): RegisterModal observes auth flip in-modal, swaps
@@ -159,6 +220,12 @@ export function ChallengeSharePrompt({
   // directly. When omitted, getNickname() is read at POST time as before.
   async function continueShareAfterName(nameOverride?: string) {
     track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
+    // Phase 3 step 1: settle the headline BEFORE the create POST so the
+    // authored string lands in the row's share_headline column (where
+    // both the landing AND the OG share card read from). When api/
+    // headline returns null OR the trigger is `default`, fall back to
+    // today's chadShareTrashTalk bank pick — create is never blocked.
+    const effectiveHeadline = await settleHeadline();
     let cid = challengeId;
     if (!cid) {
       cid = await createChallenge({
@@ -174,7 +241,7 @@ export function ChallengeSharePrompt({
         sport, season, totalFp, winTier, roster, initialRoster, badges, winTiersMap,
         challengerName: nameOverride ?? getNickname() ?? "Anonymous",
         serializeRoster,
-        shareHeadline,
+        shareHeadline: effectiveHeadline,
         // Pass the pre-evaluated trigger through so the DB row's
         // trigger_type matches what fired on the prompt. Without this,
         // useChallengeShare's re-evaluation misses topGameTier and
@@ -184,13 +251,11 @@ export function ChallengeSharePrompt({
     }
     if (!cid) return;
     const url = `${window.location.origin}/${sport}/challenge/${cid}`;
-    // Share text is the recipient-facing chad trash-talk (same string
-    // stored as share_headline on the DB row, propagated to the landing
-    // screen + OG card). Falls back to the poster-facing prompt
-    // headline only when shareHeadline is missing — preserves
-    // pre-trash-talk-wiring behavior for sports without
-    // adapter.getShareHeadline implemented.
-    await shareChallenge(shareHeadline ?? triggerResult.headline, url, "");
+    // Share text mirrors what landed in share_headline so the recipient
+    // sees the same line on the share preview, the landing, and the OG
+    // card. effectiveHeadline already incorporates the bank-pick
+    // fallback for null / default-trigger cases.
+    await shareChallenge(effectiveHeadline, url, "");
     if (!navigator.share) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
@@ -246,7 +311,16 @@ export function ChallengeSharePrompt({
   // exits via onBeforeGoogleRedirect, which persists the full share-POST
   // payload to sessionStorage; ResumeShareSurface (mounted at App.tsx
   // level) picks up the resumed flow on return.
-  const handlePersistBeforeGoogleRedirect = () => {
+  const handlePersistBeforeGoogleRedirect = async () => {
+    // Phase 3 step 1: settle the headline BEFORE the sessionStorage
+    // write. The OAuth-resume path (ResumeShareSurface.handlePostChallenge)
+    // reads `share_headline` from sessionStorage and posts it verbatim
+    // to /api/challenge/create — if we wrote the bank pick here, the
+    // resume path would degrade to today's behavior even when /api/
+    // headline could have authored a line. RegisterModal.handleGoogle
+    // now awaits this hook so the redirect doesn't fire mid-fetch.
+    const effectiveHeadline = await settleHeadline();
+
     // Phase 0 challenge-snapshot-enrichment (2026-06-02): mirror the
     // useChallengeShare create-path enrichment here. The sessionStorage
     // payload is restored post-redirect by ResumeShareSurface and POSTed
@@ -266,7 +340,7 @@ export function ChallengeSharePrompt({
       total_fp: totalFp,
       initial_roster_serialized: serializeRoster(enrichedInitialRoster),
       trigger_type: triggerResult.trigger,
-      share_headline: shareHeadline ?? triggerResult.headline ?? "",
+      share_headline: effectiveHeadline,
       near_miss_gap: triggerResult.nearMissGap ?? null,
       near_miss_next_tier: triggerResult.nearMissNextTier ?? null,
       anchor_base_player_id: triggerResult.anchorBasePlayerId ?? null,
@@ -306,7 +380,7 @@ export function ChallengeSharePrompt({
         {authModal}
         <button
           onClick={onCtaTap}
-          disabled={isCreating}
+          disabled={isCreating || isCraftingHeadline}
           aria-label="Challenge a friend with this hand"
           style={{
             position: "fixed",
@@ -317,12 +391,12 @@ export function ChallengeSharePrompt({
             background: "rgba(255,177,74,0.14)",
             border: "1px solid rgba(255,177,74,0.4)",
             color: "#FFB14A", fontSize: 18, fontWeight: 900,
-            cursor: isCreating ? "default" : "pointer",
+            cursor: (isCreating || isCraftingHeadline) ? "default" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
             lineHeight: 1,
           }}
         >
-          {isCreating ? "…" : copied ? "✓" : "↗"}
+          {(isCraftingHeadline || isCreating) ? "…" : copied ? "✓" : "↗"}
         </button>
       </>
     );
@@ -393,23 +467,28 @@ export function ChallengeSharePrompt({
       )}
       <button
         onClick={onCtaTap}
-        disabled={isCreating}
+        disabled={isCreating || isCraftingHeadline}
         style={{
           width: "100%", padding: isSpecial ? "14px" : "10px", borderRadius: 12,
-          background: isCreating ? "rgba(255,177,74,0.3)" : isSpecial ? "#FFB14A" : "rgba(255,177,74,0.12)",
+          background: (isCreating || isCraftingHeadline)
+            ? "rgba(255,177,74,0.3)"
+            : isSpecial ? "#FFB14A" : "rgba(255,177,74,0.12)",
           border: isSpecial ? "none" : "1px solid rgba(255,177,74,0.4)",
           color: isSpecial ? "#070A12" : "#FFB14A",
           fontSize: isSpecial ? 15 : 13, fontWeight: 900,
-          cursor: isCreating ? "default" : "pointer", letterSpacing: 0.5,
+          cursor: (isCreating || isCraftingHeadline) ? "default" : "pointer",
+          letterSpacing: 0.5,
         }}
       >
-        {isCreating
-          ? "Creating..."
-          : copied
-            ? "Link Copied! ✓"
-            : isRivalryBack
-              ? `Send to ${rivalryTargetName ?? "your friend"}`
-              : "Challenge a Friend"}
+        {isCraftingHeadline
+          ? "Crafting headline…"
+          : isCreating
+            ? "Creating..."
+            : copied
+              ? "Link Copied! ✓"
+              : isRivalryBack
+                ? `Send to ${rivalryTargetName ?? "your friend"}`
+                : "Challenge a Friend"}
       </button>
     </div>
     </>

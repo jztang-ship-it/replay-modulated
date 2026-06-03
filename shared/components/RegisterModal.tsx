@@ -24,12 +24,19 @@ interface RegisterModalProps {
   signInGoogle?: () => Promise<{ error: AuthError | null }>;
   /** Phase 5b piece 1: surface variant per the unification lock (U2). */
   context?: RegisterModalContext;
-  /** Phase 5b piece 1: fires synchronously BEFORE either Google call. The
-   *  caller uses this hook to persist mid-flow state (sessionStorage) so
-   *  the post-redirect ResumeShareSurface can pick up the share. Path β
-   *  for Google means the React tree unmounts during OAuth; this hook is
-   *  the only chance to checkpoint share state before that happens. */
-  onBeforeGoogleRedirect?: () => void;
+  /** Phase 5b piece 1: fires BEFORE either Google call. The caller uses
+   *  this hook to persist mid-flow state (sessionStorage) so the post-
+   *  redirect ResumeShareSurface can pick up the share. Path β for
+   *  Google means the React tree unmounts during OAuth; this hook is the
+   *  only chance to checkpoint share state before that happens.
+   *
+   *  Phase 3 step 1 (lock: docs/challenge-landing-v2-phase3-authored-
+   *  voice-engine-lock.md): widened to accept an async hook. The caller
+   *  may need to settle the authored headline via /api/headline before
+   *  the sessionStorage write, otherwise the resume path degrades to
+   *  the bank-pick string. handleGoogle below awaits the hook so the
+   *  OAuth redirect doesn't fire mid-fetch. */
+  onBeforeGoogleRedirect?: () => void | Promise<void>;
   /** Phase 5b piece 1: challenge-context only. Fired when user has authed
    *  (path α email path within this same modal session) AND entered a
    *  name AND tapped the unified Continue. Caller wires this to fire the
@@ -131,11 +138,17 @@ export function RegisterModal({
     setLoading(true);
     setError(null);
     // Phase 5b piece 1: persist mid-flow state BEFORE Google's redirect
-    // tears down the React tree. The persistence happens synchronously so
-    // the sessionStorage write lands before window.location changes. The
-    // caller (ChallengeSharePrompt in challenge context) wires this to
-    // serialize the share-POST payload.
-    if (isChallengeContext) onBeforeGoogleRedirect?.();
+    // tears down the React tree. The caller (ChallengeSharePrompt in
+    // challenge context) wires this to serialize the share-POST
+    // payload.
+    //
+    // Phase 3 step 1: AWAITED. Settling the authored headline before
+    // sessionStorage write needs a 0.6-1.5s round-trip to /api/headline;
+    // the OAuth redirect (started below by signInGoogle / linkGoogle)
+    // must NOT race ahead of that fetch or the resume path degrades.
+    // A sync caller returns void → await is a no-op; an async caller
+    // is properly sequenced.
+    if (isChallengeContext) await onBeforeGoogleRedirect?.();
     const result = isSignIn
       ? await signInGoogle?.() ?? { error: { message: "Google sign in not available" } as any }
       : await linkGoogle();

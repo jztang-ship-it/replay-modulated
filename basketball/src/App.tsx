@@ -18,6 +18,7 @@ import { LandingPage } from "./components/LandingPage";
 import H2HRevealMockRoute from "./dev/H2HRevealMockRoute";
 import H2HPlayMockRoute from "./dev/H2HPlayMockRoute";
 import ChallengeLandingMockRoute from "./dev/ChallengeLandingMockRoute";
+import HeadlineMockRoute from "./dev/HeadlineMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -115,6 +116,9 @@ function AppInner() {
   }
   if (import.meta.env.DEV && devSlug === "challenge-landing-mock") {
     return <ChallengeLandingMockRoute />;
+  }
+  if (import.meta.env.DEV && devSlug === "headline-mock") {
+    return <HeadlineMockRoute />;
   }
 
   const { isFTUE } = useFTUE(SPORT);

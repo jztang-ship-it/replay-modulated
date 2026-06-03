@@ -150,9 +150,13 @@ export const TAKES: Record<TakeCardTrigger, TakeBank> = {
 // TANKED_RATIO = 0.60: under 60% of projection is the clearly-bad-night
 // floor. The mid-zone [0.60, 0.90) deliberately maps to "no honest take"
 // → generic claim. Tight thresholds prevent overclaim at the edges.
+//
+// Phase 3 (lock: docs/challenge-landing-v2-phase3-authored-voice-engine-
+// lock.md): the constants now live in shared/commentary/anchorTruth.ts
+// (the lifted classifier needs them; templates.ts re-exports so existing
+// importers from this module keep working). Values are NOT touched.
 
-export const DELIVERED_RATIO = 0.90;
-export const TANKED_RATIO = 0.60;
+export { DELIVERED_RATIO, TANKED_RATIO } from "@shared/commentary/anchorTruth";
 
 export const TAKES_CHOKE_ANCHOR_VINDICATED: TakeBank = {
   named: [

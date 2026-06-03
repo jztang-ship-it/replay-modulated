@@ -26,8 +26,13 @@ import type {
   TakeCardInput,
   TakeCardMode,
   TakeCardTrigger,
+  HeldCardForTakeCard,
 } from "./types";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
+import {
+  classifyAnchorTruth as classifyAnchorTruthShared,
+  type AnchorTruthCard,
+} from "@shared/commentary/anchorTruth";
 import {
   TAKES,
   TAKES_MISS_WIDE_GAP,
@@ -35,8 +40,6 @@ import {
   TAKES_CHOKE_ANCHOR_BLAMED,
   TAKES_CHOKE_CULTURE_VINDICATED,
   TAKES_CHOKE_CULTURE_BLAMED,
-  DELIVERED_RATIO,
-  TANKED_RATIO,
   MISS_ONE_DECISION_THRESHOLD_FP,
   SUB_HEADLINE,
   DARES,
@@ -52,6 +55,16 @@ import {
   ROOKIE_FP_CEILING,
   buildStakesCompetition,
 } from "./templates";
+
+// Phase 3 (lock: docs/challenge-landing-v2-phase3-authored-voice-engine-
+// lock.md): re-export the verdict + thresholds from their new home so
+// any consumer importing them from this module keeps working.
+export {
+  classifyAnchorTruth,
+  DELIVERED_RATIO,
+  TANKED_RATIO,
+  type AnchorTruthVerdict,
+} from "@shared/commentary/anchorTruth";
 
 // ── Determinism: FNV-1a 32-bit hash (carried from 2a, unchanged) ───────
 // Pure, no Math.random. Same input → same output forever. The slot name
@@ -156,37 +169,51 @@ function looksLikeName(s: string | null | undefined): boolean {
 
 // ── Public entry point ────────────────────────────────────────────────
 
-/** Phase 2d — anchor-truth classification. Used by the choke TAKE
- *  routing to decide vindicate/blame/generic. Gated to choke (the only
- *  trigger where "{anchor} wasn't the problem" is a coherent claim).
+/** Phase 2d → Phase 3: anchor-truth classification, now delegating to
+ *  the shared `classifyAnchorTruth` in `@shared/commentary/anchorTruth`.
+ *  Routing here keeps the take card's existing 2d/2e bank vocabulary
+ *  ("vindicated"/"blamed"/"generic") so the rest of the generator reads
+ *  unchanged; the shared verdict ("credited"/"blamed"/"neutral") is
+ *  remapped at this boundary.
  *
- *  Returns "vindicated" when the anchor delivered AND at least one other
- *  held card tanked; "blamed" when the anchor itself tanked; "generic"
- *  for every ambiguous / under-determined case. Critically, the legacy
- *  gate (holdsRecorded:false → heldCards:[] from the landing) short-
- *  circuits to "generic" because there's no anchor card in the list to
- *  classify. */
+ *  Adapter: the take card's `TakeCardInput.heldCards` carries an
+ *  optional basePlayerId; the shared classifier matches by
+ *  basePlayerId. For held cards without one (legacy test fixtures), a
+ *  deterministic name-keyed synthetic ID is used on BOTH the anchor
+ *  resolution side and the roster side, preserving the original
+ *  name-match semantics. Production callers (the landing) supply real
+ *  basePlayerIds and never hit the synthetic path. */
 type AnchorTruth = "vindicated" | "blamed" | "generic";
 
-function classifyAnchorTruth(input: TakeCardInput): AnchorTruth {
-  if (!input.holdsRecorded) return "generic";
+function nameKeyId(c: HeldCardForTakeCard): string {
+  if (c.basePlayerId && c.basePlayerId.trim().length > 0) return c.basePlayerId;
+  return `__name__:${c.name.trim().toLowerCase()}`;
+}
+
+function classifyAnchorTruthLocal(input: TakeCardInput): AnchorTruth {
   if (!looksLikeName(input.anchorName)) return "generic";
-  if (input.heldCards.length < 2) return "generic"; // need an "other" to indict
-  const anchor = input.heldCards.find(
-    c => c.name.trim().toLowerCase() === (input.anchorName ?? "").trim().toLowerCase(),
+
+  const target = (input.anchorName ?? "").trim().toLowerCase();
+  const anchorHeld = input.heldCards.find(
+    c => c.name.trim().toLowerCase() === target,
   );
-  if (!anchor) return "generic"; // anchor wasn't held — no coherent claim
-  if (anchor.projectedFp <= 0) return "generic"; // ratio undefined
-  const anchorRatio = anchor.actualFp / anchor.projectedFp;
-  if (anchorRatio < TANKED_RATIO) return "blamed";
-  if (anchorRatio >= DELIVERED_RATIO) {
-    const otherTanked = input.heldCards.some(c => {
-      if (c === anchor) return false;
-      if (c.projectedFp <= 0) return false;
-      return c.actualFp / c.projectedFp < TANKED_RATIO;
-    });
-    if (otherTanked) return "vindicated";
-  }
+  const anchorBasePlayerId = anchorHeld ? nameKeyId(anchorHeld) : null;
+
+  const roster: AnchorTruthCard[] = input.heldCards.map(c => ({
+    basePlayerId: nameKeyId(c),
+    actualFp: c.actualFp,
+    projectedFp: c.projectedFp,
+    wasHeld: true,
+  }));
+
+  const verdict = classifyAnchorTruthShared({
+    roster,
+    anchorBasePlayerId,
+    holdsRecorded: input.holdsRecorded,
+  });
+
+  if (verdict === "credited") return "vindicated";
+  if (verdict === "blamed") return "blamed";
   return "generic";
 }
 
@@ -283,7 +310,7 @@ export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCa
   //   choke + generic                      → TAKES.choke
   //   miss wide                            → TAKES_MISS_WIDE_GAP
   //   everything else                      → TAKES[trigger]
-  const anchorTruth = input.trigger === "choke" ? classifyAnchorTruth(input) : "generic";
+  const anchorTruth = input.trigger === "choke" ? classifyAnchorTruthLocal(input) : "generic";
   const nickname =
     input.trigger === "choke" && anchorTruth !== "generic"
       ? pickIconicNickname(input.anchorCulture, input.anchorName, seed)
