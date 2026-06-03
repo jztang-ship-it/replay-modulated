@@ -1,42 +1,50 @@
 // shared/components/ChallengeTakeCardLanding.tsx
 //
-// Phase 2b — the V2 recipient-facing challenge landing's presentational
-// layer. Lock: docs/challenge-landing-v2-phase2b-landing-component-lock.md.
+// Phase 2c — V2 recipient-facing challenge landing, rebuilt to the
+// TAKE → EVIDENCE → DARE argument hierarchy. Lock: docs/challenge-
+// landing-v2-phase2c-take-evidence-dare-lock.md. Supersedes the 2b
+// hook/outcome/disagreement/cta presentation (which was a faithful
+// build of the 2a hierarchy but landed as a recap — three text blocks
+// telling the same story three ways).
 //
-// Architecture: pure presentation. The shell (`ChallengeLandingScreen`)
-// owns fetch / self-match routing / error / loading / onAccept wiring;
-// this component receives already-fetched + deserialized data and
-// renders the V2 hierarchy. Phase-0 enrichment is read off the raw
-// snapshot (which carries `wasHeld` + `actualFp` per card + the
-// top-level `holdsRecorded` flag); deserialization is the shell's job
-// at accept time, not here.
+// Architecture (unchanged from 2b): pure presentation. The shell
+// (`ChallengeLandingScreen`) owns fetch / self-match routing / error /
+// loading / onAccept; this component receives already-fetched data and
+// renders the hierarchy.
 //
-// V2 hierarchy (top to bottom):
-//   HOOK           — hookHeadline, the largest type, the provocation
-//   STARTING HAND  — 6 cards as evidence; held cards visually prominent
-//                    + inline actualFp chip; discards plain (NO "0")
-//   STAMP + OUTCOME — TeamStamp adjacent to outcomeLine + score (so the
-//                    2a "the stamp earned itself" copy works); score is
-//                    legible but NOT the hero
-//   DISAGREEMENT   — disagreementLine, room around it; this is where
-//                    acceptance happens
-//   CTA            — the "PLAY YOUR LINE" family button
-//   Attribution    — "from {name}" + tiny stats below CTA
-//
-// The current screen's giant 68px-FP top-of-page treatment is the
-// anti-pattern this component replaces.
+// Layout (top → bottom):
+//   IN-FLOW BADGE — choke/miss/big_score/rare_pull tag, inline, rotated
+//                   -5deg for the slant aesthetic. NO absolute, NO
+//                   negative-translate, NO anchor. The Phase-2b clip-
+//                   off-the-left-edge bug came from reusing
+//                   TeamStamp's thud/absolute positioning here; this
+//                   surface gets its own simple in-flow tag. TeamStamp
+//                   itself is untouched (the results-screen panel keeps
+//                   thud + absolute).
+//   TAKE          — generator's `take`, largest type, the claim. The
+//                   page exists to publish this argument.
+//   USP LINE      — generator's `subHeadline` ("Same starting hand.
+//                   Different decisions."). Real visual weight — the
+//                   fairness mechanic + differentiator. Directly under
+//                   the TAKE.
+//   EVIDENCE      — six cards. Held bright + HOLD badge + name +
+//                   salary + rarity. Discards dim. NO per-card FP chip
+//                   in either mode (the FP-spoiler rule).
+//   HELD LIST     — labeled "John held: X, Y" — structured names from
+//                   generator's `heldCards`. Omitted when [] (legacy).
+//   EVIDENCE LINE — generator's `evidenceLine` (the hand TOTAL, mode-
+//                   aware framing). Stakes in correction; "the wall"
+//                   in competition.
+//   DARE          — generator's `dare`, the challenge.
+//   CTA           — generator's `ctaText`, the "PLAY YOUR LINE" family.
+//   Attribution   — minor below CTA.
 
-import { TeamStamp } from "./TeamStamp";
 import { generateChallengeTakeCard } from "@shared/challengeTakeCard/generateChallengeTakeCard";
 import type { TakeCardInput, TakeCardTrigger } from "@shared/challengeTakeCard/types";
 import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
 
 // ── Data shape coming in from the shell ────────────────────────────────
-// Matches the existing `ChallengeData` interface in ChallengeLandingScreen
-// 1:1 — typed locally to avoid an export gymnastics roundtrip on a type
-// the shell already defines and that the component should be able to
-// render in isolation (a dev mock route mounts this with fixture data).
 
 export interface ChallengeLandingData {
   challenge_id: string;
@@ -63,20 +71,11 @@ interface Props {
   data: ChallengeLandingData;
   /** Tiny stats line composed by the shell (`challengeStatsLine`). */
   statsLine: string | null;
-  /** Localstorage hint from the shell — relabels the CTA "Play Again"
-   *  when set. Replays are unlimited; this is just clarity. */
   alreadyAttempted: boolean;
-  /** Wires to the shell's existing handleAccept. */
   onAccept: () => void;
 }
 
-// ── Roster snapshot shape (Phase 0 enrichment fields) ──────────────────
-// The serializer writes these per-card; the deserializer in production
-// fills defaults on legacy rows. Reading the raw snapshot here matches
-// the shell's existing approach (it already grabs `initial_roster.cards`
-// untyped for the existing card grid) and lets the component compute
-// `heldCards` + `anchorName` without going through deserializeRoster
-// (which is the shell's responsibility at accept time).
+// ── Snapshot card shape (Phase 0 enrichment fields) ────────────────────
 
 interface SnapshotCard {
   basePlayerId: string;
@@ -101,278 +100,362 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-// rare_pull sub-tier labels (from data.top_game_tier — Phase 5c S1).
-// Used for the BIG-SCORE / RARE-PULL pill (these triggers have no
-// TeamStamp variant on main; recon-3 option (a) — see the lock).
 const RARE_PULL_TIER_LABEL: Record<string, string> = {
   record: "NEW RECORD",
   career: "CAREER HIGH",
   season: "SEASON HIGH",
 };
 
-function pillLabelForTrigger(trigger: TakeCardTrigger, topGameTier: string | null | undefined): string | null {
-  if (trigger === "big_score") return "BIG SCORE";
-  if (trigger === "rare_pull") return topGameTier ? (RARE_PULL_TIER_LABEL[topGameTier] ?? "RARE PULL") : "RARE PULL";
-  return null; // choke/miss render TeamStamp; default renders nothing.
+// ── In-flow badge (the stamp's permanent home on this surface) ─────────
+//
+// Phase 2b reused TeamStamp's thud/absolute wrapper here and the
+// translate(-50%, -50%) bled the chip off the viewport at every width
+// it touched. 2c builds a separate inline tag for the landing — pure
+// CSS pill, rotate(-5deg) for the slant aesthetic, no animation, no
+// absolute, no negative-translate, no anchor. Cannot bleed off the edge
+// at any viewport width because it occupies normal document flow.
+//
+// TeamStamp.tsx itself is NOT modified — the results-screen panel keeps
+// its existing thud + absolute behavior. The badge label and color
+// family mirror TeamStamp's so the visual identity (CHOKE / {TIER} MISS
+// / BIG SCORE / RARE PULL) reads as the same vocabulary.
+
+interface InFlowBadgeProps {
+  trigger: TakeCardTrigger;
+  missTier?: string | null;
+  topGameTier?: "record" | "career" | "season" | null;
+}
+
+function InFlowBadge({ trigger, missTier, topGameTier }: InFlowBadgeProps) {
+  let label: string | null = null;
+  let background = "linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%)";
+  let color = "#fff5f5";
+
+  if (trigger === "choke") {
+    label = "CHOKE";
+    // background defaults to the savage-red gradient
+  } else if (trigger === "miss") {
+    const prefix = (missTier ?? "").replace(/_/g, " ").trim().toUpperCase();
+    label = prefix ? `${prefix} MISS` : "MISS";
+    background = "linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)";
+    color = "#3a2000";
+  } else if (trigger === "big_score") {
+    label = "BIG SCORE";
+    background = "linear-gradient(135deg, #FFB14A 0%, #F59E0B 100%)";
+    color = "#070A12";
+  } else if (trigger === "rare_pull") {
+    label = topGameTier ? (RARE_PULL_TIER_LABEL[topGameTier] ?? "RARE PULL") : "RARE PULL";
+    background = "linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%)";
+    color = "#070A12";
+  }
+
+  if (!label) return null; // default → no badge
+
+  return (
+    <span
+      data-testid="landing-badge"
+      data-trigger={trigger}
+      style={{
+        display: "inline-block",
+        padding: "5px 11px",
+        borderRadius: 3,
+        background,
+        color,
+        fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
+        fontSize: 13,
+        fontWeight: 900,
+        letterSpacing: 1.4,
+        lineHeight: 1,
+        textTransform: "uppercase",
+        // The slant aesthetic, applied as a static rotate. No translate,
+        // no animation — purely in-flow.
+        transform: "rotate(-5deg)",
+        border: "1.5px solid currentColor",
+        boxShadow: "0 3px 7px rgba(0,0,0,0.45)",
+        marginRight: 4,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ── Held card view ─────────────────────────────────────────────────────
+// The 2c spoiler rule: held cards show name + salary + rarity ONLY. The
+// HOLD badge marks them. The bright color treatment from 2b stays. The
+// per-card FP chip is gone (it leaked the result). Discards stay plain
+// and dim, also without any FP chip.
+
+interface HandCardProps {
+  card: SnapshotCard;
+  isHeld: boolean;
+}
+
+function HandCard({ card, isHeld }: HandCardProps) {
+  const accent = TIER_ACCENT[card.tier] ?? "#9CA3AF";
+  return (
+    <div
+      data-testid={isHeld ? "hand-card-held" : "hand-card-plain"}
+      data-was-held={isHeld ? "true" : "false"}
+      style={{
+        position: "relative",
+        background: isHeld ? `${accent}22` : "rgba(255,255,255,0.03)",
+        border: isHeld ? `2px solid ${accent}` : `1px solid ${accent}55`,
+        borderRadius: 10,
+        padding: "10px 12px",
+        minWidth: 108,
+        flex: "0 1 auto",
+        textAlign: "center",
+        opacity: isHeld ? 1 : 0.55,
+        boxShadow: isHeld ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
+      }}
+    >
+      {/* HOLD badge — held cards only. Replaces the 2b actualFp chip.
+          The marker still tells the recipient WHICH cards the sender
+          locked in, without spoiling the outcome. */}
+      {isHeld && (
+        <div
+          data-testid="hold-badge"
+          style={{
+            position: "absolute",
+            top: -8,
+            right: -6,
+            background: accent,
+            color: "#070A12",
+            borderRadius: 999,
+            padding: "2px 8px",
+            fontSize: 10,
+            fontWeight: 900,
+            letterSpacing: 1.1,
+            lineHeight: 1.2,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+          }}
+        >
+          HOLD
+        </div>
+      )}
+      <div
+        style={{
+          fontSize: 9,
+          fontWeight: 800,
+          letterSpacing: 1.4,
+          color: accent,
+          textTransform: "uppercase",
+          marginBottom: 4,
+          opacity: isHeld ? 1 : 0.7,
+        }}
+      >
+        {card.tier}
+      </div>
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          color: "#EAF0FF",
+          lineHeight: 1.15,
+        }}
+      >
+        {card.name}
+      </div>
+      {/* Salary + team — kept on every card per the 2c lock. */}
+      <div
+        style={{
+          fontSize: 10,
+          color: "rgba(255,255,255,0.4)",
+          marginTop: 2,
+        }}
+      >
+        {card.team} · ${card.salary}
+      </div>
+    </div>
+  );
 }
 
 // ── The component ─────────────────────────────────────────────────────
 
 export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, onAccept }: Props) {
-  const trigger = normalizeTriggerType(data.trigger_type) ?? "default";
+  const trigger = (normalizeTriggerType(data.trigger_type) ?? "default") as TakeCardTrigger;
   const snapshot = (data.initial_roster ?? {}) as RosterSnapshot;
   const cards: SnapshotCard[] = snapshot.cards ?? [];
   const holdsRecorded = snapshot.holdsRecorded === true;
   const namedChallenger = isRealName(data.challenger_name);
 
-  // anchorName lookup — the lock's confirmed pattern. Mirrors
-  // H2HRecipientPlay.tsx:390-396's selectIntroAnchor. Null when
-  // anchor_base_player_id is missing (legacy/default) or doesn't
-  // resolve in the roster.
   const anchorName = data.anchor_base_player_id
     ? (cards.find(c => c.basePlayerId === data.anchor_base_player_id)?.name ?? null)
     : null;
 
-  // heldCards for the take-card generator. Only meaningful when
-  // holdsRecorded is true; pre-Phase-0 snapshots set every card to
-  // wasHeld:false and the generator's no-anchor path takes over.
-  const heldCards = holdsRecorded
+  const heldCardsForGenerator = holdsRecorded
     ? cards
         .filter(c => c.wasHeld === true)
         .map(c => ({ name: c.name, actualFp: c.actualFp ?? 0, tier: c.tier }))
     : [];
 
-  // The take card (deterministic — same challengeId → same output on
-  // refresh, OG image, etc.).
   const takeCardInput: TakeCardInput = {
-    trigger: trigger as TakeCardTrigger,
+    trigger,
     challengerName: namedChallenger ? data.challenger_name : null,
     targetScore: data.target_score,
-    // generateChallengeTakeCard doesn't substitute {winTier} anywhere
-    // today (recon #2); pass a safe placeholder. If a future bank
-    // line adds it, the App mount site will need to thread winTiersMap
-    // down to derive it from target_score — flagged in the lock.
     winTier: "",
     holdsRecorded,
-    heldCards,
+    heldCards: heldCardsForGenerator,
     anchorName,
     nearMissGap: data.near_miss_gap ?? null,
     nearMissNextTier: data.near_miss_next_tier ?? null,
+    bestScore: data.best_score,
+    attemptCount: data.attempt_count,
+    winnerCount: data.winner_count,
     challengeId: data.challenge_id,
   };
   const takeCard = generateChallengeTakeCard(takeCardInput);
 
-  // Stamp placement: choke / miss get the Phase-1 TeamStamp (no thud
-  // entrance on a cold landing — leans subtle per the lock's "DECISION
-  // NEEDED" note; pass delayMs=0 and let the stamp render statically).
-  // big_score / rare_pull get a CSS pill; default → no badge.
-  const pillLabel = pillLabelForTrigger(trigger as TakeCardTrigger, data.top_game_tier ?? null);
+  // For the labeled held list: "John held: X, Y". Use challengerName
+  // when real; "Held:" (no name) otherwise.
+  const heldLabel = namedChallenger ? `${data.challenger_name} held:` : "Held:";
+  const showHeldList = takeCard.heldCards.length > 0;
 
   return (
     <div data-testid="challenge-take-card-landing">
-      {/* HOOK — top textual element, the largest type. Lock §
-          "Component spec → Hook." This is where the user lands. */}
+      {/* In-flow BADGE — sits inline above the TAKE, normal flow, no
+          translate or absolute. Drops out entirely for default. */}
+      {trigger !== "default" && (
+        <div
+          data-testid="badge-row"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 14,
+          }}
+        >
+          <InFlowBadge
+            trigger={trigger}
+            missTier={data.near_miss_next_tier}
+            topGameTier={data.top_game_tier}
+          />
+        </div>
+      )}
+
+      {/* TAKE — largest type at the top, the claim. The bank lines
+          are authored in caps; text-transform forces the substituted
+          {challengerName} into caps too so "MIKE THINKS THIS HAND IS
+          SAFE" reads as one consistent voice (per the lock's example
+          "JOHN THINKS THIS HAND IS SAFE"). */}
       <h1
-        data-testid="hook-headline"
+        data-testid="take-headline"
         style={{
-          fontSize: 26,
-          lineHeight: 1.22,
-          fontWeight: 900,
-          color: "#EAF0FF",
-          margin: "8px 0 22px",
+          fontSize: 30,
+          lineHeight: 1.18,
+          fontWeight: 950,
+          color: "#FFB14A",
+          letterSpacing: 0.3,
+          margin: "4px 0 12px",
+          maxWidth: 600,
+          textTransform: "uppercase",
+        }}
+      >
+        {takeCard.take}
+      </h1>
+
+      {/* USP / subHeadline — "Same starting hand. Different decisions."
+          Real visual weight per the lock §"Same starting hand — make
+          the USP unmissable." Distinct style from the TAKE so it reads
+          as the fairness mechanic, not buried prose. */}
+      <div
+        data-testid="usp-subheadline"
+        style={{
+          fontSize: 14,
+          fontWeight: 700,
+          letterSpacing: 0.5,
+          color: "rgba(234,240,255,0.85)",
+          textTransform: "uppercase",
+          borderTop: "1px solid rgba(255,177,74,0.35)",
+          borderBottom: "1px solid rgba(255,177,74,0.35)",
+          padding: "8px 0",
+          marginBottom: 20,
           maxWidth: 560,
         }}
       >
-        {takeCard.hookHeadline}
-      </h1>
+        {takeCard.subHeadline}
+      </div>
 
-      {/* STARTING HAND — the hero visual. Held cards bright + chip;
-          discards dim + no chip. holdsRecorded:false → 6 plain cards
-          (lock §2 graceful degrade). slotIndex order preserved so the
-          recipient sees the sender's hand the same way the sender did. */}
+      {/* EVIDENCE — the six cards. Held bright + HOLD badge + name +
+          salary + rarity (no per-card FP chip — spoiler rule). Discards
+          dim, also no chip. */}
       <div
         data-testid="starting-hand"
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: 8,
-          marginBottom: 22,
+          marginBottom: 16,
           justifyContent: "center",
         }}
       >
         {cards.map((card, i) => {
-          const accent = TIER_ACCENT[card.tier] ?? "#9CA3AF";
           const isHeld = holdsRecorded && card.wasHeld === true;
-          return (
-            <div
-              key={card.basePlayerId ?? i}
-              data-testid={isHeld ? "hand-card-held" : "hand-card-plain"}
-              data-was-held={isHeld ? "true" : "false"}
-              style={{
-                position: "relative",
-                background: isHeld
-                  ? `${accent}22` // ~13% tier-accent fill on held
-                  : "rgba(255,255,255,0.03)",
-                border: isHeld ? `2px solid ${accent}` : `1px solid ${accent}55`,
-                borderRadius: 10,
-                padding: "10px 12px",
-                minWidth: 108,
-                flex: "0 1 auto",
-                textAlign: "center",
-                opacity: isHeld ? 1 : 0.55,
-                // Subtle held-only lift so the prominence reads at a glance.
-                boxShadow: isHeld ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: 1.4,
-                  color: accent,
-                  textTransform: "uppercase",
-                  marginBottom: 4,
-                  opacity: isHeld ? 1 : 0.7,
-                }}
-              >
-                {card.tier}
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: "#EAF0FF",
-                  lineHeight: 1.15,
-                }}
-              >
-                {card.name}
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.4)",
-                  marginTop: 2,
-                }}
-              >
-                {card.team} · ${card.salary}
-              </div>
-
-              {/* Inline actualFp chip — held cards only. Never renders
-                  "0" on a discard (discards have actualFp:0 because they
-                  were never played; rendering the chip with "0" would
-                  read as "this card scored zero" — the lock-§ component-
-                  spec rule). Rounded integer to keep the chip tight at
-                  phone widths. */}
-              {isHeld && (
-                <div
-                  data-testid="held-actualfp-chip"
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -6,
-                    background: accent,
-                    color: "#070A12",
-                    borderRadius: 999,
-                    padding: "2px 7px",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    lineHeight: 1.2,
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-                    minWidth: 26,
-                  }}
-                >
-                  {Math.round(card.actualFp ?? 0)}
-                </div>
-              )}
-            </div>
-          );
+          return <HandCard key={card.basePlayerId ?? i} card={card} isHeld={isHeld} />;
         })}
       </div>
 
-      {/* STAMP + OUTCOME row — the stamp sits adjacent to the outcome
-          line so the 2a copy reference ("the stamp earned itself")
-          works. Score visible but subordinate: smaller than hook,
-          aligned to the outcome line as a trailing chip. The lock
-          forbids reintroducing the 68px top-of-page score treatment. */}
-      <div
-        data-testid="outcome-row"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-          marginBottom: 18,
-        }}
-      >
-        {/* Badge / stamp slot — choke + miss use TeamStamp; big_score /
-            rare_pull use a CSS pill (no TeamStamp variant for those
-            triggers on main per recon #3). delayMs=0 → no thud
-            entrance on cold landing (lock §). */}
-        {(trigger === "choke" || trigger === "miss") && (
-          <span data-testid="team-stamp" style={{ display: "inline-block" }}>
-            <TeamStamp
-              kind={trigger}
-              missTier={trigger === "miss" ? (data.near_miss_next_tier ?? "") : undefined}
-              delayMs={0}
-            />
-          </span>
-        )}
-        {pillLabel && (
-          <span
-            data-testid="trigger-pill"
-            style={{
-              display: "inline-block",
-              padding: "5px 10px",
-              borderRadius: 4,
-              background: trigger === "rare_pull"
-                ? "linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%)"
-                : "linear-gradient(135deg, #FFB14A 0%, #F59E0B 100%)",
-              color: "#070A12",
-              fontSize: 12,
-              fontWeight: 900,
-              letterSpacing: 1.4,
-              textTransform: "uppercase",
-              fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-            }}
-          >
-            {pillLabel}
-          </span>
-        )}
-        <span
-          data-testid="outcome-line"
+      {/* HELD LIST — labeled "X held: A, B". Omitted entirely when
+          heldCards is [] (legacy / no holds). Structured list, not
+          prose. */}
+      {showHeldList && (
+        <div
+          data-testid="held-list"
           style={{
-            fontSize: 14,
-            color: "rgba(234,240,255,0.85)",
-            lineHeight: 1.4,
-            flex: "1 1 200px",
+            fontSize: 13,
+            fontWeight: 700,
+            color: "rgba(255,255,255,0.7)",
+            marginBottom: 8,
+            textAlign: "center",
           }}
         >
-          {takeCard.outcomeLine}
-        </span>
-      </div>
+          <span style={{ color: "rgba(255,255,255,0.45)" }}>{heldLabel}</span>{" "}
+          <span style={{ color: "#EAF0FF" }}>{takeCard.heldCards.join(", ")}</span>
+        </div>
+      )}
 
-      {/* DISAGREEMENT — the acceptance moment. Roomy spacing; sits
-          between the hand evidence above and the CTA below. */}
+      {/* EVIDENCE LINE — the hand total. In correction, it's the
+          stakes; in competition, it's the wall. Same data, mode-aware
+          framing (built by the generator). */}
       <div
-        data-testid="disagreement-line"
+        data-testid="evidence-line"
         style={{
           fontSize: 16,
-          fontWeight: 700,
-          color: "#EAF0FF",
-          lineHeight: 1.4,
+          fontWeight: 900,
+          color: "#FFB14A",
+          fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
+          letterSpacing: 0.4,
+          textAlign: "center",
           marginBottom: 24,
-          maxWidth: 560,
         }}
       >
-        {takeCard.disagreementLine}
+        {takeCard.evidenceLine}
       </div>
 
-      {/* CTA — the take card's ctaText (from the "PLAY YOUR LINE"
-          family). Already-attempted relabels to "Play Again" — replays
-          are unlimited; the relabel is the lock's "already-attempted"
-          clarity. The shell handles the click → onAccept → ChallengeCtx
-          wiring; this component is purely the visible button. */}
+      {/* DARE — mode-aware. Correction is pure-hypothetical (no
+          outcome reference); competition is "beat the receipt"; neutral
+          is "beat the number." */}
+      <div
+        data-testid="dare-line"
+        style={{
+          fontSize: 18,
+          fontWeight: 800,
+          color: "#EAF0FF",
+          lineHeight: 1.35,
+          textAlign: "center",
+          marginBottom: 22,
+          maxWidth: 560,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      >
+        {takeCard.dare}
+      </div>
+
+      {/* CTA — generator's ctaText (the "PLAY YOUR LINE" family).
+          alreadyAttempted relabels — replays unlimited, relabel is
+          just clarity. */}
       <button
         data-testid="accept-cta"
         onClick={onAccept}
@@ -393,8 +476,7 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         {alreadyAttempted ? "Play Again" : takeCard.ctaText}
       </button>
 
-      {/* Attribution + stats — kept minor, below the CTA. Same as the
-          v1 layout: "from {name}" when named + the tiny stats line. */}
+      {/* Attribution + stats — minor below the CTA. */}
       <div
         data-testid="attribution"
         style={{

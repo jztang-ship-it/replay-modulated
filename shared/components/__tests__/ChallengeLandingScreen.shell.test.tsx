@@ -165,8 +165,10 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
       />
     );
     await waitFor(() => expect(screen.getByTestId("challenge-take-card-landing")).toBeTruthy());
-    // Hook is rendered (the V2 hierarchy lit up, not the old score-first).
-    expect(screen.getByTestId("hook-headline").textContent?.length).toBeGreaterThan(0);
+    // Phase 2c renamed `hook-headline` → `take-headline` in the TAKE
+    // → EVIDENCE → DARE rebuild. The shell assertion is the same in
+    // spirit (the V2 surface lit up, not the score-first anti-pattern).
+    expect(screen.getByTestId("take-headline").textContent?.length).toBeGreaterThan(0);
   });
 
   it("accept path threads ChallengeCtx through onAccept (CTA → handleAccept → onAccept)", async () => {

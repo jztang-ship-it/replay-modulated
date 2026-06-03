@@ -2,16 +2,18 @@
 //
 // shared/components/__tests__/ChallengeTakeCardLanding.test.tsx
 //
-// Phase 2b — landing-component gates. Lock:
-// docs/challenge-landing-v2-phase2b-landing-component-lock.md.
-// Pins the locked product decisions:
-//   - The hook PRECEDES the score in DOM order (the anti-regression
-//     guard for the score-first → V2 hierarchy flip — gate 3).
-//   - Held cards render prominent + an inline actualFp chip; discards
-//     render plain with NO outcome number.
-//   - holdsRecorded:false → 6 plain cards, no chips, no crash.
-//   - All 5 triggers render hook + hand + outcome + disagreement + CTA.
-//   - The CTA wires to onAccept.
+// Phase 2c landing gates. Lock: docs/challenge-landing-v2-phase2c-
+// take-evidence-dare-lock.md. Pins the locked product decisions:
+//   - TAKE → EVIDENCE → DARE hierarchy: TAKE precedes USP, USP precedes
+//     cards, cards precede evidence line, evidence line precedes dare,
+//     dare precedes CTA.
+//   - Held cards render bright + HOLD badge; discards dim.
+//   - FP SPOILER GUARD: NO per-card actualFp chip renders on any card
+//     in either mode.
+//   - Hand TOTAL renders in both modes (stakes / wall framing).
+//   - heldCards [] → labeled held list omits entirely.
+//   - In-flow badge: no thud wrapper, no absolute, no translate.
+//   - CTA wires to onAccept; alreadyAttempted relabels to "Play Again".
 
 import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -27,6 +29,8 @@ interface MakeOpts {
   nearMissNextTier?: string | null;
   targetScore?: number;
   challengerName?: string;
+  attemptCount?: number;
+  winnerCount?: number;
 }
 
 function makeData(opts: MakeOpts = {}): ChallengeLandingData {
@@ -71,8 +75,8 @@ function makeData(opts: MakeOpts = {}): ChallengeLandingData {
       ],
     },
     roster_size: 6,
-    attempt_count: 2,
-    winner_count: 0,
+    attempt_count: opts.attemptCount ?? 2,
+    winner_count: opts.winnerCount ?? 0,
     best_score: null,
     best_user_name: null,
     near_miss_gap: opts.nearMissGap ?? null,
@@ -82,9 +86,26 @@ function makeData(opts: MakeOpts = {}): ChallengeLandingData {
   };
 }
 
-describe("ChallengeTakeCardLanding — V2 hierarchy gates", () => {
-  it("hook PRECEDES the score in DOM order (the score-first anti-regression guard)", () => {
-    const { container } = render(
+function domOrderOf(rootSelector: string, testIds: string[]): Map<string, number> {
+  const root = document.querySelector(rootSelector);
+  if (!root) throw new Error(`root ${rootSelector} not found`);
+  const seen = new Map<string, number>();
+  let i = 0;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+  let node: Element | null = root as Element;
+  while (node) {
+    const t = (node as HTMLElement).getAttribute?.("data-testid");
+    if (t && testIds.includes(t) && !seen.has(t)) {
+      seen.set(t, i++);
+    }
+    node = walker.nextNode() as Element | null;
+  }
+  return seen;
+}
+
+describe("ChallengeTakeCardLanding — V2c hierarchy (TAKE → EVIDENCE → DARE)", () => {
+  it("DOM order: TAKE → USP → starting-hand → evidence-line → dare → CTA", () => {
+    render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 142.5 })}
         statsLine={null}
@@ -92,21 +113,22 @@ describe("ChallengeTakeCardLanding — V2 hierarchy gates", () => {
         onAccept={() => {}}
       />
     );
-    const root = container.querySelector("[data-testid='challenge-take-card-landing']")!;
-    const text = root.textContent ?? "";
-    const hook = screen.getByTestId("hook-headline").textContent ?? "";
-    expect(hook.length).toBeGreaterThan(0);
-    const hookIndex = text.indexOf(hook);
-    const scoreIndex = text.indexOf("142.5");
-    // The score may also appear inside the outcome line — the guard is
-    // that the hook appears FIRST in the rendered text. If we ever flip
-    // back to "giant 68px FP at top," this assertion catches it.
-    expect(hookIndex, "hook not found in rendered text").toBeGreaterThan(-1);
-    expect(scoreIndex, "score (target_score) not found in rendered text").toBeGreaterThan(-1);
-    expect(hookIndex).toBeLessThan(scoreIndex);
+    const order = domOrderOf("[data-testid='challenge-take-card-landing']", [
+      "take-headline",
+      "usp-subheadline",
+      "starting-hand",
+      "evidence-line",
+      "dare-line",
+      "accept-cta",
+    ]);
+    expect(order.get("take-headline")!).toBeLessThan(order.get("usp-subheadline")!);
+    expect(order.get("usp-subheadline")!).toBeLessThan(order.get("starting-hand")!);
+    expect(order.get("starting-hand")!).toBeLessThan(order.get("evidence-line")!);
+    expect(order.get("evidence-line")!).toBeLessThan(order.get("dare-line")!);
+    expect(order.get("dare-line")!).toBeLessThan(order.get("accept-cta")!);
   });
 
-  it("score is NOT the first rendered element (anti-regression for the V2 hierarchy)", () => {
+  it("USP subHeadline is the canonical string ('Same starting hand. Different decisions.')", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -115,40 +137,36 @@ describe("ChallengeTakeCardLanding — V2 hierarchy gates", () => {
         onAccept={() => {}}
       />
     );
-    // The hook test-id must precede the outcome row in DOM order.
-    const root = screen.getByTestId("challenge-take-card-landing");
-    const children = Array.from(root.children);
-    const hookIdx = children.findIndex(el => el.querySelector("[data-testid='hook-headline']") || el.getAttribute("data-testid") === "hook-headline");
-    const outcomeIdx = children.findIndex(el => el.querySelector("[data-testid='outcome-row']") || el.getAttribute("data-testid") === "outcome-row");
-    expect(hookIdx).toBeGreaterThanOrEqual(0);
-    expect(outcomeIdx).toBeGreaterThanOrEqual(0);
-    expect(hookIdx).toBeLessThan(outcomeIdx);
+    expect(screen.getByTestId("usp-subheadline").textContent).toBe("Same starting hand. Different decisions.");
   });
 });
 
-describe("ChallengeTakeCardLanding — held-card prominence + chip", () => {
-  it("2 held cards render prominent with actualFp chips; 4 plain cards render without chips", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const heldCards = screen.getAllByTestId("hand-card-held");
-    const plainCards = screen.getAllByTestId("hand-card-plain");
-    expect(heldCards).toHaveLength(2);
-    expect(plainCards).toHaveLength(4);
-    const chips = screen.getAllByTestId("held-actualfp-chip");
-    expect(chips).toHaveLength(2);
-    // Chips render rounded actualFp — 22.0 → "22"; 18.5 → "19".
-    const chipNumbers = chips.map(c => Number(c.textContent));
-    expect(chipNumbers).toContain(22);
-    expect(chipNumbers).toContain(19);
-  });
+describe("ChallengeTakeCardLanding — FP-SPOILER GUARD (no per-card FP chip in either mode)", () => {
+  const triggers = ["choke", "miss", "big_score", "rare_pull", "default"];
 
-  it("NEVER renders '0' on a plain (discarded) card — discard outcome is suppressed", () => {
+  for (const trigger of triggers) {
+    it(`${trigger}: zero cards render a held-actualfp-chip test-id`, () => {
+      render(
+        <ChallengeTakeCardLanding
+          data={makeData({
+            trigger,
+            heldPair: trigger === "default" ? null : ["emb", "voo"],
+            nearMissGap: trigger === "miss" ? 4 : null,
+            nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
+            anchor: trigger === "default" ? null : "voo",
+          })}
+          statsLine={null}
+          alreadyAttempted={false}
+          onAccept={() => {}}
+        />
+      );
+      // The 2b chip used data-testid="held-actualfp-chip"; 2c removes
+      // it entirely. Verify by absence.
+      expect(screen.queryAllByTestId("held-actualfp-chip")).toHaveLength(0);
+    });
+  }
+
+  it("HOLD badge marks the held cards (in lieu of the FP chip)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -157,16 +175,34 @@ describe("ChallengeTakeCardLanding — held-card prominence + chip", () => {
         onAccept={() => {}}
       />
     );
-    const plainCards = screen.getAllByTestId("hand-card-plain");
-    for (const card of plainCards) {
-      // The salary text "$X" is the only numeric in a discard card.
-      // A bare "0" outside a salary chip would be the regression we're
-      // pinning against — chip is rendered ONLY on held cards.
-      expect(card.querySelector("[data-testid='held-actualfp-chip']")).toBeNull();
+    const holds = screen.getAllByTestId("hold-badge");
+    expect(holds).toHaveLength(2);
+    for (const h of holds) {
+      expect(h.textContent).toBe("HOLD");
     }
   });
+});
 
-  it("holdsRecorded:false → 6 plain cards, no chips, no crash (graceful degrade)", () => {
+describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy", () => {
+  it("2 held → 2 prominent + 2 HOLD badges + labeled list 'Mike held: Embiid, Vucevic'", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getAllByTestId("hand-card-held")).toHaveLength(2);
+    expect(screen.getAllByTestId("hand-card-plain")).toHaveLength(4);
+    expect(screen.getAllByTestId("hold-badge")).toHaveLength(2);
+    const heldList = screen.getByTestId("held-list");
+    expect(heldList.textContent).toContain("Mike held:");
+    expect(heldList.textContent).toContain("Embiid");
+    expect(heldList.textContent).toContain("Vucevic");
+  });
+
+  it("holdsRecorded:false → 6 plain cards, no HOLD badges, held list OMITTED entirely", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
@@ -182,44 +218,11 @@ describe("ChallengeTakeCardLanding — held-card prominence + chip", () => {
     );
     expect(screen.queryAllByTestId("hand-card-held")).toHaveLength(0);
     expect(screen.queryAllByTestId("hand-card-plain")).toHaveLength(6);
-    expect(screen.queryAllByTestId("held-actualfp-chip")).toHaveLength(0);
-    // Hook + disagreement still render (the generator's no-anchor route
-    // takes over) — no half-filled tokens leak.
-    expect(screen.getByTestId("hook-headline").textContent?.length).toBeGreaterThan(0);
-    expect(screen.getByTestId("disagreement-line").textContent?.length).toBeGreaterThan(0);
-    expect(screen.getByTestId("disagreement-line").textContent ?? "").not.toMatch(/\{\w+\}/);
+    expect(screen.queryAllByTestId("hold-badge")).toHaveLength(0);
+    expect(screen.queryByTestId("held-list")).toBeNull();
   });
-});
 
-describe("ChallengeTakeCardLanding — every trigger renders hook + hand + outcome + disagreement + CTA", () => {
-  const cases = [
-    { trigger: "choke",     extra: { heldPair: ["emb", "voo"] as [string, string] } },
-    { trigger: "miss",      extra: { heldPair: ["bro", "cur"] as [string, string], nearMissGap: 7, nearMissNextTier: "ALL_STAR" } },
-    { trigger: "big_score", extra: { heldPair: ["cur", "emb"] as [string, string] } },
-    { trigger: "rare_pull", extra: { heldPair: ["cur", "emb"] as [string, string], topGameTier: "record" as const } },
-    { trigger: "default",   extra: { heldPair: null, anchor: null } },
-  ];
-
-  for (const { trigger, extra } of cases) {
-    it(`${trigger}: renders all five required surfaces`, () => {
-      render(
-        <ChallengeTakeCardLanding
-          data={makeData({ trigger, ...extra })}
-          statsLine={null}
-          alreadyAttempted={false}
-          onAccept={() => {}}
-        />
-      );
-      expect(screen.getByTestId("hook-headline").textContent?.length).toBeGreaterThan(0);
-      expect(screen.getAllByTestId(/^hand-card-(held|plain)$/).length).toBe(6);
-      expect(screen.getByTestId("outcome-row")).toBeTruthy();
-      expect(screen.getByTestId("outcome-line").textContent?.length).toBeGreaterThan(0);
-      expect(screen.getByTestId("disagreement-line").textContent?.length).toBeGreaterThan(0);
-      expect(screen.getByTestId("accept-cta").textContent?.length).toBeGreaterThan(0);
-    });
-  }
-
-  it("choke renders the TeamStamp 'CHOKE'", () => {
+  it("every card carries name + salary + rarity (kept on both held and plain)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -228,19 +231,119 @@ describe("ChallengeTakeCardLanding — every trigger renders hook + hand + outco
         onAccept={() => {}}
       />
     );
-    const stampWrap = screen.getByTestId("team-stamp");
-    expect(stampWrap.textContent).toBe("CHOKE");
-    // No pill alongside the TeamStamp.
-    expect(screen.queryByTestId("trigger-pill")).toBeNull();
+    const root = screen.getByTestId("starting-hand");
+    const text = root.textContent ?? "";
+    for (const name of ["Embiid", "Vucevic", "Brown", "Curry", "Bagley", "Holiday"]) {
+      expect(text, `missing name ${name}`).toContain(name);
+    }
+    for (const tier of ["RED", "PURPLE", "BLUE", "GREEN"]) {
+      expect(text, `missing tier label ${tier}`).toContain(tier);
+    }
+    for (const salary of ["$80", "$65", "$55", "$75", "$35", "$25"]) {
+      expect(text, `missing salary ${salary}`).toContain(salary);
+    }
+  });
+});
+
+describe("ChallengeTakeCardLanding — hand TOTAL renders in both modes", () => {
+  it("correction (choke) → evidence-line shows the total as stakes ('142.0 FP on the board')", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 142.0 })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("evidence-line").textContent).toBe("142.0 FP on the board");
   });
 
-  it("miss renders the TeamStamp '{tier} MISS' using near_miss_next_tier", () => {
+  it("competition (big_score) → evidence-line shows the total as the wall (still unbeaten when attempts>0)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({
+          trigger: "big_score",
+          heldPair: ["cur", "emb"],
+          targetScore: 232.5,
+          attemptCount: 3,
+          winnerCount: 0,
+        })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const line = screen.getByTestId("evidence-line").textContent ?? "";
+    expect(line).toContain("232.5 FP");
+    expect(line).toContain("still unbeaten");
+  });
+
+  it("neutral (default) → evidence-line shows the total with 'to beat' framing", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "default", heldPair: null, anchor: null, targetScore: 184.5 })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("evidence-line").textContent).toBe("184.5 FP to beat");
+  });
+});
+
+describe("ChallengeTakeCardLanding — every trigger renders the full set of surfaces", () => {
+  const cases = [
+    { trigger: "choke",     extra: { heldPair: ["emb", "voo"] as [string, string] } },
+    { trigger: "miss",      extra: { heldPair: ["bro", "cur"] as [string, string], nearMissGap: 4, nearMissNextTier: "ALL_STAR" } },
+    { trigger: "big_score", extra: { heldPair: ["cur", "emb"] as [string, string] } },
+    { trigger: "rare_pull", extra: { heldPair: ["cur", "emb"] as [string, string], topGameTier: "record" as const } },
+    { trigger: "default",   extra: { heldPair: null, anchor: null } },
+  ];
+
+  for (const { trigger, extra } of cases) {
+    it(`${trigger}: TAKE + USP + hand + evidence + dare + CTA all non-empty`, () => {
+      render(
+        <ChallengeTakeCardLanding
+          data={makeData({ trigger, ...extra })}
+          statsLine={null}
+          alreadyAttempted={false}
+          onAccept={() => {}}
+        />
+      );
+      expect(screen.getByTestId("take-headline").textContent?.length).toBeGreaterThan(0);
+      expect(screen.getByTestId("usp-subheadline").textContent).toBe("Same starting hand. Different decisions.");
+      expect(screen.getAllByTestId(/^hand-card-(held|plain)$/).length).toBe(6);
+      expect(screen.getByTestId("evidence-line").textContent?.length).toBeGreaterThan(0);
+      expect(screen.getByTestId("dare-line").textContent?.length).toBeGreaterThan(0);
+      expect(screen.getByTestId("accept-cta").textContent?.length).toBeGreaterThan(0);
+    });
+  }
+});
+
+describe("ChallengeTakeCardLanding — in-flow badge (no thud, no clip)", () => {
+  it("choke renders the in-flow badge with CHOKE label, NOT a TeamStamp thud wrapper", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const badge = screen.getByTestId("landing-badge");
+    expect(badge.textContent).toBe("CHOKE");
+    expect(badge.getAttribute("data-trigger")).toBe("choke");
+    // No TeamStamp thud wrapper anywhere in the rendered tree.
+    expect(document.querySelector(".ts-stamp-wrap-thud")).toBeNull();
+  });
+
+  it("miss renders the in-flow badge with '{tier} MISS' label", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
           trigger: "miss",
           heldPair: ["bro", "cur"],
-          nearMissGap: 7,
+          nearMissGap: 4,
           nearMissNextTier: "ALL_STAR",
         })}
         statsLine={null}
@@ -248,11 +351,10 @@ describe("ChallengeTakeCardLanding — every trigger renders hook + hand + outco
         onAccept={() => {}}
       />
     );
-    expect(screen.getByTestId("team-stamp").textContent).toBe("ALL STAR MISS");
-    expect(screen.queryByTestId("trigger-pill")).toBeNull();
+    expect(screen.getByTestId("landing-badge").textContent).toBe("ALL STAR MISS");
   });
 
-  it("big_score renders the BIG SCORE pill (no TeamStamp)", () => {
+  it("big_score renders the BIG SCORE in-flow badge", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "big_score", heldPair: ["cur", "emb"] })}
@@ -261,27 +363,22 @@ describe("ChallengeTakeCardLanding — every trigger renders hook + hand + outco
         onAccept={() => {}}
       />
     );
-    expect(screen.queryByTestId("team-stamp")).toBeNull();
-    expect(screen.getByTestId("trigger-pill").textContent).toBe("BIG SCORE");
+    expect(screen.getByTestId("landing-badge").textContent).toBe("BIG SCORE");
   });
 
-  it("rare_pull renders the top_game_tier-derived pill (RECORD / CAREER HIGH / SEASON HIGH)", () => {
+  it("rare_pull renders the top_game_tier-derived badge (NEW RECORD / CAREER HIGH / SEASON HIGH)", () => {
     render(
       <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "rare_pull",
-          heldPair: ["cur", "emb"],
-          topGameTier: "record",
-        })}
+        data={makeData({ trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "record" })}
         statsLine={null}
         alreadyAttempted={false}
         onAccept={() => {}}
       />
     );
-    expect(screen.getByTestId("trigger-pill").textContent).toBe("NEW RECORD");
+    expect(screen.getByTestId("landing-badge").textContent).toBe("NEW RECORD");
   });
 
-  it("default renders NO stamp and NO pill", () => {
+  it("default renders NO badge", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "default", heldPair: null, anchor: null })}
@@ -290,13 +387,29 @@ describe("ChallengeTakeCardLanding — every trigger renders hook + hand + outco
         onAccept={() => {}}
       />
     );
-    expect(screen.queryByTestId("team-stamp")).toBeNull();
-    expect(screen.queryByTestId("trigger-pill")).toBeNull();
+    expect(screen.queryByTestId("landing-badge")).toBeNull();
+    expect(screen.queryByTestId("badge-row")).toBeNull();
+  });
+
+  it("in-flow badge inline style uses transform: rotate only — no translate (the clip-prevention contract)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const badge = screen.getByTestId("landing-badge") as HTMLElement;
+    const transform = badge.style.transform;
+    expect(transform).toContain("rotate");
+    expect(transform).not.toContain("translate");
+    expect(badge.style.position === "" || badge.style.position === "static").toBe(true);
   });
 });
 
-describe("ChallengeTakeCardLanding — legacy alias routes 'bad_beat' → choke surfaces", () => {
-  it("stored trigger_type='bad_beat' renders the CHOKE stamp via normalizeTriggerType", () => {
+describe("ChallengeTakeCardLanding — legacy alias + accept wiring", () => {
+  it("legacy stored trigger_type='bad_beat' routes through normalizeTriggerType → CHOKE badge", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "bad_beat" })}
@@ -305,12 +418,10 @@ describe("ChallengeTakeCardLanding — legacy alias routes 'bad_beat' → choke 
         onAccept={() => {}}
       />
     );
-    expect(screen.getByTestId("team-stamp").textContent).toBe("CHOKE");
+    expect(screen.getByTestId("landing-badge").textContent).toBe("CHOKE");
   });
-});
 
-describe("ChallengeTakeCardLanding — CTA wires to onAccept", () => {
-  it("clicking the CTA fires onAccept exactly once", () => {
+  it("CTA click fires onAccept once", () => {
     const handle = vi.fn();
     render(
       <ChallengeTakeCardLanding
@@ -320,12 +431,11 @@ describe("ChallengeTakeCardLanding — CTA wires to onAccept", () => {
         onAccept={handle}
       />
     );
-    const cta = screen.getByTestId("accept-cta");
-    fireEvent.click(cta);
+    fireEvent.click(screen.getByTestId("accept-cta"));
     expect(handle).toHaveBeenCalledTimes(1);
   });
 
-  it("alreadyAttempted=true relabels CTA to 'Play Again' (never blocks)", () => {
+  it("alreadyAttempted=true relabels CTA to 'Play Again' (never blocks the click)", () => {
     const handle = vi.fn();
     render(
       <ChallengeTakeCardLanding

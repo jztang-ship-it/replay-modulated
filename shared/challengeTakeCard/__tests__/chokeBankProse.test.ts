@@ -21,7 +21,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HOOKS, OUTCOMES, DISAGREEMENTS, CTAS } from "../templates";
+import { TAKES, DARES, CTAS } from "../templates";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,13 +42,15 @@ function extractBankProse(src: string, bankName: string): string {
 }
 
 describe("Phase 2a — no choke bank prose contains the literal 'bad beat'", () => {
-  it("templates.ts (the take-card module) — none of HOOKS/OUTCOMES/DISAGREEMENTS/CTAS contains 'bad beat'", () => {
-    const allStrings = [
-      ...Object.values(HOOKS).flat(),
-      ...Object.values(OUTCOMES).flat(),
+  it("templates.ts (the take-card module) — none of TAKES/DARES/CTAS contains 'bad beat'", () => {
+    // Phase 2c reshape note: the 2a HOOKS / OUTCOMES / DISAGREEMENTS
+    // banks were replaced by TAKES / DARES / CTAS in the TAKE → EVIDENCE
+    // → DARE rebuild. The guard's intent (no "bad beat" prose in the
+    // take-card module) is preserved against the new bank shape.
+    const allStrings: string[] = [
+      ...Object.values(TAKES).flatMap(b => [...b.named, ...b.noName]),
+      ...Object.values(DARES).flatMap(modeBanks => Object.values(modeBanks).flat()),
       ...Object.values(CTAS).flat(),
-      ...Object.values(DISAGREEMENTS).flatMap(modeBanks =>
-        Object.values(modeBanks).flatMap(b => [...(b.withAnchor ?? []), ...(b.withTwoHelds ?? []), ...(b.noAnchor ?? [])])),
     ];
     for (const s of allStrings) {
       expect(s.toLowerCase(), `take-card bank entry contains 'bad beat': ${s}`).not.toContain("bad beat");

@@ -1,53 +1,55 @@
 // shared/challengeTakeCard/generateChallengeTakeCard.ts
 //
-// Phase 2a take-card generator — the pure selector that turns
-// challenge data into the four V2 landing fields. Lock:
-// docs/challenge-landing-v2-phase2a-voice-and-generator-lock.md.
+// Phase 2c take-card generator — the pure selector that turns
+// challenge data into the six TAKE → EVIDENCE → DARE fields. Lock:
+// docs/challenge-landing-v2-phase2c-take-evidence-dare-lock.md.
+// Reshapes the 2a/2b 4-field output (hookHeadline / outcomeLine /
+// disagreementLine / ctaText) into the argument shape; banks rewritten
+// in templates.ts to the claim/dare register.
 //
 // Non-negotiables (the test gates pin these):
 //   1. DETERMINISTIC — same challengeId → identical take card on every
-//      call (landing refresh + OG share-card runtime BOTH render this).
-//      Seed = hash(challengeId + slotName). NO Math.random. NO
-//      pickWithAntiRepeat. The existing chad selectors get this wrong
-//      for this surface (they reroll per render) — see lock 2d.
-//   2. Mode split on the disagreement slot — correction (choke/miss),
-//      competition (big_score/rare_pull), neutral (default).
-//   3. holdsRecorded graceful degrade — when false, route to no-anchor
-//      disagreement banks (never emit a half-filled "{anchorName}"
-//      token).
-//   4. CTA family lock — banks in templates.CTAS only; tested against
-//      templates.BANNED_CTAS.
-//
-// All four output fields are FULLY substituted strings — landing
-// renders them verbatim. The CHOKE/MISS stamp from Phase 1 is its own
-// element on the landing; this module is the prose around it.
+//      call. Seed = hash(challengeId + slotName) per the 2a contract,
+//      preserved through the 2c reshape. NO Math.random. NO
+//      pickWithAntiRepeat.
+//   2. Mode split — correction (choke, miss) vs competition (big_score,
+//      rare_pull) vs neutral (default). take + dare both flip on mode.
+//   3. Correction dare is pure-hypothetical — no outcome reference per
+//      the lock §"FP-spoiler rule" (guarded by templates.ts's
+//      CORRECTION_DARE_BANNED_SUBSTRINGS + the test).
+//   4. heldCards: [] on legacy (holdsRecorded:false) — the landing omits
+//      the held block entirely. Never emits a half-filled token.
+//   5. CTA family lock — banks in CTAS only; guarded against BANNED_CTAS.
 
 import type {
   ChallengeTakeCard,
   TakeCardInput,
   TakeCardMode,
   TakeCardTrigger,
-  HeldCardForTakeCard,
 } from "./types";
-import { HOOKS, OUTCOMES, DISAGREEMENTS, CTAS } from "./templates";
+import {
+  TAKES,
+  TAKES_MISS_WIDE_GAP,
+  MISS_ONE_DECISION_THRESHOLD_FP,
+  SUB_HEADLINE,
+  DARES,
+  CTAS,
+  buildEvidenceLineCorrection,
+  buildEvidenceLineCompetition,
+  buildEvidenceLineNeutral,
+} from "./templates";
 
-// ── Determinism: a tiny FNV-1a 32-bit hash ─────────────────────────────
-// Pure, no Math.random. Same input → same output forever. Used to seed
-// per-slot picks so the four fields don't all index the same bank
-// position (the slot name is salted in).
-//
-// FNV-1a is chosen because it's a few lines, has well-known constants,
-// and produces enough avalanche to spread short inputs (challengeId is
-// a UUID — ~32 hex chars — and a short slot label) across the bank
-// length space. No cryptographic claim is made or needed.
+// ── Determinism: FNV-1a 32-bit hash (carried from 2a, unchanged) ───────
+// Pure, no Math.random. Same input → same output forever. The slot name
+// is salted in so the take / dare / cta picks don't all index the same
+// bank position.
+
 function fnv1a32(input: string): number {
-  let h = 0x811c9dc5; // FNV offset basis
+  let h = 0x811c9dc5;
   for (let i = 0; i < input.length; i++) {
     h ^= input.charCodeAt(i);
-    // h *= 0x01000193 — multiplied via Math.imul for 32-bit semantics
     h = Math.imul(h, 0x01000193);
   }
-  // Force unsigned so modulo math is well-defined.
   return h >>> 0;
 }
 
@@ -56,18 +58,12 @@ function seededIndex(challengeId: string, slot: string, bankLength: number): num
   return fnv1a32(`${challengeId}|${slot}`) % bankLength;
 }
 
-/** Pure seeded pick. Returns the empty string when the bank is empty so
- *  the caller can route to a fallback bank rather than crash. Callers
- *  who must produce a non-empty field should pass a guaranteed-non-empty
- *  bank (the generator's routing ensures this for the four output
- *  fields). */
 function seededPick(bank: readonly string[], challengeId: string, slot: string): string {
   if (bank.length === 0) return "";
   return bank[seededIndex(challengeId, slot, bank.length)]!;
 }
 
 // ── Mode derivation ────────────────────────────────────────────────────
-// Lock 2e: the disagreement slot's tone flips on mode, not just trigger.
 
 export function deriveMode(trigger: TakeCardTrigger): TakeCardMode {
   switch (trigger) {
@@ -84,97 +80,56 @@ export function deriveMode(trigger: TakeCardTrigger): TakeCardMode {
 
 // ── Token substitution ────────────────────────────────────────────────
 // Tokens land at output time. Every {…} in the source bank must either
-// be substituted from input or the line must not have been picked
-// (graceful-degrade routing prevents emitting half-filled tokens). A
-// post-substitution check at the bottom of generate() catches any stray
-// braces — defense against a future bank carrying a token the generator
-// doesn't know about.
+// be substituted from input or the line must not have been picked (the
+// generator's routing guarantees this). A post-substitution check at
+// the bottom of generate() catches stray braces — defense against a
+// future bank carrying a token the dict doesn't know about.
 
 interface SubstitutionDict {
   challengerName: string;
   targetScore: string;
-  anchorName: string;
-  held1: string;
-  held2: string;
   nearMissGap: string;
   nearMissNextTier: string;
-  winTier: string;
 }
 
 function buildDict(input: TakeCardInput): SubstitutionDict {
-  // Falls back: missing names → "Your friend"; missing tier label →
-  // raw winTier; missing miss fields → "" (caller's routing should
-  // ensure miss banks only fire when these are present).
-  const held = topTwoHeldByActualFp(input.heldCards);
   return {
-    challengerName: input.challengerName?.trim() || "Your friend",
+    // The dict's challengerName is for TEMPLATE-LEVEL substitution
+    // ({challengerName} tokens in named-bank lines). Bank routing
+    // (named vs noName) handles the no-name fallback at the bank level,
+    // so this dict value is the resolved name when present and "" when
+    // not — letting any accidental {challengerName} in a noName-routed
+    // line surface as a stray and fail the post-substitution check.
+    challengerName: input.challengerName?.trim() ?? "",
     targetScore: input.targetScore.toFixed(1),
-    anchorName: input.anchorName?.trim() || "",
-    held1: held[0]?.name ?? "",
-    held2: held[1]?.name ?? "",
     nearMissGap: input.nearMissGap != null ? String(Math.round(input.nearMissGap)) : "",
     nearMissNextTier: formatTierLabel(input.nearMissNextTier),
-    winTier: formatTierLabel(input.winTier),
   };
 }
 
 function formatTierLabel(raw: string | null | undefined): string {
   if (!raw) return "";
-  // Underscore → hyphen to match existing recipient-intro rendering
-  // ("ALL_STAR" → "ALL-STAR") so the take card reads consistently with
-  // the stamp + the surrounding intro copy on the landing.
   return raw.replace(/_/g, "-");
 }
 
 function substitute(template: string, dict: SubstitutionDict): string {
   return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
     if (key in dict) return (dict as Record<string, string>)[key] ?? "";
-    // Unknown token — leave the brace in place so the post-check at the
-    // bottom of generate() catches the bank/dict drift loudly rather
-    // than silently emit a stripped half-line.
     return `{${key}}`;
   });
 }
 
-function topTwoHeldByActualFp(held: readonly HeldCardForTakeCard[]): HeldCardForTakeCard[] {
-  return [...held]
-    .sort((a, b) => (b.actualFp ?? 0) - (a.actualFp ?? 0))
-    .slice(0, 2);
-}
+// ── isRealName (subset of shared/utils/isRealName — kept local to avoid
+//   a render-path dependency on the named-vs-noName routing) ──────────
+// Returns true when the value is a non-empty string that doesn't look
+// like an auto-mint placeholder. The full @shared/utils/isRealName has
+// the placeholder denylist; for the TAKE-routing decision a simpler
+// "non-empty trimmed string" is enough — the landing already runs the
+// full check before passing challengerName to the generator.
 
-// ── Disagreement routing ──────────────────────────────────────────────
-// 2f's graceful-degrade contract + 2e's mode split + the choke-only
-// "with two helds" variant (the "stack" framing that needs both names).
-
-function pickDisagreementBank(input: TakeCardInput, mode: TakeCardMode): string[] {
-  const banks = DISAGREEMENTS[mode][input.trigger];
-  if (!banks) return [];
-
-  const hasAnchor = !!(input.anchorName && input.anchorName.trim().length > 0);
-  const heldsCount = input.holdsRecorded ? input.heldCards.length : 0;
-
-  // Choke + 2+ helds — the "stack" framing (named two players). Only
-  // when both held names are available; otherwise fall through to the
-  // anchor-only variant.
-  if (
-    input.trigger === "choke" &&
-    mode === "correction" &&
-    heldsCount >= 2 &&
-    banks.withTwoHelds &&
-    banks.withTwoHelds.length > 0
-  ) {
-    const top = topTwoHeldByActualFp(input.heldCards);
-    if (top[0]?.name && top[1]?.name) return banks.withTwoHelds;
-  }
-
-  // Anchor-bearing route — needs both holdsRecorded:true AND a
-  // resolved anchorName. Either condition false → no-anchor route
-  // (2f's graceful-degrade).
-  if (hasAnchor && input.holdsRecorded && banks.withAnchor.length > 0) {
-    return banks.withAnchor;
-  }
-
-  return banks.noAnchor;
+function looksLikeName(s: string | null | undefined): boolean {
+  if (!s) return false;
+  return s.trim().length > 0;
 }
 
 // ── Public entry point ────────────────────────────────────────────────
@@ -184,28 +139,67 @@ export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCa
   const dict = buildDict(input);
   const seed = input.challengeId;
 
-  const hookTemplate    = seededPick(HOOKS[input.trigger],    seed, "hook");
-  const outcomeTemplate = seededPick(OUTCOMES[input.trigger], seed, "outcome");
-  const disagreementBank = pickDisagreementBank(input, mode);
-  const disagreementTemplate = seededPick(disagreementBank, seed, "disagreement");
+  // TAKE: route to named or noName bank based on whether
+  // challengerName resolves. For correction triggers both banks are
+  // identical (the claim is about the hand, not the person); for
+  // competition triggers the named variant uses {challengerName}.
+  //
+  // 2c-review miss overclaim gate: when the trigger is miss AND the
+  // gap exceeds MISS_ONE_DECISION_THRESHOLD_FP, route to the wide-gap
+  // bank instead — the "ONE DECISION FROM {tier}" claim reads honest
+  // at tight gaps but overclaims as gap stretches toward the 5%-of-
+  // next-tier ceiling (up to ~13 FP near LEGEND). See templates.ts
+  // §"miss 'one decision' overclaim gate."
+  const takeBank =
+    input.trigger === "miss" && (input.nearMissGap ?? 0) > MISS_ONE_DECISION_THRESHOLD_FP
+      ? TAKES_MISS_WIDE_GAP
+      : TAKES[input.trigger];
+  const takeLines = looksLikeName(input.challengerName) ? takeBank.named : takeBank.noName;
+  const takeTemplate = seededPick(takeLines, seed, "take");
+
+  // DARE: mode-keyed, trigger-refined.
+  const dareBank = DARES[mode][input.trigger] ?? [];
+  const dareTemplate = seededPick(dareBank, seed, "dare");
+
+  // CTA: mode-keyed.
   const ctaText = seededPick(CTAS[mode], seed, "cta");
 
+  // EVIDENCE: composed from input by mode (see templates.ts).
+  const factInput = {
+    targetScore: input.targetScore,
+    bestScore: input.bestScore ?? null,
+    attemptCount: input.attemptCount ?? null,
+    winnerCount: input.winnerCount ?? null,
+  };
+  const evidenceLine =
+    mode === "correction"  ? buildEvidenceLineCorrection(factInput)  :
+    mode === "competition" ? buildEvidenceLineCompetition(factInput) :
+                             buildEvidenceLineNeutral(factInput);
+
+  // heldCards: structured list, NOT prose. Empty when holdsRecorded is
+  // false — the landing's labeled held block omits entirely.
+  const heldCards = input.holdsRecorded
+    ? input.heldCards
+        .filter(c => looksLikeName(c.name))
+        .map(c => c.name.trim())
+    : [];
+
   const card: ChallengeTakeCard = {
-    hookHeadline:     substitute(hookTemplate,         dict).trim(),
-    outcomeLine:      substitute(outcomeTemplate,      dict).trim(),
-    disagreementLine: substitute(disagreementTemplate, dict).trim(),
-    ctaText:          ctaText.trim(),
+    mode,
+    take:        substitute(takeTemplate, dict).trim(),
+    subHeadline: SUB_HEADLINE,
+    heldCards,
+    evidenceLine,
+    dare:        substitute(dareTemplate, dict).trim(),
+    ctaText:     ctaText.trim(),
   };
 
-  // Post-substitution token-stray guard. If any field still contains a
-  // {token}, the bank is referencing a key buildDict doesn't supply —
-  // surface that as an empty field rather than ship a half-rendered
-  // line. The tests pin all-tokens-resolve per trigger.
-  for (const key of ["hookHeadline", "outcomeLine", "disagreementLine", "ctaText"] as const) {
+  // Post-substitution token-stray guard. If any prose field still
+  // contains a {token}, the bank references a key buildDict doesn't
+  // supply — surface the half-rendered slot as empty rather than ship
+  // a broken line.
+  for (const key of ["take", "dare", "ctaText", "evidenceLine", "subHeadline"] as const) {
     if (/\{\w+\}/.test(card[key])) {
-      // Mark the half-rendered slot as empty; the landing's render
-      // path can decide whether to fall back, hide, or surface an
-      // error. Tests catch this in CI.
       (card as Record<typeof key, string>)[key] = "";
     }
   }

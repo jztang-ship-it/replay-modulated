@@ -1,40 +1,48 @@
 // shared/challengeTakeCard/types.ts
 //
-// Phase 2a take-card generator — input + output contracts.
-// Lock: docs/challenge-landing-v2-phase2a-voice-and-generator-lock.md.
-// Voice spine: docs/commentary-voice-system.md (the templates in
-// ./templates.ts are written against this spine, NOT a fork).
+// Phase 2c take-card generator — TAKE → EVIDENCE → DARE output contract.
+// Lock: docs/challenge-landing-v2-phase2c-take-evidence-dare-lock.md.
+// Supersedes the 2a/2b 4-field prose shape (hookHeadline / outcomeLine /
+// disagreementLine / ctaText). 2c is a structural reshape: the output
+// now distinguishes the CLAIM (take) from the FACT (evidenceLine) from
+// the CHALLENGE (dare), and surfaces structured held names as data
+// (heldCards: string[]) rather than fused into prose. Phase 2b's recap-
+// style three-blocks-of-the-same-story collapsed into one argument.
 //
-// The OUTPUT CONTRACT (ChallengeTakeCard) is what Phase 2b's landing
-// component builds against. Locking the four-field shape here lets 2b
-// place each field in the V2 hierarchy (hook at top, outcome by the
-// score, disagreement by the cards, CTA on the button) without ever
-// importing Line[]/StampToken shapes — the CHOKE/MISS stamp from
-// Phase 1 is its own element; the take card is the prose around it.
+// Voice spine: docs/commentary-voice-system.md + §3a (challenge-surface
+// user needling). Banks live in ./templates.ts.
 
 /** The trigger value AFTER normalizeTriggerType has aliased stored
  *  "bad_beat" rows to "choke". The generator never sees raw "bad_beat".
  *  Mirrors the union the recipient ctx already carries. */
 export type TakeCardTrigger = "rare_pull" | "big_score" | "choke" | "miss" | "default";
 
-/** The "acceptance psychology" axis the disagreement slot flips on.
- *  - correction (choke, miss): "I'd have done it better."
- *  - competition (big_score, rare_pull): "I'll match that."
- *  - neutral (default): "same hand, your move."
- *  See generator.deriveMode. */
+/** Acceptance psychology — the TAKE and DARE flip on this.
+ *  - correction (choke, miss): "I can do better." TAKE claims somebody
+ *    wasted this / was one decision away. DARE goes pure-hypothetical
+ *    ("would you keep the same core?") — MUST NOT reference outcome
+ *    (no "flinched"/"cratered"/"delivered nothing").
+ *  - competition (big_score, rare_pull): "I can match that." TAKE
+ *    claims safe/wall/history. DARE is "beat the receipt" / "match it."
+ *  - neutral (default): no strong claim. TAKE "SAME HAND. YOUR MOVE."
+ *  See generator.deriveMode + the 2c lock §"Two modes". */
 export type TakeCardMode = "correction" | "competition" | "neutral";
 
-/** Held-card view the generator reads. Only the fields the disagreement
- *  slot needs — the landing component owns the full GeneratedCard. */
+/** Held-card view the generator reads. The landing component owns the
+ *  full GeneratedCard; the generator only needs `name` to build the
+ *  structured heldCards list and (in legacy fallback) detect 0 helds.
+ *  actualFp + tier stay on the type for forward-compat (banks may want
+ *  to filter on tier later); generator does not emit per-card outcomes
+ *  in any field per the 2c spoiler rule. */
 export interface HeldCardForTakeCard {
   name: string;
   actualFp: number;
   tier: string;
 }
 
-/** Inputs to {@link generateChallengeTakeCard}. The caller (Phase 2b's
- *  landing) derives this from ChallengeData + the deserialized enriched
- *  roster. anchorName is resolved by the caller: find the card whose
+/** Inputs to {@link generateChallengeTakeCard}. The caller (the landing)
+ *  derives this from ChallengeData + the deserialized enriched roster.
+ *  anchorName is resolved by the caller: find the card whose
  *  basePlayerId === data.anchor_base_player_id and read its .name. The
  *  generator never does roster lookups — keeps it pure + UI-agnostic. */
 export interface TakeCardInput {
@@ -45,35 +53,70 @@ export interface TakeCardInput {
   winTier: string;
   /** Phase-0 enrichment availability flag from the snapshot top-level.
    *  When false (legacy pre-Phase-0 rows), heldCards is empty and the
-   *  generator falls back to a hold-agnostic disagreement line. */
+   *  generator emits heldCards:[] → the landing's labeled held list is
+   *  omitted entirely (no "John held:" with nothing after the colon). */
   holdsRecorded: boolean;
   /** Cards the SENDER held (wasHeld===true in the deserialized roster).
-   *  Empty when holdsRecorded is false. The disagreement slot may name
-   *  up to two of these. */
+   *  Empty when holdsRecorded is false. */
   heldCards: HeldCardForTakeCard[];
-  /** Name of the trigger anchor card (e.g. the held card most
-   *  disappointing for choke, or the rare_pull card). Null when the
-   *  stored anchor_base_player_id is null (default trigger / legacy)
-   *  or when the basePlayerId doesn't resolve in the roster — the
-   *  generator's null-anchor fallback fires. */
+  /** Name of the trigger anchor card. Null when stored
+   *  anchor_base_player_id is null (default trigger / legacy) or
+   *  doesn't resolve in the roster. */
   anchorName: string | null;
   /** miss-trigger only; null otherwise. */
   nearMissGap: number | null;
   nearMissNextTier: string | null;
-  /** Determinism seed (per 2d of the lock). Same challengeId → identical
-   *  take card every call, on every runtime (landing + OG share card). */
+  /** Best score against this challenge so far ("Still unbeaten" or
+   *  "X stand" framing for competition's evidenceLine). Optional — the
+   *  competition wall reads "{targetScore} FP · Still unbeaten" when
+   *  best_score is null. */
+  bestScore?: number | null;
+  attemptCount?: number | null;
+  winnerCount?: number | null;
+  /** Determinism seed (per the 2a contract — preserved through the
+   *  2c reshape). Same challengeId → identical card on every call. */
   challengeId: string;
 }
 
-/** The four-field output. All strings are FULLY substituted at generation
- *  time — no `{tokens}` remain. The landing renders these verbatim. */
+/** The 2c output — six fields. All strings are FULLY substituted at
+ *  generation time — no `{tokens}` remain. The landing renders these
+ *  verbatim into the TAKE → EVIDENCE → DARE hierarchy.
+ *
+ *  This shape REPLACES the 2a/2b ChallengeTakeCard (hookHeadline /
+ *  outcomeLine / disagreementLine / ctaText). The reshape is the 2c
+ *  migration tripwire — a clean tsc proves every consumer migrated. */
 export interface ChallengeTakeCard {
-  /** Top of landing — the provocation. */
-  hookHeadline: string;
-  /** By the score — what happened, score visible but not the hero. */
-  outcomeLine: string;
-  /** By the cards — where acceptance happens. Mode-keyed. */
-  disagreementLine: string;
-  /** The button — from a tight CTA family per 2g. Never "Accept Challenge". */
+  /** Mode the take/dare were written against. Useful for the landing
+   *  layout (e.g. competition shows the score-as-wall framing). */
+  mode: TakeCardMode;
+  /** The CLAIM — the argument the page exists to make. Largest type
+   *  at the top of the landing ("SOMEBODY WASTED THIS HAND" /
+   *  "JOHN THINKS THIS HAND IS SAFE" / etc.). Mode-keyed with trigger
+   *  refinement. */
+  take: string;
+  /** The USP line — "Same starting hand. Different decisions." The
+   *  fairness mechanic + differentiator. Effectively constant today
+   *  but kept on the type so per-mode variation can ship later
+   *  without a generator API change. */
+  subHeadline: string;
+  /** Structured held-player names. The landing renders this as a
+   *  LABELED LIST ("John held: Finley, Grant Hill"), not as prose —
+   *  the prose form was the 2b recap trap. Empty array on legacy
+   *  (holdsRecorded:false); the landing omits the held block then. */
+  heldCards: string[];
+  /** The one minimal fact backing the claim. MODE-SPECIFIC:
+   *  - correction: hand TOTAL only (the stakes) — never per-card
+   *    breakdown (that's the FP spoiler the lock §"FP-spoiler rule"
+   *    forbids).
+   *  - competition: hand TOTAL framed as the WALL ("238.7 FP · Still
+   *    unbeaten").
+   *  - neutral: hand total + "to beat" framing. */
+  evidenceLine: string;
+  /** The CHALLENGE line. Mode-aware. Correction MUST be pure-
+   *  hypothetical (no outcome reference); competition is "beat the
+   *  receipt" / "match it"; neutral is "beat the number." */
+  dare: string;
+  /** The button — from the tight CTA family. Never "Accept Challenge"
+   *  / "Start Game" / "Beat Score" (the V2 anti-patterns). */
   ctaText: string;
 }
