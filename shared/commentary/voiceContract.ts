@@ -32,12 +32,18 @@ import {
   BASKETBALL_TRADEMARK,
   BASKETBALL_PERSONAL_LIFE,
   BASKETBALL_GOLD_STANDARD,
-} from "./voice/basketballVoice";
+} from "./voice/basketballVoice.js";
 // Phase 3 step 2: pure-types module ONLY. Importing from
 // ./commentaryFacts would transitively load selectCommentary →
 // playerCulture which tsc traverses across the api/ boundary even with
 // `import type`. The runtime builder stays where it is.
-import type { CommentaryFacts } from "./commentaryFactsTypes";
+//
+// Phase 3.2 hotfix: BOTH relative imports above carry .js extensions.
+// Vercel's serverless runtime uses strict NodeNext ESM resolution;
+// extensionless imports 500 the function at module-load time (the
+// 2026-06-03 18:52 UTC prod bug). The type-only import below carries
+// .js for consistency even though it's erased at compile.
+import type { CommentaryFacts } from "./commentaryFactsTypes.js";
 
 // ── Per-sport segment bundles ──────────────────────────────────────────────
 // Each sport exposes the five inheritable segments. Football/baseball
