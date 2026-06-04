@@ -141,7 +141,7 @@ The subject-is-the-hand rule is universal. Each trigger gets an emotional REGIST
 
   - choke      → ACCUSATION    e.g. "KOBE AND CP3. STILL BUSTED." / "THE STARS WERE THERE. THE SCORE WASN'T."
   - miss       → REGRET        e.g. "THIS HAND WAS ONE DECISION AWAY." / "YOU LEFT MVP ON THE TABLE."
-  - big_score  → CHALLENGE     e.g. "JOHN THINKS THIS HAND IS SAFE." / "238.7 FP. GOOD LUCK."
+  - big_score  → CHALLENGE     e.g. "YOU HELD CURRY AT 65.3 FP. BEAT IT." / "65.3 FP FROM ONE MAN. GOOD LUCK."
   - rare_pull  → NOSTALGIA     e.g. "JORDAN WALKED BACK INTO THE BUILDING." / "YOU GOT THE JORDAN GAME. NOW WHAT?"
 
 Every one is an ARGUMENT, not a recap. All four talk about the HAND / PLAYERS / DECISION / OUTCOME — never the box score, never the NBA game.

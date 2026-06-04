@@ -146,7 +146,6 @@ describe("buildVoiceContract — Phase 3.3 Rule 3 (per-trigger flavor)", () => {
     // big_score → challenge
     expect(system).toContain("big_score");
     expect(system).toContain("CHALLENGE");
-    expect(system).toContain("238.7 FP. GOOD LUCK");
     // rare_pull → nostalgia
     expect(system).toContain("rare_pull");
     expect(system).toContain("NOSTALGIA");

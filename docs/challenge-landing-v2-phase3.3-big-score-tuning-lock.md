@@ -53,5 +53,9 @@ unit-asserted.
 ## Deferred (NOT this pass)
 - totalFp (hand total) at the facts boundary — required for "238.7 FP. GOOD LUCK."
 - creatorName at the facts boundary — required for "JOHN THINKS THIS HAND IS SAFE."
-  Both are facts-boundary plumbing; their own pass if/when chosen.
+  Both are facts-boundary plumbing; their own pass if/when chosen. The two
+  example strings above were also removed from the Rule 3 summary table in
+  voiceContract.ts (predates this pass; same unauthorable-output exposure),
+  so lock and code stay consistent — when totalFp / creatorName land, the
+  examples come back together with the fields.
 - miss tuning pass (next); opponent-as-COLOR; KV / rate-limit / ESM-CI cleanup.
