@@ -189,6 +189,50 @@ describe("buildVoiceContract — Phase 3.3 rare_pull deep dive", () => {
   });
 });
 
+describe("buildVoiceContract — Phase 3.3 big_score deep dive (confident-challenge register)", () => {
+  it("ships a dedicated big_score section with subject=hand+star+anchor FP", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("TRIGGER DEEP DIVE — BIG_SCORE");
+    expect(system).toContain("hand + held star(s) + the ANCHOR'S FP number");
+    // Register cue — confident, terse, a dare.
+    expect(system).toContain("confident-challenge");
+  });
+
+  it("includes the FP-vs-points strict rule — anchor.topReason is FP, statLine.pts is context", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("THE FP-VS-POINTS RULE (BIG_SCORE — STRICT)");
+    // The label must be "FP", never "POINTS".
+    expect(system).toContain("NEVER as \"POINTS\"");
+    // statLine.pts is identified as game points, not the headline number.
+    expect(system).toContain("statLine.pts");
+    expect(system).toContain("GAME points");
+    expect(system).toContain("NEVER make statLine.pts the headline number");
+  });
+
+  it("cites the prior smoke failure verbatim so a regression to it is visible", () => {
+    // The "YOU HELD CURRY AT 65 POINTS" line is the receipt-of-failure
+    // the rule exists to retire. Pinning it keeps the diagnostic in
+    // the contract — if a future edit drops it, review will see it.
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("YOU HELD CURRY AT 65 POINTS");
+  });
+
+  it("includes the big_score gold-standard examples verbatim", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("YOU HELD CURRY AT 65.3 FP. BEAT IT.");
+    expect(system).toContain("65.3 FP FROM ONE MAN. GOOD LUCK.");
+    expect(system).toContain("JOHN THINKS THIS HAND IS SAFE.");
+    expect(system).toContain("238.7 FP. GOOD LUCK.");
+  });
+
+  it("calls out big_score anti-patterns (POINTS label, statLine.pts as number, recap framing)", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("YOU HELD CURRY AT 65 POINTS.");
+    expect(system).toContain("CURRY DROPPED 42 ON YOUR HAND.");
+    expect(system).toContain("CURRY GOES OFF FOR 42/5/7 IN A WARRIORS WIN.");
+  });
+});
+
 describe("buildVoiceContract — format + anti-anachronism + season substitution", () => {
   it("substitutes {season} into the anti-anachronism rule", () => {
     const { system } = buildVoiceContract({ ...WADE_FACTS, season: "9596" });

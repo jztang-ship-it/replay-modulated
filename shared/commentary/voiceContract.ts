@@ -174,6 +174,45 @@ ANTI-PATTERNS for rare_pull — do NOT write these:
 
 ANTI-ANACHRONISM reminder for rare_pull (because retro seasons surface here often): the rare event is FROM the season provided in facts. Do not import the player's later accolades, later championships, or future-tense narrative ("would go on to win") — the line lives in the moment the user pulled.
 
+═══ TRIGGER DEEP DIVE — BIG_SCORE ═══
+
+A big_score hand cleared the ALL_STAR / MVP / LEGEND bar — a strong fantasy result. The line is a CHALLENGE to the recipient: here is what was put up, beat it. Confident, terse, a dare. Not a recap, not a brag, not a celebration of the player.
+
+THE SUBJECT for big_score:
+  hand + held star(s) + the ANCHOR'S FP number from anchor.topReason
+  NEVER the NBA game, NEVER the box score's point total, NEVER the opponent.
+
+═══ THE FP-VS-POINTS RULE (BIG_SCORE — STRICT) ═══
+
+The number that anchors a big_score line is the ANCHOR'S FANTASY POINTS — anchor.topReason.label (e.g. "65.3 FP"). This number is the WEAPON.
+
+  - anchor.topReason is FANTASY POINTS. Render it as "FP" — "65.3 FP", "238 FP". NEVER as "POINTS", "PTS", "points scored", or any phrasing that suggests game points.
+  - statLine.pts (e.g. 42) is the player's GAME points — a real-world stat from the actual NBA game. It is context, NOT the anchor number. NEVER make statLine.pts the headline number. NEVER label anchor.topReason's value as if it were statLine.pts.
+  - If the line carries a number, that number comes from anchor.topReason and is labeled "FP". One number per line is the ceiling — no slash-separated stat dumps.
+
+This rule exists because the model has previously conflated the two — writing "YOU HELD CURRY AT 65 POINTS" from a 65.3 FP topReason while statLine pts was 42. The number was right; the label was a category error. Do not repeat it.
+
+THE REGISTER: confident-challenge. The user delivered. The line dares the recipient to match. Tones to hit: "good luck," "beat it," "your turn," "safe?" / "now what?" The held star is named as the engine; the FP figure is the receipt.
+
+GOLD-STANDARD EXAMPLES (big_score) — match these:
+  - "YOU HELD CURRY AT 65.3 FP. BEAT IT."
+  - "65.3 FP FROM ONE MAN. GOOD LUCK."
+  - "JOHN THINKS THIS HAND IS SAFE."           ← stakes-as-dare; works with or without a number.
+  - "238.7 FP. GOOD LUCK."                     ← receipt + dare; the number is everything.
+
+What makes these work:
+  - The FP figure (when used) is named "FP," not "POINTS." It is the weapon.
+  - The held star is named as the talent that delivered (Rule 2 — naming, not blaming; here the player is the talent, not the cause). "Held CURRY AT 65.3 FP" frames the player as having LIT UP the hand.
+  - The dare clause ("BEAT IT," "GOOD LUCK," "SAFE?") puts the line back on the recipient — argument, not recap.
+  - Brevity is the surface. The line is short enough to land as a banner.
+
+ANTI-PATTERNS for big_score — do NOT write these:
+  - "YOU HELD CURRY AT 65 POINTS." — category error. anchor.topReason was FP, not game points. The label "POINTS" is the violation; "FP" is the only label that may render anchor.topReason.
+  - "CURRY DROPPED 42 ON YOUR HAND." — using statLine.pts as the number. statLine is context; the FP figure is the anchor.
+  - "CURRY GOES OFF FOR 42/5/7 IN A WARRIORS WIN." — NBA recap framing; the held FP is invisible; the box score is leading.
+  - "STEPH WAS UNSTOPPABLE." — generic; no FP figure, no dare, no recipient. A culture-entry sentence, not a challenge headline.
+  - Any "{player} vs {team}" / "{player} at {city}" / "{player} in {arena}" framing — game-identity color the headline surface withholds.
+
 ═══ FORMAT + INHERITED CONSTRAINTS ═══
 
 OVERRIDE — STRUCTURE: One to two clauses. Setup + editorial twist, OR a single confident assertion. Headline register, not paragraph register.
