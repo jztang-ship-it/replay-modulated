@@ -152,23 +152,28 @@ describe("totalFp — threaded through the boundary", () => {
 
 // ── salience block render ──────────────────────────────────────────────────
 
+// Phase 4 Pass 1 (fixup) — salience renders as CONCEPTS, not analyst
+// shorthand. The `label` on each SalienceFact is now magnitude + concept
+// word ("42 points" instead of "42 FP from 42 pts"). The data fields
+// (category, value, shortfall, basePlayerId) remain on the objects for
+// computation / downstream joins but never render into the prompt.
 const BIG_SCORE_SALIENCE: NonNullable<CommentaryFacts["salience"]> = {
-  primaryPositive: { category: "pts", value: 42, label: "42 FP from 42 pts" },
-  primaryNegative: { category: "turnovers", value: -3, label: "-3 FP from 3 turnovers" },
+  primaryPositive: { category: "pts", value: 42, label: "42 points" },
+  primaryNegative: { category: "turnovers", value: -3, label: "3 turnovers" },
 };
 
 const CHOKE_SALIENCE: NonNullable<CommentaryFacts["salience"]> = {
-  primaryPositive: { category: "pts", value: 38, label: "38 FP from 38 pts" },
-  primaryNegative: { category: "turnovers", value: -4, label: "-4 FP from 4 turnovers" },
+  primaryPositive: { category: "pts", value: 38, label: "38 points" },
+  primaryNegative: { category: "turnovers", value: -4, label: "4 turnovers" },
   primaryDragPlayer: { basePlayerId: "101108", name: "Chris Paul", shortfall: -22.5 },
 };
 
 const MISS_SALIENCE: NonNullable<CommentaryFacts["salience"]> = {
-  primaryPositive: { category: "pts", value: 30, label: "30 FP from 30 pts" },
+  primaryPositive: { category: "pts", value: 30, label: "30 points" },
 };
 
 describe("salience block — render shape per signal", () => {
-  it("big_score: emits SALIENCE: header + primaryPositive + primaryNegative", () => {
+  it("big_score: emits SALIENCE: header + MOST IMPORTANT POSITIVE + NEGATIVE (concept labels)", () => {
     const r = buildCommentaryFacts(input({
       trigger: "big_score",
       salience: BIG_SCORE_SALIENCE,
@@ -177,12 +182,18 @@ describe("salience block — render shape per signal", () => {
     if (r.kind !== "facts") return;
     const prompt = buildUserPrompt(r.facts);
     expect(prompt).toContain("SALIENCE:");
-    expect(prompt).toContain("  primaryPositive: 42 FP from 42 pts (pts=42)");
-    expect(prompt).toContain("  primaryNegative: -3 FP from 3 turnovers (turnovers=-3)");
-    expect(prompt).not.toContain("primaryDragPlayer");
+    expect(prompt).toContain("  MOST IMPORTANT POSITIVE: 42 points");
+    expect(prompt).toContain("  MOST IMPORTANT NEGATIVE: 3 turnovers");
+    // Analyst-shorthand suffix (key=value) and "FP from" framing must
+    // not leak back into the rendered prompt.
+    expect(prompt).not.toMatch(/\(pts=42\)/);
+    expect(prompt).not.toMatch(/FP from/);
+    expect(prompt).not.toContain("primaryPositive:");
+    expect(prompt).not.toContain("primaryNegative:");
+    expect(prompt).not.toContain("BIGGEST DRAG:");
   });
 
-  it("choke: emits primaryPositive + primaryNegative + primaryDragPlayer", () => {
+  it("choke: emits MOST IMPORTANT POSITIVE + NEGATIVE + BIGGEST DRAG (concept phrasing)", () => {
     const r = buildCommentaryFacts(input({
       trigger: "choke",
       anchorBasePlayerId: "977",
@@ -196,12 +207,20 @@ describe("salience block — render shape per signal", () => {
     if (r.kind !== "facts") return;
     const prompt = buildUserPrompt(r.facts);
     expect(prompt).toContain("SALIENCE:");
-    expect(prompt).toContain("  primaryPositive: 38 FP from 38 pts (pts=38)");
-    expect(prompt).toContain("  primaryNegative: -4 FP from 4 turnovers (turnovers=-4)");
-    expect(prompt).toContain("  primaryDragPlayer: Chris Paul shortfall -22.5 FP (basePlayerId=101108)");
+    expect(prompt).toContain("  MOST IMPORTANT POSITIVE: 38 points");
+    expect(prompt).toContain("  MOST IMPORTANT NEGATIVE: 4 turnovers");
+    expect(prompt).toContain("  BIGGEST DRAG: Chris Paul — gave you far less than his hold was worth");
+    // Drag must NEVER leak basePlayerId, shortfall number, or analyst
+    // framing (projected/actual/shortfall words) into the prompt.
+    expect(prompt).not.toMatch(/basePlayerId/);
+    expect(prompt).not.toMatch(/101108/);
+    expect(prompt).not.toMatch(/-22\.5/);
+    expect(prompt).not.toMatch(/shortfall/i);
+    expect(prompt).not.toMatch(/projected/i);
+    expect(prompt).not.toMatch(/below expectation/i);
   });
 
-  it("miss: primaryPositive only — primaryNegative leans on existing nearMissGap (lock §per-trigger)", () => {
+  it("miss: MOST IMPORTANT POSITIVE only — NEGATIVE leans on existing nearMissGap (lock §per-trigger)", () => {
     const r = buildCommentaryFacts(input({
       trigger: "miss",
       anchorBasePlayerId: null,
@@ -213,9 +232,9 @@ describe("salience block — render shape per signal", () => {
     if (r.kind !== "facts") return;
     const prompt = buildUserPrompt(r.facts);
     expect(prompt).toContain("SALIENCE:");
-    expect(prompt).toContain("  primaryPositive: 30 FP from 30 pts (pts=30)");
-    expect(prompt).not.toContain("primaryNegative");
-    expect(prompt).not.toContain("primaryDragPlayer");
+    expect(prompt).toContain("  MOST IMPORTANT POSITIVE: 30 points");
+    expect(prompt).not.toContain("MOST IMPORTANT NEGATIVE");
+    expect(prompt).not.toContain("BIGGEST DRAG");
     // nearMiss block still present — the existing miss-negative signal.
     expect(prompt).toContain("NEAR_MISS_GAP_FP: 7");
   });
@@ -246,6 +265,67 @@ describe("salience block — render shape per signal", () => {
     expect(r.kind).toBe("facts");
     if (r.kind !== "facts") return;
     expect(buildUserPrompt(r.facts)).not.toContain("SALIENCE:");
+  });
+});
+
+// ── render invariant ──────────────────────────────────────────────────────
+// Lock §"render invariant": every non-drag salience fact references a stat
+// present in the rendered (trimmed) statLine. Naturally true by
+// construction — computeSalience only ranks weights' keys, which are the
+// same set as facts.fpStatKeys (the trim allowlist) — but pinned here as a
+// gate so a future shape change can't silently produce a salience signal
+// for a stat the trim is hiding from the model (which would name a stat
+// the model doesn't see in its statLine).
+
+describe("render invariant — non-drag salience signals reference stats in the trimmed statLine", () => {
+  function statLineKeys(prompt: string): string[] {
+    const m = prompt.match(/^\s*statLine:\s*(.+)$/m);
+    if (!m) return [];
+    // statLine line is "X pts, Y reb, ..." — split by ", " and take the
+    // second token of each comma-separated pair.
+    return m[1].split(",").map(part => part.trim().split(/\s+/)[1]);
+  }
+
+  it("big_score: primaryPositive.category + primaryNegative.category both present in the rendered statLine", () => {
+    const r = buildCommentaryFacts(input({
+      trigger: "big_score",
+      roster: [card({
+        basePlayerId: "977",
+        statLine: { pts: 42, reb: 5, ast: 7, stl: 1, blk: 0, turnovers: 3 },
+      })],
+      salience: BIG_SCORE_SALIENCE,
+    }));
+    expect(r.kind).toBe("facts");
+    if (r.kind !== "facts") return;
+    const prompt = buildUserPrompt(r.facts);
+    const keys = statLineKeys(prompt);
+    expect(keys).toContain(r.facts.salience!.primaryPositive!.category);
+    expect(keys).toContain(r.facts.salience!.primaryNegative!.category);
+  });
+
+  it("choke: same invariant — drag player is exempt (not a stat reference)", () => {
+    const r = buildCommentaryFacts(input({
+      trigger: "choke",
+      anchorBasePlayerId: "977",
+      roster: [
+        card({
+          basePlayerId: "977",
+          name: "Kobe Bryant",
+          statLine: { pts: 38, reb: 6, ast: 5, stl: 2, blk: 1, turnovers: 4 },
+        }),
+        card({ basePlayerId: "101108", name: "Chris Paul", actualFp: 18, projectedFp: 40.5 }),
+      ],
+      salience: CHOKE_SALIENCE,
+    }));
+    expect(r.kind).toBe("facts");
+    if (r.kind !== "facts") return;
+    const prompt = buildUserPrompt(r.facts);
+    const keys = statLineKeys(prompt);
+    expect(keys).toContain(r.facts.salience!.primaryPositive!.category);
+    expect(keys).toContain(r.facts.salience!.primaryNegative!.category);
+    // primaryDragPlayer is the held-shortfall signal — it doesn't carry
+    // a `category` field, so the invariant doesn't apply to it.
+    expect(r.facts.salience!.primaryDragPlayer).toBeDefined();
   });
 });
 

@@ -56,8 +56,10 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     expect(salience).toBeDefined();
     // Highest FP contribution: pts (42 × 1.0 = 42); ast (7 × 1.5 = 10.5); reb (5 × 1.2 = 6); stl (1 × 2.0 = 2).
     expect(salience?.primaryPositive?.category).toBe("pts");
+    // .value still carries FP CONTRIBUTION (for downstream computation /
+    // joins); .label is the model-facing concept ("42 points").
     expect(salience?.primaryPositive?.value).toBe(42);
-    expect(salience?.primaryPositive?.label).toBe("42 FP from 42 pts");
+    expect(salience?.primaryPositive?.label).toBe("42 points");
     // No turnovers → no negative.
     expect(salience?.primaryNegative).toBeUndefined();
     expect(salience?.primaryDragPlayer).toBeUndefined();
@@ -74,8 +76,24 @@ describe("computeSalience — per-stat FP contribution rank", () => {
       }),
     ]);
     expect(salience?.primaryNegative?.category).toBe("turnovers");
+    // .value stays signed (-3 FP contribution); .label is unsigned —
+    // sign is conveyed by the MOST IMPORTANT NEGATIVE header in the
+    // SALIENCE block.
     expect(salience?.primaryNegative?.value).toBe(-3);
-    expect(salience?.primaryNegative?.label).toBe("-3 FP from 3 turnovers");
+    expect(salience?.primaryNegative?.label).toBe("3 turnovers");
+  });
+
+  it("uses singular concept word when raw count is exactly 1 (1 turnover / 1 steal / 1 block / 1 assist)", () => {
+    const { salience } = computeSalience("big_score", "basketball", [
+      card({
+        statLine: { pts: 30, reb: 5, ast: 1, stl: 0, blk: 0, turnovers: 1 },
+      }),
+    ]);
+    // Highest positive among present stats: pts=30 wins; the singular
+    // case is exercised on the negative (turnovers=1) and rendered as
+    // "1 turnover" (not "1 turnovers").
+    expect(salience?.primaryPositive?.label).toBe("30 points");
+    expect(salience?.primaryNegative?.label).toBe("1 turnover");
   });
 
   it("hand-level (not anchor-only): sums contributions across all cards", () => {

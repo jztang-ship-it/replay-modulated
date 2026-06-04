@@ -26,9 +26,11 @@ const { buildUserPrompt } = voiceMod;
 
 const FP_STAT_KEYS = ["pts", "reb", "ast", "stl", "blk", "turnovers"];
 
-// Example salience values per fixture (matching the shape computeSalience
-// would yield for each anchor's statLine, plus a synthesized
-// primaryDragPlayer for choke since the fixture has no roster context).
+// Phase 4 Pass 1 (fixup) — labels render as concepts ("42 points"), not
+// analyst shorthand ("42 FP from 42 pts"). .value still carries the FP
+// contribution for downstream computation / joins; only the rendered
+// label changes. primaryDragPlayer carries no label field — the
+// renderer composes the concept phrase from .name verbatim.
 
 const augmented = {
   big_score: {
@@ -36,7 +38,7 @@ const augmented = {
     fpStatKeys: FP_STAT_KEYS,
     salience: {
       // Curry pts: 42 × 1.0 = 42 FP (highest per stat).
-      primaryPositive: { category: "pts", value: 42, label: "42 FP from 42 pts" },
+      primaryPositive: { category: "pts", value: 42, label: "42 points" },
       // No turnovers in fixture → no negative.
     },
   },
@@ -45,9 +47,15 @@ const augmented = {
     fpStatKeys: FP_STAT_KEYS,
     salience: {
       // Kobe pts: 38 × 1.0 = 38 FP.
-      primaryPositive: { category: "pts", value: 38, label: "38 FP from 38 pts" },
-      // No turnovers in this fixture's anchor statLine → no negative.
-      // Synthesized for shape: a held co-star fell well short.
+      primaryPositive: { category: "pts", value: 38, label: "38 points" },
+      // Synthesized for shape: 8 turnovers across the hand drove the
+      // largest negative contribution. Pinned here so the dump
+      // exercises the primaryNegative concept render even though the
+      // fixture's anchor statLine on its own has none.
+      primaryNegative: { category: "turnovers", value: -8, label: "8 turnovers" },
+      // Synthesized for shape: a held co-star fell well short. The
+      // basePlayerId + shortfall stay on the object for joins /
+      // computation; the renderer never emits them.
       primaryDragPlayer: {
         basePlayerId: "101108",
         name: "Chris Paul",
@@ -62,7 +70,7 @@ const augmented = {
     // shaped here as if a top contributor in a real hand had been
     // surfaced. Miss strips primaryNegative per lock §per-trigger.
     salience: {
-      primaryPositive: { category: "pts", value: 30, label: "30 FP from 30 pts" },
+      primaryPositive: { category: "pts", value: 30, label: "30 points" },
     },
   },
 };

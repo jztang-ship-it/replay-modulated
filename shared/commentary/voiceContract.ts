@@ -265,12 +265,23 @@ function formatStatLine(
   return parts.join(", ");
 }
 
-/** Phase 4 Pass 1 — render the hand-level salience block when present.
- *  Mirror of the `topReason` line on the anchor block: one line per
- *  signal, each indented two spaces under a `SALIENCE:` header. The
- *  caller has already filtered for trigger (rare_pull → no salience),
- *  and buildCommentaryFacts enforces the same omission at the
- *  boundary, so this formatter just emits whatever is on the object. */
+/** Phase 4 Pass 1 (fixup) — render the hand-level salience block as
+ *  CONCEPTS, not key=value pairs. The model reads "MOST IMPORTANT
+ *  POSITIVE: 38 points" — magnitude + concept word — not "primary
+ *  Positive: 38 FP from 38 pts (pts=38)" which was analyst shorthand
+ *  the model treated as the line itself to write. The category /
+ *  value / shortfall / basePlayerId fields remain on the data object
+ *  for computation + downstream joins; they just never render.
+ *
+ *  primaryDragPlayer renders as a concept phrase — no shortfall
+ *  number, no basePlayerId, no projected-vs-actual analyst framing.
+ *  The shortfall MAGNITUDE stays on primaryDragPlayer.shortfall for
+ *  computation; we just don't render it here.
+ *
+ *  The caller has already filtered for trigger (rare_pull → no
+ *  salience), and buildCommentaryFacts enforces the same omission at
+ *  the boundary, so this formatter just emits whatever is on the
+ *  object. */
 function formatSalienceBlock(
   salience: NonNullable<CommentaryFacts["salience"]> | undefined,
 ): string[] {
@@ -278,16 +289,13 @@ function formatSalienceBlock(
   const lines: string[] = [];
   lines.push("SALIENCE:");
   if (salience.primaryPositive) {
-    const p = salience.primaryPositive;
-    lines.push(`  primaryPositive: ${p.label} (${p.category}=${p.value})`);
+    lines.push(`  MOST IMPORTANT POSITIVE: ${salience.primaryPositive.label}`);
   }
   if (salience.primaryNegative) {
-    const n = salience.primaryNegative;
-    lines.push(`  primaryNegative: ${n.label} (${n.category}=${n.value})`);
+    lines.push(`  MOST IMPORTANT NEGATIVE: ${salience.primaryNegative.label}`);
   }
   if (salience.primaryDragPlayer) {
-    const d = salience.primaryDragPlayer;
-    lines.push(`  primaryDragPlayer: ${d.name} shortfall ${d.shortfall} FP (basePlayerId=${d.basePlayerId})`);
+    lines.push(`  BIGGEST DRAG: ${salience.primaryDragPlayer.name} — gave you far less than his hold was worth`);
   }
   return lines;
 }

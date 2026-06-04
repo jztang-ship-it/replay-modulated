@@ -74,6 +74,41 @@ function rankPerStat(
 
 const round1 = (n: number): number => Math.round(n * 10) / 10;
 
+/** Phase 4 Pass 1 (fixup) — concept-word render for stat keys. The
+ *  rendered SalienceFact.label is a model-facing CONCEPT ("38 points")
+ *  instead of analyst shorthand ("38 FP from 38 pts"). The .value
+ *  field still carries the FP CONTRIBUTION for computation /
+ *  downstream joins; only the label form changes.
+ *
+ *  Singular form when raw count is exactly 1 ("1 point"); plural
+ *  otherwise. Unknown keys (forward-compat for football/baseball)
+ *  pass through verbatim so an unmapped category still produces a
+ *  legible — if blunt — label. */
+const STAT_WORD_FORMS: Record<string, { singular: string; plural: string }> = {
+  pts:       { singular: "point",    plural: "points" },
+  reb:       { singular: "rebound",  plural: "rebounds" },
+  ast:       { singular: "assist",   plural: "assists" },
+  stl:       { singular: "steal",    plural: "steals" },
+  blk:       { singular: "block",    plural: "blocks" },
+  turnovers: { singular: "turnover", plural: "turnovers" },
+};
+
+function statWord(key: string, count: number): string {
+  const forms = STAT_WORD_FORMS[key];
+  if (!forms) return key;
+  return count === 1 ? forms.singular : forms.plural;
+}
+
+/** Magnitude-only label: "<raw count> <concept word>" (e.g. "42 points",
+ *  "3 turnovers"). Sign is conveyed by the SALIENCE block's
+ *  MOST IMPORTANT POSITIVE / NEGATIVE header, not by a minus on the
+ *  number — the model reads the header for direction and the label
+ *  for content. */
+function magnitudeLabel(key: string, rawCount: number): string {
+  const abs = Math.abs(rawCount);
+  return `${abs} ${statWord(key, abs)}`;
+}
+
 /** Per-trigger salience for the hand. Lock §"Per-trigger signal map":
  *    big_score → primaryPositive (+ optional primaryNegative).
  *    choke     → primaryPositive + primaryDragPlayer (+ optional
@@ -109,7 +144,7 @@ export function computeSalience(
     primaryPositive = {
       category: posBest.key,
       value: fp,
-      label: `${fp} FP from ${raw} ${posBest.key}`,
+      label: magnitudeLabel(posBest.key, raw),
     };
   }
   if (negBest) {
@@ -118,7 +153,7 @@ export function computeSalience(
     primaryNegative = {
       category: negBest.key,
       value: fp,
-      label: `${fp} FP from ${raw} ${negBest.key}`,
+      label: magnitudeLabel(negBest.key, raw),
     };
   }
 
