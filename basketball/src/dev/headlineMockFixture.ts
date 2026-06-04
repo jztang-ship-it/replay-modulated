@@ -172,7 +172,15 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       trigger: "big_score",
       verdict: "credited",
       winTier: "ALL_STAR",
-      totalFp: 245.8,
+      // Phase 4 Pass 2 pre-merge lock §2 — was 245.8, which collided
+      // byte-identically with the big_score gold example "245.8 FP.
+      // Good luck." in voiceContract.ts. 238.6 is distinct from all
+      // tracked gold-standard example numbers (62.1, 245.8) and from
+      // this fixture's other figures (topReason 65.3, statLine
+      // 42/5/7, salience 42), so a future "245.8 FP. Good luck." in
+      // the smoke output is now diagnostic of example leakage rather
+      // than a faithful use of TOTAL_FP.
+      totalFp: 238.6,
       fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
       salience: {
         // Curry pts: 42 × 1.0 = 42 FP (highest single-stat carry).
