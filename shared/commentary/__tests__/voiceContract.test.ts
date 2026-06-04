@@ -221,8 +221,6 @@ describe("buildVoiceContract — Phase 3.3 big_score deep dive (confident-challe
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("YOU HELD CURRY AT 65.3 FP. BEAT IT.");
     expect(system).toContain("65.3 FP FROM ONE MAN. GOOD LUCK.");
-    expect(system).toContain("JOHN THINKS THIS HAND IS SAFE.");
-    expect(system).toContain("238.7 FP. GOOD LUCK.");
   });
 
   it("calls out big_score anti-patterns (POINTS label, statLine.pts as number, recap framing)", () => {

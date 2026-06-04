@@ -197,8 +197,6 @@ THE REGISTER: confident-challenge. The user delivered. The line dares the recipi
 GOLD-STANDARD EXAMPLES (big_score) — match these:
   - "YOU HELD CURRY AT 65.3 FP. BEAT IT."
   - "65.3 FP FROM ONE MAN. GOOD LUCK."
-  - "JOHN THINKS THIS HAND IS SAFE."           ← stakes-as-dare; works with or without a number.
-  - "238.7 FP. GOOD LUCK."                     ← receipt + dare; the number is everything.
 
 What makes these work:
   - The FP figure (when used) is named "FP," not "POINTS." It is the weapon.
