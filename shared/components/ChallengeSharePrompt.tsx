@@ -12,6 +12,7 @@ import {
   buildCommentaryFacts,
   type CommentaryTrigger,
   type CommentaryWinTier,
+  type CommentaryFactsCard,
 } from "@shared/commentary/commentaryFacts";
 import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
@@ -19,6 +20,13 @@ import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
 import { AuthContext } from "@shared/auth/AuthProvider";
 import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
+// Phase 4 Pass 1 — salience computation lives in shared/utils so the
+// sport-side FP math is unit-testable in isolation and any future
+// surface (post_hand) can import the same helper. shared/commentary/
+// stays free of basketball/ imports per the lock — the basketball
+// adapter is reached only from shared/utils/computeSalience.ts, which
+// IS allowed (the firewall is specifically around commentary).
+import { computeSalience, fpStatKeysForSport } from "@shared/utils/computeSalience";
 
 interface Props {
   sport: string;
@@ -172,6 +180,22 @@ export function ChallengeSharePrompt({
     authored: string | null;
   }> {
     const fallback = shareHeadline ?? triggerResult.headline ?? "";
+    const factsCards: CommentaryFactsCard[] = roster.map(c => ({
+      basePlayerId: String((c as any).basePlayerId ?? ""),
+      name: String((c as any).name ?? ""),
+      tier: String((c as any).tier ?? ""),
+      team: String((c as any).team ?? ""),
+      actualFp: Number((c as any).actualFp ?? 0),
+      projectedFp: Number((c as any).projectedFp ?? 0),
+      wasHeld: (c as any).wasHeld === true,
+      gameInfo: (c as any).gameInfo,
+      statLine: (c as any).statLine,
+    }));
+    // Phase 4 Pass 1 — sport-side salience computation. Returns
+    // { salience: undefined } for rare_pull and for sports without
+    // wired FP weights; the builder omits facts.salience in that case.
+    const { salience } = computeSalience(triggerResult.trigger, sport, factsCards);
+    const fpStatKeys = fpStatKeysForSport(sport);
     const factsResult = buildCommentaryFacts({
       surface: "challenge_headline",
       sport,
@@ -181,22 +205,20 @@ export function ChallengeSharePrompt({
       // router can route per-tier (KV key includes tier) and the
       // grader's "Result tier:" context line is honest.
       winTier: winTier as CommentaryWinTier,
-      roster: roster.map(c => ({
-        basePlayerId: String((c as any).basePlayerId ?? ""),
-        name: String((c as any).name ?? ""),
-        tier: String((c as any).tier ?? ""),
-        team: String((c as any).team ?? ""),
-        actualFp: Number((c as any).actualFp ?? 0),
-        projectedFp: Number((c as any).projectedFp ?? 0),
-        wasHeld: (c as any).wasHeld === true,
-        gameInfo: (c as any).gameInfo,
-        statLine: (c as any).statLine,
-      })),
+      roster: factsCards,
       anchorBasePlayerId: triggerResult.anchorBasePlayerId ?? null,
       holdsRecorded: true,
       topGamePrimaryReason: triggerResult.topGamePrimaryReason ?? null,
       nearMissGap: triggerResult.nearMissGap ?? null,
       nearMissNextTier: triggerResult.nearMissNextTier ?? null,
+      // Phase 4 Pass 1 — hand total FP from the upstream prop
+      // (rounded by evaluateTrigger ~line 150 already); facts-shape
+      // additions for prompt rendering. fpStatKeys drives the
+      // statLine trim in buildUserPrompt; salience is the hand-level
+      // signal the model will later explain (Pass 2/3).
+      totalFp: Math.round(totalFp * 10) / 10,
+      fpStatKeys: fpStatKeys ?? undefined,
+      salience,
     });
     if (factsResult.kind === "skip") return { effective: fallback, authored: null };
 

@@ -158,6 +158,27 @@ function bigScoreTopReason(anchor: CommentaryFactsCard): TopGameReason {
 
 // ── Public entry point ─────────────────────────────────────────────────
 
+/** Phase 4 Pass 1 — pass-through helpers for the new optional fields.
+ *  All three (totalFp, fpStatKeys, salience) are computed UPSTREAM by
+ *  the caller; the builder threads them onto facts unchanged. Keeping
+ *  these as one place to spread means the per-trigger branches below
+ *  don't each duplicate the same five lines.
+ *
+ *  rare_pull intentionally drops salience — per the lock, rare_pull's
+ *  topReason already carries the rare-line signal and a salience pair
+ *  would either duplicate it or distract from it. Caller is also
+ *  expected to skip the computation for rare_pull, but the builder
+ *  enforces the omission at the boundary regardless. */
+function passthroughExtras(
+  input: BuildCommentaryFactsInput,
+): Partial<CommentaryFacts> {
+  const out: Partial<CommentaryFacts> = {};
+  if (input.totalFp != null) out.totalFp = input.totalFp;
+  if (input.fpStatKeys && input.fpStatKeys.length > 0) out.fpStatKeys = input.fpStatKeys;
+  if (input.salience && input.trigger !== "rare_pull") out.salience = input.salience;
+  return out;
+}
+
 export function buildCommentaryFacts(
   input: BuildCommentaryFactsInput,
 ): CommentaryFactsResult {
@@ -168,6 +189,7 @@ export function buildCommentaryFacts(
 
   const verdict = deriveVerdict(input);
   const anchorCard = findAnchor(input.roster, input.anchorBasePlayerId);
+  const extras = passthroughExtras(input);
 
   // miss — no anchor concept. Carry gap + next-tier for the prompt to
   // shape "one decision from ALL-STAR" lines.
@@ -181,6 +203,7 @@ export function buildCommentaryFacts(
       ...(input.winTier ? { winTier: input.winTier } : {}),
       ...(input.nearMissGap != null ? { nearMissGap: input.nearMissGap } : {}),
       ...(input.nearMissNextTier ? { nearMissNextTier: input.nearMissNextTier } : {}),
+      ...extras,
     };
     return { kind: "facts", facts };
   }
@@ -200,6 +223,7 @@ export function buildCommentaryFacts(
         trigger: input.trigger,
         verdict: "neutral",
         ...(input.winTier ? { winTier: input.winTier } : {}),
+        ...extras,
       },
     };
   }
@@ -219,6 +243,7 @@ export function buildCommentaryFacts(
     verdict,
     ...(input.winTier ? { winTier: input.winTier } : {}),
     anchor: buildAnchorBlock(anchorCard, input.sport, topReason),
+    ...extras,
   };
 
   return { kind: "facts", facts };

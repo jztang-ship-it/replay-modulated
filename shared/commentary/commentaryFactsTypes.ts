@@ -24,6 +24,23 @@ interface TopGameReason {
 }
 export type { TopGameReason };
 
+/** Phase 4 Pass 1 — hand-level salience signal. Code (caller) ranks
+ *  per-stat FP contribution (weight × value summed across the roster)
+ *  and surfaces the largest positive / largest negative to the model.
+ *  Mirror of TopGameReason's {category, value, label} shape so the
+ *  prompt formatter renders both signals identically.
+ *
+ *  - category: the stat key the signal refers to ("pts", "turnovers", ...).
+ *  - value: the FP CONTRIBUTION (weight × raw value, summed across roster).
+ *           NOT the raw stat count — that's encoded in the label.
+ *  - label: human-readable form rendered into the prompt verbatim
+ *           (e.g. "84 FP from pts (84 pts across the hand)"). */
+export interface SalienceFact {
+  category: string;
+  value: number;
+  label: string;
+}
+
 // ── Public shapes ──────────────────────────────────────────────────────
 
 export type CommentarySurface = "challenge_headline" | "post_hand";
@@ -97,6 +114,41 @@ export interface CommentaryFacts {
   nearMissGap?: number;
   /** miss only — tier just missed (e.g. "ALL_STAR"). */
   nearMissNextTier?: string;
+  /** Phase 4 Pass 1 — total FP of the sender's hand. Threaded from the
+   *  upstream evaluateTrigger value (triggerEvaluation.ts ~146) — the
+   *  authoritative source — so the model can author hand-relative lines
+   *  ("238.7 FP — too much for this hand"). Rounded to 1 decimal. */
+  totalFp?: number;
+  /** Phase 4 Pass 1 — allowlist of stat keys that feed the FP formula
+   *  for this sport (basketball: pts/reb/ast/stl/blk/turnovers). Source:
+   *  the sport adapter's projectionWeights at the caller. Drives the
+   *  statLine trim in buildUserPrompt — min/threes/fg% never reach the
+   *  model. Optional for forward-compat; absent → no trim, full
+   *  statLine renders (legacy callers / tests). */
+  fpStatKeys?: readonly string[];
+  /** Phase 4 Pass 1 — hand-level salience signal. Code-computed at the
+   *  caller; the model explains rather than derives. Per-trigger usage
+   *  is governed by VOICE_CONTRACT (Pass 2). Omitted for rare_pull
+   *  (topReason already carries the signal). */
+  salience?: {
+    /** Largest positive FP contribution across the hand (any trigger
+     *  except rare_pull). */
+    primaryPositive?: SalienceFact;
+    /** Largest negative FP contribution across the hand (big_score
+     *  often absent; choke usually small; miss omitted — leans on
+     *  nearMissGap). */
+    primaryNegative?: SalienceFact;
+    /** choke only — the held star whose shortfall (actualFp -
+     *  projectedFp) sank the hand. The TRUE choke negative; stat-level
+     *  negative alone is misleading. */
+    primaryDragPlayer?: {
+      basePlayerId: string;
+      name: string;
+      /** actualFp - projectedFp. Negative for a shortfall. Rounded to
+       *  1 decimal. */
+      shortfall: number;
+    };
+  };
 }
 
 /** The builder's discriminated result. `skip` means the caller MUST NOT
@@ -148,4 +200,24 @@ export interface BuildCommentaryFactsInput {
   nearMissGap?: number | null;
   /** miss only. */
   nearMissNextTier?: string | null;
+  /** Phase 4 Pass 1 — hand total FP. Threaded from the value
+   *  evaluateTrigger already computes (triggerEvaluation.ts ~146 —
+   *  Math.round(totalFp * 10) / 10). Optional for forward-compat; when
+   *  absent the builder omits facts.totalFp rather than re-summing
+   *  (per lock §"don't re-sum in the builder"). */
+  totalFp?: number | null;
+  /** Phase 4 Pass 1 — allowlist of stat keys that feed the FP formula
+   *  for this sport. Threaded onto facts.fpStatKeys so the prompt
+   *  formatter trims the rendered statLine. Caller sources from the
+   *  sport's projectionWeights (basketball: Object.keys of
+   *  BasketballSportConfig.projectionWeights). Optional for forward-
+   *  compat. */
+  fpStatKeys?: readonly string[] | null;
+  /** Phase 4 Pass 1 — pre-computed hand-level salience signal.
+   *  Threaded through to facts.salience. Caller computes via the
+   *  sport adapter's FP helper (basketball: computeBasketballFpDetailed
+   *  + a held-card shortfall pass for choke's primaryDragPlayer).
+   *  shared/commentary/ does NOT import basketball/. Omitted for
+   *  rare_pull at the caller. */
+  salience?: CommentaryFacts["salience"] | null;
 }

@@ -231,22 +231,65 @@ REGISTER: A confident sportswriter's line about THIS hand. Not a culture-entry p
 // facts read as a brief. The verdict + season are repeated near the top
 // so the obey-verdict and anti-anachronism rules fire on the first pass.
 
-function formatStatLine(statLine: Record<string, number | string> | undefined): string {
+/** Phase 4 Pass 1 — render only the stat keys that feed the FP formula.
+ *  Allowlist arrives via facts.fpStatKeys (sourced from the sport's
+ *  projectionWeights at the caller); the order is the allowlist's order.
+ *  Stats outside the allowlist (min / threes / fg% / anything not
+ *  weighted) NEVER reach the model — the prior tail-bucket leak is
+ *  removed.
+ *
+ *  Legacy fallback: when allowedKeys is missing/empty (older callers,
+ *  some tests), the rendered statLine is empty rather than leaking
+ *  unweighted stats. The CommentaryFacts.anchor.statLine itself is
+ *  untouched — full statLine stays on facts, only prompt rendering
+ *  trims.
+ *
+ *  Also retires the pre-Phase-4 "to" mis-key: source statLines carry
+ *  "turnovers" (basketballConfig.projectionWeights, ftueRoster fixtures,
+ *  computeBasketballFp), but the prior order list used "to" and silently
+ *  routed turnovers to a tail bucket of unweighted stats. The allowlist
+ *  now reads the source key the FP formula uses ("turnovers"), so the
+ *  rendered statLine and the salience signal agree on the key name. */
+function formatStatLine(
+  statLine: Record<string, number | string> | undefined,
+  allowedKeys: readonly string[] | undefined,
+): string {
   if (!statLine) return "";
-  const order = ["pts", "reb", "ast", "stl", "blk", "to", "threes", "min"];
+  if (!allowedKeys || allowedKeys.length === 0) return "";
   const parts: string[] = [];
-  for (const k of order) {
+  for (const k of allowedKeys) {
     const v = statLine[k];
     if (v == null) continue;
     parts.push(`${v} ${k}`);
   }
-  // Tail any remaining keys we didn't enumerate, in input order.
-  for (const [k, v] of Object.entries(statLine)) {
-    if (order.includes(k)) continue;
-    if (v == null) continue;
-    parts.push(`${v} ${k}`);
-  }
   return parts.join(", ");
+}
+
+/** Phase 4 Pass 1 — render the hand-level salience block when present.
+ *  Mirror of the `topReason` line on the anchor block: one line per
+ *  signal, each indented two spaces under a `SALIENCE:` header. The
+ *  caller has already filtered for trigger (rare_pull → no salience),
+ *  and buildCommentaryFacts enforces the same omission at the
+ *  boundary, so this formatter just emits whatever is on the object. */
+function formatSalienceBlock(
+  salience: NonNullable<CommentaryFacts["salience"]> | undefined,
+): string[] {
+  if (!salience) return [];
+  const lines: string[] = [];
+  lines.push("SALIENCE:");
+  if (salience.primaryPositive) {
+    const p = salience.primaryPositive;
+    lines.push(`  primaryPositive: ${p.label} (${p.category}=${p.value})`);
+  }
+  if (salience.primaryNegative) {
+    const n = salience.primaryNegative;
+    lines.push(`  primaryNegative: ${n.label} (${n.category}=${n.value})`);
+  }
+  if (salience.primaryDragPlayer) {
+    const d = salience.primaryDragPlayer;
+    lines.push(`  primaryDragPlayer: ${d.name} shortfall ${d.shortfall} FP (basePlayerId=${d.basePlayerId})`);
+  }
+  return lines;
 }
 
 export function buildUserPrompt(facts: CommentaryFacts): string {
@@ -257,6 +300,10 @@ export function buildUserPrompt(facts: CommentaryFacts): string {
   lines.push(`TRIGGER: ${facts.trigger}`);
   lines.push(`VERDICT: ${facts.verdict}`);
   if (facts.winTier) lines.push(`WIN_TIER: ${facts.winTier}`);
+  // Phase 4 Pass 1 — hand total FP. Authoritative value threaded from
+  // evaluateTrigger upstream; rendered near the top so the model sees
+  // the hand-relative anchor before per-card detail. Surface-agnostic.
+  if (facts.totalFp != null) lines.push(`TOTAL_FP: ${facts.totalFp}`);
   lines.push("");
 
   // Phase 3.3 input-policy boundary (lock: docs/challenge-landing-v2-
@@ -283,7 +330,12 @@ export function buildUserPrompt(facts: CommentaryFacts): string {
     }
     if (a.nicknames.length > 0) lines.push(`  nicknames: ${a.nicknames.join(", ")}`);
     if (a.knownFor) lines.push(`  knownFor: ${a.knownFor}`);
-    const stats = formatStatLine(a.statLine);
+    // Phase 4 Pass 1 — statLine trimmed to FP-component keys only,
+    // sourced from facts.fpStatKeys (the caller threads from the sport's
+    // projectionWeights). min / threes / fg% / any other unweighted
+    // stat never renders. See formatStatLine for the legacy-fallback
+    // behavior + "to" → "turnovers" key-fix rationale.
+    const stats = formatStatLine(a.statLine, facts.fpStatKeys);
     if (stats) lines.push(`  statLine: ${stats}`);
     if (a.topReason) lines.push(`  topReason: ${a.topReason.label} (${a.topReason.category}=${a.topReason.value})`);
   } else {
@@ -293,6 +345,16 @@ export function buildUserPrompt(facts: CommentaryFacts): string {
     lines.push("");
     if (facts.nearMissGap != null) lines.push(`NEAR_MISS_GAP_FP: ${facts.nearMissGap}`);
     if (facts.nearMissNextTier) lines.push(`NEAR_MISS_NEXT_TIER: ${facts.nearMissNextTier}`);
+  }
+  // Phase 4 Pass 1 — salience block. Same outdent as NEAR_MISS_GAP_FP;
+  // sits between the anchor / nearMiss section and the closing
+  // instruction. Applies to BOTH surfaces; rare_pull is filtered out at
+  // the caller AND at buildCommentaryFacts so this block never emits
+  // for rare_pull regardless of how a caller composes facts.
+  const salienceLines = formatSalienceBlock(facts.salience);
+  if (salienceLines.length > 0) {
+    lines.push("");
+    for (const l of salienceLines) lines.push(l);
   }
   lines.push("");
   lines.push(`Write the headline. ONE line. Plain string. No quotes, no prefix.`);

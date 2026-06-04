@@ -20,6 +20,11 @@ const WADE_FACTS: CommentaryFacts = {
   trigger: "rare_pull",
   verdict: "credited",
   winTier: "ALL_STAR",
+  // Phase 4 Pass 1 — production-shaped fact: fpStatKeys threaded from
+  // the sport adapter so the statLine trim has its allowlist. Mirrors
+  // basketballConfig.projectionWeights keys; turnovers (not "to") is
+  // the source-of-truth key after the Phase 4 mis-key fix.
+  fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"] as const,
   anchor: {
     name: "Dwyane Wade",
     basePlayerId: "2548",
