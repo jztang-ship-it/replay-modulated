@@ -1,13 +1,21 @@
 // shared/commentary/__tests__/voiceContract.test.ts
 //
-// Phase 3.3 — gates on the rewritten VOICE_CONTRACT (lock: docs/
-// challenge-landing-v2-phase3.3-headline-subject-is-the-hand-lock.md).
-// The neutral-surface "DO NOT NAME THE ANCHOR" block + the DO-NOT-
-// INVENT-A-CULPRIT block from 2.1 are replaced by three universal
-// rules: subject is the hand (Rule 1), name-don't-blame (Rule 2),
-// per-trigger flavor (Rule 3). The new tests pin those rules + the
-// headline-scoped game-context omission. Voice quality is reviewed,
-// not unit-asserted.
+// Phase 4 Pass 2 — gates on the rewritten VOICE_CONTRACT (lock: docs/
+// challenge-landing-v2-phase4-pass2-voice-foundation-lock.md). Pass 2
+// replaces the player-first / "write a clever argument" framing with a
+// fact-first narrative target ("explain what the salient facts did to
+// the result"); retires the Norman-Chad named-commentator framing in
+// favor of "a smart sports fan explaining to a friend"; flips the
+// structure default to single-clause; bans the "{verb} {player} AT
+// {number}" scaffold and the YOU-as-default opener; rebuilds the gold
+// set; lifts FP-vs-points into FORMAT as a universal conditional rule;
+// adds per-trigger SALIENCE consumption guidance to Rule 3; drops the
+// (category=value) suffix on topReason render.
+//
+// Voice quality is NOT unit-asserted (that is on-glass + smoke); this
+// file pins the contract-text surface so a regression to the prior
+// framing is visible at review time. Includes negative assertions
+// (anti-regression) for every retired Pass-3.3-era artifact.
 
 import { describe, expect, it, vi } from "vitest";
 import { buildVoiceContract, buildUserPrompt } from "../voiceContract";
@@ -20,10 +28,6 @@ const WADE_FACTS: CommentaryFacts = {
   trigger: "rare_pull",
   verdict: "credited",
   winTier: "ALL_STAR",
-  // Phase 4 Pass 1 — production-shaped fact: fpStatKeys threaded from
-  // the sport adapter so the statLine trim has its allowlist. Mirrors
-  // basketballConfig.projectionWeights keys; turnovers (not "to") is
-  // the source-of-truth key after the Phase 4 mis-key fix.
   fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"] as const,
   anchor: {
     name: "Dwyane Wade",
@@ -40,14 +44,35 @@ const WADE_FACTS: CommentaryFacts = {
   },
 };
 
-describe("buildVoiceContract — inherited segments unchanged", () => {
-  it("inherits the basketball register, factual accuracy, trademark, §3, gold-standard segments verbatim", () => {
+// ── Inherited segments (Pass 2 — Norman Chad retired) ─────────────────────
+
+describe("buildVoiceContract — inherited segments (Pass 2: Chad retired)", () => {
+  it("inherits the (renamed) basketball register + factual / trademark / §3 / gold-standard segments", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("═══ CHAD'S VOICE — REPLAYMOD COMMENTARY STANDARD ═══");
+    expect(system).toContain("═══ COMMENTARY VOICE — REPLAYMOD STANDARD ═══");
     expect(system).toContain("FACTUAL ACCURACY: Ground every numerical");
     expect(system).toContain("TRADEMARK USAGE:");
     expect(system).toContain("PERSONAL LIFE:");
     expect(system).toContain("═══ GOLD-STANDARD EXAMPLES");
+  });
+
+  it("retires the Norman Chad / named-commentator framing", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).not.toContain("═══ CHAD'S VOICE");
+    expect(system).not.toContain("Norman Chad");
+    expect(system).not.toContain("Chad is the commentator");
+    // Replacement framing.
+    expect(system).toContain("smart sports fan explaining to a friend");
+    expect(system).toContain("no impression");
+    expect(system).toContain("no named-commentator bit");
+  });
+
+  it("falls back to basketball segments + warns on unknown sport", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { system } = buildVoiceContract({ ...WADE_FACTS, sport: "cricket" });
+    expect(system).toContain("═══ COMMENTARY VOICE");
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("cricket"));
+    warnSpy.mockRestore();
   });
 
   it("does NOT include the culture-entry JSON output instruction", () => {
@@ -60,180 +85,292 @@ describe("buildVoiceContract — inherited segments unchanged", () => {
     expect(system).not.toContain("═══ FIELD STRUCTURAL RULES ═══");
     expect(system).not.toContain("salaryTier: max | star");
   });
+});
 
-  it("falls back to basketball segments + warns on unknown sport", () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const { system } = buildVoiceContract({ ...WADE_FACTS, sport: "cricket" });
-    expect(system).toContain("═══ CHAD'S VOICE");
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("cricket"));
-    warnSpy.mockRestore();
+// ── Inherited STRUCTURE — Pass 2 flips to single-clause default ───────────
+
+describe("inherited STRUCTURE rule — Pass 2 single-clause default", () => {
+  it("retires the 'Two-clause lines. Setup, then editorial twist.' instruction", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).not.toContain("Two-clause lines. Setup, then editorial twist.");
+  });
+
+  it("declares single-clause as the inherited default", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("Single-clause lines by default");
+    expect(system).toContain("no padding");
+    // Named anti-examples — the vague-metaphor padding pattern.
+    expect(system).toContain("The shimmy didn't save this");
+    expect(system).toContain("the shot selection said different");
   });
 });
 
-describe("buildVoiceContract — Phase 3.3 banner + Rule 1 (subject is the hand)", () => {
-  it("opens with the lock's banner — sports arguments, not sports journalism", () => {
+// ── Narrative target (lock §A) ────────────────────────────────────────────
+
+describe("buildVoiceContract — Pass 2 narrative target (fact → why → verdict → style)", () => {
+  it("opens with the EXPLAIN framing (not 'sports argument' / 'clever line')", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("Challenge headlines are not sports journalism");
-    expect(system).toContain("Challenge headlines are sports arguments");
-    expect(system).toContain("subject is always the fantasy hand");
+    expect(system).toContain("EXPLAIN what this hand's salient facts did to the result");
+    expect(system).toContain("Not to manufacture a clever line");
+    expect(system).toContain("Voice comes from the obviousness of the observation");
   });
 
-  it("cites the lock's anti-recap example verbatim (the 3.2 LAKERS vs MILWAUKEE failure)", () => {
+  it("walks the internal fact → why → verdict → style order", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("walk it before you write");
+    expect(system).toContain("(1) the fact");
+    expect(system).toContain("(2) why it mattered for THIS hand");
+    expect(system).toContain("(3) the verdict");
+    expect(system).toContain("(4) style it as one observation");
+  });
+
+  it("retires the prior 'Challenge headlines are sports arguments' framing", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).not.toContain("Challenge headlines are not sports journalism");
+    expect(system).not.toContain("Challenge headlines are sports arguments");
+  });
+
+  it("cites the LAKERS-recap anti-pattern verbatim (regression guard)", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("LAKERS STUMBLE AT HOME AGAINST MILWAUKEE");
   });
+});
 
-  it("Rule 1 declares game-identity inputs are WITHHELD from the surface", () => {
+// ── Rule 1 — subject is the hand, LED BY salient fact ─────────────────────
+
+describe("buildVoiceContract — Rule 1 (subject inverted to fact-first)", () => {
+  it("Rule 1 header carries the 'LED BY THE SALIENT FACT' suffix", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("RULE 1 — THE SUBJECT IS THE HAND");
+    expect(system).toContain("RULE 1 — THE SUBJECT IS THE HAND, LED BY THE SALIENT FACT");
+  });
+
+  it("retires the old 'held players → the decision → the outcome → the claim' ladder", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).not.toContain("held players → the decision → the outcome → the claim");
+  });
+
+  it("declares the INVERTED priority — fact → result → player", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("the salient fact (what SALIENCE names) → the result it produced → the player as the talent involved");
+    expect(system).toContain("Players are NAMED — not led with");
+  });
+
+  it("keeps the hand-centric / not-player-profile reminder", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("Hand-centric, not player-centric");
+    expect(system).toContain("Never \"tell me about the player\"");
+  });
+
+  it("keeps the game-context withholding rationale", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("game-identity inputs are intentionally WITHHELD");
-    // The priority of subject must be present so the model has the ladder.
-    expect(system).toContain("held players → the decision → the outcome → the claim");
+    expect(system).toContain("cannot see \"Milwaukee\"");
   });
 });
 
-describe("buildVoiceContract — Phase 3.3 Rule 2 (name-don't-blame)", () => {
+// ── Rule 2 — name don't blame (refreshed examples) ────────────────────────
+
+describe("buildVoiceContract — Rule 2 (name, don't blame; refreshed)", () => {
   it("Rule 2 declares naming-is-not-blaming", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("RULE 2 — NAME PLAYERS. NEVER BLAME THEM.");
     expect(system).toContain("Naming is not blaming");
   });
 
-  it("includes the GOOD list verbatim from the lock", () => {
+  it("GOOD list — title case; YOU-prefix example retired", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("KOBE AND CP3. STILL BUSTED.");
-    expect(system).toContain("THE MAMBA COULDN'T SAVE THIS.");
-    expect(system).toContain("YOU HELD KOBE. WHAT HAPPENED?");
-    expect(system).toContain("TWO STARS. ZERO EXCUSES.");
+    expect(system).toContain("Kobe and CP3. Still busted.");
+    expect(system).toContain("The Mamba couldn't save this.");
+    expect(system).toContain("Two stars. Zero excuses.");
+    expect(system).toContain("Twelve points from T-Mac was never enough.");
+    // YOU-prefix example retired in Pass 2.
+    expect(system).not.toContain("YOU HELD KOBE. WHAT HAPPENED?");
   });
 
-  it("includes the BANNED list verbatim from the lock", () => {
+  it("BANNED list (player-as-cause) kept verbatim", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("KOBE CHOKED.");
     expect(system).toContain("CP3 FAILED.");
     expect(system).toContain("KOBE SOLD THE HAND.");
   });
 
-  it("draws the GOOD-vs-BANNED boundary explicitly ('EVEN {star} COULDN'T SAVE IT' is allowed)", () => {
+  it("retires the prior 'REPLACES any earlier don\\'t name the anchor' meta-line", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("EVEN {star} COULDN'T SAVE IT");
-    expect(system).toContain("CHOKED / FAILED / SOLD IT / WENT QUIET / COULDN'T DELIVER");
-  });
-
-  it("explicitly retires the 2.1 'don't name the anchor' framing", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    // 2.1 wording must be gone.
-    expect(system).not.toContain("DO NOT NAME THE ANCHOR");
-    expect(system).not.toContain("THE SIMPLE BINDING RULE");
-    // And the rewrite makes the replacement explicit so a future
-    // regression to 2.1 wording is visible at review time.
-    expect(system).toContain("REPLACES any earlier \"don't name the anchor\"");
+    expect(system).not.toContain("REPLACES any earlier");
   });
 });
 
-describe("buildVoiceContract — Phase 3.3 Rule 3 (per-trigger flavor)", () => {
-  it("Rule 3 declares universal philosophy + per-trigger emotional register", () => {
+// ── Rule 3 — register + LEAD SIGNAL per trigger (lock §E) ─────────────────
+
+describe("buildVoiceContract — Rule 3 (per-trigger register + LEAD SIGNAL)", () => {
+  it("Rule 3 header — TRIGGER REGISTER + WHICH SIGNAL LEADS", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("RULE 3 — UNIVERSAL PHILOSOPHY, PER-TRIGGER FLAVOR");
+    expect(system).toContain("RULE 3 — TRIGGER REGISTER + WHICH SIGNAL LEADS");
+    // Old header retired.
+    expect(system).not.toContain("UNIVERSAL PHILOSOPHY, PER-TRIGGER FLAVOR");
   });
 
-  it("lists each trigger with its flavor + at least one example claim verbatim", () => {
+  it("choke → leads with BIGGEST DRAG", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    // choke → accusation
     expect(system).toContain("choke");
-    expect(system).toContain("ACCUSATION");
-    expect(system).toContain("STILL BUSTED");
-    // miss → regret
+    expect(system).toContain("LEAD SIGNAL: BIGGEST DRAG");
+  });
+
+  it("miss → leads with NEAR_MISS_GAP_FP", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("miss");
-    expect(system).toContain("REGRET");
-    expect(system).toContain("ONE DECISION AWAY");
-    expect(system).toContain("LEFT MVP ON THE TABLE");
-    // big_score → challenge
+    expect(system).toContain("LEAD SIGNAL: NEAR_MISS_GAP_FP");
+    expect(system).toContain("Seven FP short of an All-Star hand");
+  });
+
+  it("big_score → leads with MOST IMPORTANT POSITIVE or TOTAL_FP", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("big_score");
-    expect(system).toContain("CHALLENGE");
-    // rare_pull → nostalgia
+    expect(system).toContain("LEAD SIGNAL: MOST IMPORTANT POSITIVE or TOTAL_FP");
+    expect(system).toContain("62.1 FP is the number to chase");
+    expect(system).toContain("245.8 FP. Good luck.");
+  });
+
+  it("rare_pull → leads with topReason", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("rare_pull");
-    expect(system).toContain("NOSTALGIA");
-    expect(system).toContain("JORDAN WALKED BACK INTO THE BUILDING");
-    expect(system).toContain("YOU GOT THE JORDAN GAME. NOW WHAT?");
+    expect(system).toContain("LEAD SIGNAL: topReason");
+    expect(system).toContain("the Jordan game");
   });
 });
 
-describe("buildVoiceContract — Phase 3.3 rare_pull deep dive", () => {
-  it("ships a dedicated rare_pull section with hook=rare event, subject=hand+star", () => {
+// ── rare_pull deep dive (gold set refreshed; YOU-prefix retired) ──────────
+
+describe("buildVoiceContract — rare_pull deep dive (Pass 2 refresh)", () => {
+  it("ships a rare_pull section keyed off topReason as the rare-event signal", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("TRIGGER DEEP DIVE — RARE_PULL");
-    // The hook is the rare event itself.
-    expect(system).toContain("rare event");
-    expect(system).toContain("hand + the held star + the rare event");
-    // Register is nostalgia + celebration + handoff to recipient.
+    expect(system).toContain("topReason names the rare event");
     expect(system).toContain("nostalgia");
-    expect(system).toContain("celebration");
+    expect(system).toContain("handoff to the recipient");
   });
 
-  it("includes the user's three rare_pull gold-standard examples verbatim", () => {
+  it("new gold set — varied openers; YOU-prefix retired as default", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("YOU PULLED THE JORDAN GAME. NOW WHAT?");
-    expect(system).toContain("JORDAN WALKED BACK INTO THE BUILDING.");
-    expect(system).toContain("YOU GOT A WADE CAREER NIGHT. MATCH IT.");
+    expect(system).toContain("Jordan walked back into the building.");
+    expect(system).toContain("The Jordan game. Now what?");
+    expect(system).toContain("A Wade career night just got pulled. Match it.");
+    // Pre-Pass-2 YOU-prefix golds retired.
+    expect(system).not.toContain("YOU PULLED THE JORDAN GAME. NOW WHAT?");
+    expect(system).not.toContain("YOU GOT A WADE CAREER NIGHT. MATCH IT.");
+    // The contract explicitly retires YOU-as-default opener.
+    expect(system).toContain("YOU-as-default opener is retired");
   });
 
-  it("calls out rare_pull anti-patterns (NBA-recap framings) verbatim", () => {
+  it("calls out rare_pull recap anti-patterns verbatim", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("WADE LIGHTS UP UTAH FOR 50");
     expect(system).toContain("JORDAN VS WASHINGTON IN '96");
     expect(system).toContain("SHAQ DROPS 41 IN A LAKERS WIN");
   });
 
-  it("reminds rare_pull's anti-anachronism is anchored to the season provided", () => {
+  it("retains the anti-anachronism reminder", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("ANTI-ANACHRONISM reminder for rare_pull");
     expect(system).toContain("later championships");
-    expect(system).toContain("would go on to win");
   });
 });
 
-describe("buildVoiceContract — Phase 3.3 big_score deep dive (confident-challenge register)", () => {
-  it("ships a dedicated big_score section with subject=hand+star+anchor FP", () => {
+// ── big_score deep dive (number leads; AT-scaffold banned) ────────────────
+
+describe("buildVoiceContract — big_score deep dive (Pass 2: AT-scaffold retired)", () => {
+  it("ships a big_score section; number leads, not player", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("TRIGGER DEEP DIVE — BIG_SCORE");
-    expect(system).toContain("hand + held star(s) + the ANCHOR'S FP number");
-    // Register cue — confident, terse, a dare.
-    expect(system).toContain("confident-challenge");
+    expect(system).toContain("LEAD SIGNAL for big_score");
+    expect(system).toContain("the number leads");
   });
 
-  it("includes the FP-vs-points strict rule — anchor.topReason is FP, statLine.pts is context", () => {
+  it("new big_score gold set — number leads", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("THE FP-VS-POINTS RULE (BIG_SCORE — STRICT)");
-    // The label must be "FP", never "POINTS".
-    expect(system).toContain("NEVER as \"POINTS\"");
-    // statLine.pts is identified as game points, not the headline number.
-    expect(system).toContain("statLine.pts");
-    expect(system).toContain("GAME points");
-    expect(system).toContain("NEVER make statLine.pts the headline number");
+    expect(system).toContain("62.1 FP is the number to chase.");
+    expect(system).toContain("Vince turned this hand into an All-Star bid.");
+    expect(system).toContain("245.8 FP. Good luck.");
+    // The "{verb} {player} AT {number}" scaffold is explicitly retired.
+    expect(system).toContain("scaffold, explicitly retired");
   });
 
-  it("cites the prior smoke failure verbatim so a regression to it is visible", () => {
-    // The "YOU HELD CURRY AT 65 POINTS" line is the receipt-of-failure
-    // the rule exists to retire. Pinning it keeps the diagnostic in
-    // the contract — if a future edit drops it, review will see it.
+  it("explicitly retires the {verb} {player} AT {number} scaffold as the gold form", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("YOU HELD CURRY AT 65 POINTS");
+    // The scaffold survives ONLY as an anti-pattern citation
+    // (regression guard); the gold list no longer carries it.
+    expect(system).not.toContain("GOLD-STANDARD EXAMPLES (big_score) — match these");
+    // Anti-pattern entry for the scaffold is present.
+    expect(system).toContain("\"YOU HELD CURRY AT 65.3 FP. BEAT IT.\" — the \"{verb} {player} AT {number}\" scaffold");
   });
 
-  it("includes the big_score gold-standard examples verbatim", () => {
+  it("calls out the recap + statLine.pts-as-number anti-patterns", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("YOU HELD CURRY AT 65.3 FP. BEAT IT.");
-    expect(system).toContain("65.3 FP FROM ONE MAN. GOOD LUCK.");
-  });
-
-  it("calls out big_score anti-patterns (POINTS label, statLine.pts as number, recap framing)", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("YOU HELD CURRY AT 65 POINTS.");
-    expect(system).toContain("CURRY DROPPED 42 ON YOUR HAND.");
-    expect(system).toContain("CURRY GOES OFF FOR 42/5/7 IN A WARRIORS WIN.");
+    expect(system).toContain("Curry dropped 42 on your hand.");
+    expect(system).toContain("Curry goes off for 42/5/7 in a Warriors win.");
+    expect(system).toContain("Steph was unstoppable.");
   });
 });
+
+// ── FP-vs-points lifted to FORMAT, conditional (lock §F) ──────────────────
+
+describe("buildVoiceContract — FP-vs-points lifted to shared FORMAT", () => {
+  it("retires the big_score-only FP-VS-POINTS RULE section header", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).not.toContain("THE FP-VS-POINTS RULE (BIG_SCORE — STRICT)");
+  });
+
+  it("the rule sits in FORMAT as 'FP-VS-POINTS — UNIVERSAL' and is conditional on category", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("FP-VS-POINTS — UNIVERSAL");
+    expect(system).toContain("When topReason carries an FP-typed value (category=\"fp\")");
+    expect(system).toContain("render it as \"FP\"");
+    expect(system).toContain("NEVER as \"POINTS,\"");
+    // Conditional clause for stat-typed topReason (rare_pull case).
+    expect(system).toContain("When topReason carries a stat-typed value");
+    expect(system).toContain("render it as that stat");
+    // The Curry failure citation is kept as a general regression guard.
+    expect(system).toContain("YOU HELD CURRY AT 65 POINTS");
+  });
+});
+
+// ── FORMAT overrides — single-clause leads + no padding + openers ─────────
+
+describe("buildVoiceContract — FORMAT overrides (single-clause leads)", () => {
+  it("STRUCTURE override leads single-clause; second clause earned only on new info", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("OVERRIDE — STRUCTURE: Single-clause lines by default");
+    expect(system).toContain("Never pad to a second clause");
+    expect(system).toContain("adds new information");
+    // Retire the prior "One to two clauses... Setup + editorial twist, OR..." framing.
+    expect(system).not.toContain("OVERRIDE — STRUCTURE: One to two clauses. Setup");
+  });
+
+  it("LENGTH override unchanged (60-110 target, 160 ceiling)", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("OVERRIDE — LENGTH: 60–110 characters target");
+    expect(system).toContain("160 hard ceiling");
+  });
+
+  it("new OVERRIDE — OPENERS bans YOU-prefix as the default opener", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toContain("OVERRIDE — OPENERS:");
+    expect(system).toContain("\"YOU HELD\" / \"YOU GOT\" / \"YOU PULLED\" / \"YOU LEFT\"");
+    expect(system).toContain("Vary openers");
+    expect(system).toContain("stat-first");
+    expect(system).toContain("verdict-first");
+    expect(system).toContain("number-first");
+    expect(system).toContain("event-first");
+  });
+
+  it("OUTPUT FORMAT override kept", () => {
+    const { system } = buildVoiceContract(WADE_FACTS);
+    expect(system).toMatch(/Return ONE plain string\. No JSON\./);
+    expect(system).toContain("No \"Headline:\" prefix");
+  });
+});
+
+// ── season substitution + anti-anachronism (unchanged) ───────────────────
 
 describe("buildVoiceContract — format + anti-anachronism + season substitution", () => {
   it("substitutes {season} into the anti-anachronism rule", () => {
@@ -242,7 +379,7 @@ describe("buildVoiceContract — format + anti-anachronism + season substitution
     expect(system).not.toMatch(/\{season\}/);
   });
 
-  it("anti-anachronism rule still lists arena-evocative phrases (carried from 2.1)", () => {
+  it("anti-anachronism rule still lists arena-evocative phrases", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
     expect(system).toContain("the Garden");
     expect(system).toContain("the Forum");
@@ -250,19 +387,15 @@ describe("buildVoiceContract — format + anti-anachronism + season substitution
     expect(system).toContain("venue rule is ABSOLUTE");
   });
 
-  it("explicitly tells the model to return a plain string, no JSON, no prefix", () => {
+  it("REGISTER (closing) carries the smart-fan / observation framing", () => {
     const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toMatch(/Return ONE plain string\. No JSON\./);
-    expect(system).toContain("No \"Headline:\" prefix");
-  });
-
-  it("retains the STRUCTURE / LENGTH / OUTPUT FORMAT overrides", () => {
-    const { system } = buildVoiceContract(WADE_FACTS);
-    expect(system).toContain("OVERRIDE — STRUCTURE:");
-    expect(system).toContain("OVERRIDE — LENGTH:");
-    expect(system).toContain("OVERRIDE — OUTPUT FORMAT:");
+    expect(system).toContain("smart sports fan would say to a friend");
+    expect(system).toContain("Construction reads as failure");
+    expect(system).toContain("observation reads as voice");
   });
 });
+
+// ── user-prompt assembly ──────────────────────────────────────────────────
 
 describe("buildUserPrompt — top-level fields + anchor block presence", () => {
   it("renders every required surface field", () => {
@@ -275,7 +408,7 @@ describe("buildUserPrompt — top-level fields + anchor block presence", () => {
     expect(user).toContain("WIN_TIER: ALL_STAR");
   });
 
-  it("renders anchor identity (name / team / tier) + culture (nicknames / knownFor) + statLine + topReason", () => {
+  it("renders anchor identity (name / team / tier) + culture + statLine + topReason (no analyst suffix)", () => {
     const user = buildUserPrompt(WADE_FACTS);
     expect(user).toContain("name: Dwyane Wade");
     expect(user).toContain("team: MIA");
@@ -283,7 +416,9 @@ describe("buildUserPrompt — top-level fields + anchor block presence", () => {
     expect(user).toContain("nicknames: Flash, D-Wade");
     expect(user).toContain("knownFor: Three-time NBA champion");
     expect(user).toContain("statLine: 48 pts, 10 reb, 8 ast, 4 stl, 6 blk");
-    expect(user).toContain("topReason: 48 pts (career) (pts=48)");
+    // Pass 2 §G: drop the "(<category>=<value>)" analyst suffix.
+    expect(user).toContain("topReason: 48 pts (career)");
+    expect(user).not.toContain("(pts=48)");
   });
 
   it("marks ANCHOR: none when facts has no anchor", () => {
@@ -316,20 +451,17 @@ describe("buildUserPrompt — top-level fields + anchor block presence", () => {
   });
 });
 
-describe("buildUserPrompt — Phase 3.3 headline-scoped game-context omission", () => {
+describe("buildUserPrompt — Phase 3.3 headline-scoped game-context omission (unchanged)", () => {
   it("OMITS opponent / home_away / date for the challenge_headline surface", () => {
     const user = buildUserPrompt(WADE_FACTS);
     expect(user).not.toMatch(/^\s*opponent:/m);
     expect(user).not.toMatch(/^\s*home_away:/m);
     expect(user).not.toMatch(/^\s*date:/m);
-    // The values themselves must not leak via another label either.
     expect(user).not.toContain("UTA");
     expect(user).not.toContain("2009-02-22");
   });
 
   it("INCLUDES opponent / home_away / date for the post_hand commentary surface", () => {
-    // Regression guard: the omission is SCOPED to the headline path.
-    // The commentary surface (future phase) keeps game context.
     const user = buildUserPrompt({ ...WADE_FACTS, surface: "post_hand" });
     expect(user).toContain("opponent: UTA");
     expect(user).toContain("home_away: H");
@@ -337,8 +469,6 @@ describe("buildUserPrompt — Phase 3.3 headline-scoped game-context omission", 
   });
 
   it("still includes player identity + stats + culture on the headline surface", () => {
-    // The omission is real-game-IDENTITY only — held players, stat
-    // line, culture stay. Test that the cut is targeted.
     const user = buildUserPrompt(WADE_FACTS);
     expect(user).toContain("name: Dwyane Wade");
     expect(user).toContain("tier: RED");

@@ -99,30 +99,34 @@ function pickSegments(sport: string): VoiceSegments {
 
 const HEADLINE_INSTRUCTION_LAYER = `═══ SURFACE: CHALLENGE HEADLINE — THE BANNER ═══
 
-Challenge headlines are not sports journalism. Challenge headlines are sports arguments. The subject is always the fantasy hand. NEVER the historical NBA game that supplied the stats.
+The job is to EXPLAIN what this hand's salient facts did to the result. Not to manufacture a clever line. The facts on the page have already named what mattered (the SALIENCE block, TOTAL_FP, NEAR_MISS_GAP_FP, topReason). The line states what those facts did in plain words. Voice comes from the obviousness of the observation, not from a construction.
 
-ReplayMod's story is not "Lakers lose to Milwaukee." That is a real NBA game and the wrong story. ReplayMod's story is: You held Kobe and CP3. You busted. Think you can do better? Write to THAT story.
+Internal order — walk it before you write: (1) the fact (the stat or number SALIENCE names), (2) why it mattered for THIS hand (made it / broke it / left it short), (3) the verdict (what the hand IS — busted / clear / one decision short / a rare line), and only then (4) style it as one observation.
 
-═══ RULE 1 — THE SUBJECT IS THE HAND ═══
+Anti-pattern: a real prior output was "LAKERS STUMBLE AT HOME AGAINST MILWAUKEE, CAN'T FIND THEIR RHYTHM." That is an NBA recap. The hand is invisible. The fact had been named in SALIENCE; the line never returned to it. Re-aim at what the SALIENCE block told you mattered.
 
-The headline is an ARGUMENT about the fantasy hand, in this priority of subject:
-  held players → the decision → the outcome → the claim
+═══ RULE 1 — THE SUBJECT IS THE HAND, LED BY THE SALIENT FACT ═══
 
-Game context (opponent, venue, home/away, date) is COLOR, never SUBJECT. It may garnish a line — but it must NEVER BE the line. On THIS surface (challenge headline), game-identity inputs are intentionally WITHHELD from the facts. You will not see opponent / venue / homeAway / date. That is by design: a punchy headline rarely has room for color, and the model that cannot see "Milwaukee" cannot write a Milwaukee recap. Lock the subject first.
+The subject is the fantasy hand — NEVER the historical NBA game that supplied the stats. ReplayMod's story is not "Lakers lose to Milwaukee." It is: a hand was held, certain facts mattered, the hand ended up where it ended up. Write to THAT.
 
-Anti-pattern (a real prior output): "LAKERS STUMBLE AT HOME AGAINST MILWAUKEE, CAN'T FIND THEIR RHYTHM." That is an NBA recap. The hand is invisible in it. Not a headline. Re-aim at: who you held, what they did, what the hand was worth.
+Within the hand, subject priority INVERTS the old player-first ladder. Lead with what mattered, not with whom you held:
+  the salient fact (what SALIENCE names) → the result it produced → the player as the talent involved.
+
+Stat or outcome leads the line. Players are NAMED — not led with. "Eight turnovers ended this before it started." names the fact first; the player(s) appear later or not at all. "Vince turned this hand into an All-Star bid." names the outcome and the player as the talent who produced it, in that order.
+
+Hand-centric, not player-centric. Explain what the facts did to THIS HAND ("8 turnovers were too much for this hand," "Twelve points from T-Mac was never enough"). Never "tell me about the player" — the model knows lots about Kobe; we don't want a Kobe profile, we want what Kobe did to this hand.
+
+Game context (opponent, venue, home/away, date) is COLOR, never SUBJECT. On the challenge_headline surface, game-identity inputs are intentionally WITHHELD from the facts. The model that cannot see "Milwaukee" cannot write a Milwaukee recap. Lock the subject on what the facts on the page named.
 
 ═══ RULE 2 — NAME PLAYERS. NEVER BLAME THEM. ═══
 
-Name the held players as the STARS you held. NEVER frame any player as the CAUSE of the loss.
+Players are NAMED as the talent that produced the line — never framed as the CAUSE of the loss. KOBE, JORDAN, SHAQ, LEBRON, CURRY carry emotional weight; users want to see them. Naming is not blaming.
 
-The stars are the attraction. KOBE, JORDAN, SHAQ, LEBRON, CURRY carry emotional weight; users WANT to see them. Naming is not blaming.
-
-GOOD (named as talent; failure pinned on the hand / outcome / difficulty):
-  - "KOBE AND CP3. STILL BUSTED."
-  - "THE MAMBA COULDN'T SAVE THIS."   ← edge case, ALLOWED. "Even greatness wasn't enough" frames the hand's difficulty, not Kobe failing.
-  - "YOU HELD KOBE. WHAT HAPPENED?"
-  - "TWO STARS. ZERO EXCUSES."
+GOOD (named as talent; outcome pinned on the hand / facts / difficulty):
+  - "Kobe and CP3. Still busted."
+  - "The Mamba couldn't save this."   ← edge case, ALLOWED. "Even greatness wasn't enough" frames the hand's difficulty, not Kobe failing.
+  - "Two stars. Zero excuses."
+  - "Twelve points from T-Mac was never enough."   ← player named as the talent that didn't deliver enough; the hand is the subject.
 
 BANNED (player as cause-of-loss):
   - "KOBE CHOKED."
@@ -130,45 +134,42 @@ BANNED (player as cause-of-loss):
   - "KOBE SOLD THE HAND."
 
 The boundary the line must thread:
-  - "EVEN {star} COULDN'T SAVE IT" — the HAND was brutal. ALLOWED.
+  - "Even {star} couldn't save it" — the HAND was brutal. ALLOWED.
   - "{star} CHOKED / FAILED / SOLD IT / WENT QUIET / COULDN'T DELIVER" — player as cause. BANNED.
 
-This rule REPLACES any earlier "don't name the anchor" framing. Naming is now encouraged. Blaming is the violation. The contrast between the GOOD and BANNED lists above is what teaches the line — internalize it.
+═══ RULE 3 — TRIGGER REGISTER + WHICH SIGNAL LEADS ═══
 
-═══ RULE 3 — UNIVERSAL PHILOSOPHY, PER-TRIGGER FLAVOR ═══
+The subject-is-the-hand rule is universal. Each trigger gets an emotional REGISTER and a designated SALIENCE signal that should LEAD the line. The signal is what the facts on the page have already singled out as the most important — your job is to phrase it.
 
-The subject-is-the-hand rule is universal. Each trigger gets an emotional REGISTER, not its own philosophy.
+  - choke     → REGISTER: observation of what dragged. LEAD SIGNAL: BIGGEST DRAG (the held-player shortfall named in SALIENCE — the real why). MOST IMPORTANT NEGATIVE is allowed alongside it when it adds new information.
+  - miss      → REGISTER: regret, plain. LEAD SIGNAL: NEAR_MISS_GAP_FP (what was left on the table — "Seven FP short of an All-Star hand"). MOST IMPORTANT POSITIVE is supporting context, not the lead.
+  - big_score → REGISTER: confident challenge. LEAD SIGNAL: MOST IMPORTANT POSITIVE or TOTAL_FP (the number that carried the hand — "62.1 FP is the number to chase," "245.8 FP. Good luck.").
+  - rare_pull → REGISTER: nostalgia + handoff. LEAD SIGNAL: topReason (the rare event itself — "the Jordan game," "a Wade career night").
 
-  - choke      → ACCUSATION    e.g. "KOBE AND CP3. STILL BUSTED." / "THE STARS WERE THERE. THE SCORE WASN'T."
-  - miss       → REGRET        e.g. "THIS HAND WAS ONE DECISION AWAY." / "YOU LEFT MVP ON THE TABLE."
-  - big_score  → CHALLENGE     e.g. "YOU HELD CURRY AT 65.3 FP. BEAT IT." / "65.3 FP FROM ONE MAN. GOOD LUCK."
-  - rare_pull  → NOSTALGIA     e.g. "JORDAN WALKED BACK INTO THE BUILDING." / "YOU GOT THE JORDAN GAME. NOW WHAT?"
-
-Every one is an ARGUMENT, not a recap. All four talk about the HAND / PLAYERS / DECISION / OUTCOME — never the box score, never the NBA game.
+Every one is an OBSERVATION about the hand grounded in the named facts — not a recap, not a manufactured argument. All four talk about the HAND and what the facts did to it, never the box score, never the NBA game.
 
 ═══ TRIGGER DEEP DIVE — RARE_PULL ═══
 
-A rare_pull hand means the user PULLED a card whose ACTUAL game was one of the rarest the player ever had — a career high, an all-time record, a season top-10 night. The hook is THE RARE EVENT itself, not the game it happened in.
+A rare_pull hand means the user pulled a card whose ACTUAL game was one of the rarest the player ever had — a career high, an all-time record, a season top-10 night. topReason names the rare event. The hook is THE RARE EVENT itself, not the game it happened in.
 
-THE SUBJECT for rare_pull:
-  hand + the held star + the rare event you pulled (career night, record game, the legendary line)
-  NEVER the NBA game (no opponent, no venue, no "vs," no "at," no city framing).
+THE SUBJECT for rare_pull: the rare event + the held star, as ONE thing. Never the NBA game (no opponent, no venue, no "vs," no "at," no city framing).
 
-THE REGISTER: nostalgia + celebration + handoff to the recipient. The user is showing the recipient something special — "look what I pulled" — and then daring them to match or react. The line carries weight ("you got the JORDAN GAME") AND a hook ("now what?").
+THE REGISTER: nostalgia + celebration + handoff to the recipient. The user is showing the recipient something special — "look what was pulled" — and then daring them to match or react. The line carries the rare-event weight AND a hook for the recipient.
 
-GOLD-STANDARD EXAMPLES (rare_pull) — match these:
-  - "YOU PULLED THE JORDAN GAME. NOW WHAT?"
-  - "JORDAN WALKED BACK INTO THE BUILDING."
-  - "YOU GOT A WADE CAREER NIGHT. MATCH IT."
+GOLD-STANDARD EXAMPLES (rare_pull) — varied openers; the topReason carries the line:
+  - "Jordan walked back into the building."
+  - "The Jordan game. Now what?"
+  - "A Wade career night just got pulled. Match it."
 
 What makes these work:
-  - "the {player} game" / "a {player} career night" / "{player} walked back into the building" — each names the iconic event and the held star as ONE THING. The hand is the subject.
-  - The handoff clause ("NOW WHAT?" / "MATCH IT.") puts the line back on the recipient — argument, not recap.
+  - The rare event is the SUBJECT ("the Jordan game," "a Wade career night," "Jordan walked back") — the player is named as part of the event, not as the lead.
+  - The handoff clause ("NOW WHAT?" / "MATCH IT.") puts the line on the recipient — observation + dare, not recap.
   - Zero game-identity nouns. No opponent. No venue. No date. The card's RARE event is enough.
+  - YOU-as-default opener is retired. Vary the opener — the rare event can lead, the player can lead, a verbed observation can lead. "You pulled" / "You got" as the default first words is the imitation pattern this gold set replaces.
 
 ANTI-PATTERNS for rare_pull — do NOT write these:
   - "WADE LIGHTS UP UTAH FOR 50." — NBA recap framing; the opponent is leading.
-  - "JORDAN VS WASHINGTON IN '96." — recap framing; locates the game in NBA history, not in the user's hand.
+  - "JORDAN VS WASHINGTON IN '96." — recap framing; locates the game in NBA history, not the user's hand.
   - "SHAQ DROPS 41 IN A LAKERS WIN." — recap; the NBA outcome is leading.
   - Any "{player} at {opponent}" / "{player} vs {team}" / "{player} in {city}" framing.
 
@@ -176,54 +177,47 @@ ANTI-ANACHRONISM reminder for rare_pull (because retro seasons surface here ofte
 
 ═══ TRIGGER DEEP DIVE — BIG_SCORE ═══
 
-A big_score hand cleared the ALL_STAR / MVP / LEGEND bar — a strong fantasy result. The line is a CHALLENGE to the recipient: here is what was put up, beat it. Confident, terse, a dare. Not a recap, not a brag, not a celebration of the player.
+A big_score hand cleared the ALL_STAR / MVP / LEGEND bar — a strong fantasy result. The line is an OBSERVATION about the number that carried the hand, said with confidence. Optionally a challenge clause for the recipient. Not a brag, not a recap, not a celebration of the player.
 
-THE SUBJECT for big_score:
-  hand + held star(s) + the ANCHOR'S FP number from anchor.topReason
-  NEVER the NBA game, NEVER the box score's point total, NEVER the opponent.
+THE LEAD SIGNAL for big_score: MOST IMPORTANT POSITIVE (the salient stat that carried the hand) or TOTAL_FP (the hand's total, when it is the headline number). The held star can be named as the talent involved, but the number leads.
 
-═══ THE FP-VS-POINTS RULE (BIG_SCORE — STRICT) ═══
-
-The number that anchors a big_score line is the ANCHOR'S FANTASY POINTS — anchor.topReason.label (e.g. "65.3 FP"). This number is the WEAPON.
-
-  - anchor.topReason is FANTASY POINTS. Render it as "FP" — "65.3 FP", "238 FP". NEVER as "POINTS", "PTS", "points scored", or any phrasing that suggests game points.
-  - statLine.pts (e.g. 42) is the player's GAME points — a real-world stat from the actual NBA game. It is context, NOT the anchor number. NEVER make statLine.pts the headline number. NEVER label anchor.topReason's value as if it were statLine.pts.
-  - If the line carries a number, that number comes from anchor.topReason and is labeled "FP". One number per line is the ceiling — no slash-separated stat dumps.
-
-This rule exists because the model has previously conflated the two — writing "YOU HELD CURRY AT 65 POINTS" from a 65.3 FP topReason while statLine pts was 42. The number was right; the label was a category error. Do not repeat it.
-
-THE REGISTER: confident-challenge. The user delivered. The line dares the recipient to match. Tones to hit: "good luck," "beat it," "your turn," "safe?" / "now what?" The held star is named as the engine; the FP figure is the receipt.
-
-GOLD-STANDARD EXAMPLES (big_score) — match these:
-  - "YOU HELD CURRY AT 65.3 FP. BEAT IT."
-  - "65.3 FP FROM ONE MAN. GOOD LUCK."
+GOLD-STANDARD EXAMPLES (big_score) — varied openers; the number leads:
+  - "62.1 FP is the number to chase."
+  - "Vince turned this hand into an All-Star bid."
+  - "245.8 FP. Good luck."
 
 What makes these work:
-  - The FP figure (when used) is named "FP," not "POINTS." It is the weapon.
-  - The held star is named as the talent that delivered (Rule 2 — naming, not blaming; here the player is the talent, not the cause). "Held CURRY AT 65.3 FP" frames the player as having LIT UP the hand.
-  - The dare clause ("BEAT IT," "GOOD LUCK," "SAFE?") puts the line back on the recipient — argument, not recap.
-  - Brevity is the surface. The line is short enough to land as a banner.
+  - The number leads — "62.1 FP," "245.8 FP" open the line. The held star is named when they ARE the carry; the FP figure is the actual subject.
+  - The optional dare clause ("Good luck," "the number to chase") puts the line on the recipient as observation + challenge, not recap.
+  - The "{verb} {player} AT {number}" scaffold ("You held Curry at 65.3 FP," "Curry at 65 points") is RETIRED — it was the dominant analyst-shorthand failure. Lead with the number, OR with what the player produced, NOT with "you held."
+  - One number per line. Slash-separated stat dumps ("42/5/7") are recap shape, not headline shape.
 
 ANTI-PATTERNS for big_score — do NOT write these:
-  - "YOU HELD CURRY AT 65 POINTS." — category error. anchor.topReason was FP, not game points. The label "POINTS" is the violation; "FP" is the only label that may render anchor.topReason.
-  - "CURRY DROPPED 42 ON YOUR HAND." — using statLine.pts as the number. statLine is context; the FP figure is the anchor.
-  - "CURRY GOES OFF FOR 42/5/7 IN A WARRIORS WIN." — NBA recap framing; the held FP is invisible; the box score is leading.
-  - "STEPH WAS UNSTOPPABLE." — generic; no FP figure, no dare, no recipient. A culture-entry sentence, not a challenge headline.
+  - "YOU HELD CURRY AT 65.3 FP. BEAT IT." — the "{verb} {player} AT {number}" scaffold, explicitly retired.
+  - "Curry dropped 42 on your hand." — using statLine.pts as the number. statLine is context; the FP figure is the anchor.
+  - "Curry goes off for 42/5/7 in a Warriors win." — NBA recap; the held FP is invisible.
+  - "Steph was unstoppable." — generic; no FP figure, no dare. A culture-entry sentence, not a challenge headline.
   - Any "{player} vs {team}" / "{player} at {city}" / "{player} in {arena}" framing — game-identity color the headline surface withholds.
 
 ═══ FORMAT + INHERITED CONSTRAINTS ═══
 
-OVERRIDE — STRUCTURE: One to two clauses. Setup + editorial twist, OR a single confident assertion. Headline register, not paragraph register.
+OVERRIDE — STRUCTURE: Single-clause lines by default. One clear observation, no padding. A second clause is allowed ONLY when it adds new information (a dare to the recipient, a contrast, a verdict the first clause did not state) — never to reach a target shape. Never pad to a second clause. "The shimmy didn't save this" / "the shot selection said different" / any vague-metaphor twist that exists only to fill the second clause is the failure pattern this rule retires.
 
 OVERRIDE — LENGTH: 60–110 characters target, 160 hard ceiling. Brevity is the surface.
 
 OVERRIDE — OUTPUT FORMAT: Return ONE plain string. No JSON. No quotes around it. No "Headline:" prefix. No leading bullet or dash. Just the line itself.
 
+OVERRIDE — OPENERS: "YOU HELD" / "YOU GOT" / "YOU PULLED" / "YOU LEFT" as the default first words is retired. Vary openers: stat-first ("Eight turnovers ended this..."), verdict-first ("This hand came up one decision short."), number-first ("62.1 FP is the number to chase."), event-first ("The Jordan game. Now what?"). A YOU-prefix opener is occasionally fine — but NOT as the default shape.
+
 RENDER ONLY PROVIDED FACTS: The CommentaryFacts object handed to you is the ENTIRETY of what you may name. If a fact is not in the object, it does not exist for purposes of this line. NEVER invent stats, opponents, awards, venues, teammates, dates, game contexts ("Game 1," "Game 7," "the playoffs," "the Finals," "regular-season"), or franchise lore.
 
-ANTI-ANACHRONISM: The game is from season {season}. NEVER reference a venue name, an arena nickname, a stadium-evocative phrase ("the Garden," "the Madhouse," "the Capital," "the Forum," "the Palace," "Oracle," "Chase Center," "Crypto.com Arena," "STAPLES Center," "American Airlines Arena," "Kaseya Center," "MSG," any place-evocative phrasing that reads as a venue), roster member, team affiliation, award, record, or franchise fact that postdates the season of play. The venue rule is ABSOLUTE — the venue field is intentionally absent from CommentaryFacts in v1. The training set skews modern; a 2009 Heat game must not gain a 2024 arena, a future title ("the 2012 ring"), or a teammate who hadn't been drafted yet. Lean on the stat line and the held players' image — never the year-of-prompt-training detail you can't see in facts.
+EXAMPLES ARE SHAPES, NOT TEMPLATES: Every illustrative line in this contract — "Eight turnovers ended this," "62.1 FP is the number to chase," "The Jordan game. Now what?" — shows you the SHAPE of the voice. Their specific numbers, stat names, and player references belong to those example hands, NOT the hand you are writing about. If "eight turnovers" is not in this hand's SALIENCE or statLine, do not write "eight turnovers." Read the examples for their register and phrasing; use only the numbers, stats, and players the facts on the page name.
 
-REGISTER: A confident sportswriter's line about THIS hand. Not a culture-entry paragraph. Not a tweet caption. Not a generic dare. The bar to clear: would this land on a page-A sports-section banner as an argument the reader has to respond to?`;
+ANTI-ANACHRONISM: The game is from season {season}. NEVER reference a venue name, an arena nickname, a stadium-evocative phrase ("the Garden," "the Madhouse," "the Capital," "the Forum," "the Palace," "Oracle," "Chase Center," "Crypto.com Arena," "STAPLES Center," "American Airlines Arena," "Kaseya Center," "MSG," any place-evocative phrasing that reads as a venue), roster member, team affiliation, award, record, or franchise fact that postdates the season of play. The venue rule is ABSOLUTE — the venue field is intentionally absent from CommentaryFacts in v1. The training set skews modern; a 2009 Heat game must not gain a 2024 arena, a future title ("the 2012 ring"), or a teammate who hadn't been drafted yet. Lean on the SALIENCE block and the held players' image — never the year-of-prompt-training detail you can't see in facts.
+
+FP-VS-POINTS — UNIVERSAL: When topReason carries an FP-typed value (category="fp"), render it as "FP" — "65.3 FP," "238 FP." NEVER as "POINTS," "PTS," "points scored," or any phrasing that suggests game points. statLine.pts is the player's GAME points — a real-world stat from the actual NBA game — and is CONTEXT, not the anchor number. When topReason carries a stat-typed value (category="pts" / "reb" / etc., as on rare_pull), render it as that stat ("48 pts (career)"). This rule retires a prior failure where the model wrote "YOU HELD CURRY AT 65 POINTS" from a 65.3 FP topReason: the number was right, the label was a category error.
+
+REGISTER: A plain, observational line about THIS hand that a smart sports fan would say to a friend. Not a culture-entry paragraph. Not a tweet caption. Not a manufactured argument. The bar to clear: does the line state what the facts named, in words that sound like a person? Construction reads as failure; observation reads as voice.`;
 
 // ── User-prompt assembly ───────────────────────────────────────────────────
 // Format CommentaryFacts into the USER message. The structure is plain
@@ -265,18 +259,37 @@ function formatStatLine(
   return parts.join(", ");
 }
 
-/** Phase 4 Pass 1 (fixup) — render the hand-level salience block as
- *  CONCEPTS, not key=value pairs. The model reads "MOST IMPORTANT
- *  POSITIVE: 38 points" — magnitude + concept word — not "primary
- *  Positive: 38 FP from 38 pts (pts=38)" which was analyst shorthand
- *  the model treated as the line itself to write. The category /
- *  value / shortfall / basePlayerId fields remain on the data object
- *  for computation + downstream joins; they just never render.
+/** Phase 4 Pass 2 (lock §G) — magnitude-BAND concept word for the
+ *  BIGGEST DRAG line. The model previously saw WHO/THAT dragged but
+ *  not HOW MUCH, so a -3 FP shortfall ("Kobe was off by a hair") got
+ *  the same canned phrase as a -25 FP collapse ("Kobe vanished") and
+ *  the canned phrase committed to "large" regardless. Bands:
  *
- *  primaryDragPlayer renders as a concept phrase — no shortfall
- *  number, no basePlayerId, no projected-vs-actual analyst framing.
- *  The shortfall MAGNITUDE stays on primaryDragPlayer.shortfall for
- *  computation; we just don't render it here.
+ *    -5 ≤ shortfall < 0   → "just short of his hold"
+ *    -15 ≤ shortfall < -5 → "well below his hold"
+ *    shortfall < -15      → "vanished against his hold"
+ *
+ *  Concept, not number. Caller's primaryDragPlayer.shortfall stays
+ *  on the data object for computation; we just bin it for voice. */
+function dragBandPhrase(shortfall: number): string {
+  if (shortfall < -15) return "vanished against his hold";
+  if (shortfall < -5)  return "well below his hold";
+  return "just short of his hold";
+}
+
+/** Phase 4 Pass 1 (fixup) + Pass 2 — render the hand-level salience
+ *  block as CONCEPTS, not key=value pairs. The model reads "MOST
+ *  IMPORTANT POSITIVE: 38 points" — magnitude + concept word — not
+ *  "primaryPositive: 38 FP from 38 pts (pts=38)" which was analyst
+ *  shorthand the model treated as the line itself to write. The
+ *  category / value / shortfall / basePlayerId fields remain on the
+ *  data object for computation + downstream joins; they just never
+ *  render.
+ *
+ *  primaryDragPlayer renders as a concept phrase: name + a
+ *  magnitude-band concept word computed from the shortfall (Pass 2 —
+ *  lets voice modulate small-vs-large drag). No raw shortfall number,
+ *  no basePlayerId, no projected-vs-actual analyst framing.
  *
  *  The caller has already filtered for trigger (rare_pull → no
  *  salience), and buildCommentaryFacts enforces the same omission at
@@ -295,7 +308,8 @@ function formatSalienceBlock(
     lines.push(`  MOST IMPORTANT NEGATIVE: ${salience.primaryNegative.label}`);
   }
   if (salience.primaryDragPlayer) {
-    lines.push(`  BIGGEST DRAG: ${salience.primaryDragPlayer.name} — gave you far less than his hold was worth`);
+    const d = salience.primaryDragPlayer;
+    lines.push(`  BIGGEST DRAG: ${d.name} — ${dragBandPhrase(d.shortfall)}`);
   }
   return lines;
 }
@@ -345,7 +359,12 @@ export function buildUserPrompt(facts: CommentaryFacts): string {
     // behavior + "to" → "turnovers" key-fix rationale.
     const stats = formatStatLine(a.statLine, facts.fpStatKeys);
     if (stats) lines.push(`  statLine: ${stats}`);
-    if (a.topReason) lines.push(`  topReason: ${a.topReason.label} (${a.topReason.category}=${a.topReason.value})`);
+    // Phase 4 Pass 2 (lock §G "render fixes") — drop the
+    // "(<category>=<value>)" analyst suffix to match the Pass 1
+    // SALIENCE-block concept-render contract. The model reads
+    // topReason.label as the concept; the category/value remain on
+    // the object for computation / downstream joins.
+    if (a.topReason) lines.push(`  topReason: ${a.topReason.label}`);
   } else {
     lines.push("ANCHOR: (none — no anchor on this hand)");
   }
