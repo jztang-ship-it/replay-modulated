@@ -209,7 +209,11 @@ describe("salience block — render shape per signal", () => {
     expect(prompt).toContain("SALIENCE:");
     expect(prompt).toContain("  MOST IMPORTANT POSITIVE: 38 points");
     expect(prompt).toContain("  MOST IMPORTANT NEGATIVE: 4 turnovers");
-    expect(prompt).toContain("  BIGGEST DRAG: Chris Paul — gave you far less than his hold was worth");
+    // Phase 4 Pass 2 §G — magnitude-BAND concept word, computed from
+    // primaryDragPlayer.shortfall: -22.5 < -15 → "vanished against his hold".
+    expect(prompt).toContain("  BIGGEST DRAG: Chris Paul — vanished against his hold");
+    // The Pass 1 canned phrase is retired in Pass 2.
+    expect(prompt).not.toContain("gave you far less than his hold was worth");
     // Drag must NEVER leak basePlayerId, shortfall number, or analyst
     // framing (projected/actual/shortfall words) into the prompt.
     expect(prompt).not.toMatch(/basePlayerId/);
@@ -218,6 +222,37 @@ describe("salience block — render shape per signal", () => {
     expect(prompt).not.toMatch(/shortfall/i);
     expect(prompt).not.toMatch(/projected/i);
     expect(prompt).not.toMatch(/below expectation/i);
+  });
+
+  it("BIGGEST DRAG magnitude-band concept words — small / medium / large shortfall", () => {
+    // Pass 2 §G: shortfall is binned into three concept bands:
+    //   -5 ≤ shortfall < 0   → "just short of his hold"
+    //   -15 ≤ shortfall < -5 → "well below his hold"
+    //   shortfall < -15      → "vanished against his hold"
+    const baseChoke = {
+      trigger: "choke" as const,
+      anchorBasePlayerId: "977",
+      roster: [card({ basePlayerId: "977", name: "Kobe Bryant" })],
+    };
+    const smallDrag = buildCommentaryFacts(input({
+      ...baseChoke,
+      salience: { primaryDragPlayer: { basePlayerId: "X", name: "Small Drag", shortfall: -3.4 } },
+    }));
+    const mediumDrag = buildCommentaryFacts(input({
+      ...baseChoke,
+      salience: { primaryDragPlayer: { basePlayerId: "X", name: "Medium Drag", shortfall: -10 } },
+    }));
+    const largeDrag = buildCommentaryFacts(input({
+      ...baseChoke,
+      salience: { primaryDragPlayer: { basePlayerId: "X", name: "Large Drag", shortfall: -25 } },
+    }));
+    expect(smallDrag.kind).toBe("facts");
+    expect(mediumDrag.kind).toBe("facts");
+    expect(largeDrag.kind).toBe("facts");
+    if (smallDrag.kind !== "facts" || mediumDrag.kind !== "facts" || largeDrag.kind !== "facts") return;
+    expect(buildUserPrompt(smallDrag.facts)).toContain("BIGGEST DRAG: Small Drag — just short of his hold");
+    expect(buildUserPrompt(mediumDrag.facts)).toContain("BIGGEST DRAG: Medium Drag — well below his hold");
+    expect(buildUserPrompt(largeDrag.facts)).toContain("BIGGEST DRAG: Large Drag — vanished against his hold");
   });
 
   it("miss: MOST IMPORTANT POSITIVE only — NEGATIVE leans on existing nearMissGap (lock §per-trigger)", () => {
@@ -257,7 +292,9 @@ describe("salience block — render shape per signal", () => {
     const prompt = buildUserPrompt(r.facts);
     expect(prompt).not.toContain("SALIENCE:");
     // topReason is the rare_pull signal — must still be present.
-    expect(prompt).toContain("topReason: 48 pts (career) (pts=48)");
+    // Phase 4 Pass 2 §G — analyst suffix "(pts=48)" dropped.
+    expect(prompt).toContain("topReason: 48 pts (career)");
+    expect(prompt).not.toContain("(pts=48)");
   });
 
   it("omits the entire SALIENCE: block when no signal is on facts", () => {

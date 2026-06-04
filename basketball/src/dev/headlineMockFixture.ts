@@ -42,6 +42,19 @@ interface HeadlineMockFixture {
 }
 
 export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixture> = {
+  // Phase 4 Pass 2 — the four primary fixtures carry Pass 1's facts
+  // shape (totalFp, fpStatKeys, salience) so the smoke regression test
+  // exercises the production prompt the Pass 2 contract assumes. Without
+  // these signals the model improvises ("Eight turnovers" with zero
+  // turnovers in statLine; "fourth quarter" with no game context), which
+  // would surface as accuracy regressions that are really fixture gaps.
+  // Retro fixtures stay legacy-shaped — they probe anti-anachronism,
+  // not Pass-2 voice consumption, so the missing-signal improvisation
+  // isn't a regression for those rows.
+  //
+  // The fpStatKeys allowlist (pts/reb/ast/stl/blk/turnovers) mirrors
+  // basketballConfig.projectionWeights; min/threes are silently dropped
+  // at prompt render per Pass 1.
   rare_pull: {
     label: "rare_pull · Wade career night",
     facts: {
@@ -51,6 +64,10 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       trigger: "rare_pull",
       verdict: "credited",
       winTier: "MVP",
+      totalFp: 312.4,
+      fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
+      // rare_pull intentionally omits salience — topReason carries the
+      // rare-line signal per the lock; salience would duplicate.
       anchor: {
         name: "Dwyane Wade",
         basePlayerId: "2548",
@@ -78,6 +95,19 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       trigger: "choke",
       verdict: "credited",
       winTier: "BUST",
+      totalFp: 154.2,
+      fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
+      salience: {
+        // Kobe pts: 38 × 1.0 = 38 FP.
+        primaryPositive: { category: "pts", value: 38, label: "38 points" },
+        // CP3 fell well off projection — the held-shortfall that
+        // sank the hand. Pass 2 §G: -22 < -15 → "vanished against".
+        primaryDragPlayer: {
+          basePlayerId: "101108",
+          name: "Chris Paul",
+          shortfall: -22,
+        },
+      },
       anchor: {
         name: "Kobe Bryant",
         basePlayerId: "977",
@@ -104,6 +134,18 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       trigger: "choke",
       verdict: "neutral",
       winTier: "BUST",
+      totalFp: 148.7,
+      fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
+      salience: {
+        primaryPositive: { category: "pts", value: 24, label: "24 points" },
+        // Mid-zone choke — a held co-star fell short but not by a
+        // collapse-class margin. -8 falls in the "well below" band.
+        primaryDragPlayer: {
+          basePlayerId: "947",
+          name: "Lamar Odom",
+          shortfall: -8,
+        },
+      },
       anchor: {
         name: "Kobe Bryant",
         basePlayerId: "977",
@@ -130,6 +172,13 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       trigger: "big_score",
       verdict: "credited",
       winTier: "ALL_STAR",
+      totalFp: 245.8,
+      fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
+      salience: {
+        // Curry pts: 42 × 1.0 = 42 FP (highest single-stat carry).
+        primaryPositive: { category: "pts", value: 42, label: "42 points" },
+        // No turnovers in fixture → no primaryNegative.
+      },
       anchor: {
         name: "Stephen Curry",
         basePlayerId: "201939",
@@ -159,6 +208,13 @@ export const HEADLINE_MOCK_FIXTURES: Record<HeadlineMockCase, HeadlineMockFixtur
       winTier: "STARTER",
       nearMissGap: 7,
       nearMissNextTier: "ALL_STAR",
+      totalFp: 218.0,
+      fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
+      salience: {
+        // miss: primaryPositive only — leans on nearMissGap for the
+        // negative per lock §per-trigger.
+        primaryPositive: { category: "pts", value: 30, label: "30 points" },
+      },
     },
     bankPick: "Almost. So close. Try the same slate.",
     evalHint: "No anchor — line is about the hand / the gap. Must NOT invent a player to credit or blame.",

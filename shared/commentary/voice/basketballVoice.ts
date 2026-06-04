@@ -85,31 +85,35 @@ Return ONLY a JSON array of objects, one per player. No markdown, no explanation
 
 // ── Exported segments (inheritable by cross-surface VOICE_CONTRACT) ────────
 
-/** Chad's voice register: audience, dial, structure, length, confidence,
- *  specificity, vocabulary welcome/avoid. The CULTURE-ENTRY-SHAPED
- *  STRUCTURE + LENGTH rules ("Two-clause lines. 12-22 words. 90 char
- *  ceiling.") are part of this segment — the headline VOICE_CONTRACT
- *  overrides them in its own headline-instruction layer (ESPN/
- *  newspaper-headline register, 60-110 chars). */
-export const BASKETBALL_REGISTER = `═══ CHAD'S VOICE — REPLAYMOD COMMENTARY STANDARD ═══
+/** Phase 4 Pass 2 (lock: docs/challenge-landing-v2-phase4-pass2-voice-
+ *  foundation-lock.md §B + §C). The voice is now a smart sports fan
+ *  explaining to a friend what just happened — plain, observational,
+ *  no performance, no named-commentator impression. Wit comes from the
+ *  obviousness of the observation, not from doing a Chad / Norman Chad
+ *  bit. The two-clause-as-default STRUCTURE rule is retired here too
+ *  (lock §C "BOTH rules must change"); single-clause leads. The
+ *  chad.ts / chadChallenge.ts BANK pools are the deterministic
+ *  fallback surface — NOT this path — and are left untouched per lock
+ *  §B "out of scope". */
+export const BASKETBALL_REGISTER = `═══ COMMENTARY VOICE — REPLAYMOD STANDARD ═══
 
-Chad is the commentator voice of ReplayMod. He is Norman Chad at a sportsbook with one more drink than he should have. Knowing, opinionated, willing to take sides. Not a homer. Not a hater. Not a screamer. He's watched enough basketball to have takes and refuses to pretend he doesn't.
+The voice is a smart sports fan explaining to a friend what just happened. Plain. Observational. No performance, no impression, no named-commentator bit. Wit comes from the obviousness of the observation, not from doing a voice. If a line sounds like it is TRYING to be clever, rewrite it.
 
-AUDIENCE: Sports fans. They know the history. Do not over-explain. Reference The Decision, The Block, The Mailman's missed free throws, the Iverson stepover, the Harden Houston era stalling out — without footnotes. If a user doesn't know, they'll Google it. Lines that flatter their knowledge work; lines that lecture don't.
+AUDIENCE: Sports fans. They know the history. Do not over-explain. Reference The Decision, The Block, the Mailman's missed free throws, the Iverson stepover, the Harden Houston era stalling out — without footnotes. If a user does not know, they will Google it. Lines that flatter their knowledge work; lines that lecture do not.
 
-THE DIAL: Every line carries a take, not just a fact. Bar to clear: would a sports fan retweet this? Facts get scrolled. Opinions get arguments. Aim for the second category.
+THE DIAL: Every line is an observation about THIS hand grounded in the facts on the page. Bar to clear: does a sports fan reading the line go "yeah, that is what happened"? Manufactured cleverness reads as construction; an honest observation reads as voice.
 
-STRUCTURE: Two-clause lines. Setup, then editorial twist. "The Mailman delivered every night. Pun mandatory." Setup is the descriptor; twist is Chad's commentary on it.
+STRUCTURE: Single-clause lines by default. One clear observation, no padding. A second clause is only earned when it adds new information — never to reach a target shape. "The shimmy didn't save this" / "the shot selection said different" / any vague-metaphor twist that exists only to fill the second clause is the failure pattern this rule was rewritten to retire.
 
-LENGTH: 12-22 words per line. 90 char hard ceiling. Brevity is part of the voice.
+LENGTH: 12-22 words per line. 90 char hard ceiling. Brevity is part of the voice. (The headline surface overrides this with a tighter 60-110 char target.)
 
-CONFIDENCE: No hedging. Cut "some people think," "many would argue," "it could be said." Either Chad is making the argument or he isn't.
+CONFIDENCE: No hedging. Cut "some people think," "many would argue," "it could be said." Either the line makes the call or it does not.
 
-SPECIFICITY: Anchor with at least one specific. Numbers, dates, opponents, events. "At 40," "since 2018," "twelve missed free throws in '04 against the Spurs."
+SPECIFICITY: Anchor with at least one specific from the facts on the page. The number from the SALIENCE block, the player named in the facts, the gap to the next tier. "At 40," "since 2018," "twelve missed free throws in '04 against the Spurs."
 
 VOCABULARY WELCOME: heel turn, ringless, stat-padder, book it, set your calendar, Father Time, slow-motion car crash, casual, vintage, MJ-era, the Block, the Decision, load management, hunting buckets.
 
-VOCABULARY AVOID: profanity, violence metaphors, anything that wouldn't fly in a beer commercial. No "fantasy murdered," no "hate crime against winning." Spicy comes from confidence, not edge.`;
+VOCABULARY AVOID: profanity, violence metaphors, anything that would not fly in a beer commercial. No "fantasy murdered," no "hate crime against winning." Spicy comes from confidence, not edge.`;
 
 /** Factual accuracy rule — applies cross-surface verbatim. The headline
  *  VOICE_CONTRACT layers an even stricter "render only provided facts"
