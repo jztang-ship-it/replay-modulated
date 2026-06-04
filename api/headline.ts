@@ -35,7 +35,7 @@ import type {
   CommentaryFacts,
   CommentaryWinTier,
 } from "../shared/commentary/commentaryFactsTypes.js";
-import { buildVoiceContract } from "../shared/commentary/voiceContract.js";
+import { buildVoiceContract, buildUserPrompt } from "../shared/commentary/voiceContract.js";
 import { routeCommentary } from "./_lib/router/llmRouter.js";
 import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
 
@@ -137,6 +137,179 @@ function extractAnchorTokens(facts: CommentaryFacts): Set<string> {
  *  is the most common hand result and a neutral fallback. */
 const DEFAULT_TIER: PayoutTier = "STARTER";
 
+// ── Phase 4 Pass 2 numeric grounding (lock §1) ─────────────────────────────
+// Reject lines that cite a number not grounded in the rendered fact block.
+// Allowed set = digit literals parsed from buildUserPrompt(facts) — the
+// SAME string the model received. Parsing the rendered block (not the raw
+// facts) means stat-trim (Pass 1) is inherited automatically: a `threes`
+// value present on raw facts but stripped from the prompt does NOT enter
+// the allowed set, so a line citing it gets rejected. Governing principle
+// per lock: BIAS TOWARD PERMISSIVENESS — a false reject resurrects the
+// bank-pick fallback (the robotic voice this project exists to kill).
+
+/** 0-19 cardinal words. ≤ 12 are STANDALONE-excluded (idiomatic in
+ *  headlines: "one decision short," "give it a second"). Hyphenated
+ *  pairs and compound forms (with hundred/thousand) are always checked. */
+const CARDINAL_ONES_TO_NINETEEN: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+  seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+  seventeen: 17, eighteen: 18, nineteen: 19,
+};
+const CARDINAL_TENS: Record<string, number> = {
+  twenty: 20, thirty: 30, forty: 40, fifty: 50,
+  sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+};
+/** Ordinal words: never extracted as cardinals. */
+const ORDINAL_WORDS: ReadonlySet<string> = new Set([
+  "first", "second", "third", "fourth", "fifth", "sixth", "seventh",
+  "eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth",
+  "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth",
+  "nineteenth", "twentieth", "thirtieth", "fortieth", "fiftieth",
+  "sixtieth", "seventieth", "eightieth", "ninetieth", "hundredth", "thousandth",
+]);
+/** Idioms / franchise-embedded numbers. Empty at landing per lock §1
+ *  rule (C); add entries only when a real false-reject is observed. */
+const NUMERIC_IDIOM_SKIPLIST: ReadonlySet<string> = new Set<string>([]);
+
+interface ExtractedNumber {
+  /** Numeric value, compared against the allowed set. */
+  value: number;
+  /** Source representation as written, for the reason string. */
+  display: string;
+  /** Decimal places in the displayed form — drives tolerance precision. */
+  decimals: number;
+}
+
+/** Parse one token as a 0-99 cardinal atom. Returns null for non-cardinals
+ *  including ambiguous hyphenations like "all-star" / "t-mac". */
+function parseSubHundredAtom(token: string): number | null {
+  if (token.includes("-")) {
+    const [a, b] = token.split("-");
+    const tens = CARDINAL_TENS[a];
+    const ones = CARDINAL_ONES_TO_NINETEEN[b];
+    if (tens != null && ones != null && ones >= 1 && ones <= 9) return tens + ones;
+    return null;
+  }
+  if (token in CARDINAL_ONES_TO_NINETEEN) return CARDINAL_ONES_TO_NINETEEN[token];
+  if (token in CARDINAL_TENS) return CARDINAL_TENS[token];
+  return null;
+}
+
+/** Tokenize a headline. Lowercased; punctuation stripped; hyphens kept
+ *  inside words ("thirty-eight" stays a single token, "all-star" too). */
+function tokenizeHeadline(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[\s,.!?;:()"'`]+/)
+    .map(t => t.replace(/[^\w-]/g, ""))
+    .filter(t => t.length > 0);
+}
+
+/** Walk tokens; emit spelled-cardinal expressions per lock §1 rules
+ *  (A)/(B)/(C). Handles standalone words, hyphenated pairs, and the
+ *  hundred/thousand compounds the lock explicitly cites ("two hundred
+ *  forty-five" → 245). Standalone ≤ 12 are skipped (rule C). */
+function extractSpelledCardinals(tokens: string[]): ExtractedNumber[] {
+  const out: ExtractedNumber[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    if (ORDINAL_WORDS.has(tokens[i]) || NUMERIC_IDIOM_SKIPLIST.has(tokens[i])) {
+      i++; continue;
+    }
+    const startToken = tokens[i];
+    let total = 0;
+    let pending = 0;
+    let lastWasScale = false;
+    let parsed = 0;
+    let didAdvance = false;
+    while (i < tokens.length) {
+      const t = tokens[i];
+      if (ORDINAL_WORDS.has(t)) break;
+      const atom = parseSubHundredAtom(t);
+      if (atom != null) {
+        if (pending !== 0 && !lastWasScale) break; // two atoms in a row, no scale separator → new span
+        pending += atom;
+        lastWasScale = false;
+        i++; parsed++; didAdvance = true;
+        continue;
+      }
+      if (t === "hundred") {
+        pending = (pending === 0 ? 1 : pending) * 100;
+        lastWasScale = true;
+        i++; parsed++; didAdvance = true;
+        continue;
+      }
+      if (t === "thousand") {
+        total += (pending === 0 ? 1 : pending) * 1000;
+        pending = 0;
+        lastWasScale = true;
+        i++; parsed++; didAdvance = true;
+        continue;
+      }
+      break;
+    }
+    total += pending;
+    if (parsed > 0 && total > 0) {
+      // Standalone = single sub-99 ATOM that's not a hyphenated pair.
+      // A hyphenated "thirty-eight" is compound (always checked) even
+      // though parsed=1 (it's one token). A bare "seven" is standalone.
+      const isHyphenated = startToken.includes("-");
+      const standalone = parsed === 1 && !isHyphenated;
+      if (standalone && total <= 12) continue; // rule (C)
+      out.push({ value: total, display: startToken, decimals: 0 });
+    } else if (!didAdvance) {
+      i++;
+    }
+  }
+  return out;
+}
+
+/** Find every digit-number literal in the headline (ints + decimals).
+ *  Skips numeric ordinals (1st / 2nd / 3rd / 4th / ... / 99th). */
+function extractDigitNumbers(text: string): ExtractedNumber[] {
+  const out: ExtractedNumber[] = [];
+  const RE = /-?\d+(?:\.\d+)?/g;
+  let m: RegExpExecArray | null;
+  while ((m = RE.exec(text)) !== null) {
+    const afterIdx = m.index + m[0].length;
+    const after = text.slice(afterIdx, afterIdx + 2);
+    if (/^(st|nd|rd|th)/i.test(after)) continue;
+    const dotIdx = m[0].indexOf(".");
+    const decimals = dotIdx >= 0 ? m[0].length - dotIdx - 1 : 0;
+    out.push({ value: parseFloat(m[0]), display: m[0], decimals });
+  }
+  return out;
+}
+
+/** Allowed set: every digit literal that appears in the rendered user
+ *  prompt. Parsing the rendered string (not the raw facts) is deliberate
+ *  — it inherits the Pass-1 stat-trim invariant. */
+function extractAllowedNumbers(userPrompt: string): number[] {
+  const out: number[] = [];
+  const RE = /-?\d+(?:\.\d+)?/g;
+  let m: RegExpExecArray | null;
+  while ((m = RE.exec(userPrompt)) !== null) {
+    out.push(parseFloat(m[0]));
+  }
+  return out;
+}
+
+/** Permissive match per lock §1: N matches F if N == F exactly, or if F
+ *  is within one unit at N's displayed precision (so 65 and 66 both match
+ *  65.3; 245 and 246 both match 245.8). The unit-at-precision rule is
+ *  the permissive reading of "rounded OR truncated to N's displayed
+ *  precision" — covers both the worked examples in the lock and the
+ *  general "bias toward permissiveness" stance. */
+function numberMatchesAllowed(n: ExtractedNumber, allowed: readonly number[]): boolean {
+  const unit = Math.pow(10, -n.decimals);
+  for (const f of allowed) {
+    if (n.value === f) return true;
+    if (Math.abs(n.value - f) < unit) return true;
+  }
+  return false;
+}
+
 // ── Validators ─────────────────────────────────────────────────────────────
 
 type ValidationResult =
@@ -184,6 +357,28 @@ export function validateHeadline(
     if (!NBA_TEAM_CODES.has(t)) continue;
     if (allowed.has(t)) continue;
     return { ok: false, reason: `team_not_in_facts:${t}` };
+  }
+
+  // §7 — Numeric stat-grounding (Phase 4 Pass 2 pre-merge lock §1).
+  // The allowed set is digit literals from the rendered user prompt;
+  // we re-render via buildUserPrompt because it is pure + deterministic
+  // and guarantees we check against the same string the model saw.
+  // Bias is toward permissiveness — false rejects fall back to the
+  // bank pick (the robotic voice this work exists to retire).
+  const userPrompt = buildUserPrompt(facts);
+  const allowedNumbers = extractAllowedNumbers(userPrompt);
+  const tokens = tokenizeHeadline(text);
+  const headlineNumbers: ExtractedNumber[] = [
+    ...extractDigitNumbers(text),
+    ...extractSpelledCardinals(tokens),
+  ];
+  for (const n of headlineNumbers) {
+    if (numberMatchesAllowed(n, allowedNumbers)) continue;
+    console.warn(
+      `[api/headline] validation:number_not_in_facts:${n.display} ` +
+      `allowed=[${allowedNumbers.join(",")}] raw=${JSON.stringify(text)}`,
+    );
+    return { ok: false, reason: `number_not_in_facts:${n.display}` };
   }
 
   return { ok: true, headline: text };
