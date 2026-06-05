@@ -673,7 +673,9 @@ export function chadInitiationBank(bucket: InitiationBucket): string[] {
 //   TOP_BIG_SCORE               — big_score trigger (renders win_tier stamp)
 //   TOP_RARE_PULL_RECORD        — rare_pull, topGameTier=record
 //   TOP_RARE_PULL_CAREER        — rare_pull, topGameTier=career
-//   TOP_RARE_PULL_SEASON        — rare_pull, topGameTier=season (uses {statLabel})
+//   TOP_RARE_PULL_SEASON_RANK_1      — rare_pull season, rank == 1 (flat superlative)
+//   TOP_RARE_PULL_SEASON_RANK_2_3    — rare_pull season, rank 2 or 3 (top-3 framing)
+//   TOP_RARE_PULL_SEASON_RANK_4_PLUS — rare_pull season, rank >= 4 or undefined (hedge)
 //   TOP_DEFAULT                 — unreachable per GameView gate (see comment at def)
 //
 // Substitution tokens (resolved by selector at selection time):
@@ -786,7 +788,52 @@ const TOP_RARE_PULL_CAREER: Line[] = [
   ["{starName} has played hundreds of games. None of them looked like tonight. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
 ];
 
-const TOP_RARE_PULL_SEASON: Line[] = [
+// SEASON rare_pull subtext — split by rank tier (bug B fix, lock:
+// fix/rare-pull-rank-and-career-categories).
+//
+// Pre-fix the SEASON bank had 10 lines, every one hedged with "one of
+// the best / biggest / highest" regardless of whether the game was
+// rank 1, rank 3, or rank 8 in the season. The rank value WAS in the
+// data (TopGameReason.rank=1 — surfaced by extractStatLabelAndRank);
+// the bank just had no slot for it. A real on-glass case: Brandon
+// Roy's Jan 24 2009 10-steals game was the season's #1 steals game
+// (rank=1, label "1st highest steal game of the season") but the
+// subtext read "one of the best steals games the league has seen all
+// year" — true, hedged, technically wrong.
+//
+// Three sub-banks now route on rank:
+//   rank == 1       → flat superlative, no hedge (the league's best)
+//   rank 2 or 3     → top-3 framing
+//   rank >= 4 OR    → the original "one of the best" hedge (correct
+//   rank undefined    framing at that depth; preserved verbatim).
+//
+// Bank choice is the rank-aware mechanism; lines can additionally
+// reference {rank} as the raw number for fine-tuning. The substitution
+// map at the selector exposes both {rank} and {rankPhrase} as tokens.
+
+const TOP_RARE_PULL_SEASON_RANK_1: Line[] = [
+  ["{starName} had the best {statLabel} game in the league all season. You pulled him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["Nobody in the league had a better {statLabel} game this year. {starName}. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} put up the season's #1 {statLabel} performance tonight — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the read."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just delivered the best {statLabel} game in the league all year and you stacked him."],
+  ["The league's top {statLabel} game of the season belongs to {starName} tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Pure read."],
+  ["You picked {starName} on the night he set the season's best {statLabel} line. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} owns the season's top {statLabel} game. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You were on it."],
+  ["No {statLabel} game in the league has touched what {starName} put up tonight. You had it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+];
+
+const TOP_RARE_PULL_SEASON_RANK_2_3: Line[] = [
+  ["{starName} put up one of the 3 best {statLabel} games in the league all season. You pulled him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} had a top-3 {statLabel} game of the season tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You called it."],
+  ["Top three {statLabel} games of the season — {starName} is on the list tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} delivered a top-3 {statLabel} line for the season. You stacked him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just had one of the 3 best {statLabel} nights in the league this year and you were already there."],
+  ["{starName} put together one of the season's three best {statLabel} games. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Read of the month."],
+  ["You picked the right night for the right player — top-3 {statLabel} game of the season. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName}'s {statLabel} line tonight is one of the 3 biggest the league has seen this year. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Pure read."],
+];
+
+const TOP_RARE_PULL_SEASON_RANK_4_PLUS: Line[] = [
   ["{starName} put together one of the best {statLabel} performances of the season tonight. You picked him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} just had one of the highest {statLabel} nights of the entire season and you were stacked behind him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's a read."],
   ["{starName} just dropped one of the biggest {statLabel} games anyone's put up this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you called it."],
@@ -798,6 +845,23 @@ const TOP_RARE_PULL_SEASON: Line[] = [
   ["{starName} just had one of the best {statLabel} nights the league has seen this year and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the call."],
   ["You picked {starName} on the night he put up one of the biggest {statLabel} games of the season. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
 ];
+
+/** Route to the rank-aware SEASON sub-bank for rare_pull.
+ *
+ *  rank == 1       → RANK_1 (flat superlative)
+ *  rank 2 or 3     → RANK_2_3 (top-3 framing)
+ *  rank >= 4 OR    → RANK_4_PLUS (the prior hedged bank, preserved)
+ *  rank null
+ *
+ *  Per lock: do NOT invent a rank when reason.rank is undefined —
+ *  fall to the hedge tier. Callers that pass rank=null get the
+ *  RANK_4_PLUS bank, which is the framing that was correct on the
+ *  hedge tier even before the split. */
+export function selectRarePullSeasonBank(rank: number | null | undefined): Line[] {
+  if (rank === 1) return TOP_RARE_PULL_SEASON_RANK_1;
+  if (rank === 2 || rank === 3) return TOP_RARE_PULL_SEASON_RANK_2_3;
+  return TOP_RARE_PULL_SEASON_RANK_4_PLUS;
+}
 
 // UNREACHABLE per GameView L1330 trigger-override gate
 // (`challengeTrigger.trigger !== "default"` filters default-trigger hands
@@ -849,13 +913,30 @@ export const STAT_LABEL_MAP: Record<string, string> = {
 export function extractStatLabel(
   topGame: { primaryReason: TopGameReason | null; allReasons: TopGameReason[] | null } | null,
 ): string | null {
-  if (!topGame) return null;
+  return extractStatLabelAndRank(topGame).label;
+}
+
+/** Sibling of extractStatLabel that ALSO returns the preferred reason's
+ *  numeric rank — the per-stat per-season top-N position (1-indexed)
+ *  from `TopGameReason.rank`. Composite/flag reasons and undefined
+ *  ranks return rank=null.
+ *
+ *  rare_pull bug B fix: the SEASON bank used to hedge "one of the best"
+ *  on every line, dropping the rank value the data layer carries
+ *  (rank=1 / rank=3 / etc.). Selecting a rank-aware sub-bank requires
+ *  the actual number — this helper surfaces it without changing the
+ *  label-only extractStatLabel signature that existing callers use. */
+export function extractStatLabelAndRank(
+  topGame: { primaryReason: TopGameReason | null; allReasons: TopGameReason[] | null } | null,
+): { label: string | null; rank: number | null } {
+  if (!topGame) return { label: null, rank: null };
   const all = topGame.allReasons ?? (topGame.primaryReason ? [topGame.primaryReason] : []);
-  if (all.length === 0) return null;
+  if (all.length === 0) return { label: null, rank: null };
   // Prefer stat-typed (rank defined). Fall through to first available.
   const preferred = all.find(r => typeof r.rank === "number") ?? all[0];
-  const label = STAT_LABEL_MAP[preferred.category];
-  return label ?? null;
+  const label = STAT_LABEL_MAP[preferred.category] ?? null;
+  const rank = typeof preferred.rank === "number" ? preferred.rank : null;
+  return { label, rank };
 }
 
 /** Title-case formatter for {winTierLow} substitution into CHOKE
@@ -972,7 +1053,9 @@ export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
         // SEASON requires statLabel. If null (topGame missing or
         // category unmapped), log warn and fall back to RECORD bank
         // per Q3.1 spec — closest texturally; better than placeholder.
-        const statLabel = extractStatLabel(args.topGame ?? null);
+        // Bug B fix: also extract rank so the SEASON bank can route to
+        // a rank-aware sub-bank (rank=1 / rank=2-3 / rank>=4 or null).
+        const { label: statLabel, rank: statRank } = extractStatLabelAndRank(args.topGame ?? null);
         if (!statLabel) {
           // eslint-disable-next-line no-console
           console.warn(
@@ -983,7 +1066,7 @@ export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
           bank = TOP_RARE_PULL_RECORD;
           resolvedAchievementType = "record"; // for downstream consistency
         } else {
-          bank = TOP_RARE_PULL_SEASON;
+          bank = selectRarePullSeasonBank(statRank);
         }
       } else {
         // rare_pull fired but no topGameTier supplied — shouldn't happen
@@ -1002,13 +1085,15 @@ export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
   // ring buffer reflects bank shape, not per-hand substituted values.
   const raw = pickWithAntiRepeat(bank, line => JSON.stringify(line));
 
-  // Substitute {starName} / {statLabel} / {winTierLow} / etc. in
-  // string parts, and replace tier sentinels in StampToken parts.
-  // Build statLabel once here so both the bank-routing path above
-  // (SEASON branch) and substitution path use the same extracted value.
-  const statLabel = args.trigger === "rare_pull" && resolvedAchievementType === "season"
-    ? extractStatLabel(args.topGame ?? null)
-    : null;
+  // Substitute {starName} / {statLabel} / {winTierLow} / {rank} /
+  // {rankPhrase} / etc. in string parts, and replace tier sentinels in
+  // StampToken parts. Build statLabel + rank once so the SEASON
+  // bank-routing above and the substitution path use the same values.
+  const seasonExtract = args.trigger === "rare_pull" && resolvedAchievementType === "season"
+    ? extractStatLabelAndRank(args.topGame ?? null)
+    : { label: null, rank: null };
+  const statLabel = seasonExtract.label;
+  const statRank = seasonExtract.rank;
 
   return substituteLine(raw, {
     starName: args.starName ?? "",
@@ -1019,7 +1104,31 @@ export function selectTopSlotFraming(args: TopSlotFramingArgs): Line {
     winTier: args.winTier ?? "",
     winTierLow: formatWinTierLow(args.winTier),
     rarePullTier: args.starAchievementType ?? "",
+    // Bug B fix tokens (lock §1). Bank choice handles the rank-tier
+    // framing; these tokens let individual lines fine-tune phrasing
+    // without spawning a new sub-bank. {rank} is the raw number ("1",
+    // "2", …) or empty when unknown; {rankPhrase} is a derived English
+    // phrase ("the best" / "one of the top 3" / "one of the best")
+    // that mirrors the bank tier the line lives in.
+    rank: statRank != null ? String(statRank) : "",
+    rankPhrase: rankPhraseFor(statRank),
   });
+}
+
+/** Derive the model-facing phrase for a season-rank position. Tracks
+ *  the bank routing in selectRarePullSeasonBank so a {rankPhrase}
+ *  substitution in any tier's lines reads consistently with the tier
+ *  the line is from.
+ *
+ *  rank == 1       → "the best"
+ *  rank 2 or 3     → "one of the top 3"
+ *  rank >= 4 OR    → "one of the best"
+ *  rank null
+ */
+function rankPhraseFor(rank: number | null | undefined): string {
+  if (rank === 1) return "the best";
+  if (rank === 2 || rank === 3) return "one of the top 3";
+  return "one of the best";
 }
 
 interface LineSubstitutions {
@@ -1031,6 +1140,15 @@ interface LineSubstitutions {
   winTier: string;
   winTierLow: string;
   rarePullTier: string;
+  /** Bug B fix (rare_pull SEASON rank-aware bank). The raw rank
+   *  number as a string ("1", "2", …) or empty string when unknown.
+   *  Available on every line; only meaningful inside the SEASON banks.
+   *  rare_pull RECORD / CAREER / other triggers populate it as "". */
+  rank: string;
+  /** Bug B fix. Derived phrase mirroring the SEASON sub-bank tier:
+   *  "the best" (rank 1) / "one of the top 3" (rank 2-3) / "one of the
+   *  best" (rank ≥ 4 or unknown). See rankPhraseFor. */
+  rankPhrase: string;
 }
 
 /** Substitute tokens into each LinePart. Strings: `{starName}`,
@@ -1051,7 +1169,11 @@ function substituteLine(line: Line, subs: LineSubstitutions): Line {
         .replace(/\{starName2\}/g, subs.starName2)
         .replace(/\{starName\}/g, subs.starName)
         .replace(/\{statLabel\}/g, subs.statLabel)
-        .replace(/\{winTierLow\}/g, subs.winTierLow);
+        .replace(/\{winTierLow\}/g, subs.winTierLow)
+        // Bug B fix: {rankPhrase} BEFORE {rank} so the trailing
+        // "Phrase" doesn't get eaten by a greedy {rank} substitution.
+        .replace(/\{rankPhrase\}/g, subs.rankPhrase)
+        .replace(/\{rank\}/g, subs.rank);
     }
     // StampToken: handle tier sentinel substitution.
     if (part.tier === "{missTier}") {
@@ -1077,7 +1199,13 @@ function substituteLine(line: Line, subs: LineSubstitutions): Line {
 export type TopSlotBankKey =
   | "choke_held_one" | "choke_held_two_plus" | "choke_no_holds"
   | "miss" | "big_score"
-  | "rare_pull_record" | "rare_pull_career" | "rare_pull_season"
+  | "rare_pull_record" | "rare_pull_career"
+  // rare_pull SEASON now split by rank tier (bug B fix). The
+  // legacy "rare_pull_season" key is preserved as the union of all
+  // three sub-banks for backward-compat with existing tests; new
+  // tests should target the three explicit sub-bank keys.
+  | "rare_pull_season"
+  | "rare_pull_season_rank_1" | "rare_pull_season_rank_2_3" | "rare_pull_season_rank_4_plus"
   | "default";
 
 export function topSlotFramingBank(key: TopSlotBankKey): Line[] {
@@ -1086,12 +1214,20 @@ export function topSlotFramingBank(key: TopSlotBankKey): Line[] {
       case "choke_held_one":      return TOP_CHOKE_HELD_ONE;
       case "choke_held_two_plus": return TOP_CHOKE_HELD_TWO_PLUS;
       case "choke_no_holds":      return TOP_CHOKE_NO_HOLDS;
-      case "miss":                   return TOP_MISS;
-      case "big_score":              return TOP_BIG_SCORE;
-      case "rare_pull_record":       return TOP_RARE_PULL_RECORD;
-      case "rare_pull_career":       return TOP_RARE_PULL_CAREER;
-      case "rare_pull_season":       return TOP_RARE_PULL_SEASON;
-      case "default":                return TOP_DEFAULT;
+      case "miss":                       return TOP_MISS;
+      case "big_score":                  return TOP_BIG_SCORE;
+      case "rare_pull_record":           return TOP_RARE_PULL_RECORD;
+      case "rare_pull_career":           return TOP_RARE_PULL_CAREER;
+      // Legacy alias: union of all three rank sub-banks.
+      case "rare_pull_season":           return [
+        ...TOP_RARE_PULL_SEASON_RANK_1,
+        ...TOP_RARE_PULL_SEASON_RANK_2_3,
+        ...TOP_RARE_PULL_SEASON_RANK_4_PLUS,
+      ];
+      case "rare_pull_season_rank_1":      return TOP_RARE_PULL_SEASON_RANK_1;
+      case "rare_pull_season_rank_2_3":    return TOP_RARE_PULL_SEASON_RANK_2_3;
+      case "rare_pull_season_rank_4_plus": return TOP_RARE_PULL_SEASON_RANK_4_PLUS;
+      case "default":                      return TOP_DEFAULT;
     }
   })();
   return bank.map(line => [...line]);

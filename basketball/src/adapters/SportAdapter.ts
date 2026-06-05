@@ -24,10 +24,37 @@ registerRecordSources("basketball", {
   singleGameRecords: NBA_SINGLE_GAME_RECORDS,
   statAliases: STAT_ALIASES,
   careerCategories: [
-    { key: "pts",    label: v => `personal best — ${v} pts` },
-    { key: "reb",    label: v => `personal best — ${v} reb` },
-    { key: "ast",    label: v => `personal best — ${v} ast` },
-    { key: "threes", label: v => `personal best — ${v} threes` },
+    // Bug A fix (CODE HALF). detectCareerTier (shared/data/
+    // recordDetector.ts:152-176) iterates only the keys in this list,
+    // so a career-high in a stat that's absent here is structurally
+    // invisible to T1 detection — it falls through to T2 and badges as
+    // "SEASON HIGH" even when it's a true personal career best. Before
+    // this fix the list ended at `threes`; that's how Brandon Roy's
+    // Jan 24 2009 10-steals game (his real career high in stl, AND the
+    // league's #1 stl game of 0809) badged "SEASON HIGH" on prod.
+    //
+    // Adding stl / blk / turnovers below opens the T1 path for those
+    // categories. ⚠ HOWEVER ⚠ this is the code half ONLY: the
+    // basketball/public/data/careerHighs.json data file currently
+    // carries only { pts, reb, ast } per player (no stl / blk /
+    // turnovers values). Until that JSON is regenerated with the new
+    // keys, detectCareerTier's `highs[key]` lookup will return
+    // undefined for stl / blk / turnovers, T1 will skip them, and the
+    // tier will still fall through to T2. The badge for those stats
+    // will not flip from "SEASON HIGH" to "CAREER HIGH" until the
+    // careerHighs.json regen lands as a separate data task.
+    //
+    // turnovers is data-permissible per the pre-existing intent at
+    // STAT_LABEL_MAP (shared/commentary/chadChallenge.ts): "rare_pull
+    // on turnovers is data-permissible but reads ironically; left
+    // intentional pending feature-polish review."
+    { key: "pts",       label: v => `personal best — ${v} pts` },
+    { key: "reb",       label: v => `personal best — ${v} reb` },
+    { key: "ast",       label: v => `personal best — ${v} ast` },
+    { key: "threes",    label: v => `personal best — ${v} threes` },
+    { key: "stl",       label: v => `personal best — ${v} stl` },
+    { key: "blk",       label: v => `personal best — ${v} blk` },
+    { key: "turnovers", label: v => `personal best — ${v} turnovers` },
   ],
 });
 
