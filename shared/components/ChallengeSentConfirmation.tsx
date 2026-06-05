@@ -46,6 +46,23 @@ import {
   telegramUrl,
   redditUrl,
 } from "@shared/components/shareIntents";
+// Per-icon named imports from simple-icons (build lock rev 4, 2026-06-05).
+// Tree-shake-friendly: the package's index.mjs ships each brand mark as
+// its own top-level `export const siXxx = {…}`, so a Vite/Rollup build
+// drops the unused 3000+ icons. We import only the six we render. NOT
+// the deprecated `simple-icons/icons` subpath (removed in v17). Each
+// imported object carries `{ title, slug, hex, path, … }` — `hex` is the
+// official brand color (no leading #), `path` is the SVG `d` geometry.
+// Brand marks are rendered in their official form and color per
+// trademark usage guidance; we do not recolor or distort.
+import {
+  siX,
+  siFacebook,
+  siBluesky,
+  siWhatsapp,
+  siTelegram,
+  siReddit,
+} from "simple-icons";
 
 interface Props {
   shareUrl: string;
@@ -80,13 +97,24 @@ export function ChallengeSentConfirmation({
     try { window.open(url, "_blank", "noopener"); } catch { /* popup blocked */ }
   };
 
-  const destinations: Array<{ key: string; label: string; url: string }> = [
-    { key: "x",        label: SHARE_X_LABEL,        url: twitterUrl(shareHeadline, shareUrl) },
-    { key: "facebook", label: SHARE_FACEBOOK_LABEL, url: facebookUrl(shareUrl) },
-    { key: "bluesky",  label: SHARE_BLUESKY_LABEL,  url: blueskyUrl(shareHeadline, shareUrl) },
-    { key: "whatsapp", label: SHARE_WHATSAPP_LABEL, url: whatsAppUrl(shareHeadline, shareUrl) },
-    { key: "telegram", label: SHARE_TELEGRAM_LABEL, url: telegramUrl(shareHeadline, shareUrl) },
-    { key: "reddit",   label: SHARE_REDDIT_LABEL,   url: redditUrl(shareHeadline, shareUrl) },
+  // `hex` is the brand's official color (no leading #); `path` is the SVG
+  // 24×24 geometry. Both come from simple-icons verbatim — no recolor,
+  // no distort. The tile background uses the brand hex; the glyph is
+  // rendered white over it (the only neutral fill that reads against
+  // all six brand colors, including the X brand mark which is on
+  // black).
+  const destinations: Array<{
+    key: string;
+    label: string;
+    url: string;
+    icon: { title: string; hex: string; path: string };
+  }> = [
+    { key: "x",        label: SHARE_X_LABEL,        url: twitterUrl(shareHeadline, shareUrl), icon: siX },
+    { key: "facebook", label: SHARE_FACEBOOK_LABEL, url: facebookUrl(shareUrl),               icon: siFacebook },
+    { key: "bluesky",  label: SHARE_BLUESKY_LABEL,  url: blueskyUrl(shareHeadline, shareUrl), icon: siBluesky },
+    { key: "whatsapp", label: SHARE_WHATSAPP_LABEL, url: whatsAppUrl(shareHeadline, shareUrl), icon: siWhatsapp },
+    { key: "telegram", label: SHARE_TELEGRAM_LABEL, url: telegramUrl(shareHeadline, shareUrl), icon: siTelegram },
+    { key: "reddit",   label: SHARE_REDDIT_LABEL,   url: redditUrl(shareHeadline, shareUrl),  icon: siReddit },
   ];
 
   return (
@@ -161,7 +189,11 @@ export function ChallengeSentConfirmation({
           }}
         />
 
-        {/* 3×2 destination grid */}
+        {/* 3×2 destination grid. Brand-colored tiles with the official
+            simple-icons mark rendered in white over the brand hex. Text
+            label kept (NOT icon-only) for accessibility + clarity per
+            build lock rev 4. Each button's accessible name is its inner
+            text label; the SVG is decorative (`aria-hidden`). */}
         <div
           data-testid="challenge-sent-destinations"
           style={{
@@ -170,21 +202,34 @@ export function ChallengeSentConfirmation({
             gap: 8,
           }}
         >
-          {destinations.map(({ key, label, url }) => (
+          {destinations.map(({ key, label, url, icon }) => (
             <button
               key={key}
               onClick={() => openIntent(url)}
               data-share-destination={key}
               style={{
-                padding: "10px 8px", borderRadius: 10,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                color: "#EAF0FF",
-                fontSize: 13, fontWeight: 600,
+                padding: "10px 6px", borderRadius: 10,
+                background: `#${icon.hex}`,
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "#fff",
+                fontSize: 12, fontWeight: 700,
                 cursor: "pointer", letterSpacing: 0.3,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: 6,
+                minHeight: 64,
               }}
             >
-              {label}
+              <svg
+                viewBox="0 0 24 24"
+                width="22" height="22"
+                aria-hidden="true"
+                focusable="false"
+                style={{ display: "block" }}
+              >
+                <path fill="#fff" d={icon.path} />
+              </svg>
+              <span>{label}</span>
             </button>
           ))}
         </div>

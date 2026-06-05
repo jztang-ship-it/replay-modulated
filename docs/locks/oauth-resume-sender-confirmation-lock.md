@@ -5,7 +5,7 @@
 **Status:** LOCKED. Rev 3 (2026-06-05):
   - **Item 1 — Auth-nudge race fix.** Adds a presence-only sessionStorage check (`hasPendingResumeShare()`) plus an `isAnonymous` re-check inside the auth-modal setTimeout in `shared/views/GameView.tsx`. Stops the spurious "Save your progress" modal that the OAuth-resume Close revealed.
   - **Item 3 — Signed-in path converged onto the same modal.** `ChallengeSharePrompt` now opens `ChallengeSentConfirmation` after a successful create on the signed-in path too; the native `navigator.share()` / `shareChallenge` call from this site is gone. Both paths land on one identical surface.
-  - **Item 2 — Destination-button platform icons.** Held — no brand assets in repo, no icon library in deps; lightest option (inline SVG glyphs) proposed, **pending user OK** before pulling any dependency.
+  - **Item 2 — Destination-button platform icons (rev 4, 2026-06-05).** Added `simple-icons` (^16.22.0) to the worktree-root `package.json`. Per-icon named imports (`import { siX, siFacebook, siBluesky, siWhatsapp, siTelegram, siReddit } from "simple-icons"`) — the package's `index.mjs` ships each brand mark as its own top-level `export const`, so Vite/Rollup tree-shakes the remaining ~3000 unused icons. Tiles render the brand mark over the official brand hex with a white glyph; text labels stay alongside (NOT icon-only) per accessibility + clarity rule; the SVG is `aria-hidden` so each button's accessible name is its text label. No recolor, no distortion.
 
 ## Why this exists
 
