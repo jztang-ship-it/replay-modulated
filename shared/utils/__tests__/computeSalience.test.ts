@@ -96,17 +96,86 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     expect(salience?.primaryNegative?.label).toBe("1 turnover");
   });
 
-  it("hand-level (not anchor-only): sums contributions across all cards", () => {
-    // Two-card hand. Player A drives pts; Player B drives ast. The
-    // hand-level pts contribution (45 + 12 = 57 FP) should still beat
-    // the hand-level ast contribution (3*1.5 + 10*1.5 = 19.5 FP) —
-    // verifying we sum across the roster, not just look at one card.
+  it("held-level (not anchor-only): sums contributions across HELD cards", () => {
+    // Phase 4 Pass 1 held-only fix (was "hand-level... across all
+    // cards"). Two-card hand, BOTH HELD via the card() factory's
+    // wasHeld:true default. Player A drives pts; Player B drives ast.
+    // Held-only pts contribution (45 + 12 = 57 FP) beats held-only
+    // ast contribution (3*1.5 + 10*1.5 = 19.5 FP) — verifying we sum
+    // across the HELD subset, not just one card.
     const { salience } = computeSalience("big_score", "basketball", [
-      card({ basePlayerId: "A", statLine: { pts: 45, reb: 5, ast: 3 } }),
-      card({ basePlayerId: "B", statLine: { pts: 12, reb: 8, ast: 10 } }),
+      card({ basePlayerId: "A", wasHeld: true, statLine: { pts: 45, reb: 5, ast: 3 } }),
+      card({ basePlayerId: "B", wasHeld: true, statLine: { pts: 12, reb: 8, ast: 10 } }),
     ]);
     expect(salience?.primaryPositive?.category).toBe("pts");
     expect(salience?.primaryPositive?.value).toBe(57);
+  });
+
+  it("HELD-ONLY: unheld cards' stats do NOT contribute to primaryPositive / primaryNegative", () => {
+    // Phase 4 Pass 1 held-only-fix regression test (lock §4 item 2).
+    // Reproduces the real on-glass bug: the "Fourteen turnovers killed
+    // this before Bosh could matter." choke headline against
+    // challenge c3b8247b… — only 3 turnovers came from the user's two
+    // held cards (Bosh 2 + Jefferson 1); the other 11 turnovers came
+    // from bench cards the user cut (Duncan alone had 6). The
+    // narrative SALIENCE block must reflect the user's DECISIONS (the
+    // held cards), not the all-cards box score (which is the FP-score
+    // scope, not the narrative scope).
+    //
+    // Held subset for this test:
+    //   Bosh:      2 TO,  12 pts → contributes pts +12, turnovers −2
+    //   Jefferson: 1 TO,  27 pts → contributes pts +27, turnovers −1
+    //   held totals: pts 39, turnovers 3
+    //
+    // Bench (must be ignored):
+    //   Duncan: 6 TO  ← largest single-card negative; pre-fix would
+    //                   have dominated the negative aggregate
+    //   Jack:   3 TO
+    //   Arthur: 1 TO
+    //   Speights: 1 TO
+    //   bench would have added: pts +37, turnovers −11
+    //
+    // Expected (post-fix): primaryPositive = "39 points";
+    //                      primaryNegative = "3 turnovers" (NOT 14).
+    // Pre-fix this test FAILS because the all-cards aggregate would
+    // surface primaryPositive.value=76 and primaryNegative.label="14
+    // turnovers" — verified by removing the wasHeld guard locally and
+    // observing the assertion deltas.
+    const { salience } = computeSalience("choke", "basketball", [
+      card({ basePlayerId: "2547", name: "Chris Bosh",   wasHeld: true,
+             actualFp: 27.8, projectedFp: 39.9,
+             statLine: { pts: 12, reb: 9, ast: 2, stl: 2, blk: 0, turnovers: 2 } }),
+      card({ basePlayerId: "2744", name: "Al Jefferson", wasHeld: true,
+             actualFp: 51.5, projectedFp: 41.7,
+             statLine: { pts: 27, reb: 5, ast: 5, stl: 2, blk: 3, turnovers: 1 } }),
+      card({ basePlayerId: "1717", name: "Tim Duncan",   wasHeld: false,
+             actualFp: 15.8, projectedFp: 39.6,
+             statLine: { pts: 14, reb: 9, ast: 2, stl: 0, blk: 0, turnovers: 6 } }),
+      card({ basePlayerId: "201571", name: "Jarrett Jack", wasHeld: false,
+             actualFp: 24.4, projectedFp: 23.6,
+             statLine: { pts: 13, reb: 7, ast: 4, stl: 0, blk: 0, turnovers: 3 } }),
+      card({ basePlayerId: "201589", name: "Darrell Arthur", wasHeld: false,
+             actualFp: 5.2, projectedFp: 14,
+             statLine: { pts: 3, reb: 1, ast: 0, stl: 1, blk: 0, turnovers: 1 } }),
+      card({ basePlayerId: "201578", name: "Marreese Speights", wasHeld: false,
+             actualFp: 15.6, projectedFp: 14.2,
+             statLine: { pts: 7, reb: 3, ast: 0, stl: 1, blk: 2, turnovers: 1 } }),
+    ]);
+    // Held-only positive: pts wins (39 from Bosh+Jefferson, NOT 76 all-cards).
+    expect(salience?.primaryPositive?.category).toBe("pts");
+    expect(salience?.primaryPositive?.value).toBe(39);
+    expect(salience?.primaryPositive?.label).toBe("39 points");
+    // The critical regression assertion: held-only negative is 3
+    // turnovers (Bosh 2 + Jefferson 1), NOT 14 (the all-cards sum).
+    expect(salience?.primaryNegative?.category).toBe("turnovers");
+    expect(salience?.primaryNegative?.value).toBe(-3);
+    expect(salience?.primaryNegative?.label).toBe("3 turnovers");
+    // The narrative's better "why" for this choke is the held shortfall —
+    // Bosh delivered 27.8 vs projected 39.9 (-12.1) while Jefferson over-
+    // performed (+9.8) — so primaryDragPlayer correctly surfaces Bosh.
+    expect(salience?.primaryDragPlayer?.basePlayerId).toBe("2547");
+    expect(salience?.primaryDragPlayer?.name).toBe("Chris Bosh");
+    expect(salience?.primaryDragPlayer?.shortfall).toBe(-12.1);
   });
 });
 

@@ -51,9 +51,29 @@ export interface SalienceComputation {
   salience: NonNullable<CommentaryFacts["salience"]> | undefined;
 }
 
-/** Per-stat FP-contribution sum across the roster, plus the raw stat
- *  count per key for the human-readable label. Pure: no side effects,
- *  weights passed in. */
+/** Per-stat FP-contribution sum across HELD cards only, plus the raw
+ *  stat count per key for the human-readable label. Pure: no side
+ *  effects, weights passed in.
+ *
+ *  Phase 4 Pass 1 held-only fix (lock: docs/phase4-pass1-salience-
+ *  held-only-lock.md §1). The narrative-salience signals fed to
+ *  primaryPositive / primaryNegative critique the user's HELD lineup
+ *  — the decisions they made — not the full roster's box score. The
+ *  earlier all-cards aggregation was correctly-sourced-but-wrongly-
+ *  scoped: e.g. an on-glass choke headline "Fourteen turnovers killed
+ *  this before Bosh could matter." where only 3 turnovers came from
+ *  held cards and the other 11 from bench cards the user cut.
+ *
+ *  Held filter mirrors the existing primaryDragPlayer loop pattern
+ *  (`if (c.wasHeld !== true) continue;`): skip cards where wasHeld is
+ *  not strictly true. Cards missing the flag are treated as unheld;
+ *  CommentaryFactsCard.wasHeld is always populated in production
+ *  (ChallengeSharePrompt maps `c.wasHeld === true` explicitly).
+ *
+ *  Does NOT change the FP score / target_fp / tier / payout math —
+ *  those paths read `actualFp` directly and never call this helper.
+ *  The two scopes (score = all cards, narrative = held cards) are
+ *  intentionally different per the lock's two-lens principle. */
 function rankPerStat(
   cards: ReadonlyArray<CommentaryFactsCard>,
   weights: Readonly<Record<string, number>>,
@@ -61,6 +81,7 @@ function rankPerStat(
   const fpByStat: Record<string, number> = {};
   const rawCountByStat: Record<string, number> = {};
   for (const c of cards) {
+    if (c.wasHeld !== true) continue;
     if (!c.statLine) continue;
     const detailed: FpBreakdown = computeBasketballFpDetailed(c.statLine, weights);
     for (const [k, contrib] of Object.entries(detailed.breakdown)) {
