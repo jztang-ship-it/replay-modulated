@@ -18,6 +18,7 @@ import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
+import { LINK_COPIED_LABEL } from "@shared/components/shareCopyLabels";
 import { AuthContext } from "@shared/auth/AuthProvider";
 import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
 // Phase 4 Pass 1 — salience computation lives in shared/utils so the
@@ -535,7 +536,7 @@ export function ChallengeSharePrompt({
           : isCreating
             ? "Creating..."
             : copied
-              ? "Link Copied! ✓"
+              ? LINK_COPIED_LABEL
               : isRivalryBack
                 ? `Send to ${rivalryTargetName ?? "your friend"}`
                 : "Challenge a Friend"}

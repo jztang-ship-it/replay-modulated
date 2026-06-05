@@ -27,6 +27,7 @@ import { AuthProvider } from "@shared/auth/AuthProvider";
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ResumeShareSurface } from "@shared/components/ResumeShareSurface";
+import { ChallengeSentConfirmation } from "@shared/components/ChallengeSentConfirmation";
 import { PasswordResetSurface } from "@shared/components/PasswordResetSurface";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
@@ -164,6 +165,14 @@ function AppInner() {
   // (state machine resets to pre_deal, fresh resolve).
   const [h2hPlayingMode, setH2hPlayingMode] = useState(false);
   const [h2hPlayKey, setH2hPlayKey] = useState(0);
+  // OAuth-resume sender confirmation (build lock: docs/locks/
+  // oauth-resume-sender-confirmation-lock.md). Holds {challengeId,
+  // shareUrl, sport} once ResumeShareSurface has posted the resumed
+  // challenge; ChallengeSentConfirmation renders over the IDLE tree
+  // until the user dismisses. The signed-in path is byte-unchanged —
+  // it still relies on the RESULTS-phase ChallengeSharePrompt's
+  // implicit "Link Copied! ✓" confirmation.
+  const [resumeSent, setResumeSent] = useState<{ challengeId: string; shareUrl: string; sport: string } | null>(null);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
@@ -282,7 +291,7 @@ function AppInner() {
           Friend → Google → redirect → tree rebuilds → this surface picks
           up the persisted share state and renders the post-auth half of
           the unified modal. Silent no-op when there's no pending share. */}
-      <ResumeShareSurface />
+      <ResumeShareSurface onResumeChallengeCreated={setResumeSent} />
       {/* Phase 5b piece 1 U4-g (2026-05-28, doc lock 8004211): password
           recovery surface. Self-managed state machine: email-entry
           (triggered by RegisterModal's Forgot password link via
@@ -585,6 +594,16 @@ function AppInner() {
               });
           }}
           onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
+        />
+      )}
+      {/* OAuth-resume sender confirmation. Mounted at App level so it
+          overlays the IDLE GameView that re-mounts post-redirect. State
+          fires from ResumeShareSurface.onResumeChallengeCreated. */}
+      {resumeSent && (
+        <ChallengeSentConfirmation
+          shareUrl={resumeSent.shareUrl}
+          sport={resumeSent.sport}
+          onDismiss={() => setResumeSent(null)}
         />
       )}
       {/* Other user's achievement wall — rendered when visiting /basketball/profile/:userId */}
