@@ -18,7 +18,7 @@ import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
-import { LINK_COPIED_LABEL } from "@shared/components/shareCopyLabels";
+import { ChallengeSentConfirmation } from "@shared/components/ChallengeSentConfirmation";
 import { AuthContext } from "@shared/auth/AuthProvider";
 import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
 // Phase 4 Pass 1 — salience computation lives in shared/utils so the
@@ -77,8 +77,18 @@ export function ChallengeSharePrompt({
   // linkGoogle / signIn / signInGoogle pulled from AuthContext to feed
   // the unified RegisterModal.
   const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useContext(AuthContext);
-  const [copied, setCopied] = useState(false);
-  const { isCreating, challengeId, error, createChallenge, shareChallenge } = useChallengeShare(sport);
+  // Build lock rev 3 (2026-06-05): signed-in path now opens the same
+  // ChallengeSentConfirmation modal the OAuth-resume path uses. The
+  // prior `copied` + 2.5s `setTimeout` affordance on the CTA button is
+  // gone — the modal owns the Link Copied affordance via its own Copy
+  // link bar. `shareChallenge` from useChallengeShare is no longer
+  // called from this site (the hook still exports it; no other callers).
+  const { isCreating, challengeId, error, createChallenge } = useChallengeShare(sport);
+  // Inline modal mount state. Non-null while the consolidated share
+  // surface is open over the RESULTS-phase prompt. shareHeadline is
+  // `effectiveHeadline` from settleHeadline() — passed by value, never
+  // re-resolved inside the modal.
+  const [sentModal, setSentModal] = useState<{ shareUrl: string; shareHeadline: string } | null>(null);
 
   // Rivalry-back mode forces the prominent prompt regardless of the
   // underlying trigger (default-trigger fresh hands would otherwise
@@ -298,15 +308,13 @@ export function ChallengeSharePrompt({
     }
     if (!cid) return;
     const url = `${window.location.origin}/${sport}/challenge/${cid}`;
-    // Share text mirrors what landed in share_headline so the recipient
-    // sees the same line on the share preview, the OG card, and the
-    // sender's outgoing message. effectiveHeadline already incorporates
-    // the bank-pick fallback for null / default-trigger cases.
-    await shareChallenge(effectiveHeadline, url, "");
-    if (!navigator.share) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
+    // Build lock rev 3 (2026-06-05): open the consolidated
+    // ChallengeSentConfirmation modal instead of firing navigator.share.
+    // Both paths (signed-in here + OAuth-resume via ResumeShareSurface)
+    // now land on the same surface — link field, six destination
+    // buttons, Copy link bar. effectiveHeadline arrives as a string by
+    // value through the prop; the modal renders it as-is.
+    setSentModal({ shareUrl: url, shareHeadline: effectiveHeadline });
   }
 
   // Static labels for the fixed-text triggers. The miss trigger is
@@ -429,6 +437,14 @@ export function ChallengeSharePrompt({
       <>
         {nameModal}
         {authModal}
+        {sentModal && (
+          <ChallengeSentConfirmation
+            shareUrl={sentModal.shareUrl}
+            sport={sport}
+            shareHeadline={sentModal.shareHeadline}
+            onDismiss={() => setSentModal(null)}
+          />
+        )}
         <button
           onClick={onCtaTap}
           disabled={isCreating || isCraftingHeadline}
@@ -447,7 +463,7 @@ export function ChallengeSharePrompt({
             lineHeight: 1,
           }}
         >
-          {(isCraftingHeadline || isCreating) ? "…" : copied ? "✓" : "↗"}
+          {(isCraftingHeadline || isCreating) ? "…" : "↗"}
         </button>
       </>
     );
@@ -457,6 +473,14 @@ export function ChallengeSharePrompt({
     <>
     {nameModal}
     {authModal}
+    {sentModal && (
+      <ChallengeSentConfirmation
+        shareUrl={sentModal.shareUrl}
+        sport={sport}
+        shareHeadline={sentModal.shareHeadline}
+        onDismiss={() => setSentModal(null)}
+      />
+    )}
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000,
       background: "linear-gradient(0deg, #0D1628 0%, rgba(13,22,40,0.97) 100%)",
@@ -535,11 +559,9 @@ export function ChallengeSharePrompt({
           ? "Crafting headline…"
           : isCreating
             ? "Creating..."
-            : copied
-              ? LINK_COPIED_LABEL
-              : isRivalryBack
-                ? `Send to ${rivalryTargetName ?? "your friend"}`
-                : "Challenge a Friend"}
+            : isRivalryBack
+              ? `Send to ${rivalryTargetName ?? "your friend"}`
+              : "Challenge a Friend"}
       </button>
     </div>
     </>

@@ -2,7 +2,10 @@
 
 **Type:** build lock (Thread #1 / OAuth-resume sender lands on nothing).
 **Branch:** `feat/oauth-resume-sender-confirmation` (parked off `main` for an isolated Vercel preview); do NOT merge to main.
-**Status:** LOCKED. Rev 2 (2026-06-05) — consolidated modal expansion: native `navigator.share()` removed from the resume path, replaced by an in-modal preview + read-only link field + six destination buttons + Copy link.
+**Status:** LOCKED. Rev 3 (2026-06-05):
+  - **Item 1 — Auth-nudge race fix.** Adds a presence-only sessionStorage check (`hasPendingResumeShare()`) plus an `isAnonymous` re-check inside the auth-modal setTimeout in `shared/views/GameView.tsx`. Stops the spurious "Save your progress" modal that the OAuth-resume Close revealed.
+  - **Item 3 — Signed-in path converged onto the same modal.** `ChallengeSharePrompt` now opens `ChallengeSentConfirmation` after a successful create on the signed-in path too; the native `navigator.share()` / `shareChallenge` call from this site is gone. Both paths land on one identical surface.
+  - **Item 2 — Destination-button platform icons.** Held — no brand assets in repo, no icon library in deps; lightest option (inline SVG glyphs) proposed, **pending user OK** before pulling any dependency.
 
 ## Why this exists
 
@@ -17,14 +20,15 @@ We are building the missing sender-side confirmation, not routing to an existing
 - `shared/components/shareCopyLabels.ts` (new) — lifted-out constant(s) so `ChallengeSentConfirmation` and the existing `ChallengeSharePrompt` reuse the same string by reference. Also holds the six destination-button UI labels (`SHARE_X_LABEL`, `SHARE_FACEBOOK_LABEL`, `SHARE_BLUESKY_LABEL`, `SHARE_WHATSAPP_LABEL`, `SHARE_TELEGRAM_LABEL`, `SHARE_REDDIT_LABEL`) — UI labels only, NOT share message copy.
 - `shared/components/ResumeShareSurface.tsx` — adds `onResumeChallengeCreated({ challengeId, shareUrl, sport, shareHeadline })` prop; fires after the successful `/api/challenge/create` POST. `clearPending()` / `setPending(null)` preserved. The prior auto-share/clipboard block (was at `:223-231` in rev 1) is **deleted** — the consolidated modal is the share surface; `resumeShareUrl` and the `track(...)` analytics call remain.
 - `basketball/src/App.tsx` — holds `resumeSent` state (now `{ challengeId, shareUrl, sport, shareHeadline } | null`); passes `onResumeChallengeCreated` to `ResumeShareSurface` (mounted at `:285`); on fire, renders `<ChallengeSentConfirmation>` over the IDLE tree; `onDismiss` clears the state.
-- `shared/components/ChallengeSharePrompt.tsx` — strings-only touch. Replaces the inline `"Link Copied! ✓"` literal at `:538` with an import from `shareCopyLabels.ts`. The signed-in path (`:299-308`) is byte-unchanged.
+- `shared/components/ChallengeSharePrompt.tsx` — **rev 3 expansion**: signed-in path now opens the consolidated modal. Adds local `sentModal` state; `continueShareAfterName` calls `setSentModal({ shareUrl, shareHeadline: effectiveHeadline })` after `createChallenge` succeeds instead of `shareChallenge(...)`. The prior `copied` / 2.5s setTimeout affordance + the `LINK_COPIED_LABEL` import are removed (the modal's own Copy link bar owns the affordance now). `useChallengeShare.shareChallenge` is no longer called from this site; the hook is **NOT touched** (the export stays, dead on the call side — `shareChallenge` had exactly one caller per the lock recon).
+- `shared/views/GameView.tsx` — **rev 3 addition**: presence-only `hasPendingResumeShare()` module-level helper that reads `sessionStorage.getItem("replaymod_pending_challenge_share_v1") !== null`. Does NOT parse, does NOT import the key constant from `ResumeShareSurface` (the key string is duplicated intentionally to keep the gate dependency-free). The helper gates the two auth-nudge effects (`big_win` ~:923, `hand_5` ~:931) and short-circuits the chad pass at the top of the chad effect (~:843) so the chained `tryOpenAuthModal` at ~:872 never schedules. Plus an `isAnonymousRef` mirror + an `isAnonymous` re-check inside `tryOpenAuthModal`'s setTimeout body as a belt-and-suspenders guard for any already-scheduled timer.
 
 ## What this lock forbids
 
-- Convergence with the signed-in path (`ChallengeSharePrompt.tsx:299-308`) — that flow works as-is; no changes this PR.
 - `history.pushState` or any navigation to `/${sport}/challenge/${id}` (the recipient route is the wrong surface).
 - Any change to `shared/auth/AuthProvider.tsx` or the OAuth redirect (`oauthRedirectUrl`, `signInWithOAuth`, `linkIdentity`).
 - Any edit under `api/`, `shared/utils/`, `shared/data/`, `shared/commentary/`.
+- Any edit to `shared/hooks/useChallengeShare.ts`. Item 3 (rev 3) stops *calling* `shareChallenge` from `ChallengeSharePrompt` but does NOT alter the hook itself. The dead export stays; cleanup is a separate follow-up.
 - Any edit to `baseball/src/App.tsx` or `football/src/App.tsx`. Parity is reported as a pre-written fast-follow diff for per-sport on-glass verification before any of those ship.
 
 ## Strings
