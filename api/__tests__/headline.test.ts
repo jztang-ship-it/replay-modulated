@@ -339,7 +339,11 @@ describe("generateHeadline — composes VOICE_CONTRACT + routes", () => {
     await generateHeadline(factsRarePullWade());
     expect(mockRouteCommentary).toHaveBeenCalledOnce();
     const [system, user] = mockRouteCommentary.mock.calls[0];
-    expect(system).toContain("═══ CHAD'S VOICE");
+    // Phase 4 Pass 2 §B retired the "CHAD'S VOICE" / Norman Chad
+    // named-commentator framing in favor of "COMMENTARY VOICE —
+    // REPLAYMOD STANDARD". Assert against the distinctive stable
+    // portion so cosmetic ═══ padding changes don't re-break this.
+    expect(system).toContain("COMMENTARY VOICE — REPLAYMOD STANDARD");
     expect(system).toContain("═══ SURFACE: CHALLENGE HEADLINE");
     expect(system).toContain("game is from season 0809");
     expect(user).toContain("SEASON: 0809");
