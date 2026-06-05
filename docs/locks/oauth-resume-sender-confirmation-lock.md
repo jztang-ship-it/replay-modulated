@@ -1,8 +1,8 @@
 # OAuth-resume sender confirmation — build lock
 
 **Type:** build lock (Thread #1 / OAuth-resume sender lands on nothing).
-**Branch:** `fix/rare-pull-rank-and-career-categories` (worktree); do NOT merge to main this PR.
-**Status:** LOCKED.
+**Branch:** `feat/oauth-resume-sender-confirmation` (parked off `main` for an isolated Vercel preview); do NOT merge to main.
+**Status:** LOCKED. Rev 2 (2026-06-05) — consolidated modal expansion: native `navigator.share()` removed from the resume path, replaced by an in-modal preview + read-only link field + six destination buttons + Copy link.
 
 ## Why this exists
 
@@ -12,10 +12,11 @@ We are building the missing sender-side confirmation, not routing to an existing
 
 ## Files this lock owns (sole writer)
 
-- `shared/components/ChallengeSentConfirmation.tsx` (new) — sender-side post-share confirmation. Props: `{ shareUrl, sport, onDismiss }`. Renders the share URL plus a Copy link button that writes to clipboard on tap (user gesture) and flips its label to the Link Copied affordance. NOT the recipient take-challenge page.
-- `shared/components/shareCopyLabels.ts` (new) — lifted-out constant(s) so `ChallengeSentConfirmation` and the existing `ChallengeSharePrompt` reuse the same string by reference. No new copy authored.
-- `shared/components/ResumeShareSurface.tsx` — adds `onResumeChallengeCreated({ challengeId, shareUrl, sport })` prop; fires after the successful `/api/challenge/create` POST. `clearPending()` / `setPending(null)` preserved. The existing auto-share/clipboard block (lines 182-191) stays in place, defensively wrapped so a post-redirect gesture failure can't throw and abort the handler before the callback fires.
-- `basketball/src/App.tsx` — holds `resumeSent` state; passes `onResumeChallengeCreated` to `ResumeShareSurface` (mounted at `:285`); on fire, renders `<ChallengeSentConfirmation>` over the IDLE tree; `onDismiss` clears the state.
+- `shared/components/ChallengeSentConfirmation.tsx` (new) — sender-side post-share confirmation, **consolidated modal** (rev 2). Props: `{ shareUrl, sport, shareHeadline, onDismiss }`. Layout top→bottom: header (title slot + close X), message preview rendered as-is from `shareHeadline` (empty slot if the prop is empty — no fallback copy authored), read-only selectable share-link field, 3×2 grid of six destination buttons (X/Twitter, Facebook, Bluesky, WhatsApp, Telegram, Reddit) each opening its `shareIntents.ts` URL via `window.open(url, "_blank", "noopener")`, full-width Copy link bar at the bottom reusing `COPY_LINK_LABEL`/`LINK_COPIED_LABEL`. NOT the recipient take-challenge page.
+- `shared/components/shareIntents.ts` (new) — pure URL builders for the six destinations. No React, no side effects, `encodeURIComponent` on every interpolated value. Exposes `twitterUrl(text, url)`, `facebookUrl(url)`, `blueskyUrl(text, url)`, `whatsAppUrl(text, url)`, `telegramUrl(text, url)`, `redditUrl(text, url)`.
+- `shared/components/shareCopyLabels.ts` (new) — lifted-out constant(s) so `ChallengeSentConfirmation` and the existing `ChallengeSharePrompt` reuse the same string by reference. Also holds the six destination-button UI labels (`SHARE_X_LABEL`, `SHARE_FACEBOOK_LABEL`, `SHARE_BLUESKY_LABEL`, `SHARE_WHATSAPP_LABEL`, `SHARE_TELEGRAM_LABEL`, `SHARE_REDDIT_LABEL`) — UI labels only, NOT share message copy.
+- `shared/components/ResumeShareSurface.tsx` — adds `onResumeChallengeCreated({ challengeId, shareUrl, sport, shareHeadline })` prop; fires after the successful `/api/challenge/create` POST. `clearPending()` / `setPending(null)` preserved. The prior auto-share/clipboard block (was at `:223-231` in rev 1) is **deleted** — the consolidated modal is the share surface; `resumeShareUrl` and the `track(...)` analytics call remain.
+- `basketball/src/App.tsx` — holds `resumeSent` state (now `{ challengeId, shareUrl, sport, shareHeadline } | null`); passes `onResumeChallengeCreated` to `ResumeShareSurface` (mounted at `:285`); on fire, renders `<ChallengeSentConfirmation>` over the IDLE tree; `onDismiss` clears the state.
 - `shared/components/ChallengeSharePrompt.tsx` — strings-only touch. Replaces the inline `"Link Copied! ✓"` literal at `:538` with an import from `shareCopyLabels.ts`. The signed-in path (`:299-308`) is byte-unchanged.
 
 ## What this lock forbids
@@ -28,4 +29,4 @@ We are building the missing sender-side confirmation, not routing to an existing
 
 ## Strings
 
-The new surface authors NO new copy. The constants in `shareCopyLabels.ts` are lifted verbatim from inline presentation-chrome literals already in `shared/components/`. None come from `shared/commentary/`, `shared/data/`, or `api/`.
+The new surface authors NO **share message** copy — the message preview slot renders the `shareHeadline` prop as-is and falls back to empty when it's empty. `COPY_LINK_LABEL`/`LINK_COPIED_LABEL` in `shareCopyLabels.ts` are lifted verbatim from inline presentation-chrome literals already in `shared/components/`. The six `SHARE_*_LABEL` constants are new UI labels (brand names only — `"X"`, `"Facebook"`, etc.) and are explicitly scoped to button chrome by this lock; they are NOT share copy. None of these strings come from `shared/commentary/`, `shared/data/`, `shared/utils/`, or `api/`.

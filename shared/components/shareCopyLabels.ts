@@ -18,3 +18,15 @@
 
 export const LINK_COPIED_LABEL = "Link Copied! ✓";
 export const COPY_LINK_LABEL = "Copy link";
+
+// Destination-button UI labels for ChallengeSentConfirmation's six-grid
+// (rev 2, 2026-06-05). These are CHROME labels (brand names) — NOT share
+// message copy. The shared message that goes out the door is passed
+// through ChallengeSentConfirmation's shareHeadline prop as-is and is
+// authored upstream (see lock §Strings).
+export const SHARE_X_LABEL = "X";
+export const SHARE_FACEBOOK_LABEL = "Facebook";
+export const SHARE_BLUESKY_LABEL = "Bluesky";
+export const SHARE_WHATSAPP_LABEL = "WhatsApp";
+export const SHARE_TELEGRAM_LABEL = "Telegram";
+export const SHARE_REDDIT_LABEL = "Reddit";

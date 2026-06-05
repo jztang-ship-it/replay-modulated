@@ -166,13 +166,20 @@ function AppInner() {
   const [h2hPlayingMode, setH2hPlayingMode] = useState(false);
   const [h2hPlayKey, setH2hPlayKey] = useState(0);
   // OAuth-resume sender confirmation (build lock: docs/locks/
-  // oauth-resume-sender-confirmation-lock.md). Holds {challengeId,
-  // shareUrl, sport} once ResumeShareSurface has posted the resumed
-  // challenge; ChallengeSentConfirmation renders over the IDLE tree
-  // until the user dismisses. The signed-in path is byte-unchanged —
-  // it still relies on the RESULTS-phase ChallengeSharePrompt's
-  // implicit "Link Copied! ✓" confirmation.
-  const [resumeSent, setResumeSent] = useState<{ challengeId: string; shareUrl: string; sport: string } | null>(null);
+  // oauth-resume-sender-confirmation-lock.md, rev 2). Holds
+  // {challengeId, shareUrl, sport, shareHeadline} once ResumeShareSurface
+  // has posted the resumed challenge; ChallengeSentConfirmation
+  // (consolidated modal — preview + link field + six destination
+  // buttons + Copy link) renders over the IDLE tree until the user
+  // dismisses. The signed-in path is byte-unchanged — it still relies
+  // on the RESULTS-phase ChallengeSharePrompt's implicit
+  // "Link Copied! ✓".
+  const [resumeSent, setResumeSent] = useState<{
+    challengeId: string;
+    shareUrl: string;
+    sport: string;
+    shareHeadline: string;
+  } | null>(null);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
@@ -603,6 +610,7 @@ function AppInner() {
         <ChallengeSentConfirmation
           shareUrl={resumeSent.shareUrl}
           sport={resumeSent.sport}
+          shareHeadline={resumeSent.shareHeadline}
           onDismiss={() => setResumeSent(null)}
         />
       )}

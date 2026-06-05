@@ -96,18 +96,24 @@ function clearPending(): void {
 
 interface ResumeShareSurfaceProps {
   /** OAuth-resume sender confirmation hook (build lock: docs/locks/
-   *  oauth-resume-sender-confirmation-lock.md). Fired once the post-
-   *  redirect /api/challenge/create POST succeeds, regardless of whether
-   *  the opportunistic native share / clipboard attempt that follows
-   *  succeeds. Caller (App.tsx) renders <ChallengeSentConfirmation /> over
-   *  the IDLE tree so the sender lands on an explicit confirmation surface
-   *  instead of a virgin game. Optional so existing call sites that
-   *  haven't wired the surface yet keep today's silent-completion
-   *  behavior. */
+   *  oauth-resume-sender-confirmation-lock.md, rev 2). Fired once the
+   *  post-redirect /api/challenge/create POST succeeds. Caller (App.tsx)
+   *  renders <ChallengeSentConfirmation /> over the IDLE tree so the
+   *  sender lands on an explicit confirmation surface instead of a
+   *  virgin game.
+   *
+   *  shareHeadline plumbs the pre-resolved effective share message
+   *  (authored line when available, bank fallback otherwise) by value
+   *  from `pending.share_headline`. The modal renders it as-is in the
+   *  preview slot — this surface does not author share copy.
+   *
+   *  Optional so existing call sites that haven't wired the surface
+   *  yet keep today's silent-completion behavior. */
   onResumeChallengeCreated?: (info: {
     challengeId: string;
     shareUrl: string;
     sport: string;
+    shareHeadline: string;
   }) => void;
 }
 
@@ -194,41 +200,28 @@ export function ResumeShareSurface({ onResumeChallengeCreated }: ResumeShareSurf
         trigger: pending.trigger_type, target_score: pending.total_fp,
         resumed_from_oauth: true,
       });
-      // Resolve the share URL once — both the confirmation hook AND the
-      // opportunistic native-share block below consume it. Same fallback
-      // shape as useChallengeShare.shareChallenge.
+      // Resolve the share URL once. Same fallback shape as
+      // useChallengeShare.shareChallenge.
       const resumeShareUrl: string = data.share_url
         || `${window.location.origin}/${pending.sport}/challenge/${data.challenge_id}`;
       // Sender-confirmation hook (build lock: docs/locks/oauth-resume-
-      // sender-confirmation-lock.md). Fired BEFORE the opportunistic
-      // navigator.share / clipboard block so a gesture failure inside
-      // that try/catch can't race ahead of the surface render. The
-      // outer try/catch around handlePostChallenge still guards POST
-      // errors — the callback only fires on a successful create.
+      // sender-confirmation-lock.md, rev 2). The consolidated modal that
+      // App.tsx mounts in response is now the sole share surface on this
+      // path — the prior opportunistic navigator.share / clipboard block
+      // is gone (rev 2): post-redirect it ran without a fresh user
+      // gesture and silently no-op'd on most browsers anyway. shareUrl
+      // and shareHeadline are plumbed by value so the modal renders the
+      // preview slot as-is without re-reading sessionStorage.
       try {
         onResumeChallengeCreated?.({
           challengeId: data.challenge_id,
           shareUrl: resumeShareUrl,
           sport: pending.sport,
+          shareHeadline: pending.share_headline,
         });
       } catch (cbErr) {
         console.warn("[resume-share] confirmation callback threw:", cbErr);
       }
-      // Hand off to navigator.share / clipboard. Same shape as
-      // useChallengeShare.shareChallenge. Defensively wrapped: post-
-      // redirect this runs without a fresh user gesture and may throw
-      // / silently no-op on some browsers. A failure here MUST NOT
-      // abort the handler — the confirmation surface (just fired above)
-      // is the reliable copy path; this is opportunistic.
-      try {
-        const title = pending.share_headline || "Take my challenge";
-        if (navigator.share) {
-          await navigator.share({ title, text: title, url: resumeShareUrl });
-        } else {
-          const clipboardPayload = title ? `${title}\n\n${resumeShareUrl}` : resumeShareUrl;
-          await navigator.clipboard.writeText(clipboardPayload);
-        }
-      } catch { /* user cancelled native share / gesture-less context — not an error */ }
     } catch (err) {
       console.error("[resume-share] POST failed:", err);
       // Leave sessionStorage in place so a retry surface (if added later)
