@@ -86,6 +86,37 @@ function factsRarePullWade(): any {
   };
 }
 
+// Phase 4 Pass 2 numeric-grounding boundary pin (lock: docs/phase4-pass2-
+// premerge-numeric-grounding-lock.md §1 "Matching / tolerance"). This
+// fixture deliberately omits SEASON digits (season:"00" → 0), knownFor
+// digits (knownFor:""), salience, and topReason so the only rendered
+// fact number > 7 is totalFp=237.4. That isolates numberMatchesAllowed's
+// LOW-side band (|N − F| < 10^(−dp(N))) from extractAllowedNumbers'
+// rendered-prompt scraping, which currently admits SEASON / knownFor
+// digits into the allowed set. The broader scrape behavior is tracked
+// separately as a validator-tightening item — do NOT widen it here.
+function factsNumericLowBand(): any {
+  return {
+    surface: "challenge_headline",
+    sport: "basketball",
+    season: "00",
+    trigger: "big_score",
+    verdict: "credited",
+    winTier: "STARTER",
+    totalFp: 237.4,
+    fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
+    anchor: {
+      name: "TEST PLAYER",
+      basePlayerId: "0",
+      nicknames: [],
+      knownFor: "",
+      tier: "RED",
+      team: "ATL",
+      statLine: { pts: 30, reb: 5, ast: 4, stl: 2, blk: 1, turnovers: 0 },
+    },
+  };
+}
+
 beforeEach(() => {
   mockRouteCommentary.mockReset();
   mockWaitUntil.mockReset();
@@ -307,6 +338,28 @@ describe("validateHeadline — output guards", () => {
 
   it("strict empty check after trim", () => {
     expect(validateHeadline("\n\t  \n", facts).ok).toBe(false);
+  });
+
+  // Phase 4 Pass 2 §1 numeric-grounding — band-boundary pins against
+  // factsNumericLowBand (totalFp=237.4, max other allowed=30). The
+  // permissive matching rule `|N − F| < 10^(−dp(N))` accepts N just
+  // above F at dp=0; the worked examples in the lock cover the
+  // round-up side but no test pinned the LOW-side band until now.
+  it("accepts N when an allowed F sits in (N−1, N) at dp=0 (LOW-side band)", () => {
+    const r = validateHeadline("238 FP for the night.", factsNumericLowBand());
+    expect(r.ok).toBe(true);
+  });
+
+  it("rejects N when no allowed F sits within the unit band at N's precision", () => {
+    const r = validateHeadline("239 FP for the night.", factsNumericLowBand());
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("number_not_in_facts:239");
+  });
+
+  it("rejects single-digit N where the band is tight at dp=0 (the '8 vs 7' case)", () => {
+    const r = validateHeadline("8 FP short of ALL-STAR.", factsNumericLowBand());
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("number_not_in_facts:8");
   });
 });
 
