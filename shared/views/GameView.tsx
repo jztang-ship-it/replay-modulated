@@ -625,6 +625,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     return !seenToday || !introSeen;
   });
   const [trophyPulsing, setTrophyPulsing] = useState(false);
+  const [trophyBurst, setTrophyBurst] = useState(false);
 
   // ── Referral capture + claim ────────────────────────────────────────
   useEffect(() => {
@@ -941,6 +942,32 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
   }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
+
+  // Trophy burst — fires when the user lands on the daily leaderboard,
+  // independent of (and parallel to) the isAnonymous-gated chad
+  // leaderboard_intro topic so it celebrates registered users too. Edge-
+  // detected via the rm_board_pulsed_state key (owned by this branch)
+  // against rm_on_board_today (read-only here; that flag's writer is
+  // shared/utils/leaderboardContext.ts:125). Outer gates mirror the chad
+  // effect so the burst lands on IDLE after the share prompt dismisses,
+  // never during it.
+  useEffect(() => {
+    if (isFTUE || challengeCtx || gameState !== "IDLE") return;
+    if (hasPendingResumeShare()) return;
+    let onBoard = false;
+    let lastCelebrated: string | null = null;
+    try {
+      onBoard = localStorage.getItem("rm_on_board_today") === "1";
+      lastCelebrated = localStorage.getItem("rm_board_pulsed_state");
+    } catch { return; }
+    if (onBoard && lastCelebrated !== "1") {
+      setTrophyBurst(true);
+      try { localStorage.setItem("rm_board_pulsed_state", "1"); } catch { }
+    } else if (!onBoard && lastCelebrated !== "0") {
+      // Re-arm the edge so a later flip back to onBoard re-fires.
+      try { localStorage.setItem("rm_board_pulsed_state", "0"); } catch { }
+    }
+  }, [gameState, handCount, isFTUE, challengeCtx]);
 
   // (prepareChallenge removed in push 2a. Send It Back from the
   // comparison sheet no longer shares from the played hand directly —
@@ -3058,11 +3085,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         onViewLeaderboard={() => {
           setShowLeaderboard(true);
           setTrophyPulsing(false);
+          setTrophyBurst(false);
           setFtueCommentaryOverride(null);
           track("leaderboard", "viewed", { source: "gamebar_trophy" });
         }}
         legendPulsing={legendGold && !isFTUE}
         trophyPulsing={trophyPulsing && !isFTUE}
+        trophyBurst={trophyBurst && !isFTUE}
         streak={streak}
         streakTiers={streakTiers}
         onLegendOpened={() => {
@@ -3072,6 +3101,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         }}
         onTrophyOpened={() => {
           setTrophyPulsing(false);
+          setTrophyBurst(false);
         }}
       />
 

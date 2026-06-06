@@ -149,6 +149,10 @@ type Props = {
   legendPulsing?: boolean;
   /** Pulse the trophy (🏆) icon to draw attention — e.g. leaderboard qualification */
   trophyPulsing?: boolean;
+  /** One-shot celebration burst on the trophy (~800ms scale-pop + radiating
+   *  glow ring) that chains into the iconBlink pulse loop. Fires when the
+   *  player has just landed on the daily leaderboard. */
+  trophyBurst?: boolean;
   /** Current win streak for fire emoji display under balance */
   streak?: number;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
@@ -1371,6 +1375,7 @@ export function GameBar({
   onViewLeaderboard,
   legendPulsing = false,
   trophyPulsing = false,
+  trophyBurst = false,
   streak = 0,
   streakTiers,
   onLegendOpened,
@@ -1577,6 +1582,12 @@ export function GameBar({
               0%, 100% { opacity: 1; transform: scale(1); }
               50% { opacity: 0.3; transform: scale(0.92); }
             }
+            @keyframes trophyBurst {
+              0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+              25%  { transform: scale(1.4);  box-shadow: 0 0 0 4px rgba(255,215,0,0.65), 0 0 18px 8px rgba(255,215,0,0.5); }
+              55%  { transform: scale(1.08); box-shadow: 0 0 0 14px rgba(255,215,0,0.05), 0 0 28px 16px rgba(255,215,0,0); }
+              100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+            }
             @keyframes streakFlash {
               0% { transform: scale(1); filter: brightness(1); }
               30% { transform: scale(1.8); filter: brightness(2.5) drop-shadow(0 0 6px rgba(255,160,0,0.9)); }
@@ -1654,12 +1665,16 @@ export function GameBar({
                   onClick={() => { onViewLeaderboard(); onTrophyOpened?.(); }}
                   style={{
                     width: 32, height: 32, borderRadius: "50%",
-                    background: trophyPulsing ? "rgba(255,215,0,0.15)" : "transparent",
-                    border: `1px solid ${trophyPulsing ? "rgba(255,215,0,0.7)" : trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
-                    color: trophyPulsing ? "#FFD700" : trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+                    background: (trophyBurst || trophyPulsing) ? "rgba(255,215,0,0.15)" : "transparent",
+                    border: `1px solid ${(trophyBurst || trophyPulsing) ? "rgba(255,215,0,0.7)" : trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    color: (trophyBurst || trophyPulsing) ? "#FFD700" : trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", fontSize: 14, padding: 0,
-                    animation: trophyPulsing ? "iconBlink 1.2s ease-in-out infinite" : "none",
+                    animation: trophyBurst
+                      ? "trophyBurst 800ms ease-out 0s 1 both, iconBlink 1.2s ease-in-out 800ms infinite"
+                      : trophyPulsing
+                      ? "iconBlink 1.2s ease-in-out infinite"
+                      : "none",
                   }}
                 >🏆</button>
               )}
