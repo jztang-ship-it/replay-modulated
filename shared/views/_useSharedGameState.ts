@@ -213,7 +213,7 @@ export function useSharedGameState(
       }
     } catch { /* auth not available, submit unverified */ }
     try {
-      await fetch("/api/leaderboard", {
+      const resp = await fetch("/api/leaderboard", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
@@ -228,7 +228,12 @@ export function useSharedGameState(
           ...extra,
         }),
       });
-    } catch { }
+      if (!resp.ok) {
+        console.warn("[lb-diag]", metric, resp.status, await resp.text());  // TEMP DIAGNOSTIC
+      }
+    } catch (e) {
+      console.warn("[lb-diag] network", metric, e);  // TEMP DIAGNOSTIC
+    }
   }, [adapter]);
 
   /** Check if player is in top 10 of either daily leaderboard → set
