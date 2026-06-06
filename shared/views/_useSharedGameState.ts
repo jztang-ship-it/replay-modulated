@@ -213,7 +213,7 @@ export function useSharedGameState(
       }
     } catch { /* auth not available, submit unverified */ }
     try {
-      await fetch("/api/leaderboard", {
+      const resp = await fetch("/api/leaderboard", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
@@ -228,7 +228,10 @@ export function useSharedGameState(
           ...extra,
         }),
       });
-    } catch { }
+      if (!resp.ok) console.warn("[leaderboard] submit failed", metric, resp.status);
+    } catch (e) {
+      console.warn("[leaderboard] submit network error", metric, e);
+    }
   }, [adapter]);
 
   /** Check if player is in top 10 of either daily leaderboard → set
