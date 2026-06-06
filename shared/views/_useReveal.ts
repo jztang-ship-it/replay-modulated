@@ -112,6 +112,11 @@ export interface UseRevealArgs {
   /** True when the user is anonymous (no auth) — gates big-win nudges. */
   isAnonymous: boolean;
   setBigWinFired: (v: boolean) => void;
+  /** Bumped after checkLeaderboardRank's localStorage write completes so
+   *  GameView re-renders and the trophy-burst edge-detect effect re-reads
+   *  rm_on_board_today same-hand instead of waiting for the next
+   *  gameState/handCount transition. */
+  setOnBoardTick: (updater: (t: number) => number) => void;
 
   // ── Engagement counters ─────────────────────────────────────────────
   recordHandPlayed: () => void;
@@ -185,7 +190,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     currentBet, betMultiplier,
     rosterRef,
     isFTUE, ftueLastHandFpRef,
-    isAnonymous, setBigWinFired,
+    isAnonymous, setBigWinFired, setOnBoardTick,
     recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
     recordStreakWin, recordStreakBust, recordBonusPlayerUsed, recordMultiplierUsed,
     gameAnalytics, getTopGameInfo,
@@ -461,7 +466,16 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
               hand_id: handIdForAudit,
               hand_number: handCount,
             });
-            setTimeout(() => checkLeaderboardRank(), 2000);
+            setTimeout(async () => {
+              // Await so the bump strictly follows the localStorage write
+              // inside checkLeaderboardRank's body — the edge-detect effect
+              // on the GameView side must observe the fresh value, not the
+              // stale one. Covers both write branches (on-board "1" and
+              // off-board "0"); the early-return path (missing uid) makes
+              // the bump a harmless no-op re-evaluation.
+              await checkLeaderboardRank();
+              setOnBoardTick(t => t + 1);
+            }, 2000);
           }
           // Personal bests are sport-scoped via nsKey — basketball reads
           // the raw key (back-compat: namespace = ""), baseball reads
@@ -497,7 +511,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     setWinTier, setWinPayout, setBalance, persistBalance, setGameState,
     submitToLeaderboard, checkLeaderboardRank, logHandToDb,
     incrementStreak, resetStreak, incrementHandCount,
-    setBigWinFired, gameAnalytics, getTopGameInfo,
+    setBigWinFired, setOnBoardTick, gameAnalytics, getTopGameInfo,
     recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
     recordStreakWin, recordStreakBust, recordBonusPlayerUsed, recordMultiplierUsed,
   ]);

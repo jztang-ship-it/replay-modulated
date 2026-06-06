@@ -626,6 +626,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   });
   const [trophyPulsing, setTrophyPulsing] = useState(false);
   const [trophyBurst, setTrophyBurst] = useState(false);
+  // Tick bumped by _useReveal after checkLeaderboardRank's localStorage
+  // write completes. Wired into the trophy-burst edge-detect effect's
+  // deps so the effect re-evaluates same-hand on the write, instead of
+  // waiting for the next gameState/handCount transition.
+  const [onBoardTick, setOnBoardTick] = useState(0);
 
   // ── Referral capture + claim ────────────────────────────────────────
   useEffect(() => {
@@ -967,7 +972,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // Re-arm the edge so a later flip back to onBoard re-fires.
       try { localStorage.setItem("rm_board_pulsed_state", "0"); } catch { }
     }
-  }, [gameState, handCount, isFTUE, challengeCtx]);
+  }, [gameState, handCount, isFTUE, challengeCtx, onBoardTick]);
 
   // (prepareChallenge removed in push 2a. Send It Back from the
   // comparison sheet no longer shares from the played hand directly —
@@ -1078,6 +1083,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     ftueLastHandFpRef,
     isAnonymous,
     setBigWinFired,
+    setOnBoardTick,
     recordHandPlayed,
     recordHandWon,
     recordHandLost,
