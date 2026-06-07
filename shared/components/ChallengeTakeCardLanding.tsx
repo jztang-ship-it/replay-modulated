@@ -434,12 +434,12 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
       <h1
         data-testid="take-headline"
         style={{
-          fontSize: 30,
-          lineHeight: 1.18,
+          fontSize: 32,
+          lineHeight: 1.15,
           fontWeight: 950,
           color: "#FFB14A",
           letterSpacing: 0.3,
-          margin: "4px 0 12px",
+          margin: "4px 0 16px",
           maxWidth: 600,
           textTransform: "uppercase",
         }}
@@ -499,15 +499,12 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
       <div
         data-testid="usp-subheadline"
         style={{
-          fontSize: 14,
-          fontWeight: 700,
-          letterSpacing: 0.5,
-          color: "rgba(234,240,255,0.85)",
-          textTransform: "uppercase",
-          borderTop: "1px solid rgba(255,177,74,0.35)",
-          borderBottom: "1px solid rgba(255,177,74,0.35)",
-          padding: "8px 0",
-          marginBottom: 20,
+          fontSize: 13,
+          fontWeight: 500,
+          letterSpacing: 0.2,
+          color: "rgba(234,240,255,0.5)",
+          lineHeight: 1.4,
+          marginBottom: 24,
           maxWidth: 560,
         }}
       >
@@ -561,10 +558,10 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
             <div
               data-testid="line-owner"
               style={{
-                fontSize: 12,
-                fontWeight: 800,
-                letterSpacing: 1.4,
-                color: "rgba(255,177,74,0.85)",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: 1.2,
+                color: "rgba(234,240,255,0.45)",
                 textTransform: "uppercase",
                 marginBottom: 4,
               }}
@@ -612,14 +609,14 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
       <div
         data-testid="evidence-line"
         style={{
-          fontSize: 18,
-          fontWeight: 900,
-          color: "#FFB14A",
+          fontSize: 13,
+          fontWeight: 700,
+          color: "rgba(234,240,255,0.55)",
           fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
           letterSpacing: 0.6,
           textAlign: "center",
           textTransform: "uppercase",
-          marginBottom: 24,
+          marginBottom: 16,
         }}
       >
         {takeCard.evidenceLine}
