@@ -967,9 +967,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     } catch { return; }
     if (onBoard && lastCelebrated !== "1") {
       setTrophyBurst(true);
-      try { localStorage.setItem("rm_board_pulsed_state", "1"); } catch { }
+      try {
+        localStorage.setItem("rm_board_pulsed_state", "1");
+        // New on-board entry is unacknowledged — drives GameBar's durable
+        // pulse loop (independent of the one-shot trophyBurst state) until
+        // the user taps the trophy. Cleared in the tap handlers below.
+        localStorage.setItem("rm_board_ack", "0");
+      } catch { }
     } else if (!onBoard && lastCelebrated !== "0") {
-      // Re-arm the edge so a later flip back to onBoard re-fires.
+      // Re-arm the edge so a later flip back to onBoard re-fires. Leave
+      // rm_board_ack alone — it'll re-zero on the next not→on edge.
       try { localStorage.setItem("rm_board_pulsed_state", "0"); } catch { }
     }
   }, [gameState, handCount, isFTUE, challengeCtx, onBoardTick]);
@@ -3092,6 +3099,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           setShowLeaderboard(true);
           setTrophyPulsing(false);
           setTrophyBurst(false);
+          // Durable acknowledgement — kills the iconBlink pulse loop
+          // across all future hands until rm_on_board_today drops to
+          // "0" and flips back to "1" (a fresh entry edge).
+          try { localStorage.setItem("rm_board_ack", "1"); } catch { }
           setFtueCommentaryOverride(null);
           track("leaderboard", "viewed", { source: "gamebar_trophy" });
         }}
@@ -3108,7 +3119,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         onTrophyOpened={() => {
           setTrophyPulsing(false);
           setTrophyBurst(false);
+          try { localStorage.setItem("rm_board_ack", "1"); } catch { }
         }}
+        onBurstEnd={() => setTrophyBurst(false)}
       />
 
       {/* Lazy-loaded overlays — single Suspense boundary; fallback is null

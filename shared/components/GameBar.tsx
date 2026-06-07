@@ -153,6 +153,11 @@ type Props = {
    *  glow ring) that chains into the iconBlink pulse loop. Fires when the
    *  player has just landed on the daily leaderboard. */
   trophyBurst?: boolean;
+  /** Called when the trophyBurst keyframe animation completes (one-shot).
+   *  Parent should clear its trophyBurst state so the in-memory flag does
+   *  not persist across hands. The durable iconBlink pulse keeps running
+   *  via the rm_board_ack-derived pulseActive read below. */
+  onBurstEnd?: () => void;
   /** Current win streak for fire emoji display under balance */
   streak?: number;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
@@ -1376,6 +1381,7 @@ export function GameBar({
   legendPulsing = false,
   trophyPulsing = false,
   trophyBurst = false,
+  onBurstEnd,
   streak = 0,
   streakTiers,
   onLegendOpened,
@@ -1390,6 +1396,19 @@ export function GameBar({
   const trophyOnBoard = (() => {
     if (typeof window === "undefined") return false;
     try { return localStorage.getItem("rm_on_board_today") === "1"; } catch { return false; }
+  })();
+  // Durable pulse derivation — true while the player is on the daily
+  // leaderboard AND has not yet acknowledged it (by tapping the trophy).
+  // Survives page reloads because both keys are persistent localStorage.
+  // Independent of the one-shot trophyBurst prop, so when the burst
+  // self-clears via onBurstEnd the pulse keeps going until the tap
+  // writes rm_board_ack="1".
+  const pulseActive = (() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("rm_on_board_today") === "1"
+        && localStorage.getItem("rm_board_ack") !== "1";
+    } catch { return false; }
   })();
   const TrophyButton = onViewLeaderboard && !ftueHideSkip ? (
     <button
@@ -1663,16 +1682,23 @@ export function GameBar({
                   type="button"
                   aria-label="View leaderboard"
                   onClick={() => { onViewLeaderboard(); onTrophyOpened?.(); }}
+                  onAnimationEnd={(e) => {
+                    // Only the trophyBurst keyframe ever ends — iconBlink
+                    // is `infinite`, so it never fires animationend. The
+                    // name check guards against accidental future
+                    // chained animations on this element.
+                    if (e.animationName === "trophyBurst") onBurstEnd?.();
+                  }}
                   style={{
                     width: 32, height: 32, borderRadius: "50%",
-                    background: (trophyBurst || trophyPulsing) ? "rgba(255,215,0,0.15)" : "transparent",
-                    border: `1px solid ${(trophyBurst || trophyPulsing) ? "rgba(255,215,0,0.7)" : trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
-                    color: (trophyBurst || trophyPulsing) ? "#FFD700" : trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+                    background: (trophyBurst || trophyPulsing || pulseActive) ? "rgba(255,215,0,0.15)" : "transparent",
+                    border: `1px solid ${(trophyBurst || trophyPulsing || pulseActive) ? "rgba(255,215,0,0.7)" : trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    color: (trophyBurst || trophyPulsing || pulseActive) ? "#FFD700" : trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", fontSize: 14, padding: 0,
                     animation: trophyBurst
                       ? "trophyBurst 800ms ease-out 0s 1 both, iconBlink 1.2s ease-in-out 800ms infinite"
-                      : trophyPulsing
+                      : (trophyPulsing || pulseActive)
                       ? "iconBlink 1.2s ease-in-out infinite"
                       : "none",
                   }}
