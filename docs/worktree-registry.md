@@ -154,3 +154,15 @@ For files inside a worktree that absolutely cannot be lost, the preferred primit
 If commit isn't appropriate (e.g. a generated file you regenerate each run), a `_DO-NOT-DELETE.md` marker file at the worktree root listing what's preserved and why is an acceptable secondary primitive.
 
 Untracked files with no marker and no commit are **at risk**. The registry exists to surface them so they can be either committed or marked.
+
+### `fix-h2h-commentary` — mergeable
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/fix-h2h-commentary`
+- **Branch:** `fix/h2h-commentary`
+- **Unique commits vs main:** 0 (ff-merged — same SHA on both)
+- **Uncommitted state:** clean
+- **Stash:** none (the `stash@{0}` football-culture WIP visible from `stash list` belongs to `feat/basketball-perseason-layout`, not this worktree)
+- **What it carries:** H2H static recipient-copy pass — killed dynamic per-draw commentary on H2HRecipientPlay (stage-1 instruction, stage-2 directive, redraw-beat number persistence).
+- **Equivalence on main:** VERIFIED — `2592555` is on main directly via fast-forward (same SHA, not squash); pushed to origin 2026-06-08, Vercel green.
+- **Intent:** safe to delete branch; worktree retained pending the queued 38-worktree audit (do NOT remove ad-hoc).
+- **Last reviewed:** 2026-06-08
