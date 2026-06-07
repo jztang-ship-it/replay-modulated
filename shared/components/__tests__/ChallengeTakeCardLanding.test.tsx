@@ -19,6 +19,19 @@ import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ChallengeTakeCardLanding, type ChallengeLandingData } from "../ChallengeTakeCardLanding";
 
+// Wrap the take-card generator in vi.fn so the #4a blank-case floor
+// test can mockReturnValueOnce an empty take. Default delegates to the
+// real implementation, so every other spec runs against the real
+// generator output.
+vi.mock("@shared/challengeTakeCard/generateChallengeTakeCard", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@shared/challengeTakeCard/generateChallengeTakeCard")>();
+  return {
+    ...actual,
+    generateChallengeTakeCard: vi.fn(actual.generateChallengeTakeCard),
+  };
+});
+import { generateChallengeTakeCard } from "@shared/challengeTakeCard/generateChallengeTakeCard";
+
 interface MakeOpts {
   trigger?: string;
   heldPair?: [string, string] | null;
@@ -191,7 +204,7 @@ describe("ChallengeTakeCardLanding — FP-SPOILER GUARD (no per-card FP chip in 
 });
 
 describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy", () => {
-  it("2 held → 2 prominent + 2 HOLD badges + structured 'MIKE'S LINE / HOLD: Embiid / Vucevic' block", () => {
+  it("2 held → 2 prominent + 2 HOLD badges; held-list block absent (#4a declutter: cards carry held state via HOLD badge)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -203,25 +216,11 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
     expect(screen.getAllByTestId("hand-card-held")).toHaveLength(2);
     expect(screen.getAllByTestId("hand-card-plain")).toHaveLength(4);
     expect(screen.getAllByTestId("hold-badge")).toHaveLength(2);
-    // Phase 2d: structured DENZEL'S LINE / HOLD: block (label-led
-    // exhibit, vertical names — replaces 2c's "{name} held: X, Y" prose).
-    expect(screen.getByTestId("line-owner").textContent).toBe("MIKE'S LINE");
-    const heldNames = screen.getAllByTestId("held-name").map(n => n.textContent);
-    expect(heldNames).toEqual(["Embiid", "Vucevic"]);
-    const heldList = screen.getByTestId("held-list");
-    expect(heldList.textContent).toContain("HOLD:");
-  });
-
-  it("anonymous sender → 'THE LINE' label (no sender name leak in the held-list header)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: null })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("line-owner").textContent).toBe("THE LINE");
+    // #4a declutter: the structured "MIKE'S LINE / HOLD: …" exhibit is
+    // gone. Cards themselves carry held state via HOLD badge + tier color.
+    expect(screen.queryByTestId("held-list")).toBeNull();
+    expect(screen.queryByTestId("line-owner")).toBeNull();
+    expect(screen.queryAllByTestId("held-name")).toHaveLength(0);
   });
 
   it("holdsRecorded:false → 6 plain cards, no HOLD badges, held list OMITTED entirely", () => {
@@ -244,7 +243,7 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
     expect(screen.queryByTestId("held-list")).toBeNull();
   });
 
-  it("every card carries name + salary + rarity (kept on both held and plain)", () => {
+  it("every card carries name + team (#4a declutter: tier chip + salary stripped from HandCard)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -258,11 +257,17 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
     for (const name of ["Embiid", "Vucevic", "Brown", "Curry", "Bagley", "Holiday"]) {
       expect(text, `missing name ${name}`).toContain(name);
     }
-    for (const tier of ["RED", "PURPLE", "BLUE", "GREEN"]) {
-      expect(text, `missing tier label ${tier}`).toContain(tier);
+    for (const team of ["PHI", "ORL", "BOS", "GSW", "WAS"]) {
+      expect(text, `missing team ${team}`).toContain(team);
     }
+    // #4a stripped the visible tier chip + per-card salary — cards now
+    // read as name + team. Tier color still threads via data-tier-accent
+    // on the HandCard root (asserted separately).
     for (const salary of ["$80", "$65", "$55", "$75", "$35", "$25"]) {
-      expect(text, `missing salary ${salary}`).toContain(salary);
+      expect(text, `salary ${salary} should be stripped`).not.toContain(salary);
+    }
+    for (const tier of ["RED", "PURPLE", "BLUE", "GREEN"]) {
+      expect(text, `tier chip ${tier} should be stripped`).not.toContain(tier);
     }
   });
 });
@@ -540,10 +545,10 @@ describe("ChallengeTakeCardLanding — Phase 2e culture-flavored take + supporti
     const evidence = screen.getByTestId("evidence-line").textContent ?? "";
     expect(evidence.toUpperCase()).not.toContain("EMBIID");
     expect(evidence.toUpperCase()).not.toContain("VUCEVIC");
-    // The DENZEL'S LINE block still lists them — that's the one mention.
-    const heldNames = screen.getAllByTestId("held-name").map(n => n.textContent);
-    expect(heldNames).toContain("Embiid");
-    expect(heldNames).toContain("Vucevic");
+    // #4a removed the held-list block entirely — held names no longer
+    // render anywhere outside the cards themselves. The DE-DUP rule on
+    // the stakes line is what this test exists to pin.
+    expect(screen.queryAllByTestId("held-name")).toHaveLength(0);
   });
 
   it("supporting culture line — OFF by default (the lock-spec'd default)", () => {
@@ -660,12 +665,13 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
     }
   });
 
-  // Phase 2d single-mention rule: EXACTLY ONE sender mention per
-  // landing. With held data → MIKE'S LINE block is the mention; without
-  // held data (legacy) → bottom "from {sender}" line is the mention.
-  // The two tests below pin both halves of the rule.
+  // #4a single-mention rule: EXACTLY ONE sender mention per landing, in
+  // the bottom attribution. The Phase 2d "MIKE'S LINE / HOLD: …" block
+  // was the holds-recorded mention site pre-#4a; with that block
+  // removed, attribution now carries it on every named row (holds
+  // recorded or legacy).
 
-  it("HOLDS-RECORDED → sender mentioned EXACTLY ONCE (in MIKE'S LINE block, NOT in attribution)", () => {
+  it("HOLDS-RECORDED + named → sender mentioned EXACTLY ONCE (in attribution 'from {sender}'; held-list block removed in #4a)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
@@ -679,16 +685,12 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
       />
     );
     const root = screen.getByTestId("challenge-take-card-landing");
-    // Case-insensitive match counts both "Denzel" (anonymous-safe) and
-    // "DENZEL" (uppercased line-owner label) as one mention each.
     const matches = (root.textContent ?? "").match(/Denzel/gi) ?? [];
     expect(matches.length, `holds-recorded sender mentioned ${matches.length} times — should be exactly 1`).toBe(1);
-    // The single mention is the line-owner label, NOT a bottom "from X".
-    expect(screen.getByTestId("line-owner").textContent).toBe("DENZEL'S LINE");
-    const attribution = screen.queryByTestId("attribution");
-    if (attribution) {
-      expect(attribution.textContent ?? "", "attribution must NOT include 'from Denzel' when held block names sender").not.toMatch(/from\s+Denzel/i);
-    }
+    // The single mention now lives in the bottom attribution. The old
+    // line-owner element is gone with the held-list block.
+    expect(screen.queryByTestId("line-owner")).toBeNull();
+    expect(screen.getByTestId("attribution").textContent).toContain("from Denzel");
   });
 
   it("LEGACY (holdsRecorded:false) → sender mentioned EXACTLY ONCE (in bottom 'from {sender}', not in line-owner)", () => {
@@ -759,7 +761,7 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
     expect(screen.queryByTestId("attribution")).toBeNull();
   });
 
-  it("HOLDS-RECORDED + null statsLine → attribution surface omitted (the held block IS the mention)", () => {
+  it("HOLDS-RECORDED + named + null statsLine → attribution renders 'from {sender}' (#4a: held-list block was the prior mention site)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "Denzel" })}
@@ -768,11 +770,12 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
         onAccept={() => {}}
       />
     );
-    expect(screen.queryByTestId("attribution")).toBeNull();
-    expect(screen.getByTestId("line-owner").textContent).toBe("DENZEL'S LINE");
+    const attribution = screen.getByTestId("attribution");
+    expect(attribution.textContent).toBe("from Denzel");
+    expect(screen.queryByTestId("line-owner")).toBeNull();
   });
 
-  it("HOLDS-RECORDED + statsLine → attribution renders stats only, NEVER 'from {sender}'", () => {
+  it("HOLDS-RECORDED + named + statsLine → attribution renders BOTH 'from {sender}' AND stats (#4a)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "Denzel" })}
@@ -782,8 +785,8 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
       />
     );
     const attribution = screen.getByTestId("attribution");
-    expect(attribution.textContent).toBe("3 attempts · 67% failed");
-    expect(attribution.textContent).not.toContain("from Denzel");
+    expect(attribution.textContent).toContain("from Denzel");
+    expect(attribution.textContent).toContain("3 attempts · 67% failed");
   });
 });
 
@@ -948,245 +951,39 @@ describe("ChallengeTakeCardLanding — legacy alias + accept wiring", () => {
   });
 });
 
-describe("ChallengeTakeCardLanding — Phase 2e conditional held-list block (cut when take names anchor)", () => {
-  // The rule: showHeldList = heldCards.length > 0 && !takeCard.takeNamedAnchor
-  // Block CUT when the take names the anchor (vindicated/blamed/culture).
-  // Block KEPT when the take is generic (carries the only text-level
-  // attribution of who was held).
-  // Confirmed via the generic-no-culture 2×2 screenshot review.
+describe("ChallengeTakeCardLanding — #4a declutter: held-list block always absent", () => {
+  // The Phase 2e conditional held-list block (kept-vs-cut by
+  // takeCard.takeNamedAnchor) is removed in #4a. The held-list /
+  // line-owner / held-name test-ids should never render, regardless of
+  // trigger, held-state, or take-card output. Cards carry held state
+  // via HOLD badge; sender attribution lives in the bottom attribution
+  // (covered by the Phase 2d layout describe above).
+  const cases: Array<{ name: string; extra: MakeOpts }> = [
+    { name: "GENERIC choke",                 extra: { trigger: "choke", heldPair: ["emb", "voo"] as [string, string] } },
+    { name: "MISS",                          extra: { trigger: "miss", heldPair: ["bro", "cur"] as [string, string], nearMissGap: 4, nearMissNextTier: "ALL_STAR" } },
+    { name: "BIG_SCORE",                     extra: { trigger: "big_score", heldPair: ["cur", "emb"] as [string, string] } },
+    { name: "RARE_PULL",                     extra: { trigger: "rare_pull", heldPair: ["cur", "emb"] as [string, string], topGameTier: "record" as const } },
+    { name: "DEFAULT",                       extra: { trigger: "default", heldPair: ["bro", "hol"] as [string, string], anchor: null } },
+    { name: "LEGACY (no holds)",             extra: { trigger: "choke", heldPair: null, holdsRecorded: false, anchor: null } },
+    { name: "VINDICATED (anchor delivered)", extra: { trigger: "choke", heldPair: ["emb", "voo"] as [string, string], anchor: "emb", heldOutcomes: { emb: 47, voo: 12 } } },
+    { name: "BLAMED (anchor tanked)",        extra: { trigger: "choke", heldPair: ["emb", "voo"] as [string, string], anchor: "emb", heldOutcomes: { emb: 18, voo: 24 } } },
+  ];
 
-  // Helper to access the Kobe culture-rich data builder defined above.
-  function makeKoboFixture(heldOutcomes: Record<string, number>): ChallengeLandingData {
-    return {
-      challenge_id: "ch_kobe_block_rule",
-      created_by: "u_creator",
-      challenger_name: "Mike",
-      target_score: 142.0,
-      sport: "basketball",
-      season: "2425",
-      trigger_type: "choke",
-      share_headline: "",
-      initial_roster: {
-        v: 1,
-        sport: "basketball",
-        holdsRecorded: true,
-        cards: [
-          { id: "kobe", basePlayerId: "977", personKey: "977", cardId: "kobe_c",
-            name: "Kobe Bryant", team: "LAL", season: "2425", position: "G",
-            photoCode: null, salary: 95, tier: "RED", slotIndex: 0,
-            projectedFp: 50, wasHeld: true, actualFp: heldOutcomes.kobe ?? 47 },
-          { id: "kidd", basePlayerId: "467", personKey: "467", cardId: "kidd_c",
-            name: "Jason Kidd", team: "DAL", season: "2425", position: "G",
-            photoCode: null, salary: 60, tier: "RED", slotIndex: 1,
-            projectedFp: 35, wasHeld: true, actualFp: heldOutcomes.kidd ?? 12 },
-          { id: "bro", basePlayerId: "bro", personKey: "bro", cardId: "bro_c",
-            name: "Brown", team: "BOS", season: "2425", position: "F",
-            photoCode: null, salary: 55, tier: "PURPLE", slotIndex: 2,
-            projectedFp: 30, wasHeld: false, actualFp: 0 },
-          { id: "cur", basePlayerId: "cur", personKey: "cur", cardId: "cur_c",
-            name: "Curry", team: "GSW", season: "2425", position: "G",
-            photoCode: null, salary: 75, tier: "RED", slotIndex: 3,
-            projectedFp: 42, wasHeld: false, actualFp: 0 },
-          { id: "bag", basePlayerId: "bag", personKey: "bag", cardId: "bag_c",
-            name: "Bagley", team: "WAS", season: "2425", position: "F",
-            photoCode: null, salary: 35, tier: "BLUE", slotIndex: 4,
-            projectedFp: 18, wasHeld: false, actualFp: 0 },
-          { id: "hol", basePlayerId: "hol", personKey: "hol", cardId: "hol_c",
-            name: "Holiday", team: "BOS", season: "2425", position: "G",
-            photoCode: null, salary: 25, tier: "GREEN", slotIndex: 5,
-            projectedFp: 14, wasHeld: false, actualFp: 0 },
-        ],
-      },
-      roster_size: 6,
-      attempt_count: 2,
-      winner_count: 0,
-      best_score: null,
-      best_user_name: null,
-      near_miss_gap: null,
-      near_miss_next_tier: null,
-      anchor_base_player_id: "977",
-      top_game_tier: null,
-    };
+  for (const { name, extra } of cases) {
+    it(`${name}: held-list / line-owner / held-name all absent`, () => {
+      render(
+        <ChallengeTakeCardLanding
+          data={makeData(extra)}
+          statsLine={null}
+          alreadyAttempted={false}
+          onAccept={() => {}}
+        />
+      );
+      expect(screen.queryByTestId("held-list")).toBeNull();
+      expect(screen.queryByTestId("line-owner")).toBeNull();
+      expect(screen.queryAllByTestId("held-name")).toHaveLength(0);
+    });
   }
-
-  it("CULTURE-VINDICATED (Kobe DELIVERED, Kidd TANKED) → block CUT", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeKoboFixture({ kobe: 47, kidd: 12 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.queryByTestId("held-list")).toBeNull();
-    expect(screen.queryByTestId("line-owner")).toBeNull();
-  });
-
-  it("CULTURE-BLAMED (Kobe TANKED) → block CUT", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeKoboFixture({ kobe: 18, kidd: 25 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.queryByTestId("held-list")).toBeNull();
-  });
-
-  it("NON-CULTURE VINDICATED (synthetic 'emb' DELIVERED, 'voo' TANKED) → block CUT", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "choke",
-          heldPair: ["emb", "voo"],
-          anchor: "emb",
-          heldOutcomes: { emb: 47, voo: 12 },
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.queryByTestId("held-list")).toBeNull();
-  });
-
-  it("NON-CULTURE BLAMED (synthetic 'emb' TANKED) → block CUT", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "choke",
-          heldPair: ["emb", "voo"],
-          anchor: "emb",
-          heldOutcomes: { emb: 18, voo: 24 },
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.queryByTestId("held-list")).toBeNull();
-  });
-
-  it("GENERIC choke (MID zone, no anchor split) → block KEPT (carries the only text-level naming)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("held-list")).toBeTruthy();
-    expect(screen.getByTestId("line-owner").textContent).toBe("MIKE'S LINE");
-    const heldNames = screen.getAllByTestId("held-name").map(n => n.textContent);
-    expect(heldNames).toEqual(["Embiid", "Vucevic"]);
-  });
-
-  it("LEGACY (holdsRecorded:false) → block CUT (no holds to list)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: null, holdsRecorded: false, anchor: null })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.queryByTestId("held-list")).toBeNull();
-  });
-
-  it("MISS → block KEPT (take names a tier, not a player → block carries name attribution)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "miss",
-          heldPair: ["bro", "cur"],
-          nearMissGap: 4,
-          nearMissNextTier: "ALL_STAR",
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("held-list")).toBeTruthy();
-    const heldNames = screen.getAllByTestId("held-name").map(n => n.textContent);
-    expect(heldNames).toEqual(["Brown", "Curry"]);
-  });
-
-  it("BIG_SCORE → block KEPT", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "big_score", heldPair: ["cur", "emb"] })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("held-list")).toBeTruthy();
-  });
-
-  it("RARE_PULL → block KEPT", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "rare_pull",
-          heldPair: ["cur", "emb"],
-          topGameTier: "record",
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("held-list")).toBeTruthy();
-  });
-
-  it("DEFAULT (no anchor) → block KEPT when holds present", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "default", heldPair: ["bro", "hol"], anchor: null })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("held-list")).toBeTruthy();
-  });
-
-  // Sender-mention rule preserved through the conditional block:
-  // when the block is cut on a vindicated/blamed case, the bottom
-  // "from Mike" attribution does NOT re-instate (it only fires on
-  // showHeldList:false WHEN namedChallenger). The 2d single-mention
-  // rule said "block OR bottom" — but on a vindicated case the take
-  // itself names the player. So the bottom attribution should NOT
-  // re-fire here, since the held cards still carry the names visually.
-  //
-  // ACTUAL CURRENT BEHAVIOR per the landing code: showHeldList:false
-  // + namedChallenger → bottom "from Mike" renders. That means on a
-  // vindicated case (block cut), the bottom "from Mike" fires.
-  // Document the behavior — if not desired, that's a follow-up.
-  it("VINDICATED block-cut → bottom 'from Mike' RENDERS (showHeldList:false fallback fires)", () => {
-    // Behavior pin — surfaces the trade-off so the rule's
-    // sender-mention coverage is observable. The 2d single-mention
-    // rule still holds: exactly ONE mention per landing. On vindicated
-    // it's the bottom attribution; on generic it's the block.
-    render(
-      <ChallengeTakeCardLanding
-        data={makeKoboFixture({ kobe: 47, kidd: 12 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const attribution = screen.queryByTestId("attribution");
-    expect(attribution).not.toBeNull();
-    expect(attribution!.textContent).toContain("from Mike");
-    // Still exactly ONE sender mention overall.
-    const root = screen.getByTestId("challenge-take-card-landing");
-    const matches = (root.textContent ?? "").match(/Mike/g) ?? [];
-    expect(matches.length).toBe(1);
-  });
 });
 
 // ── Phase 3.2 — authored_headline wiring on the TAKE ──────────────────────
@@ -1265,10 +1062,11 @@ describe("ChallengeTakeCardLanding — Phase 3.2 authored_headline wiring on the
     expect(h1.textContent).not.toMatch(/road trip stalls/i);
   });
 
-  it("badge / held-list / evidence-line / dare / CTA all unchanged when authored renders", () => {
+  it("badge / evidence-line / dare / CTA all unchanged when authored renders", () => {
     // Phase 3.2 lock: "No other take-card change." The h1 swap MUST NOT
     // disturb any other surface. Render with authored present and assert
-    // every other test-id is still where it was.
+    // every other test-id is still where it was. (#4a removed the
+    // held-list surface entirely, so it's no longer asserted here.)
     render(
       <ChallengeTakeCardLanding
         data={{
@@ -1286,6 +1084,35 @@ describe("ChallengeTakeCardLanding — Phase 3.2 authored_headline wiring on the
     expect(screen.getByTestId("evidence-line")).toBeTruthy();
     expect(screen.getByTestId("dare-line")).toBeTruthy();
     expect(screen.getByTestId("accept-cta")).toBeTruthy();
+  });
+
+  it("#4a blank-case floor: authored_headline null + empty generator take → 'THIS IS THE LINE.'", () => {
+    // The new tertiary fallback in #4a: `authored_headline || takeCard.take || "THIS IS THE LINE."`
+    // Exercises the path where the generator returns an empty TAKE (a
+    // degenerate state — real banks are never empty, but the floor exists
+    // to guarantee the headline surface never renders bare).
+    vi.mocked(generateChallengeTakeCard).mockReturnValueOnce({
+      take: "",
+      subHeadline: "Same starting hand. Different decisions.",
+      evidenceLine: "",
+      dare: "",
+      ctaText: "PLAY YOUR LINE",
+      heldCards: [],
+      takeNamedAnchor: false,
+    } as ReturnType<typeof generateChallengeTakeCard>);
+    render(
+      <ChallengeTakeCardLanding
+        data={{
+          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
+          authored_headline: null,
+        }}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const h1 = screen.getByTestId("take-headline");
+    expect(h1.textContent).toContain("THIS IS THE LINE.");
   });
 
   it("RULE PROOF — every chadShareTrashTalk bank string never reaches the TAKE", () => {

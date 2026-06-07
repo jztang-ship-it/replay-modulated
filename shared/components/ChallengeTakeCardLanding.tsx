@@ -269,19 +269,6 @@ function HandCard({ card, isHeld }: HandCardProps) {
       )}
       <div
         style={{
-          fontSize: 9,
-          fontWeight: 800,
-          letterSpacing: 1.4,
-          color: accent,
-          textTransform: "uppercase",
-          marginBottom: 4,
-          opacity: isHeld ? 1 : 0.85,
-        }}
-      >
-        {card.tier}
-      </div>
-      <div
-        style={{
           fontSize: 13,
           fontWeight: 800,
           color: "#EAF0FF",
@@ -297,7 +284,7 @@ function HandCard({ card, isHeld }: HandCardProps) {
           marginTop: 2,
         }}
       >
-        {card.team} · ${card.salary}
+        {card.team}
       </div>
     </div>
   );
@@ -405,22 +392,6 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   // showCultureLine is false OR no culture / no usable line.
   const supportingCultureLine = showCultureLine ? pickSupportingCultureLine(anchorCulture) : null;
 
-  // Phase 2d: structured "DENZEL'S LINE / HOLD: X / Y" evidence block —
-  // vertical, label-led, reads as an exhibit rather than narration. Uses
-  // possessive form of the sender's name when present; falls back to
-  // "THE LINE" when anonymous.
-  const lineOwnerLabel = namedChallenger
-    ? `${data.challenger_name.trim().toUpperCase()}'S LINE`
-    : "THE LINE";
-  // Phase 2e conditional block render — cut when the take already names
-  // the anchor (vindicated/blamed/culture-flavored); kept when the take
-  // is generic and the block carries the only text-level attribution of
-  // who was held. Confirmed via the generic-no-culture 2×2 screenshot
-  // review: block-OFF on the generic path reads naked ("the stars"
-  // without antecedent), block-OFF on the named-anchor path reads
-  // cleaner (take already named someone; cards carry the rest).
-  const showHeldList = takeCard.heldCards.length > 0 && !takeCard.takeNamedAnchor;
-
   return (
     <div data-testid="challenge-take-card-landing">
       {/* TAKE — largest type at the top, the claim. The Phase-2d
@@ -452,7 +423,7 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
             writes a bank pick into authored_headline, so the take-
             card fallback path is the ONLY way a non-authored string
             can land here. */}
-        {data.authored_headline || takeCard.take}
+        {data.authored_headline || takeCard.take || "THIS IS THE LINE."}
         {trigger !== "default" && (
           <>
             {" "}
@@ -530,77 +501,6 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         })}
       </div>
 
-      {/* HELD LIST — Phase 2d structured evidence block.
-            "DENZEL'S LINE
-             HOLD: Kobe Bryant
-                   Jason Kidd"
-          Vertical, label-led. The line owner labels the exhibit; the
-          HOLD label introduces the cards. Each held name on its own
-          row, indented to align under the HOLD label. Replaces the 2c
-          prose "Denzel held: X, Y" form.
-          Omitted entirely when heldCards is [] (legacy / no holds). */}
-      {showHeldList && (
-        <div
-          data-testid="held-list"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: 14,
-          }}
-        >
-          <div
-            style={{
-              display: "inline-block",
-              textAlign: "left",
-              fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
-            }}
-          >
-            <div
-              data-testid="line-owner"
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: 1.2,
-                color: "rgba(234,240,255,0.45)",
-                textTransform: "uppercase",
-                marginBottom: 4,
-              }}
-            >
-              {lineOwnerLabel}
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 900,
-                  letterSpacing: 1.2,
-                  color: "rgba(255,255,255,0.55)",
-                  textTransform: "uppercase",
-                }}
-              >
-                HOLD:
-              </span>
-              <div>
-                {takeCard.heldCards.map((name, i) => (
-                  <div
-                    key={`${name}-${i}`}
-                    data-testid="held-name"
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 800,
-                      color: "#EAF0FF",
-                      lineHeight: 1.25,
-                    }}
-                  >
-                    {name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* EVIDENCE LINE — Phase 2d plain-language stakes. NO raw FP.
           Correction → "KOBE AND KIDD. BUSTED." (fused, generic choke)
           or just "BUSTED." (when anchor-aware take names the anchor).
@@ -665,16 +565,12 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         {alreadyAttempted ? "Play Again" : takeCard.ctaText}
       </button>
 
-      {/* Attribution + stats — Phase 2d sender rule: exactly ONE sender
-          mention per landing. Normally the "DENZEL'S LINE" block in the
-          evidence section is the mention; legacy rows (holdsRecorded:false
-          → showHeldList:false → no MIKE'S LINE block) would otherwise
-          have zero mentions, so on legacy we re-instate the bottom
-          "from {sender}" line as the sole attribution. The fallback
-          fires ONLY when showHeldList is false AND we have a real name —
-          anonymous legacy stays nameless (correct: there's no name to
-          attribute). */}
-      {((!showHeldList && namedChallenger) || statsLine) && (
+      {/* Attribution — sender + optional stats line. #4a declutter
+          removed the inline "X'S LINE / HOLD: …" exhibit, so this is
+          now the sole sender mention. Renders whenever there's a real
+          challenger name or a stats line; anonymous + no-stats stays
+          empty (nothing to attribute). */}
+      {(namedChallenger || statsLine) && (
         <div
           data-testid="attribution"
           style={{
@@ -683,8 +579,8 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
             textAlign: "center",
           }}
         >
-          {!showHeldList && namedChallenger && <span>from {data.challenger_name}</span>}
-          {!showHeldList && namedChallenger && statsLine && <span> · </span>}
+          {namedChallenger && <span>from {data.challenger_name}</span>}
+          {namedChallenger && statsLine && <span> · </span>}
           {statsLine && <span>{statsLine}</span>}
         </div>
       )}
