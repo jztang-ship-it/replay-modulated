@@ -116,12 +116,7 @@ import {
   HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
 } from "./H2HBoardShell";
 import { PartsLine } from "./TierGauge";
-import {
-  selectIntroAnchor,
-  selectRecipientIntro,
-  selectRecipientDealNudge,
-  type Line,
-} from "@shared/commentary/chadChallenge";
+import { type Line } from "@shared/commentary/chadChallenge";
 
 const ROSTER_SIZE = 6;
 
@@ -381,44 +376,13 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // and Stage 2 collapse — VS treatment + existing headline take over.
   const [introDismissed, setIntroDismissed] = useState(false);
 
-  // Anchor + intro Lines — memoized so PartsLine receives stable parts
-  // arrays across renders (its identity-keyed reset effect would
-  // otherwise re-fire on every keystroke equivalent). Anchor identity is
-  // keyed on ctx fields the selector actually reads.
-  const introAnchor = useMemo(
-    () =>
-      selectIntroAnchor({
-        triggerType: challengeCtx.triggerType,
-        senderCards: challengeCtx.resolvedSenderHand?.cards,
-        anchorBasePlayerId: challengeCtx.anchorBasePlayerId ?? null,
-        topGameTier: challengeCtx.topGameTier ?? null,
-        sport,
-      }),
-    [
-      challengeCtx.triggerType,
-      challengeCtx.resolvedSenderHand,
-      challengeCtx.anchorBasePlayerId,
-      challengeCtx.topGameTier,
-      sport,
-    ],
-  );
-
-  // Stage 1/Stage 2 lines: lock the picked Line into a ref keyed on a
-  // STABLE string signature, not the object refs. selectRecipientIntro /
-  // selectRecipientDealNudge call pickWithAntiRepeat internally, which
-  // is RANDOM — a useMemo whose deps include resolvedSenderHand (an
-  // object that the parent may rebuild every render) would re-fire the
-  // pick on every parent rerender and swap the displayed paragraph
-  // mid-hold. Ref + signature comparison guarantees one pick per
-  // mounted (ctx + anchor) tuple. The anchor useMemo above is fine —
-  // selectIntroAnchor is deterministic (same inputs → same output).
+  // Static recipient commentary (lock: docs/h2h-recipient-static-commentary-lock.md).
+  // Dynamic per-draw picks (selectRecipientIntro / selectRecipientDealNudge) were
+  // DISABLED for the investor demo while #4b voice-engine repair is out of scope.
+  // The ref/sig scaffolding stays — it gives PartsLine's identity-keyed reset
+  // effect a stable Line reference. Only the picked value is now a constant.
   const introSig = [
     challengeCtx.triggerType ?? "",
-    challengeCtx.resolvedSenderHand?.handId ?? "",
-    challengeCtx.anchorBasePlayerId ?? "",
-    challengeCtx.topGameTier ?? "",
-    challengeCtx.nearMissGap ?? "",
-    challengeCtx.nearMissNextTier ?? "",
     challengeCtx.challengerName ?? "",
     String(challengeCtx.targetScore),
   ].join("|");
@@ -427,14 +391,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   if (stage1Ref.current.sig !== introSig) {
     stage1Ref.current = {
       sig: introSig,
-      line: selectRecipientIntro({
-        triggerType: challengeCtx.triggerType,
-        challengerName: challengeCtx.challengerName,
-        targetScore: challengeCtx.targetScore,
-        anchor: introAnchor,
-        nearMissGap: challengeCtx.nearMissGap,
-        nearMissNextTier: challengeCtx.nearMissNextTier,
-      }),
+      line: ["Tap the players you'd keep. Draw the rest."],
     };
   }
   const stage1Line = stage1Ref.current.line;
@@ -443,12 +400,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   if (stage2Ref.current.sig !== introSig) {
     stage2Ref.current = {
       sig: introSig,
-      line: selectRecipientDealNudge({
-        triggerType: challengeCtx.triggerType,
-        challengerName: challengeCtx.challengerName,
-        targetScore: challengeCtx.targetScore,
-        anchor: introAnchor,
-      }),
+      line: [`Draw to beat ${challengeCtx.targetScore.toFixed(1)}.`],
     };
   }
   const stage2Line = stage2Ref.current.line;
@@ -1110,16 +1062,26 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           }}
         >
           {state.kind === "redraw_running" || state.kind === "your_redraw_flip" ? (
-            // BUG-1 FIX: empty placeholder during the redraw beat so
-            // the container keeps its INTRO_3LINE_BUDGET_CSS reserved
-            // height (no strip Y-shift) without duplicating the
-            // "Drawing…" headline (which lives in the hero region for
-            // these states). The container itself owns the height
-            // budget; this inner is purely a layout-stable spacer.
+            // BUG-1 FIX (refreshed 2026-06-08): the redraw beat now
+            // renders a real single line ("<target> to beat.") through
+            // the introTypography wrapper instead of an empty layout
+            // spacer. The wrapper owns WebkitLineClamp:3 + the height
+            // budget — rendering through it is what preserves the
+            // container's INTRO_3LINE_BUDGET_CSS reserved height and
+            // keeps the strip from Y-shifting between hold_select and
+            // redraw_running. The hero region still owns the "Drawing…"
+            // copy (deriveHeadline, unchanged); this top line is the
+            // persistent number-to-beat anchor spanning deal → hold →
+            // draw. Format matches stage-2 (.toFixed(1)) so they can't
+            // drift on glass.
             <div
-              data-h2h-play-intro="redraw-empty-spacer"
+              data-h2h-play-intro="redraw-target"
               style={{ width: "100%" }}
-            />
+            >
+              <div data-h2h-play-headline="true" style={introTypography}>
+                {`${challengeCtx.targetScore.toFixed(1)} to beat.`}
+              </div>
+            </div>
           ) : state.kind === "deal_in" ? (
             // PASS 1 PLACEHOLDER — deal-intro beat. Pass 2 will replace
             // this branch with a templated bank (selectRecipientDealIntro)

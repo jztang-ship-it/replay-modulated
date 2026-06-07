@@ -474,6 +474,128 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
   });
 });
 
+// ── 4b. redraw-target persistence in the top intro region ──────────
+//
+// Continuation of docs/h2h-recipient-static-commentary-lock.md
+// (session 2026-06-08): during redraw_running / your_redraw_flip the
+// top intro region — previously an empty layout spacer (BUG-1 FIX) —
+// now renders the static line "<targetScore.toFixed(1)> to beat." so
+// the number-to-beat stays parked from deal → hold → draw. The hero
+// region's "Drawing…" (from deriveHeadline) is unchanged. Format must
+// match the stage-2 line's targetScore.toFixed(1) — both lines render
+// the same number string so they can't drift on glass.
+
+describe("H2HRecipientPlay — state 3a/3b — top intro renders the redraw-target line", () => {
+  async function holdAndDraw() {
+    let resolveRedraw: (val: { roster: GeneratedCard[] }) => void = () => { };
+    const heldRedraw = new Promise<{ roster: GeneratedCard[] }>((r) => { resolveRedraw = r; });
+    const props = baseProps({
+      redrawRoster: vi.fn(() => heldRedraw),
+    } as any);
+
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    // Hold slot 2 (tap-tap per #11).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    vi.useRealTimers();
+    fireEvent.click(screen.getByText("Draw"));
+
+    await waitFor(() => {
+      const root = document.querySelector("[data-h2h-recipient-play]");
+      expect(root?.getAttribute("data-playing-state")).toBe("redraw_running");
+    });
+    return { container, resolveRedraw };
+  }
+
+  it("top intro renders '<target.toFixed(1)> to beat.' during redraw_running", async () => {
+    const { container, resolveRedraw } = await holdAndDraw();
+    // makeCtx default targetScore is 175 → 175.0 to beat.
+    const target = container.querySelector('[data-h2h-play-intro="redraw-target"]');
+    expect(target).not.toBeNull();
+    expect(target?.textContent).toBe("175.0 to beat.");
+    // The empty spacer is fully gone — assert against its old data-attr.
+    expect(container.querySelector('[data-h2h-play-intro="redraw-empty-spacer"]')).toBeNull();
+    // Cleanup.
+    resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
+  });
+
+  it("hero region still shows 'Drawing…' during redraw_running (deriveHeadline unchanged)", async () => {
+    const { resolveRedraw } = await holdAndDraw();
+    // The "Drawing…" copy comes from deriveHeadline (hero headline) and
+    // also from the CTA label (deriveCta) during redraw_running — both
+    // intentional, both unchanged. Use getAllByText to assert at least
+    // one element with that text remains in the DOM; this proves the
+    // top-region edit didn't displace the hero-region "Drawing…".
+    expect(screen.getAllByText("Drawing…").length).toBeGreaterThan(0);
+    resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
+  });
+
+  it("redraw-target number format matches stage-2's targetScore.toFixed(1) (anti-drift guard)", async () => {
+    // The stage-2 line and the redraw-target line both render
+    // targetScore.toFixed(1). If either side drifts (e.g. one becomes
+    // toFixed(2), or one starts using Math.round, or one drops the
+    // decimal), the two on-glass numbers stop matching and the
+    // continuous-anchor intent breaks. Drive into stage-2 first,
+    // capture its number substring, drive into redraw_running, and
+    // assert the same number substring lives in the redraw-target.
+    //
+    // Real timers throughout: stage-2 renders through PartsLine's
+    // typewriter rush; under fake timers it never paints. Pattern
+    // mirrors §9 (introSig-pinned stability test) for the same reason.
+    vi.useRealTimers();
+    let resolveRedraw: (val: { roster: GeneratedCard[] }) => void = () => { };
+    const heldRedraw = new Promise<{ roster: GeneratedCard[] }>((r) => { resolveRedraw = r; });
+    const props = baseProps({
+      redrawRoster: vi.fn(() => heldRedraw),
+    } as any);
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
+    );
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 3000 },
+    );
+    // Confirm hold of slot 2 (tap-tap). Stage 2 mounts.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    // Wait for the typewriter rush to paint the full stage-2 line.
+    await waitFor(
+      () => {
+        const el = container.querySelector('[data-h2h-play-intro="stage2"]');
+        // Match "Draw to beat <number>." with decimal-bearing number.
+        expect(el?.textContent ?? "").toMatch(/Draw to beat [\d.]+\.$/);
+      },
+      { timeout: 2000 },
+    );
+    const stage2Text = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
+    const stage2Match = stage2Text.match(/Draw to beat ([\d.]+)\.$/);
+    expect(stage2Match).not.toBeNull();
+    const stage2Number = stage2Match![1];
+    // 175 → "175.0" (single decimal, matching landing #3 format).
+    expect(stage2Number).toBe("175.0");
+
+    // Advance into redraw_running.
+    fireEvent.click(screen.getByText("Draw"));
+    await waitFor(() => {
+      const root = document.querySelector("[data-h2h-recipient-play]");
+      expect(root?.getAttribute("data-playing-state")).toBe("redraw_running");
+    });
+    const target = container.querySelector('[data-h2h-play-intro="redraw-target"]');
+    expect(target?.textContent).toBe(`${stage2Number} to beat.`);
+    resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
+  });
+});
+
 // ── 5. your_redraw_flip pass (Layout A/B restructure §3 step 2) ────
 //
 // Renamed from column_flip. The flip pass now applies ONLY to the
@@ -1540,7 +1662,11 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     await waitFor(
       () => {
         const el = container.querySelector('[data-h2h-play-intro="stage2"]');
-        expect(el?.textContent?.length ?? 0).toBeGreaterThan(20);
+        // Threshold tracks the static stage-2 line introduced by the
+        // 2026-06-08 subtraction (docs/h2h-recipient-static-commentary-lock.md):
+        // placeholder is [""] (length 0), painted line is `Draw to beat <target>.`
+        // (~19 chars for target=175). > 0 still guarantees the line painted.
+        expect(el?.textContent?.length ?? 0).toBeGreaterThan(0);
       },
       { timeout: 2000 },
     );

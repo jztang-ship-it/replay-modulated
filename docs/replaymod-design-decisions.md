@@ -6,6 +6,27 @@
 
 ---
 
+## Pending doc update — session 2026-06-08
+
+**H2H recipient play screen: dynamic per-draw commentary DISABLED for the investor demo.**
+
+The two random picks on `shared/components/H2HRecipientPlay.tsx` — `selectRecipientIntro` (stage 1, no holds) and `selectRecipientDealNudge` (stage 2, after first hold) — are removed from this surface. Replaced with two static `Line`s:
+
+- **Stage 1** (`hold_select`, 0 holds, `!introDismissed`): instructional directive — `"Tap the players you'd keep. Draw the rest."`
+- **Stage 2** (`hold_select`, ≥1 hold): stable directive — `"Draw to beat <targetScore>."` (target formatted to match the landing's #3 number format).
+
+Generator and banks are unchanged: `shared/commentary/chadChallenge.ts` and its bank exports are NOT touched. The `#4b` voice-engine repair remains out of scope for this change. The intent is **subtraction, not repair** — kill the dynamic call on the play surface; leave the generator intact so the engine work can resume later without re-litigating this decision.
+
+The PartsLine ref/sig scaffolding stays (gives stable identity to PartsLine's reset effect); only the picked `line` value changes. `introTypography` / WebkitLineClamp triad, render sites, and `showStage1`/`showStage2` gating are not touched.
+
+**Continuation — number-to-beat persistence in the redraw beat (same session, same lock):**
+
+The H2H recipient redraw beat (`redraw_running` / `your_redraw_flip`): the top intro region — previously an empty layout spacer (`BUG-1 FIX`) — now renders the static number line `"<targetScore.toFixed(1)> to beat."` so the number-to-beat persists continuously through deal → hold → draw. Hero-region `"Drawing…"` copy is unchanged. `deriveHeadline` unchanged. Layout height budget (`INTRO_3LINE_BUDGET_CSS`) preserved — single line, well within the 3-line clamp. The `introTypography` wrapper is mandatory on the new line (it owns the WebkitLineClamp:3 + height budget that prevents the BUG-1 strip Y-shift regression).
+
+**Lock:** `docs/h2h-recipient-static-commentary-lock.md` (narrow — H2HRecipientPlay.tsx only; refreshed in place with the redraw-beat continuation note).
+
+---
+
 ## How to use this doc
 
 This is the source of truth for:
