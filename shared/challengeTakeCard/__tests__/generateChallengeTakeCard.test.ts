@@ -319,111 +319,95 @@ describe("generateChallengeTakeCard — heldCards (structured, legacy gate)", ()
   });
 });
 
-describe("generateChallengeTakeCard — Phase 2d plain-language stakes (NO raw FP)", () => {
-  // Stakes-mapping gates. Each evidenceLine asserts the plain-language
-  // word a stranger can read — never the raw FP number.
+describe("generateChallengeTakeCard — RD5 evidenceLine (number-forward, mode-keyed)", () => {
+  // RD5 (lock amendment 2026-06-08) — the FP-spoiler rule split. The
+  // challenger's TOTAL is no longer hidden behind a stakes word; the
+  // evidenceLine is now mode-keyed FP-bearing copy. Stakes words
+  // (BUSTED / UNBEATEN / …) stay exported in templates.ts for
+  // downstream surfaces but no longer drive the engine's primary
+  // evidenceLine output. (The Phase 2d "NO raw FP" gate is preserved
+  // for `take` and `dare` only, below.)
 
-  it("choke + target < BUST ceiling (173) → BUSTED stakes", () => {
+  it("choke (correction) → '{N.N} FP on the board'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "choke",
       targetScore: 142.0,
-      anchorName: null, // force generic so no fuse
-      holdsRecorded: false, // force generic + no fuse
-      heldCards: [],
-    }));
-    // Phase 2e — choke evidence wraps with trailing period.
-    expect(card.evidenceLine).toBe("BUSTED.");
-  });
-
-  it("choke + target in ROOKIE band (173–202) → BARELY SURVIVED stakes", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 188.0,
       anchorName: null,
       holdsRecorded: false,
       heldCards: [],
     }));
-    expect(card.evidenceLine).toBe("BARELY SURVIVED.");
+    expect(card.evidenceLine).toBe("142.0 FP on the board");
   });
 
-  it("miss narrow gap (≤7) → ONE DECISION SHORT stakes", () => {
+  it("miss (correction) → '{N.N} FP on the board'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "miss",
       nearMissGap: 4,
       nearMissNextTier: "ALL_STAR",
       targetScore: 218.0,
     }));
-    expect(card.evidenceLine).toBe("ONE DECISION SHORT");
+    expect(card.evidenceLine).toBe("218.0 FP on the board");
   });
 
-  it("miss wide gap (>7) → CAME UP SHORT stakes", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "miss",
-      nearMissGap: 11,
-      nearMissNextTier: "LEGEND",
-      targetScore: 260.0,
-    }));
-    expect(card.evidenceLine).toBe("CAME UP SHORT");
-  });
-
-  it("competition 0 attempts → UNBEATEN stakes", () => {
+  it("big_score 0 attempts (competition) → '{N.N} FP · the wall'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "big_score",
+      targetScore: 232.5,
       attemptCount: 0,
       winnerCount: 0,
     }));
-    expect(card.evidenceLine).toBe("UNBEATEN");
+    expect(card.evidenceLine).toBe("232.5 FP · the wall");
   });
 
-  it("competition 1 attempt / 0 winners → UNBEATEN stakes", () => {
+  it("big_score 1 attempt / 0 winners (competition) → '{N.N} FP · 1 attempt, still standing'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "big_score",
+      targetScore: 232.5,
       attemptCount: 1,
       winnerCount: 0,
     }));
-    expect(card.evidenceLine).toBe("UNBEATEN");
+    expect(card.evidenceLine).toBe("232.5 FP · 1 attempt, still standing");
   });
 
-  it("competition 2+ attempts / 0 winners → '{N} TRIED. {N} FAILED.' stakes", () => {
+  it("big_score 5 attempts / 0 winners (competition) → '{N.N} FP · 5 attempts, still unbeaten'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "big_score",
+      targetScore: 232.5,
       attemptCount: 5,
       winnerCount: 0,
     }));
-    expect(card.evidenceLine).toBe("5 TRIED. 5 FAILED.");
+    expect(card.evidenceLine).toBe("232.5 FP · 5 attempts, still unbeaten");
   });
 
-  it("competition 2+ attempts / 1+ winners → 'BEEN BEATEN. DO IT AGAIN.' stakes", () => {
+  it("big_score 5 attempts / ≥1 winner (competition) → '{N.N} FP · the wall'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "big_score",
+      targetScore: 232.5,
       attemptCount: 5,
       winnerCount: 2,
     }));
-    expect(card.evidenceLine).toBe("BEEN BEATEN. DO IT AGAIN.");
+    expect(card.evidenceLine).toBe("232.5 FP · the wall");
   });
 
-  it("neutral (default) → 'A NUMBER ON THE BOARD. BEAT IT.' stakes", () => {
+  it("default (neutral) → '{N.N} FP to beat'", () => {
     const card = generateChallengeTakeCard(input({
       trigger: "default",
+      targetScore: 184.5,
       anchorName: null,
     }));
-    expect(card.evidenceLine).toBe("A NUMBER ON THE BOARD. BEAT IT.");
+    expect(card.evidenceLine).toBe("184.5 FP to beat");
   });
 
-  // The core 2d guard — no raw FP number EVER reaches the rendered fields.
-  // This is the spoiler/noise rule: "165.5 FP" is meaningless to a
-  // first-timer; the stakes word leads.
-  it("NO raw FP anywhere in take/evidenceLine/dare across all triggers × 50 ids", () => {
+  it("evidenceLine renders as 'FP' (never 'points' / 'pts') across all triggers × 50 ids", () => {
+    // Templated 'X.X FP …' — cannot emit "points" by construction. Pinned
+    // as a gate so any future re-routing of evidenceLine through a
+    // stakes-word bank is caught here.
     const triggers: TakeCardTrigger[] = ["rare_pull", "big_score", "choke", "miss", "default"];
-    // Match digits followed (anywhere) by " FP" — the canonical FP-number
-    // surface from the 2c "X.X FP on the board" form. Includes optional
-    // decimals; case-insensitive.
-    const fpNumberRe = /\d+(?:\.\d+)?\s*FP\b/i;
     for (const trigger of triggers) {
       for (let i = 0; i < 50; i++) {
         const card = generateChallengeTakeCard(input({
           trigger,
-          challengeId: `ch_no_fp_${trigger}_${i}`,
+          challengeId: `ch_rd5_fp_${trigger}_${i}`,
           targetScore: 200 + i,
           attemptCount: i % 7,
           winnerCount: i % 3,
@@ -431,8 +415,34 @@ describe("generateChallengeTakeCard — Phase 2d plain-language stakes (NO raw F
           nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
           anchorName: trigger === "default" ? null : "Vucevic",
         }));
-        for (const field of [card.take, card.evidenceLine, card.dare]) {
-          expect(fpNumberRe.test(field), `raw FP leaked into ${trigger} #${i}: ${field}`).toBe(false);
+        expect(card.evidenceLine.toLowerCase(), `${trigger} #${i} leaked 'points'`).not.toMatch(/\d+(?:\.\d+)?\s*points?\b/);
+        expect(card.evidenceLine.toLowerCase(), `${trigger} #${i} leaked 'pts'`).not.toMatch(/\d+(?:\.\d+)?\s*pts\b/);
+        expect(card.evidenceLine, `${trigger} #${i} did not name the FP figure`).toMatch(/\d+(?:\.\d+)?\s*FP\b/);
+      }
+    }
+  });
+
+  // The pre-RD5 "NO raw FP anywhere" gate split: RD5 admits FP on the
+  // evidenceLine (per the lock amendment) but keeps the prose fields
+  // (take, dare) raw-FP-free — those are voice surfaces, not the
+  // engine's number-forward evidence.
+  it("NO raw FP in take/dare across all triggers × 50 ids (FP-spoiler rule preserved for prose)", () => {
+    const triggers: TakeCardTrigger[] = ["rare_pull", "big_score", "choke", "miss", "default"];
+    const fpNumberRe = /\d+(?:\.\d+)?\s*FP\b/i;
+    for (const trigger of triggers) {
+      for (let i = 0; i < 50; i++) {
+        const card = generateChallengeTakeCard(input({
+          trigger,
+          challengeId: `ch_no_fp_prose_${trigger}_${i}`,
+          targetScore: 200 + i,
+          attemptCount: i % 7,
+          winnerCount: i % 3,
+          nearMissGap: trigger === "miss" ? (i % 13) : null,
+          nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
+          anchorName: trigger === "default" ? null : "Vucevic",
+        }));
+        for (const field of [card.take, card.dare]) {
+          expect(fpNumberRe.test(field), `raw FP leaked into ${trigger} #${i} prose: ${field}`).toBe(false);
         }
       }
     }
@@ -591,103 +601,12 @@ describe("generateChallengeTakeCard — Phase 2d anchor-truth branching (choke)"
   });
 });
 
-describe("generateChallengeTakeCard — Phase 2e conditional choke evidence (de-dup + prefix)", () => {
-  // 2e drops the 2d name fuse ("KOBE AND KIDD. BUSTED.") — the held
-  // names already appear in the DENZEL'S LINE block + HOLD badges, so
-  // listing them in the stakes line was the third repetition. Replaced
-  // with a conditional prefix:
-  //   take NAMES anchor (vindicated/blamed/culture)    → bare "BUSTED."
-  //   take is GENERIC + ≥2 held                        → "HELD THE STARS. BUSTED."
-  //   take is GENERIC + 1 held                         → "HELD THE STAR. BUSTED."
-  //   take is GENERIC + 0 held (legacy)                → "BUSTED."
-  // Talent-vs-failure tension lives in the prefix when the take can't
-  // carry it (generic path).
-
-  it("GENERIC choke + 2 held → evidenceLine prefixed 'HELD THE STARS. BUSTED.'", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 142.0,
-      anchorName: null, // force generic — no anchor split
-      holdsRecorded: true,
-      heldCards: [
-        { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },     // MID
-        { name: "Kidd", actualFp: 22, projectedFp: 30, tier: "PURPLE" },  // MID
-      ],
-    }));
-    expect(card.evidenceLine).toBe("HELD THE STARS. BUSTED.");
-  });
-
-  it("GENERIC choke + 1 held → evidenceLine singular prefix 'HELD THE STAR. BUSTED.'", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 142.0,
-      anchorName: null,
-      holdsRecorded: true,
-      heldCards: [
-        { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },
-      ],
-    }));
-    expect(card.evidenceLine).toBe("HELD THE STAR. BUSTED.");
-  });
-
-  it("ANCHOR-VINDICATED take → evidenceLine is BARE stakes (take already names the anchor)", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 142.0,
-      anchorName: "Kobe",
-      holdsRecorded: true,
-      heldCards: [
-        { name: "Kobe", actualFp: 47, projectedFp: 50, tier: "RED" },     // DELIVERED
-        { name: "Kidd", actualFp: 12, projectedFp: 35, tier: "PURPLE" },  // TANKED
-      ],
-    }));
-    expect(card.evidenceLine).toBe("BUSTED.");
-    expect(card.evidenceLine).not.toContain("HELD THE STAR");
-  });
-
-  it("ANCHOR-BLAMED take → evidenceLine is BARE stakes", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 142.0,
-      anchorName: "Kobe",
-      holdsRecorded: true,
-      heldCards: [
-        { name: "Kobe", actualFp: 18, projectedFp: 50, tier: "RED" },     // TANKED
-        { name: "Kidd", actualFp: 25, projectedFp: 35, tier: "PURPLE" },  // MID
-      ],
-    }));
-    expect(card.evidenceLine).toBe("BUSTED.");
-  });
-
-  it("LEGACY choke (0 held) → evidenceLine is BARE stakes (nothing to credit)", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 142.0,
-      holdsRecorded: false,
-      heldCards: [],
-      anchorName: null,
-    }));
-    expect(card.evidenceLine).toBe("BUSTED.");
-    expect(card.evidenceLine).not.toContain("HELD THE STAR");
-  });
-
-  // De-dup guard: the names of the held players must NEVER appear in
-  // the stakes line — that's the 2d → 2e fix.
-  it("DE-DUP: stakes line never contains held player names (no 2d-style fuse)", () => {
-    const card = generateChallengeTakeCard(input({
-      trigger: "choke",
-      targetScore: 142.0,
-      anchorName: null,
-      holdsRecorded: true,
-      heldCards: [
-        { name: "Kobe", actualFp: 18, projectedFp: 25, tier: "RED" },
-        { name: "Kidd", actualFp: 22, projectedFp: 30, tier: "PURPLE" },
-      ],
-    }));
-    expect(card.evidenceLine.toUpperCase()).not.toContain("KOBE");
-    expect(card.evidenceLine.toUpperCase()).not.toContain("KIDD");
-  });
-});
+// RD5 (2026-06-08): the Phase-2e "conditional choke evidence" describe
+// was retired — the HELD THE STARS prefix dance and the stakes-word
+// evidenceLine are gone, replaced by the mode-keyed FP-bearing
+// evidenceLine pinned in the RD5 describe above. The held-name de-dup
+// is structurally enforced now (the evidenceLine is a number-only
+// string by construction — it has no name surface to fuse into).
 
 describe("generateChallengeTakeCard — Phase 2e culture-flavored anchor takes", () => {
   // Layered on top of 2d anchor-truth. When the anchor has a CultureShape
@@ -833,8 +752,11 @@ describe("generateChallengeTakeCard — Phase 2e culture-flavored anchor takes",
     }
   });
 
-  // No raw FP guard preserved through 2e additions.
-  it("NO RAW FP across culture-flavored emissions × 50 seeds", () => {
+  // No raw FP guard preserved through 2e additions — RD5 scopes the
+  // ban to take + dare only (the prose voice surfaces). evidenceLine is
+  // now number-forward by lock amendment and intentionally carries
+  // "X.X FP" copy.
+  it("NO RAW FP in take/dare across culture-flavored emissions × 50 seeds", () => {
     const fpRe = /\d+(?:\.\d+)?\s*FP\b/i;
     for (let i = 0; i < 50; i++) {
       const card = generateChallengeTakeCard(chokeHand({
@@ -845,8 +767,8 @@ describe("generateChallengeTakeCard — Phase 2e culture-flavored anchor takes",
           { name: "Jason Kidd",  actualFp: 12, projectedFp: 35 },
         ],
       }));
-      for (const field of [card.take, card.evidenceLine, card.dare]) {
-        expect(fpRe.test(field), `2e culture #${i} leaked raw FP: ${field}`).toBe(false);
+      for (const field of [card.take, card.dare]) {
+        expect(fpRe.test(field), `2e culture #${i} leaked raw FP into prose: ${field}`).toBe(false);
       }
     }
   });

@@ -123,8 +123,8 @@ function domOrderOf(rootSelector: string, testIds: string[]): Map<string, number
   return seen;
 }
 
-describe("ChallengeTakeCardLanding — V2c hierarchy (TAKE → EVIDENCE → DARE)", () => {
-  it("DOM order: TAKE → USP → starting-hand → evidence-line → dare → CTA", () => {
+describe("ChallengeTakeCardLanding — RD5 hierarchy (TAKE → starting-hand → held-list → dare → CTA)", () => {
+  it("DOM order: TAKE → starting-hand → held-list → dare → CTA (USP deleted)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 142.5 })}
@@ -135,29 +135,22 @@ describe("ChallengeTakeCardLanding — V2c hierarchy (TAKE → EVIDENCE → DARE
     );
     const order = domOrderOf("[data-testid='challenge-take-card-landing']", [
       "take-headline",
-      "usp-subheadline",
       "starting-hand",
-      "evidence-line",
+      "held-list",
       "dare-line",
       "accept-cta",
     ]);
-    expect(order.get("take-headline")!).toBeLessThan(order.get("usp-subheadline")!);
-    expect(order.get("usp-subheadline")!).toBeLessThan(order.get("starting-hand")!);
-    expect(order.get("starting-hand")!).toBeLessThan(order.get("evidence-line")!);
-    expect(order.get("evidence-line")!).toBeLessThan(order.get("dare-line")!);
+    expect(order.get("take-headline")!).toBeLessThan(order.get("starting-hand")!);
+    expect(order.get("starting-hand")!).toBeLessThan(order.get("held-list")!);
+    expect(order.get("held-list")!).toBeLessThan(order.get("dare-line")!);
     expect(order.get("dare-line")!).toBeLessThan(order.get("accept-cta")!);
-  });
-
-  it("USP subHeadline is the canonical string ('Same starting hand. Different decisions.')", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("usp-subheadline").textContent).toBe("Same starting hand. Different decisions.");
+    // RD5: the usp-subheadline ("Same starting hand. Different decisions.")
+    // was deleted; the held-list + HOLD badges carry the
+    // fairness-mechanic story now.
+    expect(screen.queryByTestId("usp-subheadline")).toBeNull();
+    // The pre-RD5 stakes-word evidence-line is also gone — its slot is
+    // now occupied by the held-list element.
+    expect(screen.queryByTestId("evidence-line")).toBeNull();
   });
 });
 
@@ -204,7 +197,7 @@ describe("ChallengeTakeCardLanding — FP-SPOILER GUARD (no per-card FP chip in 
 });
 
 describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy", () => {
-  it("2 held → 2 prominent + 2 HOLD badges; held-list block absent (#4a declutter: cards carry held state via HOLD badge)", () => {
+  it("2 held → 2 prominent + 2 HOLD badges; RD5 held-list names the same held cards", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -216,14 +209,21 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
     expect(screen.getAllByTestId("hand-card-held")).toHaveLength(2);
     expect(screen.getAllByTestId("hand-card-plain")).toHaveLength(4);
     expect(screen.getAllByTestId("hold-badge")).toHaveLength(2);
-    // #4a declutter: the structured "MIKE'S LINE / HOLD: …" exhibit is
-    // gone. Cards themselves carry held state via HOLD badge + tier color.
-    expect(screen.queryByTestId("held-list")).toBeNull();
+    // RD5 — the held-list element renders held names (no per-card FP).
+    // The pre-RD5 #4a "always-absent" rule was reversed by the
+    // 2026-06-08 lock amendment (FP-spoiler rule split): per-card FP
+    // is still suppressed, but the held-name supporting line is the
+    // RD5 lead-in to the dare.
+    const heldList = screen.getByTestId("held-list");
+    expect(heldList.textContent).toContain("Held:");
+    expect(heldList.textContent?.toUpperCase()).toContain("EMBIID");
+    expect(heldList.textContent?.toUpperCase()).toContain("VUCEVIC");
+    // The legacy "MIKE'S LINE" exhibit + per-name testid stay retired.
     expect(screen.queryByTestId("line-owner")).toBeNull();
     expect(screen.queryAllByTestId("held-name")).toHaveLength(0);
   });
 
-  it("holdsRecorded:false → 6 plain cards, no HOLD badges, held list OMITTED entirely", () => {
+  it("holdsRecorded:false → 6 plain cards, no HOLD badges, held-list OMITTED (empty heldNames)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
@@ -240,6 +240,7 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
     expect(screen.queryAllByTestId("hand-card-held")).toHaveLength(0);
     expect(screen.queryAllByTestId("hand-card-plain")).toHaveLength(6);
     expect(screen.queryAllByTestId("hold-badge")).toHaveLength(0);
+    // Empty held set → element omitted entirely (no bare "Held:" label).
     expect(screen.queryByTestId("held-list")).toBeNull();
   });
 
@@ -272,162 +273,25 @@ describe("ChallengeTakeCardLanding — held-card prominence + held list + legacy
   });
 });
 
-describe("ChallengeTakeCardLanding — Phase 2e conditional choke evidence", () => {
-  it("correction (choke, generic, 2 held) → 'HELD THE STARS. BUSTED.' prefix (no held-name fuse)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 142.0 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    // Default makeData ratios are MID → anchor-truth = generic → 2e
-    // conditional prefix fires "HELD THE STARS. BUSTED." (replaces the
-    // 2d name-fusion "EMBIID AND VUCEVIC. BUSTED.").
-    expect(screen.getByTestId("evidence-line").textContent).toBe("HELD THE STARS. BUSTED.");
-  });
+// RD5 (2026-06-08): the Phase-2e "conditional choke evidence" describe
+// (stakes-word evidence-line per mode) and the Phase-2d "anchor-truth
+// wiring" describe (take-headline content via takeCard.take) were
+// deleted from this file. The landing no longer renders the take
+// engine's evidenceLine OR takeCard.take — the hero is the deterministic
+// number-forward template and the held-list takes the evidence slot.
+// Generator-level coverage of anchor-truth + stakes mapping stays in
+// shared/challengeTakeCard/__tests__/generateChallengeTakeCard.test.ts;
+// this file scopes to LANDING-RENDER assertions.
 
-  it("competition (big_score) → '{N} TRIED. {N} FAILED.' stakes when 2+ attempts / 0 winners", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "big_score",
-          heldPair: ["cur", "emb"],
-          attemptCount: 3,
-          winnerCount: 0,
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("evidence-line").textContent).toBe("3 TRIED. 3 FAILED.");
-  });
-
-  it("competition (big_score) with 0 attempts → 'UNBEATEN' stakes", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "big_score",
-          heldPair: ["cur", "emb"],
-          attemptCount: 0,
-          winnerCount: 0,
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("evidence-line").textContent).toBe("UNBEATEN");
-  });
-
-  it("neutral (default) → 'A NUMBER ON THE BOARD. BEAT IT.' stakes", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "default", heldPair: null, anchor: null, targetScore: 184.5 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("evidence-line").textContent).toBe("A NUMBER ON THE BOARD. BEAT IT.");
-  });
-
-  // Phase 2d core gate: no raw FP number on the landing.
-  it("NO 'X.X FP' string anywhere in the rendered landing across all triggers", () => {
-    const triggers = ["choke", "miss", "big_score", "rare_pull", "default"];
-    const fpNumberRe = /\d+(?:\.\d+)?\s*FP\b/i;
-    for (const trigger of triggers) {
-      const { unmount } = render(
-        <ChallengeTakeCardLanding
-          data={makeData({
-            trigger,
-            heldPair: trigger === "default" ? null : ["emb", "voo"],
-            anchor: trigger === "default" ? null : "voo",
-            nearMissGap: trigger === "miss" ? 4 : null,
-            nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
-          })}
-          statsLine={null}
-          alreadyAttempted={false}
-          onAccept={() => {}}
-        />
-      );
-      const root = screen.getByTestId("challenge-take-card-landing");
-      const allText = root.textContent ?? "";
-      expect(fpNumberRe.test(allText), `${trigger} landing leaked raw FP: ${allText}`).toBe(false);
-      unmount();
-    }
-  });
-});
-
-describe("ChallengeTakeCardLanding — Phase 2d anchor-truth wiring (component → generator)", () => {
-  it("anchor DELIVERED + other TANKED → take vindicates anchor", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "choke",
-          heldPair: ["emb", "voo"],
-          anchor: "emb",                   // anchor = Embiid
-          heldOutcomes: { emb: 47, voo: 12 }, // emb 0.94 DELIVERED, voo 0.34 TANKED
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const take = screen.getByTestId("take-headline").textContent ?? "";
-    expect(take).toMatch(/WASN'T THE PROBLEM|DID HIS PART|DON'T BLAME|SHOWED UP\. THE REST/i);
-    expect(take.toUpperCase()).toContain("EMBIID");
-  });
-
-  it("anchor TANKED → take blames anchor", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "choke",
-          heldPair: ["emb", "voo"],
-          anchor: "emb",
-          heldOutcomes: { emb: 18, voo: 24 }, // emb 0.36 TANKED, voo 0.69 MID
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const take = screen.getByTestId("take-headline").textContent ?? "";
-    expect(take).toMatch(/COULDN'T SAVE|FORGOT TO SHOW|WAS THE ONE THAT MISSED|BLINKED/i);
-    expect(take.toUpperCase()).toContain("EMBIID");
-  });
-
-  it("legacy (holdsRecorded:false) → take is GENERIC, no anchor name leak", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "choke",
-          heldPair: null,
-          holdsRecorded: false,
-          anchor: "emb",
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const take = screen.getByTestId("take-headline").textContent ?? "";
-    expect(take).toMatch(/WASTED|SHOULD NOT|WINNING SHAPE|STARS WERE/i);
-    expect(take.toUpperCase()).not.toContain("EMBIID");
-    expect(take.toUpperCase()).not.toContain("WASN'T THE PROBLEM");
-    expect(take.toUpperCase()).not.toContain("COULDN'T SAVE");
-  });
-});
-
-describe("ChallengeTakeCardLanding — Phase 2e culture-flavored take + supporting line + de-dup", () => {
+describe("ChallengeTakeCardLanding — supporting culture line (optional, off by default)", () => {
   // The component wires lookupCulture(name, sport, tier, seed, basePlayerId,
   // team). The makeData synthetic basePlayerIds (emb/voo/etc.) won't hit
-  // the basketball culture DB → lookupCulture returns null → generator
-  // falls to 2d non-culture banks. Use a Kobe fixture with the REAL
-  // basePlayerId "977" to exercise the culture-flavored path end-to-end.
+  // the basketball culture DB → lookupCulture returns null → no
+  // supporting line. Use a Kobe fixture with the REAL basePlayerId
+  // "977" to exercise the culture-resolved path end-to-end.
+  // (RD5: the take-content + DE-DUP cases that used to share this
+  // describe were retired with the take-engine landing render; the
+  // supporting-culture-line surface is unaffected by RD5.)
 
   function makeCultureRichData(heldOutcomes: Record<string, number> = { kobe: 47, kidd: 12 }): ChallengeLandingData {
     return {
@@ -481,75 +345,6 @@ describe("ChallengeTakeCardLanding — Phase 2e culture-flavored take + supporti
       top_game_tier: null,
     };
   }
-
-  it("culture-rich anchor (Kobe, vindicated) → take uses a Kobe nickname (Mamba family)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeCultureRichData()}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const take = screen.getByTestId("take-headline").textContent ?? "";
-    // Iconic nicknames from bryant_977: BLACK MAMBA, MAMBA, VINO, KB24,
-    // MAMBA MENTALITY. The seeded pick lands on one of these.
-    expect(take).toMatch(/BLACK MAMBA|MAMBA|VINO|KB24|MAMBA MENTALITY/);
-    expect(take).not.toMatch(/\{nickname\}/);
-    expect(take).not.toMatch(/\{anchorName\}/);
-  });
-
-  it("culture-rich anchor (Kobe, blamed) → take blames the Mamba family", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeCultureRichData({ kobe: 18, kidd: 25 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const take = screen.getByTestId("take-headline").textContent ?? "";
-    expect(take).toMatch(/BLACK MAMBA|MAMBA|VINO|KB24|MAMBA MENTALITY/);
-    expect(take).toMatch(/WENT QUIET|FORGOT TO SHOW|BLINKED|BUILT AROUND/);
-  });
-
-  it("culture-poor anchor (synthetic 'emb' basePlayerId) → falls to 2d 'EMBIID …' bank, no broken token", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({
-          trigger: "choke",
-          heldPair: ["emb", "voo"],
-          anchor: "emb",
-          heldOutcomes: { emb: 47, voo: 12 },
-        })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const take = screen.getByTestId("take-headline").textContent ?? "";
-    expect(take.toUpperCase()).toContain("EMBIID");
-    expect(take).not.toMatch(/\{nickname\}/);
-    expect(take).not.toMatch(/\{anchorName\}/);
-  });
-
-  it("DE-DUP: stakes line never contains the held player NAMES (the 2d → 2e cut)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const evidence = screen.getByTestId("evidence-line").textContent ?? "";
-    expect(evidence.toUpperCase()).not.toContain("EMBIID");
-    expect(evidence.toUpperCase()).not.toContain("VUCEVIC");
-    // #4a removed the held-list block entirely — held names no longer
-    // render anywhere outside the cards themselves. The DE-DUP rule on
-    // the stakes line is what this test exists to pin.
-    expect(screen.queryAllByTestId("held-name")).toHaveLength(0);
-  });
 
   it("supporting culture line — OFF by default (the lock-spec'd default)", () => {
     render(
@@ -671,7 +466,7 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
   // removed, attribution now carries it on every named row (holds
   // recorded or legacy).
 
-  it("HOLDS-RECORDED + named → sender mentioned EXACTLY ONCE (in attribution 'from {sender}'; held-list block removed in #4a)", () => {
+  it("HOLDS-RECORDED + named → sender mentioned TWICE (once in the RD5 hero, once in attribution)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
@@ -686,14 +481,18 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
     );
     const root = screen.getByTestId("challenge-take-card-landing");
     const matches = (root.textContent ?? "").match(/Denzel/gi) ?? [];
-    expect(matches.length, `holds-recorded sender mentioned ${matches.length} times — should be exactly 1`).toBe(1);
-    // The single mention now lives in the bottom attribution. The old
-    // line-owner element is gone with the held-list block.
-    expect(screen.queryByTestId("line-owner")).toBeNull();
+    // RD5 — the hero now reads "Denzel SCORED N FP", so the challenger
+    // is named in the hero AND in the attribution. The pre-RD5
+    // "EXACTLY ONCE" rule reflected the old take-content hero (which
+    // never named the sender); the lock amendment makes Score-on-the-
+    // landing explicit and the name surfaces in the hero by design.
+    expect(matches.length, `holds-recorded sender mentioned ${matches.length} times — RD5 expects 2 (hero + attribution)`).toBe(2);
+    expect(screen.getByTestId("take-headline").textContent).toContain("Denzel SCORED");
     expect(screen.getByTestId("attribution").textContent).toContain("from Denzel");
+    expect(screen.queryByTestId("line-owner")).toBeNull();
   });
 
-  it("LEGACY (holdsRecorded:false) → sender mentioned EXACTLY ONCE (in bottom 'from {sender}', not in line-owner)", () => {
+  it("LEGACY (holdsRecorded:false) → sender named TWICE (RD5 hero + attribution)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
@@ -710,14 +509,13 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
     );
     const root = screen.getByTestId("challenge-take-card-landing");
     const matches = (root.textContent ?? "").match(/Denzel/gi) ?? [];
-    expect(matches.length, `legacy sender mentioned ${matches.length} times — should be exactly 1`).toBe(1);
-    // The single mention is in the bottom attribution (legacy has no
-    // MIKE'S LINE block).
-    expect(screen.queryByTestId("line-owner")).toBeNull();
+    expect(matches.length, `legacy sender mentioned ${matches.length} times — RD5 expects 2 (hero + attribution)`).toBe(2);
+    expect(screen.getByTestId("take-headline").textContent).toContain("Denzel SCORED");
     expect(screen.getByTestId("attribution").textContent).toContain("from Denzel");
+    expect(screen.queryByTestId("line-owner")).toBeNull();
   });
 
-  it("LEGACY + statsLine → both 'from {sender}' AND stats render, still exactly one sender mention", () => {
+  it("LEGACY + statsLine → attribution renders 'from {sender}' + stats; RD5 hero also names the sender", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({
@@ -735,9 +533,10 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
     const attribution = screen.getByTestId("attribution");
     expect(attribution.textContent).toContain("from Denzel");
     expect(attribution.textContent).toContain("3 attempts · 67% failed");
+    expect(screen.getByTestId("take-headline").textContent).toContain("Denzel SCORED");
     const root = screen.getByTestId("challenge-take-card-landing");
     const matches = (root.textContent ?? "").match(/Denzel/gi) ?? [];
-    expect(matches.length).toBe(1);
+    expect(matches.length).toBe(2);
   });
 
   it("ANONYMOUS LEGACY (no real name + holdsRecorded:false) → ZERO sender mentions (no name to attribute)", () => {
@@ -790,17 +589,17 @@ describe("ChallengeTakeCardLanding — Phase 2d layout (stamp inline, all six ti
   });
 });
 
-describe("ChallengeTakeCardLanding — every trigger renders the full set of surfaces", () => {
+describe("ChallengeTakeCardLanding — RD5: every trigger renders the full set of surfaces", () => {
   const cases = [
-    { trigger: "choke",     extra: { heldPair: ["emb", "voo"] as [string, string] } },
-    { trigger: "miss",      extra: { heldPair: ["bro", "cur"] as [string, string], nearMissGap: 4, nearMissNextTier: "ALL_STAR" } },
-    { trigger: "big_score", extra: { heldPair: ["cur", "emb"] as [string, string] } },
-    { trigger: "rare_pull", extra: { heldPair: ["cur", "emb"] as [string, string], topGameTier: "record" as const } },
-    { trigger: "default",   extra: { heldPair: null, anchor: null } },
+    { trigger: "choke",     extra: { heldPair: ["emb", "voo"] as [string, string] }, expectHeld: true },
+    { trigger: "miss",      extra: { heldPair: ["bro", "cur"] as [string, string], nearMissGap: 4, nearMissNextTier: "ALL_STAR" }, expectHeld: true },
+    { trigger: "big_score", extra: { heldPair: ["cur", "emb"] as [string, string] }, expectHeld: true },
+    { trigger: "rare_pull", extra: { heldPair: ["cur", "emb"] as [string, string], topGameTier: "record" as const }, expectHeld: true },
+    { trigger: "default",   extra: { heldPair: null, anchor: null }, expectHeld: false },
   ];
 
-  for (const { trigger, extra } of cases) {
-    it(`${trigger}: TAKE + USP + hand + evidence + dare + CTA all non-empty`, () => {
+  for (const { trigger, extra, expectHeld } of cases) {
+    it(`${trigger}: hero + hand + ${expectHeld ? "held-list" : "no held-list"} + dare + CTA all present`, () => {
       render(
         <ChallengeTakeCardLanding
           data={makeData({ trigger, ...extra })}
@@ -810,9 +609,16 @@ describe("ChallengeTakeCardLanding — every trigger renders the full set of sur
         />
       );
       expect(screen.getByTestId("take-headline").textContent?.length).toBeGreaterThan(0);
-      expect(screen.getByTestId("usp-subheadline").textContent).toBe("Same starting hand. Different decisions.");
+      // RD5 — usp-subheadline + evidence-line testids are gone.
+      expect(screen.queryByTestId("usp-subheadline")).toBeNull();
+      expect(screen.queryByTestId("evidence-line")).toBeNull();
       expect(screen.getAllByTestId(/^hand-card-(held|plain)$/).length).toBe(6);
-      expect(screen.getByTestId("evidence-line").textContent?.length).toBeGreaterThan(0);
+      if (expectHeld) {
+        expect(screen.getByTestId("held-list").textContent?.length).toBeGreaterThan(0);
+      } else {
+        // default trigger renders heldPair: null → held-list omitted.
+        expect(screen.queryByTestId("held-list")).toBeNull();
+      }
       expect(screen.getByTestId("dare-line").textContent?.length).toBeGreaterThan(0);
       expect(screen.getByTestId("accept-cta").textContent?.length).toBeGreaterThan(0);
     });
@@ -951,196 +757,154 @@ describe("ChallengeTakeCardLanding — legacy alias + accept wiring", () => {
   });
 });
 
-describe("ChallengeTakeCardLanding — #4a declutter: held-list block always absent", () => {
-  // The Phase 2e conditional held-list block (kept-vs-cut by
-  // takeCard.takeNamedAnchor) is removed in #4a. The held-list /
-  // line-owner / held-name test-ids should never render, regardless of
-  // trigger, held-state, or take-card output. Cards carry held state
-  // via HOLD badge; sender attribution lives in the bottom attribution
-  // (covered by the Phase 2d layout describe above).
-  const cases: Array<{ name: string; extra: MakeOpts }> = [
-    { name: "GENERIC choke",                 extra: { trigger: "choke", heldPair: ["emb", "voo"] as [string, string] } },
-    { name: "MISS",                          extra: { trigger: "miss", heldPair: ["bro", "cur"] as [string, string], nearMissGap: 4, nearMissNextTier: "ALL_STAR" } },
-    { name: "BIG_SCORE",                     extra: { trigger: "big_score", heldPair: ["cur", "emb"] as [string, string] } },
-    { name: "RARE_PULL",                     extra: { trigger: "rare_pull", heldPair: ["cur", "emb"] as [string, string], topGameTier: "record" as const } },
-    { name: "DEFAULT",                       extra: { trigger: "default", heldPair: ["bro", "hol"] as [string, string], anchor: null } },
-    { name: "LEGACY (no holds)",             extra: { trigger: "choke", heldPair: null, holdsRecorded: false, anchor: null } },
-    { name: "VINDICATED (anchor delivered)", extra: { trigger: "choke", heldPair: ["emb", "voo"] as [string, string], anchor: "emb", heldOutcomes: { emb: 47, voo: 12 } } },
-    { name: "BLAMED (anchor tanked)",        extra: { trigger: "choke", heldPair: ["emb", "voo"] as [string, string], anchor: "emb", heldOutcomes: { emb: 18, voo: 24 } } },
-  ];
+// RD5 (2026-06-08): the "#4a held-list always absent" describe was
+// reversed by the FP-spoiler-rule split lock amendment — held-names ARE
+// now rendered as the supporting line. The "Phase 3.2 authored_headline
+// wiring" describe was retired with the authored-narrative hero: the
+// landing no longer reads data.authored_headline (the leak-source RD5
+// is structurally immune to). Both were deleted from this file.
 
-  for (const { name, extra } of cases) {
-    it(`${name}: held-list / line-owner / held-name all absent`, () => {
-      render(
+describe("ChallengeTakeCardLanding — RD5: number-forward hero + held names + dare CTA", () => {
+  it("named challenger → hero reads '{name} SCORED {N} FP'", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 165.5, challengerName: "Mike" })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const headline = screen.getByTestId("take-headline").textContent ?? "";
+    expect(headline).toContain("Mike SCORED 165.5 FP");
+    // Templated string — by construction it cannot emit "points" for
+    // the FP figure (the RD0 leak shape is structurally retired here).
+    expect(headline.toLowerCase()).not.toMatch(/\d+(?:\.\d+)?\s*points?\b/);
+    expect(headline.toLowerCase()).not.toMatch(/\d+(?:\.\d+)?\s*pts\b/);
+  });
+
+  it("unnamed challenger → hero falls back to 'THE SCORE TO BEAT — {N} FP'", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "default", heldPair: null, anchor: null, targetScore: 184.5, challengerName: null })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const headline = screen.getByTestId("take-headline").textContent ?? "";
+    expect(headline).toContain("THE SCORE TO BEAT — 184.5 FP");
+  });
+
+  it("hero rounds targetScore to one decimal", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], targetScore: 165, challengerName: "Mike" })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("take-headline").textContent).toContain("Mike SCORED 165.0 FP");
+  });
+
+  it("held-list lists the held-card NAMES only (no per-card FP, no outcome word)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "Mike" })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    const heldList = screen.getByTestId("held-list");
+    const text = heldList.textContent ?? "";
+    expect(text).toMatch(/^Held:\s/);
+    expect(text).toContain("Embiid");
+    expect(text).toContain("Vucevic");
+    // Per-card FP stays suppressed — heldNames is a name string, not
+    // an FP receipt.
+    expect(text).not.toMatch(/\d+(?:\.\d+)?\s*FP\b/);
+    expect(text.toLowerCase()).not.toMatch(/busted|unbeaten|short/);
+  });
+
+  it("dare-line reads 'Can you beat him?' when challenger is named", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "Mike" })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("dare-line").textContent).toBe("Can you beat him?");
+  });
+
+  it("dare-line reads 'Can you beat it?' when challenger is unnamed", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "default", heldPair: null, anchor: null, challengerName: null })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("dare-line").textContent).toBe("Can you beat it?");
+  });
+
+  it("accept-cta button reads 'Accept Challenge' on first attempt", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    expect(screen.getByTestId("accept-cta").textContent).toBe("Accept Challenge");
+  });
+
+  it("NO per-card FP chip rendered anywhere on the landing (spoiler guard intact)", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        statsLine={null}
+        alreadyAttempted={false}
+        onAccept={() => {}}
+      />
+    );
+    // The per-card FP chip data-testid stays absent — RD5 preserves
+    // this spoiler guard (the lock amendment retained per-card FP
+    // suppression).
+    expect(screen.queryAllByTestId("held-actualfp-chip")).toHaveLength(0);
+  });
+
+  it("NO 'points' string anywhere in the hero for the FP figure (RD0 leak shape, structurally retired by RD5)", () => {
+    // The landing's hero is a templated `{N} FP` string. There is no
+    // code path on the landing that can render the FP figure as
+    // "points". A FRESH challenge's authored_headline is no longer
+    // consumed here, so a stale pre-RD0 seed on the wire cannot leak
+    // through the landing surface.
+    const triggers = ["choke", "miss", "big_score", "rare_pull", "default"];
+    for (const trigger of triggers) {
+      const { unmount } = render(
         <ChallengeTakeCardLanding
-          data={makeData(extra)}
+          data={makeData({
+            trigger,
+            heldPair: trigger === "default" ? null : ["emb", "voo"],
+            anchor: trigger === "default" ? null : "voo",
+            nearMissGap: trigger === "miss" ? 4 : null,
+            nearMissNextTier: trigger === "miss" ? "ALL_STAR" : null,
+            targetScore: 165.5,
+          })}
           statsLine={null}
           alreadyAttempted={false}
           onAccept={() => {}}
         />
       );
-      expect(screen.queryByTestId("held-list")).toBeNull();
-      expect(screen.queryByTestId("line-owner")).toBeNull();
-      expect(screen.queryAllByTestId("held-name")).toHaveLength(0);
-    });
-  }
-});
-
-// ── Phase 3.2 — authored_headline wiring on the TAKE ──────────────────────
-// Lock: docs/challenge-landing-v2-phase3.2-wire-authored-headline-to-take-
-// lock.md (commit ac4b032). The visible top headline on the accept page is
-// the take-card's <h1 data-testid="take-headline">. Phase 3 wrote authored
-// lines into share_headline, which the accept-page TAKE never read — so
-// authored output silently bypassed the surface the lock was supposed to
-// retire. Phase 3.2 splits the wire: authored_headline lands on its own
-// column, and the TAKE renders it when present and falls back to the take
-// card's TAKE field when null.
-
-import { chadShareTrashTalkBank } from "../../commentary/chadChallenge";
-
-describe("ChallengeTakeCardLanding — Phase 3.2 authored_headline wiring on the TAKE", () => {
-  it("renders authored_headline as the TAKE when present (instead of takeCard.take)", () => {
-    const authored = "Lakers' road trip stalls in Portland";
-    render(
-      <ChallengeTakeCardLanding
-        data={{
-          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
-          authored_headline: authored,
-        }}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const h1 = screen.getByTestId("take-headline");
-    // textContent compares against the source string (CSS uppercases at
-    // render time only; the DOM string is the original casing).
-    expect(h1.textContent).toContain(authored);
-  });
-
-  it("authored_headline=null → renders takeCard.take (today's behavior unchanged)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={{
-          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
-          authored_headline: null,
-        }}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const h1 = screen.getByTestId("take-headline");
-    // The default Embiid+Vucevic fixture has mid-zone ratios → anchor-
-    // truth = generic → take card picks from TAKES.choke. The exact line
-    // is seed-dependent; what matters is it ISN'T the (absent) authored
-    // line — i.e. text content is the take card's TAKE, not an authored
-    // ESPN-register line. We assert the take card's TAKE banks contain
-    // the rendered string.
-    const text = (h1.textContent ?? "").toUpperCase();
-    const choke = ["SOMEBODY WASTED THIS HAND", "THESE CARDS SHOULD NOT HAVE LOST",
-                   "THIS HAND HAD A WINNING SHAPE", "THE STARS WERE THERE. THE SCORE WASN'T."];
-    expect(choke.some(c => text.startsWith(c))).toBe(true);
-  });
-
-  it("authored_headline omitted (legacy row, pre-migration) → renders takeCard.take", () => {
-    // Same as null but the field isn't in the payload at all — exercises
-    // the optional-field-absent path.
-    const data = makeData({ trigger: "choke", heldPair: ["emb", "voo"] });
-    // No authored_headline key set on data; pass as-is.
-    render(
-      <ChallengeTakeCardLanding
-        data={data}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const h1 = screen.getByTestId("take-headline");
-    expect(h1.textContent).toBeTruthy();
-    // No authored ESPN-register string accidentally rendered.
-    expect(h1.textContent).not.toMatch(/road trip stalls/i);
-  });
-
-  it("badge / evidence-line / dare / CTA all unchanged when authored renders", () => {
-    // Phase 3.2 lock: "No other take-card change." The h1 swap MUST NOT
-    // disturb any other surface. Render with authored present and assert
-    // every other test-id is still where it was. (#4a removed the
-    // held-list surface entirely, so it's no longer asserted here.)
-    render(
-      <ChallengeTakeCardLanding
-        data={{
-          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
-          authored_headline: "Lakers' road trip stalls in Portland",
-        }}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    expect(screen.getByTestId("badge-row")).toBeTruthy();
-    expect(screen.getByTestId("usp-subheadline")).toBeTruthy();
-    expect(screen.getByTestId("starting-hand")).toBeTruthy();
-    expect(screen.getByTestId("evidence-line")).toBeTruthy();
-    expect(screen.getByTestId("dare-line")).toBeTruthy();
-    expect(screen.getByTestId("accept-cta")).toBeTruthy();
-  });
-
-  it("#4a blank-case floor: authored_headline null + empty generator take → 'THIS IS THE LINE.'", () => {
-    // The new tertiary fallback in #4a: `authored_headline || takeCard.take || "THIS IS THE LINE."`
-    // Exercises the path where the generator returns an empty TAKE (a
-    // degenerate state — real banks are never empty, but the floor exists
-    // to guarantee the headline surface never renders bare).
-    vi.mocked(generateChallengeTakeCard).mockReturnValueOnce({
-      take: "",
-      subHeadline: "Same starting hand. Different decisions.",
-      evidenceLine: "",
-      dare: "",
-      ctaText: "PLAY YOUR LINE",
-      heldCards: [],
-      takeNamedAnchor: false,
-    } as ReturnType<typeof generateChallengeTakeCard>);
-    render(
-      <ChallengeTakeCardLanding
-        data={{
-          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
-          authored_headline: null,
-        }}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const h1 = screen.getByTestId("take-headline");
-    expect(h1.textContent).toContain("THIS IS THE LINE.");
-  });
-
-  it("RULE PROOF — every chadShareTrashTalk bank string never reaches the TAKE", () => {
-    // The load-bearing Phase 3.2 invariant: a bank pick (which is what
-    // share_headline degrades to on /api/headline failure) must NEVER be
-    // rendered as the TAKE. The architectural guarantee is that the
-    // client only writes authored values into authored_headline — bank
-    // picks land in share_headline, which the TAKE doesn't read. This
-    // test demonstrates the rule structurally: when authored_headline
-    // is null (the only path a bank-pick scenario would take), the
-    // rendered TAKE is from TAKES.choke / 2d / 2e banks, not from
-    // SHARE_TT_CHOKE. Iterates the bank to prove none of those strings
-    // ever appears in the TAKE.
-    render(
-      <ChallengeTakeCardLanding
-        data={{
-          ...makeData({ trigger: "choke", heldPair: ["emb", "voo"] }),
-          authored_headline: null,
-        }}
-        statsLine={null}
-        alreadyAttempted={false}
-        onAccept={() => {}}
-      />
-    );
-    const takeText = (screen.getByTestId("take-headline").textContent ?? "").toUpperCase();
-    const bank = chadShareTrashTalkBank("choke").map(s => s.toUpperCase());
-    for (const bankString of bank) {
-      expect(takeText).not.toContain(bankString);
+      const headline = screen.getByTestId("take-headline").textContent ?? "";
+      expect(headline.toLowerCase(), `${trigger}: hero leaked 'points' for an FP figure`).not.toMatch(/\d+(?:\.\d+)?\s*points?\b/);
+      expect(headline.toLowerCase(), `${trigger}: hero leaked 'pts' for an FP figure`).not.toMatch(/\d+(?:\.\d+)?\s*pts\b/);
+      unmount();
     }
   });
 });

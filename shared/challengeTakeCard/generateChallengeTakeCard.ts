@@ -44,16 +44,9 @@ import {
   SUB_HEADLINE,
   DARES,
   CTAS,
-  STAKES_BUSTED,
-  STAKES_BARELY_SURVIVED,
-  STAKES_MISS_NARROW,
-  STAKES_MISS_WIDE,
-  STAKES_NEUTRAL,
-  STAKES_PREFIX_HELD_STARS_PLURAL,
-  STAKES_PREFIX_HELD_STARS_SINGULAR,
-  BUST_FP_CEILING,
-  ROOKIE_FP_CEILING,
-  buildStakesCompetition,
+  buildEvidenceLineCorrection,
+  buildEvidenceLineCompetition,
+  buildEvidenceLineNeutral,
 } from "./templates";
 
 // Phase 3 (lock: docs/challenge-landing-v2-phase3-authored-voice-engine-
@@ -217,32 +210,6 @@ function classifyAnchorTruthLocal(input: TakeCardInput): AnchorTruth {
   return "generic";
 }
 
-/** Phase 2d — plain-language stakes by mode/trigger. Replaces the 2c
- *  "165.5 FP on the board" prose. NO FP number ever appears in the
- *  return value (asserted by gate test). */
-function buildPlainStakes(input: TakeCardInput, mode: TakeCardMode): string {
-  if (mode === "competition") {
-    return buildStakesCompetition(input.attemptCount, input.winnerCount);
-  }
-  if (mode === "correction") {
-    if (input.trigger === "choke") {
-      // BUST < ROOKIE_MIN; ROOKIE_MIN <= ROOKIE < STARTER_MIN. Choke fires
-      // only on BUST/ROOKIE finals so we map both.
-      return input.targetScore < BUST_FP_CEILING ? STAKES_BUSTED : STAKES_BARELY_SURVIVED;
-    }
-    if (input.trigger === "miss") {
-      const gap = input.nearMissGap ?? 0;
-      return gap > MISS_ONE_DECISION_THRESHOLD_FP ? STAKES_MISS_WIDE : STAKES_MISS_NARROW;
-    }
-  }
-  // BUST_FP_CEILING / ROOKIE_FP_CEILING currently only inform the choke
-  // branch above. ROOKIE_FP_CEILING stays exported for future tier-edge
-  // routing — referenced here to keep the import contract live so a
-  // future bank can branch on the STARTER-MIN line without a re-import.
-  void ROOKIE_FP_CEILING;
-  return STAKES_NEUTRAL;
-}
-
 /** Phase 2e — iconic nickname pick. Returns the first nickname in the
  *  culture's `nicknames[]` that passes the iconic-nickname filter
  *  (length ≥ 4, not equal to the player's first or last name — same
@@ -269,27 +236,6 @@ function pickIconicNickname(
   });
   if (iconic.length === 0) return "";
   return seededPick(iconic, challengeId, "take-nickname").toUpperCase();
-}
-
-/** Phase 2e — conditional stakes evidence line. When the take NAMES the
- *  anchor (vindicated/blamed/culture-flavored), the take carries the
- *  talent indictment → bare stakes ("BUSTED.") reads honest. When the
- *  take is GENERIC ("THESE CARDS SHOULD NOT HAVE LOST"), the bare form
- *  reads flat alongside it → prefix the stakes with "HELD THE STARS."
- *  so the talent-vs-failure tension lives somewhere on the page.
- *  Drops the prefix entirely on 0-held (legacy) — can't credit "stars
- *  held" when none were. */
-function buildEvidenceLineChoke(
-  input: TakeCardInput,
-  stakesWord: string,
-  takeNamedAnchor: boolean,
-): string {
-  if (takeNamedAnchor) return `${stakesWord}.`;
-  const heldCount = input.holdsRecorded ? input.heldCards.length : 0;
-  if (heldCount === 0) return `${stakesWord}.`;
-  const prefix =
-    heldCount === 1 ? STAKES_PREFIX_HELD_STARS_SINGULAR : STAKES_PREFIX_HELD_STARS_PLURAL;
-  return `${prefix}. ${stakesWord}.`;
 }
 
 export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCard {
@@ -341,15 +287,31 @@ export function generateChallengeTakeCard(input: TakeCardInput): ChallengeTakeCa
   // CTA: mode-keyed.
   const ctaText = seededPick(CTAS[mode], seed, "cta");
 
-  // EVIDENCE: Phase 2d plain-language stakes + Phase 2e conditional
-  // prefix (generic take only). NO raw FP appears. NO held names fused
-  // into the stakes line — the DENZEL'S LINE block lists them; the take
-  // names the anchor (when applicable). De-dup'd.
-  const stakesWord = buildPlainStakes(input, mode);
+  // EVIDENCE (RD5, 2026-06-08): the lock amendment splits the FP-spoiler
+  // rule. The challenger's TOTAL is no longer a spoiler — it IS the
+  // challenge, so the evidenceLine is now number-forward across modes
+  // (correction → "165.5 FP on the board", competition → "232.5 FP · …
+  // unbeaten", neutral → "232.5 FP to beat"). The Phase 2d stakes words
+  // (BUSTED / UNBEATEN / …) and the choke-prefix dance (HELD THE STARS.)
+  // are no longer the primary evidenceLine; the STAKES_* constants in
+  // templates.ts stay exported as flavor for downstream surfaces but
+  // never substitute for the number on the engine's primary output.
+  // The landing renders its own number-forward hero from
+  // input.targetScore directly and no longer reads this field, so the
+  // engine contract becomes the stand-alone source-of-truth for the
+  // FP figure on any future consumer.
+  const evidenceFactInput = {
+    targetScore: input.targetScore,
+    bestScore: input.bestScore,
+    attemptCount: input.attemptCount,
+    winnerCount: input.winnerCount,
+  };
   const evidenceLine =
-    input.trigger === "choke"
-      ? buildEvidenceLineChoke(input, stakesWord, takeNamedAnchor)
-      : stakesWord;
+    mode === "correction"
+      ? buildEvidenceLineCorrection(evidenceFactInput)
+      : mode === "competition"
+        ? buildEvidenceLineCompetition(evidenceFactInput)
+        : buildEvidenceLineNeutral(evidenceFactInput);
 
   // heldCards: structured list, NOT prose. Empty when holdsRecorded is
   // false — the landing's labeled held block omits entirely.
