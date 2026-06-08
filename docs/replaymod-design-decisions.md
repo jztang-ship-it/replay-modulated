@@ -1,7 +1,7 @@
 # ReplayMod — Design Decisions & Session State
 
-**Last updated:** 2026-05-23
-**Status:** stamps feature shipped 2026-05-22 (merge `ce9c277`); position-data fix shipped 2026-05-22 (`87742bb`); cross-worktree-scan ritual added then superseded today by `docs/worktree-registry.md`; bucket 2 (S1 slot-split restoration) open questions resolved and queued as the next code workstream
+**Last updated:** 2026-06-08
+**Status:** #7 (results hero-slot flip) shipped to `origin/main` at `8d3d7d9` (fast-forward from `08b95c8`); challenge-redesign roadmap **RD0–RD5** sequenced for the investor build (objective + non-goals locked below; build sequence revised 2026-06-08 supersedes the 2026-05-23 sender/stamps sequence, which is deferred behind the investor build). Prior: stamps feature shipped 2026-05-22 (merge `ce9c277`); position-data fix shipped 2026-05-22 (`87742bb`).
 **Purpose:** home-base document for the ReplayMod project. Every chat in this project should start with this in context. Update at the end of each session — *and during the session, whenever a decision is locked.*
 
 ---
@@ -119,6 +119,63 @@ Landed *after* session 2's snapshot above. Full workstream record in `docs/calib
 ---
 
 ## Design decisions — LOCKED
+
+### Challenge redesign — objective & non-goals (investor build) — LOCKED
+
+**Objective (the lens for every redesign ticket):** make the challenge **easier to
+understand and easier to care about.** This is the single bar. It is *not* "improve H2H,"
+"improve onboarding," or "improve the reveal." Every ticket answers one question:
+
+> Does this make the challenge more **understandable**, or more **emotionally competitive**?
+
+If a change does neither, it is **deferred past the investor build.** No exceptions inside
+this roadmap.
+
+**Litmus test (apply to every screen, current and future):** *Replay currently explains the
+game before selling the challenge; 82-0 sells the challenge before explaining the game.*
+("82-0" = 82-0.com, the viral product we're studying as the stickiness exemplar — we are not
+82-0, but we copy what makes its hook land before the click.) A screen passes if a cold viewer
+grasps the dare before they're taught the mechanics. This is the behavior to hunt across the
+whole flow, not just the redesign tickets.
+
+**Non-goals (settled — do not reopen for this build):**
+- No new challenge mechanics.
+- No one-tap reveal; the hold decision stays.
+- No redesign of the decision system.
+- No challenge-vs-fantasy identity debate.
+
+**Ticket-namespace note (locked-vocabulary hazard):** the redesign tickets are labeled
+**RD0–RD5** ("redesign"), *not* R0–R5. `R1–R5` are already locked **recipient-surface**
+names (R1 = Accept Challenge, R2 = play, R3 = Results, R4 = first normal-game landing,
+R5 = persistent icon). Each RD ticket below names the surface it targets explicitly to keep
+the two namespaces from colliding — note the handover's old "R1=results / R5=landing"
+shorthand actually inverts against the locked surfaces (results is **R3**, landing is **R1**).
+
+### Challenge hierarchy — LOCKED
+
+Every challenge surface prioritizes, in this order:
+
+1. **Outcome** — did you win or lose
+2. **Score** — the number to beat / the gap
+3. **Rival** — who you're playing (the named friend)
+4. **Decision** — what they held / drew
+5. **Fantasy detail** — individual player stat lines
+
+Reason: Replay drifts toward **fantasy-first** thinking by default (stat lines before stakes).
+This hierarchy is the guardrail that keeps the challenge from getting buried under fantasy detail.
+
+**Bad ordering (fantasy-first):** Curry 58 FP · Booker 42 FP · Held 2 stars · Lost by 11.
+**Good ordering (challenge-first):** You lost · by 11 · to John · because he held Curry.
+
+**Applied per surface — the hierarchy is gated by what exists yet:**
+- **R1 (landing, pre-play):** no outcome exists, so the hierarchy *starts at Score.* Lead with
+  the number-to-beat (rival fused in), decision as supporting detail. This is why the landing
+  is a **direct score challenge, not an accusation** — accusation asks the recipient to judge
+  the sender's *decision* (level 4) before they have any context. See **RD5**.
+- **R3 (results, post-play):** outcome exists, so it leads — "good ordering" above is the R3
+  spec verbatim. See **RD1**.
+
+Same hierarchy, different top rung depending on whether the hand has been played.
 
 ### Voice register
 
@@ -393,8 +450,12 @@ Process rules now live in `/Users/john/Desktop/ReplayMod/CLAUDE.md` at the repo 
 
 ### R1-R5 recipient experience design
 
-- Each touchpoint needs its copy + structure designed
-- Sequence per priority: R1 (gate), R3 (highest copy issues), R2 (game-teaching), R4 (transition), R5 (persistence)
+- **Now being executed** via the challenge-redesign roadmap (RD0–RD5) — see "Build sequence —
+  revised 2026-06-08." The investor build sequences the high-priority surfaces: **R3** results
+  (RD1), **R1** landing (RD5), **R2** play/reveal (RD2/RD3), onboarding (RD4). The engine
+  prerequisite (RD0, points→FP) is not a surface but gates RD1/RD5.
+- Still open beyond the investor build: **R4** transition copy and **R5** persistence are not
+  in the RD sequence; design when the investor build lands.
 
 ### Win path
 
@@ -404,7 +465,99 @@ Process rules now live in `/Users/john/Desktop/ReplayMod/CLAUDE.md` at the repo 
 
 ---
 
-## Build sequence — revised 2026-05-23
+## Build sequence — revised 2026-06-08 (challenge redesign, investor build)
+
+Active investor-build sequence. Order is by dependency + lock-risk, **locked**. Each ticket:
+own worktree off the latest landed `main`; **doc-before-code**; own narrow lock; any shared
+touch → `scripts/build-vercel.sh` **+ full root `npm test`** (never scoped); CSS-transform /
+animation → real-browser bbox **+ glass mandatory**; **push held per item**; content verified
+by `grep`, not filename. Guardrail per ticket = the objective question above.
+
+**RD0 — Generator-level points→FP fix** *(must land first — dependency for RD1 + RD5)*.
+Root cause is one voice-path guardrail gap: `voiceContract.ts` enforces FP-vs-points for FP
+*totals*, but the generator still emits "points" for turnover / other counts ("8 turnovers,"
+"11 points," "34 points" originate here). Fix at the generator, not per-surface, or we chase
+ghosts across consumers. Fold in the "8 turnovers" team-vs-player attribution ambiguity.
+Surface: engine — `shared/commentary/` (`voiceContract.ts` + generator `chadChallenge.ts` /
+`selectCommentary.ts` / `templateResolver.ts` + facts/salience). Guardrail: understandability.
+Heaviest test surface of any ticket — expect the most test rewrite here.
+
+**RD1 — Rivalry results** *(highest ROI; demo centerpiece)*. `YOU LOST TO JOHN` huge +
+centered, `-20.1 FP` as the hero number, supporting line small, rivalry CTA. Absorbs the
+queued results items (centered red headline + white subline, points→FP sourced correct from
+RD0, delete redundant lines). Surface: **R3** (Results page) — `H2HResultsOverlay.tsx` only,
+no locked geometry. Guardrail: emotional competitiveness. Ordering follows the challenge
+hierarchy R3 application (You lost · by 11 · to John · because he held Curry). **Spec against
+the post-#7 file** (now on `main @ 8d3d7d9`).
+
+**RD5 — Landing copy** *(after RD1 for one consistent voice; isolated surface)*. **Direct
+score challenge, not accusation or narrative.** Lead with the number to beat; decision as a
+supporting line; the dare last:
+
+```
+JOHN SCORED 184.9 FP
+Held: Curry  LaVine
+Can you beat him?
+```
+
+The user's brain wants only three things here — *what happened, why care, can I beat it* — and
+the answer to all three is the score, not an evaluation of John's decision quality (that's
+level 4 of the hierarchy and they have no context for it pre-play). Keep it brutally direct;
+do not drift narrative/clever ("CURRY LET HIM DOWN" is out). Delete the top "Same starting
+hand…" line and "HELD THE STARS. BARELY SURVIVED." **Structure untouched per strategy doc —
+copy only.** Surface: **R1** (Accept Challenge) — `ChallengeLandingScreen.tsx` /
+recipient-intro path. Guardrail: emotional competitiveness, via clarity (see Challenge
+hierarchy → R1 application).
+
+**GATE-A — Comprehension test** *(after RD1 + RD5 land, before RD2/RD3/RD4)*. The roadmap rests
+on one **unproven assumption: that understanding the challenge better makes recipients care more.**
+Most likely true, but the open risk is whether the challenge creates curiosity *before* play —
+i.e. does `JOHN SCORED 184.9 FP / Can you beat him?` make a cold recipient want to click, or do
+they only care once they're playing? Test it the moment the two top-of-funnel surfaces (R1
+landing, R3 results) are live. Protocol — show ~10 sports fans the challenge cold and **watch**;
+ask only: (1) what happened? (2) what do you think happens if you click? (3) would you click?
+Do **not** ask whether they like it; do **not** explain the game. Treat answers 1–2 as the real
+signal (comprehension); answer 3 spoken aloud carries yes-bias, so weight observed lean-in over
+the verbal yes. **This is a go/no-go, not feedback:** if the challenge doesn't communicate on its
+own, the problem is the hook, not the reveal — pause/reorder RD2/RD3/RD4 rather than polish a
+flow whose top of funnel doesn't land.
+
+**RD2 — Shrink reveal tracker ~50%** *(smallest play/reveal change; prereq read for RD3)*.
+The tracker is a supporting visual, not the hero — the matchup/score race is. One reveal-layout
+lock release. Surface: **R2** (play) — `H2HRecipientReveal.tsx` (locked geometry). Guardrail:
+understandability.
+
+**RD3 — Kill "Drawing…" + add running score** *(P2 + P4 as one surgery)*. Remove the dead
+intermediary state; reveal immediately. Add a live YOU / JOHN / difference readout during the
+reveal — every flip moves the number, turning the reveal into a sporting event:
+`YOU +18 → +7 → -4 → +22 → +3 → YOU LOSE`. Touches locked geometry + `PRE_REVEAL_HOLD_MS` +
+settle-pause + single-canvas (Fix C2) pinning tests — deliberate lock release with matching
+test rewrite. Surface: **R2** (play) — `H2HRecipientPlay.tsx` + `H2HRecipientReveal.tsx`.
+Guardrail: both. **Priority flag:** kept at this position for *dependency* reasons (RD2 read
+first; geometry/test risk), but this is likely the **highest-emotion lever in the roadmap** —
+the running score race may produce more investor reaction than RD1's static results. Treat as a
+marquee ticket, not a cleanup; do not under-resource it because of its sequence position.
+
+**RD4 — Merge onboarding 2/3/4 → one** *(last; biggest blast radius)*. "JOHN SCORED 184.9 /
+Can you beat him? / Tap to HOLD / DRAW" → immediate reveal. Built **after** reveal cadence
+settles (RD2/RD3) so onboarding isn't redesigned twice. Surface: onboarding / play flow
+(R2 area). Guardrail: understandability.
+
+Sequencing rationale: RD0 is a hard dependency (RD1 + RD5 read its output); RD1→RD5 settles
+results voice before landing copy is written against it; **GATE-A** validates the top-of-funnel
+hook before any reveal-polish spend; RD2→RD3 does the small reveal change
+and required read before the larger reveal surgery; RD4 last because it depends on the RD2/RD3
+reveal cadence.
+
+---
+
+## Build sequence — revised 2026-05-23 (sender/stamps — DEFERRED behind investor build)
+
+> **Deferred 2026-06-08:** superseded as the *active* sequence by the challenge-redesign
+> sequence above. Per the investor-build objective, anything that isn't "more understandable
+> or more emotionally competitive" defers past the investor build — these sender/stamps items
+> qualify. Retained here, not deleted; resume after RD0–RD5.
+
 
 1. **S1 slot-split restoration (bucket 2)** — *active workstream, next code session*. Reverts WS2's TOP-slot collapse and rebuilds TOP-slot copy against the stricter S1 slot rules. Open questions resolved 2026-05-23 (see "Bucket 2 (S1 slot-split restoration) — LOCKED" above). Pieces A, C, D, E, F are code; piece B (~50 lines of bank copy) is a separate chat-drafting session.
 
@@ -632,3 +785,74 @@ the animation (`getBoundingClientRect` zeros) — real-browser bbox check
 sets `topSelectedCardId` and dims cells on tap, but there is no top `HeroCell`
 to display into (removed in Step-3) — so opponent-card taps are a dead/cosmetic
 interaction. Out of scope for #7; surfaced for triage.
+
+## RD0 — points→FP voice fix: spec (2026-06-08)
+
+Dependency gate for RD1 + RD5. Recon done against `main @ 8d3d7d9`. Engine ticket
+(no surface render of its own) — its user-visible proof lands when RD1 consumes corrected
+output.
+
+**Architecture finding (reframes the handover):** the commentary engine is **LLM-driven**,
+not templated. `voiceContract.ts` exports `buildVoiceContract(facts)→{system}` +
+`buildUserPrompt(facts)`; a model writes the line from typed facts. The FP-vs-points and
+attribution **rules already exist** in the contract (lines 218 / 220 / 222). RD0 is **not**
+writing rules — it makes the *data* match them so the prose workarounds can be deleted. The
+tell is `voiceContract.ts:222`: *"TOTAL_FP is untyped in CommentaryFacts today, so default it
+to FP."* A contract papering over an untyped fact is the ghost we stop chasing.
+
+**Geography correction:** the salience builder is `shared/utils/computeSalience.ts`, NOT
+`shared/commentary/`. The handover's `salience.ts` / `computeSalience.ts in commentary/` was
+wrong. RD0 touches `shared/commentary/` **and** `shared/utils/`.
+
+**Do NOT touch (already correct — verified):** `computeSalience.ts` and
+`shared/utils/extremeGames.ts` build "42 points" / "8 turnovers" from **raw game-stat
+counts**, with the FP contribution carried separately in `SalienceFact.value`. The
+"38 FP from 38 pts" analyst-shorthand bug was already fixed in Phase 4 Pass 1. Most "points"
+in the engine are correct game-stat labels — blanket "fix every points" would corrupt them.
+Also off-limits: the stat-word regexes at `selectCommentary.ts:1088` (number→category
+extraction) and `:1587` (`secondaryRepeatsStat` anti-repeat) — machinery, not guardrails;
+they must keep passing.
+
+### Fix layers (curated — confirmed with John this session)
+
+**L1 — Authored delta-banks: FP gap mislabeled as "points" (the real leak; live on RD1).**
+`H2HResultsOverlay.tsx` imports `chadChallenge`; `chadTrashTalk(bucket, name, delta)` and the
+delta-banks (`chadChallenge.ts` ~1264–1401; e.g. `"by a sneeze ({delta} points)"`,
+`"{delta} extra points"`) render the **FP gap** as "points." Fix = render `{delta}` (and any
+FP gap/total token) as **"FP."** **Curated, not blanket** — preserve idioms ("a few points
+short," "no style points") and real game-stat citations. Build the exact site list at
+implement time by grep, not from this list:
+`grep -nE "\{delta\}[^.]*point|points|pts" shared/commentary/chadChallenge.ts shared/commentary/selectCommentary.ts`
+then hand-classify each hit as FP-token (fix) vs idiom/game-stat (keep). Est. ~10–15 sites.
+
+**L2 — Type `totalFp` (delete the contract workaround).** `commentaryFactsTypes.ts` types
+`totalFp?: number` (bare); thread an FP category so it's self-describing
+(`commentaryFacts.ts` already passes it through at line ~176). Then **delete** the
+"TOTAL_FP is untyped… default it to FP" carve-out in `voiceContract.ts:222` — the rule
+becomes category-driven, not a default.
+
+**L3 — Scope the salience aggregate label to the HELD lineup (the "8 turnovers" ambiguity).**
+`computeSalience.ts` `magnitudeLabel` builds held-lineup-aggregate labels with no scope marker;
+`rankPerStat` sums **held cards only** (`if (c.wasHeld !== true) continue;`), so "8 turnovers"
+= the user's held lineup combined — NOT one player, NOT drawn/cut cards. Make the label
+self-describing as held-lineup-wide (e.g. `"8 turnovers from your held lineup"`); do **not**
+use "across the hand" (reads as all cards). The named player-level signal `primaryDragPlayer`
+(carries `name: worst.card.name`) stays player-attributed (e.g. "Curry's 5 turnovers"). Update
+contract rule 220 to lean on the now-scoped aggregate label instead of policing attribution in
+prose.
+
+### Tests (heaviest rewrite of any ticket — localized)
+Rewrite assertions that pin specific label strings: `voiceContract.test.ts` (workaround
+removal + scoped aggregate), `commentaryFacts.test.ts` (totalFp typing), `salience.test.ts`
+(held-lineup-scoped label), `templateFill.test.ts`, `api/__tests__/headline.test.ts`. Add a
+test asserting an FP-delta bank line renders "FP" not "points," and one asserting the
+aggregate label names the held-lineup scope. Extraction/dedup regex specs must remain green.
+
+### Verification
+Shared touch → `bash scripts/build-vercel.sh` + **full root `npm test`** (never scoped). RD0
+is engine-only (no CSS/animation) → no glass for RD0 itself; user-visible proof is RD1
+rendering "-20.1 FP" (not "points") on the results overlay. Push held per item.
+
+### Decisions locked this session
+- Scope the aggregate label as held-lineup-wide (not "across the hand"); keep `primaryDragPlayer` named.
+- L1 is a curated FP-token pass with idiom + game-stat carve-outs, not a blanket replace.
