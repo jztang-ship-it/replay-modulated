@@ -856,3 +856,94 @@ rendering "-20.1 FP" (not "points") on the results overlay. Push held per item.
 ### Decisions locked this session
 - Scope the aggregate label as held-lineup-wide (not "across the hand"); keep `primaryDragPlayer` named.
 - L1 is a curated FP-token pass with idiom + game-stat carve-outs, not a blanket replace.
+
+## RD1 — rivalry results: spec (2026-06-08)
+
+Demo centerpiece. **Branch off `fix/rd0-points-fp`** (not main) — see dependency below.
+Surface: R3 (Results page), `H2HResultsOverlay.tsx` + `selectChallengeResolution` in
+`chadChallenge.ts`. Goal: make the result **impossible to miss without reopening layout.**
+
+**Recon corrections to the build-sequence bullet (verified against post-#7 tree):**
+- **RD0 IS a prerequisite (the bullet's "sourced correct from RD0" is real).** The overlay
+  renders TWO lines — `headline` (`selectHeadline`, local) AND `resolutionLine`
+  (`selectChallengeResolution`, `chadChallenge.ts:1467`). The resolution generator interpolates
+  `{delta}` and picks from `RESOLUTION_BANKS` = the **1261–1401 banks RD0 fixed**. So the
+  resolution line consumes RD0's relabel, and both tickets edit `chadChallenge.ts` → branch off
+  RD0. (The "trash-talk no longer rendered" comment at :781 refers to `chadTrashTalk`, a
+  *different* generator — not the resolution line.)
+- **"No locked geometry" is FALSE.** The overlay's strips + hero rows mirror the arc's Y
+  positions exactly; the commentary lives in a locked grid cell (`gridRow 1`,
+  `gridColumn "1 / span 2"`); the right rail is held by a **dormant, unbuilt** Step-4 score
+  glide. Strips/rows/rail-widths/`HERO_ROW_HEIGHT` may NOT move. **However** the row-1 cell is
+  `HERO_ROW_HEIGHT` tall (≈1.45× a card) and holds only ~50px of centered text today — ample
+  vertical slack. RD1 fills that slack; it does not release geometry.
+- **"Overlay only" is incomplete** — also `chadChallenge.ts` (`selectChallengeResolution`).
+
+### Decisions locked this session (John)
+- **Option A+ in-cell. Do NOT release arc geometry. No Step-4 glide. No held-player plumbing.**
+- Headline = pure outcome + rival; the margin moves into the hero number ONLY; no duplicate
+  delta in `selectHeadline`.
+- Level-4 (Decision, "because he held Curry") is DEFERRED to a fast-follow — needs the poster's
+  held-star plumbed into `selectChallengeResolution` (today it gets scores + name only). RD1
+  ships **Outcome + Score + Rival**.
+- Keep `selectChallengeResolution` as the small supporting why-line, RD0-clean, untouched.
+
+### Copy (locked)
+`delta = recipient.totalFp − sender.totalFp` (recipient = user, sender = opponent;
+`challengerName = sender.displayName`). Outcome is by **sign of delta**, color by outcome:
+
+| Outcome (sign)        | Headline (big)        | FP hero  | color |
+|-----------------------|-----------------------|----------|-------|
+| win  (delta > 0)      | `YOU BEAT {NAME}`     | `+20.1 FP` | green (`WINNING_COLOR`) |
+| loss (delta < 0)      | `YOU LOST TO {NAME}`  | `−20.1 FP` | red (`#EF4444`) |
+| tie  (\|delta\| < 0.05) | `YOU TIED {NAME}`     | `0.0 FP`   | amber (`#FFB14A`) |
+
+No-name fallback: `YOU WON` / `YOU LOST` / `YOU TIED` (hero unchanged). Hero magnitude =
+`Math.abs(delta).toFixed(1)`; sign prefix per outcome; tie renders literal `0.0 FP`.
+
+**Flag (falls out of pure-outcome copy):** the `photo_finish` bucket no longer produces a
+special "Photo finish — X FP" headline — a sub-1-FP loss is still `YOU LOST TO {NAME}` (the
+soft-pedal buries the outcome, counter to "impossible to miss"). Only the strict tie
+(`overlayTied`, <0.05) is "tie." `bucket`/`trashTalkBucket` stays for any other use but no
+longer drives headline copy or color.
+
+### Implementation
+- **`selectHeadline` (overlay ~248):** rewrite to the table above — outcome + rival only,
+  **delta removed from the string.** Delete the clever placeholder variants and the
+  "Window's open / closed" wording (redundant — state is already carried by the countdown pill
+  + CTA label). Drive outcome by sign (+ tie threshold), not by `bucket`.
+- **FP hero (new element in the commentary cell):** render the signed hero number as its own
+  stacked element between the headline and the why-line — large `fontSize`/`fontWeight`,
+  outcome-colored. This is where the margin lives now.
+- **`headlineColor` (790):** map to outcome (win green / loss red / tie amber), not `bucket`.
+- **Cell layout:** within `gridRow 1 / gridColumn "1 / span 2"`, fill the existing vertical
+  slack — outcome biggest (wraps to 2 lines OK at ~278px), FP hero large, why-line small,
+  `justifyContent: center`. Do NOT touch the grid template, row heights, rail widths, strip
+  layout, or the per-child `marginBottom` tuning.
+- **`selectChallengeResolution`:** unchanged (RD0-clean why-line).
+
+### Do NOT touch
+Arc-mirroring geometry (grid template, `HERO_ROW_HEIGHT`, `LEFT/RIGHT_RAIL_WIDTH_PX`, strip
+layout, marginBottom tuning); the dormant Step-4 flags (`dockedScoreSettled`, `glideHandoff`,
+`railSuppressed`) — leave dormant; the right-rail `ScoreCell` absolute totals; the #7 hero-flip;
+held-player data (out of scope).
+
+### Known minor redundancy (glass-watch, not a blocker)
+The why-line may restate the FP magnitude (resolution banks interpolate `{delta}`). The hero is
+the dominant number; the why-line's mention is contextual. If glass reads it as duplicative,
+tighten the resolution banks in a fast-follow — NOT in RD1 (John: keep resolution as-is).
+
+### Tests
+- Rewrite `selectHeadline` assertions (they pin the old clever copy): win → `YOU BEAT {NAME}` +
+  `+X FP`; loss → `YOU LOST TO {NAME}` + `−X FP`; tie → `YOU TIED {NAME}` + `0.0 FP`; no-name
+  fallbacks; assert NO numeric in the headline string (delta lives only in the hero).
+- Assert `headlineColor` maps by outcome.
+- Assert sub-1-FP loss renders as a loss, not "photo finish."
+
+### Verification
+Shared touch → `bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`** (never
+scoped). **Glass MANDATORY** — typography change inside locked geometry: real-browser bbox to
+confirm the bigger outcome + hero fit the row-1 cell with NO clip/overflow on tight viewports
+(390×664 mid-scroll, 360×590, 320×520, in-app webviews — the cell's own overflow comments list
+these). Confirm win / loss / tie each on glass. Push held. RD1's glass IS also RD0's deferred
+output proof (the "−20.1 FP" hero proves the engine + surface together).
