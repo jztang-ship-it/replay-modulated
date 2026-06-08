@@ -576,3 +576,59 @@ Three files have uncommitted changes from a prior session, found during investig
 - Token-efficiency tradeoff confirmed: chat for design + design-doc maintenance, Claude Code for actual implementation. Spec written in chat → handed to Code → Code investigates → plan back to chat for sanity check → approval → Code implements.
 - Code paraphrased the doc's old "5 commits ahead" state instead of running `git log` — exact failure mode rule #3 (git-state-first) is meant to prevent. Confirms the rule is necessary.
 - When investigation reveals a build prompt's architectural assumption is wrong (e.g., WinCelebration vs GameView), STOP and surface — do not silently work around. Added as session-2 process rule #7.
+## #7 — results-page hero-slot flip: preview-then-flip + visible empty slot (2026-06-08)
+
+Surface: `shared/components/H2HResultsOverlay.tsx` (user/bottom hero only — the
+opponent/top hero was removed in the Step-3 results-page lock). Base: `main @
+08b95c8` (= `2592555` + one docs-only `chore(registry)` commit; no code in the
+delta).
+
+**Recon verdict (broken-vs-absent):** NEITHER absent nor regressed — the flip was
+built and wired end-to-end (overlay state → `HeroCell` → basketball
+`h2hOverlayRenderer` → `PlayerCardShell` `rotateY(180deg)`), but the *behavior*
+was wrong vs intent. Reclassified from "build the flip" to "change the
+interaction model + make the empty slot visible."
+
+**Verified (static recon, anchor strings):**
+- `H2HResultsOverlay.tsx` header `Tap-to-flip mechanic (phase 4 fix 3, 2026-05-27)`; state `const [bottomSelectedCardId, …]` is plain `useState`, not flag-gated.
+- The `dockedScoreSettled` / `glideHandoff` "dormant until C4" flags gate the SCORE-GLYPH glide, not the flip (red herring cleared).
+- Live mount chain (not dev-route-only): `GameView.tsx` `renderOverlayCard={adapter.h2hOverlayRenderer}` → `H2HRecipientPlay` → `H2HRecipientReveal` (`<H2HResultsOverlay … renderCard={renderOverlayCard}`) → overlay.
+- Basketball `h2hOverlayRenderer` (`basketball/src/views/GameView.tsx`) forwards `isFlipped={options?.flipped ?? false}`, `canFlip={true}` — back face honored.
+- Old behavior: `HeroCell` rendered `renderCard(card, { flipped: true })` hardcoded → card dropped in already on the BACK (`BackBStats`). Hero-card tap was a dead no-op (`onToggleFlip` never wired in this surface; `PlayerCardShell`/`CardFront` have no `stopPropagation`). Empty `HeroCell` was an invisible spacer.
+
+**Locked (confirmed with John this session):**
+- Req 1 — the user/bottom hero box shows a dashed border whenever empty, regardless of whether any mini card has been tapped. Empty state reserves the same Y span as before (no layout jump).
+- Req 2 — preview-then-flip, mirroring the hold-decision preview feel:
+  - Tap a mini card that isn't selected → it appears in the hero FRONT-up (not back).
+  - Re-tap the active mini card, OR tap the hero card itself → flip front↔back in place.
+  - Tap a different mini card → switch + reset to front. Never jump card-back→card-back across selections.
+  - No deselect: the hero keeps showing the last-tapped card; the empty bordered state only exists before the first tap.
+- Ownership: the overlay owns the flip at the `HeroCell` wrapper (`onClick`), since the card's own `onToggleFlip` is intentionally not wired here. Relies on there being no `stopPropagation` in the card render path (verified).
+- Scope: bottom/user side only. The top/opponent strip keeps its existing (cosmetic, hero-less) tap state untouched — flagged below, not actioned.
+
+**Implementation (3 edits, `H2HResultsOverlay.tsx` only; tests updated alongside):**
+1. `HeroCell` gains `flipped` / `onTap` / `showEmptyBorder` props; renders `flipped` instead of hardcoded `true`; paints a dashed border + `borderRadius` when empty; `onClick={card ? onTap : undefined}`; adds `data-h2h-overlay-hero-flipped` ("true"/"false"/absent) as a deterministic bbox/test hook.
+2. New `bottomHeroFlipped` state (default `false`); `handleBottomCardTap` rewritten to select-front / re-tap-flip / switch-reset; new `handleBottomHeroTap`; visibility-reset effect also clears `bottomHeroFlipped`.
+3. Live bottom `<HeroCell … flipped={bottomHeroFlipped} onTap={handleBottomHeroTap} showEmptyBorder />`.
+
+No adapter / `PlayerCardShell` / `CardFront` changes.
+
+**Tests:** replaced the prior `flipped: true on mount` test (it encoded the
+removed back-first behavior) with four: seeded hero previews front; hero-tap
+flips front→back→front; re-tap-flips + switch-resets-to-front; empty cell shows
+dashed border.
+
+**Verification status:** code + tests syntax-checked (esbuild parse, clean).
+NOT yet run through the gate. This is a CSS-transform flip → JSDOM is blind to
+the animation (`getBoundingClientRect` zeros) — real-browser bbox check
+(Playwright vs `H2HRevealMockRoute` / `H2HPlayMockRoute`, which accept
+`?bottomFlipped=` seeds) is mandatory, not optional. Push held until glass.
+
+**Pending:**
+- Run `bash scripts/build-vercel.sh` + full root `npm test` (shared touch — never scoped vitest).
+- Real-browser bbox: tap mini → hero front; tap again → flips to back; switch card → front; empty slot shows border. Confirm on glass (Cmd-Shift-R after the standing port-kill ritual).
+
+**Flagged, not actioned (separate item):** the top/opponent (`MIKE`) strip still
+sets `topSelectedCardId` and dims cells on tap, but there is no top `HeroCell`
+to display into (removed in Step-3) — so opponent-card taps are a dead/cosmetic
+interaction. Out of scope for #7; surfaced for triage.
