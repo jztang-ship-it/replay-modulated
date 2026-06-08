@@ -103,7 +103,7 @@ function factsNumericLowBand(): any {
     trigger: "big_score",
     verdict: "credited",
     winTier: "STARTER",
-    totalFp: 237.4,
+    totalFp: { value: 237.4, category: "fp" },
     fpStatKeys: ["pts", "reb", "ast", "stl", "blk", "turnovers"],
     anchor: {
       name: "TEST PLAYER",

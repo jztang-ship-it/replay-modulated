@@ -173,7 +173,7 @@ function passthroughExtras(
   input: BuildCommentaryFactsInput,
 ): Partial<CommentaryFacts> {
   const out: Partial<CommentaryFacts> = {};
-  if (input.totalFp != null) out.totalFp = input.totalFp;
+  if (input.totalFp != null) out.totalFp = { value: input.totalFp, category: "fp" };
   if (input.fpStatKeys && input.fpStatKeys.length > 0) out.fpStatKeys = input.fpStatKeys;
   if (input.salience && input.trigger !== "rare_pull") out.salience = input.salience;
   return out;

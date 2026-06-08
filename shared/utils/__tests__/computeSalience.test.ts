@@ -57,9 +57,9 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     // Highest FP contribution: pts (42 × 1.0 = 42); ast (7 × 1.5 = 10.5); reb (5 × 1.2 = 6); stl (1 × 2.0 = 2).
     expect(salience?.primaryPositive?.category).toBe("pts");
     // .value still carries FP CONTRIBUTION (for downstream computation /
-    // joins); .label is the model-facing concept ("42 points").
+    // joins); .label is the model-facing concept ("42 points from your held lineup").
     expect(salience?.primaryPositive?.value).toBe(42);
-    expect(salience?.primaryPositive?.label).toBe("42 points");
+    expect(salience?.primaryPositive?.label).toBe("42 points from your held lineup");
     // No turnovers → no negative.
     expect(salience?.primaryNegative).toBeUndefined();
     expect(salience?.primaryDragPlayer).toBeUndefined();
@@ -80,7 +80,7 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     // sign is conveyed by the MOST IMPORTANT NEGATIVE header in the
     // SALIENCE block.
     expect(salience?.primaryNegative?.value).toBe(-3);
-    expect(salience?.primaryNegative?.label).toBe("3 turnovers");
+    expect(salience?.primaryNegative?.label).toBe("3 turnovers from your held lineup");
   });
 
   it("uses singular concept word when raw count is exactly 1 (1 turnover / 1 steal / 1 block / 1 assist)", () => {
@@ -91,9 +91,9 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     ]);
     // Highest positive among present stats: pts=30 wins; the singular
     // case is exercised on the negative (turnovers=1) and rendered as
-    // "1 turnover" (not "1 turnovers").
-    expect(salience?.primaryPositive?.label).toBe("30 points");
-    expect(salience?.primaryNegative?.label).toBe("1 turnover");
+    // "1 turnover from your held lineup" (not "1 turnovers").
+    expect(salience?.primaryPositive?.label).toBe("30 points from your held lineup");
+    expect(salience?.primaryNegative?.label).toBe("1 turnover from your held lineup");
   });
 
   it("held-level (not anchor-only): sums contributions across HELD cards", () => {
@@ -135,8 +135,8 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     //   Speights: 1 TO
     //   bench would have added: pts +37, turnovers −11
     //
-    // Expected (post-fix): primaryPositive = "39 points";
-    //                      primaryNegative = "3 turnovers" (NOT 14).
+    // Expected (post-fix): primaryPositive = "39 points from your held lineup";
+    //                      primaryNegative = "3 turnovers from your held lineup" (NOT 14).
     // Pre-fix this test FAILS because the all-cards aggregate would
     // surface primaryPositive.value=76 and primaryNegative.label="14
     // turnovers" — verified by removing the wasHeld guard locally and
@@ -164,12 +164,12 @@ describe("computeSalience — per-stat FP contribution rank", () => {
     // Held-only positive: pts wins (39 from Bosh+Jefferson, NOT 76 all-cards).
     expect(salience?.primaryPositive?.category).toBe("pts");
     expect(salience?.primaryPositive?.value).toBe(39);
-    expect(salience?.primaryPositive?.label).toBe("39 points");
+    expect(salience?.primaryPositive?.label).toBe("39 points from your held lineup");
     // The critical regression assertion: held-only negative is 3
     // turnovers (Bosh 2 + Jefferson 1), NOT 14 (the all-cards sum).
     expect(salience?.primaryNegative?.category).toBe("turnovers");
     expect(salience?.primaryNegative?.value).toBe(-3);
-    expect(salience?.primaryNegative?.label).toBe("3 turnovers");
+    expect(salience?.primaryNegative?.label).toBe("3 turnovers from your held lineup");
     // The narrative's better "why" for this choke is the held shortfall —
     // Bosh delivered 27.8 vs projected 39.9 (-12.1) while Jefferson over-
     // performed (+9.8) — so primaryDragPlayer correctly surfaces Bosh.
@@ -295,5 +295,54 @@ describe("computeSalience — empty / zero-stat hands", () => {
       card({ statLine: { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, turnovers: 0 } }),
     ]);
     expect(salience).toBeUndefined();
+  });
+});
+
+// ── RD0 — held-lineup scope baked into the aggregate label ────────────────
+//
+// The rankPerStat filter (`if (c.wasHeld !== true) continue;`) makes the
+// aggregate a held-lineup sum — not one player, not drawn/cut cards.
+// magnitudeLabel names that scope verbatim so the voice contract's
+// ATTRIBUTION rule can lean on the label rather than policing attribution
+// in prose. The named drag signal (primaryDragPlayer) stays
+// player-attributed; only the aggregate (positive/negative) is scoped.
+
+describe("RD0 — aggregate label names the held-lineup scope", () => {
+  it("primaryPositive.label is scoped 'from your held lineup'", () => {
+    const { salience } = computeSalience("big_score", "basketball", [
+      card({ statLine: { pts: 42, reb: 5, ast: 7 } }),
+    ]);
+    expect(salience?.primaryPositive?.label).toMatch(/from your held lineup$/);
+  });
+
+  it("primaryNegative.label is scoped 'from your held lineup'", () => {
+    const { salience } = computeSalience("big_score", "basketball", [
+      card({ statLine: { pts: 40, reb: 6, ast: 4, stl: 1, blk: 0, turnovers: 3 } }),
+    ]);
+    expect(salience?.primaryNegative?.label).toMatch(/from your held lineup$/);
+  });
+
+  it("primaryDragPlayer stays player-attributed (no held-lineup phrase on the named drag)", () => {
+    const { salience } = computeSalience("choke", "basketball", [
+      card({ basePlayerId: "977", name: "Kobe Bryant", wasHeld: true,
+             actualFp: 15, projectedFp: 38.5,
+             statLine: { pts: 12, reb: 3, ast: 2, stl: 0, blk: 0, turnovers: 4 } }),
+    ]);
+    expect(salience?.primaryDragPlayer?.name).toBe("Kobe Bryant");
+    // primaryDragPlayer is a structured object (basePlayerId/name/shortfall);
+    // there is no .label to scope. The held-lineup phrase belongs only to
+    // the aggregate (primaryPositive/primaryNegative) so the named drag
+    // stays a clean player-level signal.
+    expect((salience?.primaryDragPlayer as any)?.label).toBeUndefined();
+  });
+
+  it("the scope phrase reads exactly 'from your held lineup' (not 'across the hand')", () => {
+    // Spec lock: 'across the hand' reads as all cards (it isn't —
+    // rankPerStat is held-only). Pin the literal phrase.
+    const { salience } = computeSalience("big_score", "basketball", [
+      card({ statLine: { pts: 30, reb: 5, ast: 5 } }),
+    ]);
+    expect(salience?.primaryPositive?.label).toContain("from your held lineup");
+    expect(salience?.primaryPositive?.label).not.toContain("across the hand");
   });
 });

@@ -1258,12 +1258,12 @@ export function topSlotFramingBank(key: TopSlotBankKey): Line[] {
 const RES_YOU_WON_BIG_TACTICAL: string[] = [
   "Ran them off the floor by {delta}. Different builds, same slate — yours hit harder.",
   "Cooked them by {delta}. The same names, a sharper hand.",
-  "{delta}-point gap doesn't come from luck. You read the room better.",
+  "{delta} FP gap doesn't come from luck. You read the room better.",
   "Crushed by {delta}. That's the kind of margin people screenshot.",
   "Slate said it was possible. You said yes by {delta}.",
-  "You found {delta} extra points in cards they had access to. That's the whole game.",
+  "You found {delta} extra FP in cards they had access to. That's the whole game.",
   "Math says decisive. Decisive says {delta}.",
-  "{delta} points means the holds and the swings all hit. Clean execution.",
+  "{delta} FP means the holds and the swings all hit. Clean execution.",
 ];
 
 const RES_YOU_WON_BIG_PERSONALITY: string[] = [
@@ -1271,7 +1271,7 @@ const RES_YOU_WON_BIG_PERSONALITY: string[] = [
   "{name} just got a basketball reality check. Send it back, twist the knife.",
   "Put {name} in the dirt by {delta}. Don't be modest about it.",
   "{name} sent you a challenge. You sent them a lesson.",
-  "Hand back to {name} — let them carry the {delta}-point bruise around for a day.",
+  "Hand back to {name} — let them carry the {delta} FP bruise around for a day.",
   "{name} thought this was competitive. You corrected that assumption.",
   "{name} just learned what your hand looks like on a good night.",
   "Hope {name} is sitting down. {delta} is not a polite margin.",
@@ -1280,7 +1280,7 @@ const RES_YOU_WON_BIG_PERSONALITY: string[] = [
 const RES_YOU_WON_NARROW_TACTICAL: string[] = [
   "By {delta}. One different decision and it flips — that's the line you walked.",
   "Won by {delta}. Tight, but math doesn't grade on style.",
-  "{delta}-point margin. The slate is honest; you were honester.",
+  "{delta} FP margin. The slate is honest; you were honester.",
   "Squeaked it by {delta}. Two cards swung the whole hand.",
   "Closer than the screen makes it look — {delta} is real but fragile.",
   "Your build edged theirs by {delta}. Single-game variance kind of margin.",
@@ -1290,7 +1290,7 @@ const RES_YOU_WON_NARROW_TACTICAL: string[] = [
 
 const RES_YOU_WON_NARROW_PERSONALITY: string[] = [
   "{name} kept it close. You kept it closer.",
-  "Beat {name} by a sneeze ({delta} points). They'll demand a rematch — give them one.",
+  "Beat {name} by a sneeze ({delta} FP). They'll demand a rematch — give them one.",
   "{name} is allowed to be salty. You're allowed to be smug.",
   "Tight one against {name}. Send it back before they cool off.",
   "{name} brought a fight. You brought one more point. Or {delta}.",
@@ -1307,7 +1307,7 @@ const RES_YOU_WON_NARROW_PERSONALITY: string[] = [
 const RES_PHOTO_FINISH_TIE_TACTICAL: string[] = [
   "Within a free throw. Both hands were honest — the slate cooperated with both of you.",
   "Photo finish. The math couldn't separate you, neither could the slate.",
-  "Dead even in real terms. {delta} point gap is rounding error.",
+  "Dead even in real terms. {delta} FP gap is rounding error.",
   "Tied in spirit. You both played the same cards the same well.",
   "If this had a longer slate, somebody would be embarrassed. Today, neither of you is.",
   "Same hand, same answer. Run a different slate to settle it.",
@@ -1333,7 +1333,7 @@ const RES_PHOTO_FINISH_WIN_TACTICAL: string[] = [
   "Photo finish, but you're in the photo. Don't squint at the margin.",
   "Squeaked past by {delta} — the kind of win that makes the rematch feel mandatory.",
   "Took it by a sneeze. Don't sit on it.",
-  "Won by a {delta}-point bounce. Bank it; run it back.",
+  "Won by a {delta} FP bounce. Bank it; run it back.",
 ];
 
 const RES_PHOTO_FINISH_WIN_PERSONALITY: string[] = [
@@ -1371,7 +1371,7 @@ const RES_PHOTO_FINISH_LOSS_PERSONALITY: string[] = [
 const RES_YOU_LOST_NARROW_TACTICAL: string[] = [
   "Cost yourself {delta}. Read the slate one more time tomorrow.",
   "Lost by {delta}. One different swap and it's a different story.",
-  "{delta} points off. That's a single-card miss. Find it.",
+  "{delta} FP off. That's a single-card miss. Find it.",
   "Slate had answers; you found most of them. Not all.",
   "Closer than the trophy makes it look — but losing is losing.",
   "Down {delta}. The hand was right; the timing wasn't.",
@@ -1387,18 +1387,18 @@ const RES_YOU_LOST_NARROW_PERSONALITY: string[] = [
   "{name} will remind you about this for a week. Quiet them next slate.",
   "Lost to {name} by a possession. That's the kind of loss that compounds if you let it.",
   "{name} earned this round. Take the slate they sent — give one back.",
-  "{name} is celebrating {delta} points. Make tomorrow's hand louder.",
+  "{name} is celebrating {delta} FP. Make tomorrow's hand louder.",
 ];
 
 const RES_YOU_LOST_BIG_TACTICAL: string[] = [
   "Cooked by {delta}. The slate had answers; you missed them.",
   "Down {delta}. The build never had a chance — wrong reads at the wrong tier.",
-  "{delta}-point gap is structural. Not a miss — a mismatch.",
-  "Slate said try this. You tried that. {delta} points apart.",
+  "{delta} FP gap is structural. Not a miss — a mismatch.",
+  "Slate said try this. You tried that. {delta} FP apart.",
   "Lost by {delta}. The math wasn't unfair; the choices were.",
   "Decisive loss. {delta} doesn't lie. Take it as data.",
   "Margin of {delta} means the hand wasn't close at any point.",
-  "{delta} points down. Different slate next time, different lessons.",
+  "{delta} FP down. Different slate next time, different lessons.",
 ];
 
 const RES_YOU_LOST_BIG_PERSONALITY: string[] = [

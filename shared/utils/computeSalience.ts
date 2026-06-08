@@ -120,14 +120,21 @@ function statWord(key: string, count: number): string {
   return count === 1 ? forms.singular : forms.plural;
 }
 
-/** Magnitude-only label: "<raw count> <concept word>" (e.g. "42 points",
- *  "3 turnovers"). Sign is conveyed by the SALIENCE block's
- *  MOST IMPORTANT POSITIVE / NEGATIVE header, not by a minus on the
- *  number — the model reads the header for direction and the label
- *  for content. */
+/** Magnitude-only label, held-lineup-scoped: "<raw count> <concept word>
+ *  from your held lineup" (e.g. "42 points from your held lineup",
+ *  "8 turnovers from your held lineup"). Sign is conveyed by the SALIENCE
+ *  block's MOST IMPORTANT POSITIVE / NEGATIVE header, not by a minus on
+ *  the number — the model reads the header for direction and the label
+ *  for content.
+ *
+ *  RD0 — scope is baked into the label so prose doesn't have to police
+ *  attribution. rankPerStat filters held-only
+ *  (`if (c.wasHeld !== true) continue;`), so the aggregate is always a
+ *  held-lineup sum — never one player, never the drawn/cut cards. The
+ *  named drag signal `primaryDragPlayer` stays player-attributed. */
 function magnitudeLabel(key: string, rawCount: number): string {
   const abs = Math.abs(rawCount);
-  return `${abs} ${statWord(key, abs)}`;
+  return `${abs} ${statWord(key, abs)} from your held lineup`;
 }
 
 /** Per-trigger salience for the hand. Lock §"Per-trigger signal map":

@@ -117,8 +117,10 @@ export interface CommentaryFacts {
   /** Phase 4 Pass 1 — total FP of the sender's hand. Threaded from the
    *  upstream evaluateTrigger value (triggerEvaluation.ts ~146) — the
    *  authoritative source — so the model can author hand-relative lines
-   *  ("238.7 FP — too much for this hand"). Rounded to 1 decimal. */
-  totalFp?: number;
+   *  ("238.7 FP — too much for this hand"). Rounded to 1 decimal.
+   *  RD0 — tagged with category "fp" so the voice contract's
+   *  FP-VS-POINTS rule is category-driven (no untyped-default carve-out). */
+  totalFp?: { value: number; category: "fp" };
   /** Phase 4 Pass 1 — allowlist of stat keys that feed the FP formula
    *  for this sport (basketball: pts/reb/ast/stl/blk/turnovers). Source:
    *  the sport adapter's projectionWeights at the caller. Drives the

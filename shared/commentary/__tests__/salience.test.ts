@@ -23,6 +23,11 @@ import {
   type CommentaryFactsCard,
 } from "../commentaryFacts";
 import { buildUserPrompt } from "../voiceContract";
+import {
+  chadResolutionBank,
+  type ResolutionOutcome,
+  type ResolutionFlavor,
+} from "../chadChallenge";
 
 const FP_STAT_KEYS = ["pts", "reb", "ast", "stl", "blk", "turnovers"] as const;
 
@@ -121,9 +126,9 @@ describe("totalFp — threaded through the boundary", () => {
     const r = buildCommentaryFacts(input({ totalFp: 238.7 }));
     expect(r.kind).toBe("facts");
     if (r.kind !== "facts") return;
-    expect(r.facts.totalFp).toBe(238.7);
+    expect(r.facts.totalFp).toEqual({ value: 238.7, category: "fp" });
     const prompt = buildUserPrompt(r.facts);
-    expect(prompt).toContain("TOTAL_FP: 238.7");
+    expect(prompt).toContain("TOTAL_FP: 238.7 FP");
   });
 
   it("threads through on miss (no anchor) too", () => {
@@ -136,9 +141,9 @@ describe("totalFp — threaded through the boundary", () => {
     }));
     expect(r.kind).toBe("facts");
     if (r.kind !== "facts") return;
-    expect(r.facts.totalFp).toBe(218.4);
+    expect(r.facts.totalFp).toEqual({ value: 218.4, category: "fp" });
     const prompt = buildUserPrompt(r.facts);
-    expect(prompt).toContain("TOTAL_FP: 218.4");
+    expect(prompt).toContain("TOTAL_FP: 218.4 FP");
   });
 
   it("omits TOTAL_FP when caller did not provide one", () => {
@@ -153,23 +158,26 @@ describe("totalFp — threaded through the boundary", () => {
 // ── salience block render ──────────────────────────────────────────────────
 
 // Phase 4 Pass 1 (fixup) — salience renders as CONCEPTS, not analyst
-// shorthand. The `label` on each SalienceFact is now magnitude + concept
-// word ("42 points" instead of "42 FP from 42 pts"). The data fields
-// (category, value, shortfall, basePlayerId) remain on the objects for
-// computation / downstream joins but never render into the prompt.
+// shorthand. RD0 — the `label` on each SalienceFact is magnitude +
+// concept word + held-lineup scope ("42 points from your held lineup"
+// instead of "42 FP from 42 pts"); the scope phrase comes from
+// computeSalience.magnitudeLabel so prose doesn't have to police
+// attribution. The data fields (category, value, shortfall,
+// basePlayerId) remain on the objects for computation / downstream
+// joins but never render into the prompt.
 const BIG_SCORE_SALIENCE: NonNullable<CommentaryFacts["salience"]> = {
-  primaryPositive: { category: "pts", value: 42, label: "42 points" },
-  primaryNegative: { category: "turnovers", value: -3, label: "3 turnovers" },
+  primaryPositive: { category: "pts", value: 42, label: "42 points from your held lineup" },
+  primaryNegative: { category: "turnovers", value: -3, label: "3 turnovers from your held lineup" },
 };
 
 const CHOKE_SALIENCE: NonNullable<CommentaryFacts["salience"]> = {
-  primaryPositive: { category: "pts", value: 38, label: "38 points" },
-  primaryNegative: { category: "turnovers", value: -4, label: "4 turnovers" },
+  primaryPositive: { category: "pts", value: 38, label: "38 points from your held lineup" },
+  primaryNegative: { category: "turnovers", value: -4, label: "4 turnovers from your held lineup" },
   primaryDragPlayer: { basePlayerId: "101108", name: "Chris Paul", shortfall: -22.5 },
 };
 
 const MISS_SALIENCE: NonNullable<CommentaryFacts["salience"]> = {
-  primaryPositive: { category: "pts", value: 30, label: "30 points" },
+  primaryPositive: { category: "pts", value: 30, label: "30 points from your held lineup" },
 };
 
 describe("salience block — render shape per signal", () => {
@@ -387,6 +395,41 @@ describe("buildCommentaryFacts — pass-through of new optional fields", () => {
     const r = buildCommentaryFacts(input({ totalFp: 312.4 }));
     expect(r.kind).toBe("facts");
     if (r.kind !== "facts") return;
-    expect(r.facts.totalFp).toBe(312.4);
+    expect(r.facts.totalFp).toEqual({ value: 312.4, category: "fp" });
   });
+});
+
+// ── RD0 — FP-delta resolution banks render FP, not points ─────────────────
+//
+// {delta} = absolute FP gap (chadChallenge.ts §"Template tokens"). Any
+// resolution-bank line that labels that figure as "points" / "pts" /
+// "-point" is the L1 leak this ticket fixes. Curated carve-out: the
+// "at any point" idiom (= "ever") stays legal — strip it before checking.
+
+describe("RD0 — challenge-resolution delta banks render the FP gap as FP", () => {
+  const OUTCOMES: ResolutionOutcome[] = [
+    "you_won_big",
+    "you_won_narrow",
+    "photo_finish_win",
+    "photo_finish_tie",
+    "photo_finish_loss",
+    "you_lost_narrow",
+    "you_lost_big",
+  ];
+  const FLAVORS: ResolutionFlavor[] = ["tactical", "personality"];
+
+  for (const outcome of OUTCOMES) {
+    for (const flavor of FLAVORS) {
+      it(`${outcome} · ${flavor}: no {delta} line labels the FP gap as points / pts / -point`, () => {
+        for (const line of chadResolutionBank(outcome, flavor)) {
+          if (!line.includes("{delta}")) continue;
+          const stripped = line.replace(/at any point/g, "");
+          expect(stripped).not.toMatch(/\{delta\}[^.]*\bpoints?\b/i);
+          expect(stripped).not.toMatch(/\bpoints?\b[^.]*\{delta\}/i);
+          expect(stripped).not.toMatch(/\{delta\}-point\b/i);
+          expect(stripped).not.toMatch(/\{delta\}[^.]*\bpts\b/i);
+        }
+      });
+    }
+  }
 });
