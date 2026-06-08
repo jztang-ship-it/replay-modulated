@@ -242,32 +242,46 @@ const URGENT_THRESHOLD_MS = 5 * 60 * 1000;
 // Win/loss colors (WINNING_COLOR, TRAILING_COLOR, DELTA_NEUTRAL) are
 // imported from H2HScoreRail and shared with H2HRevealScreen.
 
-// ── Headline copy ────────────────────────────────────────────────────────
+// ── Headline copy (RD1 — rivalry results) ───────────────────────────────
 //
-// Phase 4 placeholder. Polish pass (phase 8) re-tones.
+// Outcome-first headline; the margin number lives in the stacked FP hero,
+// not in the headline string. Outcome is determined by the SIGN of
+// `delta` plus the tie threshold (|delta| < 0.05) — NOT by trashTalkBucket.
+// A sub-1-FP loss reads as "YOU LOST TO {NAME}" (not "photo finish") so
+// the result is impossible to miss. Function returns name-cased text;
+// the JSX applies textTransform:uppercase for the visual hierarchy.
 
-function selectHeadline(args: {
-  state: ResultsOverlayState;
-  bucket: ResultsMarginBucket;
+const TIE_EPSILON = 0.05;
+
+export function selectHeadline(args: {
   delta: number;
   challengerName: string | null;
 }): string {
-  const { state, bucket, delta, challengerName } = args;
-  const d = Math.abs(delta).toFixed(1);
-  const name = challengerName ?? "them";
+  const { delta, challengerName } = args;
+  if (Math.abs(delta) < TIE_EPSILON) {
+    return challengerName ? `YOU TIED ${challengerName}` : "YOU TIED";
+  }
+  if (delta > 0) {
+    return challengerName ? `YOU BEAT ${challengerName}` : "YOU WON";
+  }
+  return challengerName ? `YOU LOST TO ${challengerName}` : "YOU LOST";
+}
 
-  if (bucket === "photo_finish") return `Photo finish — ${d} FP.`;
-  if (state === "WIN") {
-    if (bucket === "win_big") return `Cooked. +${d} over ${name}.`;
-    return `Got 'em by ${d}.`;
-  }
-  if (state === "LOSS_OPEN") {
-    if (bucket === "loss_big") return `Off by ${d}. One more swing.`;
-    return `Off by ${d}. Window's open.`;
-  }
-  // LOSS_CLOSED
-  if (bucket === "loss_big") return `Off by ${d}. Window closed.`;
-  return `${d} short. Window closed.`;
+/** Signed FP-margin string for the stacked hero element. U+2212 minus
+ *  on losses so it reads as a typographic minus rather than a hyphen at
+ *  fontWeight 950. Tie renders literal "0.0 FP" (no sign prefix). */
+export function formatFpHero(delta: number): string {
+  if (Math.abs(delta) < TIE_EPSILON) return "0.0 FP";
+  const mag = Math.abs(delta).toFixed(1);
+  return delta > 0 ? `+${mag} FP` : `−${mag} FP`;
+}
+
+/** Outcome-driven color for the headline + hero. Replaces the
+ *  pre-RD1 bucket+state-keyed map at the overlay's render site. */
+export function selectOutcomeColor(delta: number): string {
+  if (Math.abs(delta) < TIE_EPSILON) return "#FFB14A";
+  if (delta > 0) return WINNING_COLOR;
+  return "#EF4444";
 }
 
 // ── Zone panel — glass chrome (matches arc) ──────────────────────────────
@@ -784,14 +798,14 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
   // it here. Re-introducing the trash-talk render is a single
   // useMemo + JSX node away if the relay frame dials back.
   const delta = recipient.totalFp - sender.totalFp;
+  // bucket stays computed for the data-h2h-overlay-bucket attribute
+  // (consumers downstream of the overlay still read it); it no longer
+  // drives headline copy or color — RD1 keys both off the SIGN of delta.
   const bucket = trashTalkBucket(delta);
   const challengerName = sender.displayName || null;
-  const headline = selectHeadline({ state, bucket, delta, challengerName });
-  const headlineColor =
-    state === "WIN" ? WINNING_COLOR
-    : bucket === "photo_finish" ? "#FFB14A"
-    : state === "LOSS_OPEN" ? "#EF4444"
-    : "#EAF0FF";
+  const headline = selectHeadline({ delta, challengerName });
+  const fpHero = formatFpHero(delta);
+  const headlineColor = selectOutcomeColor(delta);
 
   // Right-rail score treatment tracks the FINAL totals via the shared
   // ScoreCell three-state model (relay-tension Phase 1). Cross-surface
@@ -1015,14 +1029,18 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           }}
         >
           {/* Row 1: commentary block — spans LEFT RAIL + CENTER (278px at
-              390 viewport). Two stacked lines, centered horizontally
-              within the freed area: state-tinted headline with the
-              margin number folded in (selectHeadline already interpolates
-              `${absDelta}`), and the substantive "WHY" second line from
-              selectChallengeResolution. Step 4 unlocks expanding this
-              to full-width once scores leave the right rail. The headline
-              and resolution colors keep the existing state-tint system
-              — no new palette. */}
+              390 viewport). RD1 — three stacked elements, centered
+              within the freed area:
+                1. OUTCOME headline (selectHeadline) — pure outcome+rival,
+                   keyed off SIGN of delta; the margin number is NOT in
+                   the string (it lives in the hero below).
+                2. FP hero (formatFpHero) — signed magnitude rendered
+                   large + tabular-nums, in the outcome color.
+                3. Why-line (selectChallengeResolution) — RD0-clean
+                   small supporting copy, untouched by RD1.
+              Color flows from selectOutcomeColor(delta) — win green,
+              loss red, tie amber. Step 4 unlocks expanding this to
+              full-width once scores leave the right rail. */}
           <div
             data-h2h-overlay-commentary="true"
             style={{
@@ -1040,16 +1058,31 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             <div
               data-h2h-overlay-headline="true"
               style={{
-                fontSize: 18,
+                fontSize: 26,
                 fontWeight: 950,
                 color: headlineColor,
                 letterSpacing: -0.4,
-                lineHeight: 1.15,
+                lineHeight: 1.1,
+                textTransform: "uppercase",
                 wordBreak: "break-word",
                 textAlign: "center",
               }}
             >
               {headline}
+            </div>
+            <div
+              data-h2h-overlay-fphero="true"
+              style={{
+                fontSize: 32,
+                fontWeight: 950,
+                color: headlineColor,
+                letterSpacing: -0.5,
+                lineHeight: 1,
+                fontVariantNumeric: "tabular-nums",
+                textAlign: "center",
+              }}
+            >
+              {fpHero}
             </div>
             <div
               data-h2h-overlay-resolution="true"

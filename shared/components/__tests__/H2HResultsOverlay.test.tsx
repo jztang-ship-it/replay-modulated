@@ -17,7 +17,12 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { H2HResultsOverlay } from "../H2HResultsOverlay";
+import {
+  H2HResultsOverlay,
+  selectHeadline,
+  formatFpHero,
+  selectOutcomeColor,
+} from "../H2HResultsOverlay";
 import type { H2HHand, H2HCard, CardRenderer } from "../H2HRevealScreen";
 
 function makeCard(over: Partial<H2HCard> = {}): H2HCard {
@@ -190,7 +195,7 @@ describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)",
     expect(container.querySelector('[data-h2h-overlay-trash-talk="true"]')).toBeNull();
   });
 
-  it("photo_finish margin bucket headline reads 'Photo finish'", () => {
+  it("RD1: sub-1-FP win renders 'YOU BEAT {NAME}' (no longer 'Photo finish')", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 100.0)}
@@ -200,13 +205,19 @@ describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)",
       />
     );
     const overlay = container.querySelector('[data-h2h-results-overlay="true"]') as HTMLElement;
+    // bucket attr still set (trashTalkBucket survives for downstream
+    // consumers); it just no longer drives headline copy.
     expect(overlay.getAttribute("data-h2h-overlay-bucket")).toBe("photo_finish");
-    expect(
-      container.querySelector('[data-h2h-overlay-headline="true"]')?.textContent
-    ).toMatch(/Photo finish/i);
+    const headline = container.querySelector('[data-h2h-overlay-headline="true"]')?.textContent ?? "";
+    expect(headline).toBe("YOU BEAT Mike");
+    expect(headline).not.toMatch(/Photo finish/i);
+    // RD1 — outcome carries no numeric; the delta lives only in the hero.
+    expect(headline).not.toMatch(/\d/);
+    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]')?.textContent ?? "";
+    expect(hero).toBe("+0.7 FP");
   });
 
-  it("win_big bucket headline includes opponent name + delta", () => {
+  it("RD1: large win renders 'YOU BEAT {NAME}' + signed hero; no number in the headline", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 100.0)}
@@ -219,8 +230,154 @@ describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)",
       container.querySelector('[data-h2h-results-overlay="true"]')?.getAttribute("data-h2h-overlay-bucket")
     ).toBe("win_big");
     const headline = container.querySelector('[data-h2h-overlay-headline="true"]')?.textContent ?? "";
-    expect(headline).toMatch(/Mike/);
-    expect(headline).toMatch(/25/);
+    expect(headline).toBe("YOU BEAT Mike");
+    expect(headline).not.toMatch(/\d/);
+    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]')?.textContent ?? "";
+    expect(hero).toBe("+25.0 FP");
+  });
+});
+
+// ── RD1 — outcome-first headline + FP hero + outcome color ──────────────
+//
+// Spec: docs/replaymod-design-decisions.md §"RD1 — rivalry results: spec".
+// The headline copy is keyed off the SIGN of delta (with a tie threshold
+// of |delta| < 0.05), NOT off trashTalkBucket. The margin number lives
+// only in the stacked FP hero; the headline string carries no numeric.
+
+describe("RD1 — selectHeadline (outcome + rival, no number in string)", () => {
+  it("win → YOU BEAT {NAME}", () => {
+    expect(selectHeadline({ delta: 25.0, challengerName: "Mike" })).toBe("YOU BEAT Mike");
+  });
+  it("loss → YOU LOST TO {NAME}", () => {
+    expect(selectHeadline({ delta: -25.0, challengerName: "Mike" })).toBe("YOU LOST TO Mike");
+  });
+  it("tie (|delta| < 0.05) → YOU TIED {NAME}", () => {
+    expect(selectHeadline({ delta: 0.0, challengerName: "Mike" })).toBe("YOU TIED Mike");
+    expect(selectHeadline({ delta: 0.04, challengerName: "Mike" })).toBe("YOU TIED Mike");
+    expect(selectHeadline({ delta: -0.04, challengerName: "Mike" })).toBe("YOU TIED Mike");
+  });
+
+  it("no-name fallback: win → YOU WON / loss → YOU LOST / tie → YOU TIED", () => {
+    expect(selectHeadline({ delta: 25.0, challengerName: null })).toBe("YOU WON");
+    expect(selectHeadline({ delta: -25.0, challengerName: null })).toBe("YOU LOST");
+    expect(selectHeadline({ delta: 0.0, challengerName: null })).toBe("YOU TIED");
+  });
+
+  it("headline string contains NO numeric (delta lives only in the hero)", () => {
+    const samples = [
+      selectHeadline({ delta: 25.0, challengerName: "Mike" }),
+      selectHeadline({ delta: -25.0, challengerName: "Mike" }),
+      selectHeadline({ delta: 0.0, challengerName: "Mike" }),
+      selectHeadline({ delta: 0.7, challengerName: "Mike" }),
+      selectHeadline({ delta: -0.7, challengerName: "Mike" }),
+      selectHeadline({ delta: 0.7, challengerName: null }),
+    ];
+    for (const s of samples) {
+      expect(s).not.toMatch(/\d/);
+    }
+  });
+
+  it("sub-1-FP loss renders as YOU LOST TO {NAME} (not 'photo finish' / soft-pedal)", () => {
+    // Spec: the photo_finish bucket no longer produces a special headline;
+    // a sub-1-FP loss is still a loss, because soft-pedaling it buries
+    // the outcome — counter to "impossible to miss."
+    expect(selectHeadline({ delta: -0.7, challengerName: "Mike" })).toBe("YOU LOST TO Mike");
+    expect(selectHeadline({ delta: -0.6, challengerName: "Mike" })).toBe("YOU LOST TO Mike");
+    expect(selectHeadline({ delta: -0.05, challengerName: "Mike" })).toBe("YOU LOST TO Mike");
+  });
+});
+
+describe("RD1 — formatFpHero (signed magnitude only)", () => {
+  it("win → +X.X FP", () => {
+    expect(formatFpHero(20.1)).toBe("+20.1 FP");
+    expect(formatFpHero(0.7)).toBe("+0.7 FP");
+  });
+  it("loss → −X.X FP (U+2212 minus, not hyphen)", () => {
+    expect(formatFpHero(-20.1)).toBe("−20.1 FP");
+    expect(formatFpHero(-0.7)).toBe("−0.7 FP");
+    // The minus is U+2212 specifically so the hero reads as a typographic
+    // minus at fontWeight 950, not a thin hyphen.
+    expect(formatFpHero(-20.1).charCodeAt(0)).toBe(0x2212);
+  });
+  it("tie (|delta| < 0.05) → literal '0.0 FP' (no sign prefix)", () => {
+    expect(formatFpHero(0.0)).toBe("0.0 FP");
+    expect(formatFpHero(0.04)).toBe("0.0 FP");
+    expect(formatFpHero(-0.04)).toBe("0.0 FP");
+  });
+});
+
+describe("RD1 — selectOutcomeColor (driven by outcome, not bucket)", () => {
+  it("win → WINNING_COLOR (green)", () => {
+    // We assert the value via stable hex/known-symbol checks below; the
+    // exact import-time value is exercised in the JSX wiring test.
+    expect(selectOutcomeColor(25.0)).toBe(selectOutcomeColor(0.7));
+    expect(selectOutcomeColor(25.0)).not.toBe("#EF4444");
+    expect(selectOutcomeColor(25.0)).not.toBe("#FFB14A");
+  });
+  it("loss → #EF4444 (red)", () => {
+    expect(selectOutcomeColor(-25.0)).toBe("#EF4444");
+    expect(selectOutcomeColor(-0.7)).toBe("#EF4444");
+    expect(selectOutcomeColor(-0.05)).toBe("#EF4444");
+  });
+  it("tie (|delta| < 0.05) → #FFB14A (amber)", () => {
+    expect(selectOutcomeColor(0.0)).toBe("#FFB14A");
+    expect(selectOutcomeColor(0.04)).toBe("#FFB14A");
+    expect(selectOutcomeColor(-0.04)).toBe("#FFB14A");
+  });
+});
+
+describe("RD1 — overlay render wires the new outcome shape", () => {
+  it("LOSS_OPEN sub-1-FP loss → 'YOU LOST TO Mike' + '−0.7 FP' + red color", () => {
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 100.7)}
+        recipient={makeHand("You", 100.0)}
+        renderCard={stubRender()}
+        state="LOSS_OPEN"
+      />
+    );
+    const headline = container.querySelector('[data-h2h-overlay-headline="true"]') as HTMLElement;
+    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]') as HTMLElement;
+    expect(headline?.textContent).toBe("YOU LOST TO Mike");
+    expect(headline?.textContent).not.toMatch(/Photo finish/i);
+    expect(hero?.textContent).toBe("−0.7 FP");
+    // Outcome color drives both headline and hero — red on loss.
+    expect(headline.style.color).toBe("rgb(239, 68, 68)");
+    expect(hero.style.color).toBe("rgb(239, 68, 68)");
+  });
+
+  it("tie → 'YOU TIED Mike' + '0.0 FP' + amber color", () => {
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 100.0)}
+        recipient={makeHand("You", 100.0)}
+        renderCard={stubRender()}
+        // A 0-delta hand is unusual on LOSS_OPEN, but the headline copy +
+        // color are driven by delta, not the legacy state machine.
+        state="LOSS_OPEN"
+      />
+    );
+    const headline = container.querySelector('[data-h2h-overlay-headline="true"]') as HTMLElement;
+    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]') as HTMLElement;
+    expect(headline?.textContent).toBe("YOU TIED Mike");
+    expect(hero?.textContent).toBe("0.0 FP");
+    expect(headline.style.color).toBe("rgb(255, 177, 74)");
+  });
+
+  it("LOSS_CLOSED loss → headline is red (state no longer overrides outcome color)", () => {
+    // Pre-RD1 a LOSS_CLOSED headline rendered off-white; RD1 keys color
+    // off the SIGN of delta so a closed-window loss is still red.
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 125.0)}
+        recipient={makeHand("You", 100.0)}
+        renderCard={stubRender()}
+        state="LOSS_CLOSED"
+      />
+    );
+    const headline = container.querySelector('[data-h2h-overlay-headline="true"]') as HTMLElement;
+    expect(headline?.textContent).toBe("YOU LOST TO Mike");
+    expect(headline.style.color).toBe("rgb(239, 68, 68)");
   });
 });
 
