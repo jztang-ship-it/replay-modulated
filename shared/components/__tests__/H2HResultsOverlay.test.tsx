@@ -487,6 +487,33 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     expect(innerBox?.style.border).toContain("dashed");
   });
 
+  it("#7: flip-discoverability caption tracks hero state (empty → front → hidden on back)", () => {
+    const sender = makeHand("Mike", 178.4);
+    const recipient = makeHand("You", 182.4);
+    const targetId = recipient.cards[2].cardId;
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={sender}
+        recipient={recipient}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    const hint = () => container.querySelector("[data-h2h-overlay-hero-hint]");
+    // Empty → invite the first tap.
+    expect(hint()?.getAttribute("data-h2h-overlay-hero-hint")).toBe("empty");
+    expect(hint()?.textContent).toContain("game logs");
+    // Select → front preview → invite the flip.
+    fireEvent.click(container.querySelector(
+      `[data-h2h-overlay-zone="user"] [data-card-id="${targetId}"]`
+    ) as HTMLElement);
+    expect(hint()?.getAttribute("data-h2h-overlay-hero-hint")).toBe("front");
+    expect(hint()?.textContent).toContain("back");
+    // Flip to back → caption hidden (card's own hint takes over).
+    fireEvent.click(container.querySelector("[data-h2h-overlay-hero-flipped]") as HTMLElement);
+    expect(hint()).toBeNull();
+  });
+
   it("initialTopFlippedCardId + initialBottomFlippedCardId both seed selection state; only bottom hero renders", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);

@@ -584,6 +584,10 @@ function HeroCell({
         onClick={card ? onTap : undefined}
         data-h2h-overlay-hero-flipped={card ? (flipped ? "true" : "false") : undefined}
         style={{
+          // position: relative anchors the discoverability caption below,
+          // which is absolutely positioned (out of flow) so it can never
+          // shift the hero↔strip geometry locked to H2H-reveal parity.
+          position: "relative",
           width: "100%",
           maxWidth: HERO_CARD_MAX_WIDTH,
           // Locked: empty AND occupied cells reserve the same Y span
@@ -597,6 +601,32 @@ function HeroCell({
           boxSizing: "border-box",
         }}
       >
+        {/* #7 flip-discoverability caption. Floats just ABOVE the hero box
+            (bottom: 100%), out of normal flow → zero effect on the locked
+            geometry. pointerEvents:none so taps fall through to the card.
+            Empty → invite the first tap; front → invite the flip; back →
+            hidden (the card's own "TAP TO FLIP BACK" hint takes over). */}
+        {(!card || !flipped) && (
+          <div
+            data-h2h-overlay-hero-hint={card ? "front" : "empty"}
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 6px)",
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 0.3,
+              lineHeight: 1.2,
+              color: "rgba(255,255,255,0.45)",
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {card ? "Tap again — game logs are on the back" : "Tap a card to see the game logs we pulled"}
+          </div>
+        )}
         {card && renderCard(card, { flipped })}
       </div>
     </div>
@@ -609,7 +639,9 @@ function HeroCell({
 
 // ── Countdown pill ───────────────────────────────────────────────────────
 
-function CountdownPill({ windowClosesAtMs }: { windowClosesAtMs: number | null | undefined }) {
+// Live 1-second countdown math. Returns the seconds left (null when no
+// window) + urgency flag. Shared by the in-CTA clock below.
+function useCountdown(windowClosesAtMs: number | null | undefined) {
   const [nowMs, setNowMs] = useState(() => Date.now());
   useEffect(() => {
     if (windowClosesAtMs == null) return;
@@ -621,34 +653,38 @@ function CountdownPill({ windowClosesAtMs }: { windowClosesAtMs: number | null |
     ? null
     : Math.max(0, Math.floor((windowClosesAtMs - nowMs) / 1_000));
   const isUrgent = secondsLeft != null && secondsLeft < URGENT_THRESHOLD_MS / 1_000;
-  const mm = secondsLeft == null ? null : Math.floor(secondsLeft / 60);
-  const ss = secondsLeft == null ? null : secondsLeft % 60;
-  const label = secondsLeft == null
+  return { secondsLeft, isUrgent };
+}
+
+// #7 (2026-06-08): the flip-timer now lives INSIDE the CTA bar, right-
+// aligned, as a bare clock — the standalone pill above the CTA was
+// overlaying the bottom mini-strip (the tap-to-preview/flip area). The
+// label stays dead-centered on the bar (see the CTA render); this clock
+// is absolutely positioned to the right so it never shifts the label.
+function CtaClock({ windowClosesAtMs }: { windowClosesAtMs: number | null | undefined }) {
+  const { secondsLeft, isUrgent } = useCountdown(windowClosesAtMs);
+  const text = secondsLeft == null
     ? "—:—"
-    : `${mm}:${ss!.toString().padStart(2, "0")}`;
+    : `${Math.floor(secondsLeft / 60)}:${(secondsLeft % 60).toString().padStart(2, "0")}`;
   return (
-    <div
+    <span
       data-h2h-overlay-countdown="true"
+      aria-hidden="true"
       style={{
-        padding: "10px 14px",
-        borderRadius: 10,
-        background: isUrgent ? "rgba(239,68,68,0.12)" : "rgba(255,177,74,0.10)",
-        border: `1px solid ${isUrgent ? "rgba(239,68,68,0.45)" : "rgba(255,177,74,0.35)"}`,
-        color: isUrgent ? "#FCA5A5" : "#FFB14A",
-        fontSize: isUrgent ? 16 : 14,
-        fontWeight: isUrgent ? 900 : 800,
-        textAlign: "center",
+        position: "absolute",
+        right: 16,
+        top: "50%",
+        transform: "translateY(-50%)",
+        fontSize: 13,
+        fontWeight: 800,
         fontVariantNumeric: "tabular-nums",
-        width: "100%",
-        boxSizing: "border-box",
+        // On the amber CTA, darken for contrast; redden when urgent.
+        color: isUrgent ? "#B91C1C" : "rgba(7,10,18,0.62)",
+        pointerEvents: "none",
       }}
     >
-      {secondsLeft === 0
-        ? "Window closing — last shot."
-        : secondsLeft == null
-          ? "—:— to flip this."
-          : `${label} to flip this.`}
-    </div>
+      {text}
+    </span>
   );
 }
 
@@ -1135,15 +1171,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               margin: "0 auto",
             }}
           >
-            {state === "LOSS_OPEN" && (
-              <CountdownPill windowClosesAtMs={windowClosesAtMs} />
-            )}
             <button
               type="button"
               data-h2h-overlay-primary-cta="true"
               data-cta-label={primaryCta.label}
               onClick={primaryCta.handler}
               style={{
+                position: "relative",
                 padding: "15px",
                 borderRadius: 12,
                 background: "#FFB14A",
@@ -1151,10 +1185,19 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
                 color: "#070A12",
                 fontSize: 16,
                 fontWeight: 900,
+                textAlign: "center",
                 cursor: "pointer",
               }}
             >
               {primaryCta.label}
+              {/* #7: flip-timer merged into the bar — bare clock, right-
+                  aligned, absolutely positioned so the label stays
+                  dead-centered. LOSS_OPEN only. Removing the old pill
+                  reclaims the vertical space that was overlaying the
+                  bottom mini-strip's tap area. */}
+              {state === "LOSS_OPEN" && (
+                <CtaClock windowClosesAtMs={windowClosesAtMs} />
+              )}
             </button>
           </div>
         </div>
