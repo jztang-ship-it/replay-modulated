@@ -389,29 +389,102 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     expect(heroCells[0].getAttribute("data-occupied")).toBe("true");
   });
 
-  it("bottom hero card renderer receives `flipped: true`; strip cards receive `flipped: false`", () => {
+  // #7 (2026-06-08): preview-then-flip. The hero shows the card FRONT
+  // on selection; the back appears only after a deliberate flip tap.
+  // (Supersedes the prior "hero renders flipped: true on mount" test,
+  // which encoded the now-removed back-first behavior.)
+  it("#7: a seeded bottom hero previews FRONT on mount, not the back", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
-    const calls: Array<{ cardId: string; flipped: boolean }> = [];
-    const renderCard: CardRenderer = vi.fn<CardRenderer>((card, options) => {
-      calls.push({ cardId: card.cardId, flipped: options?.flipped ?? false });
-      return <div data-card-stub="true" data-card-id={card.cardId} />;
-    });
     const targetId = recipient.cards[1].cardId;
-    render(
+    const { container } = render(
       <H2HResultsOverlay
         sender={sender}
         recipient={recipient}
-        renderCard={renderCard}
+        renderCard={stubRender()}
         state="WIN"
         initialBottomFlippedCardId={targetId}
       />
     );
-    const targetCalls = calls.filter(c => c.cardId === targetId);
-    // The recipient card with this id renders BOTH in the user strip
-    // (flipped: false) AND in the bottom hero (flipped: true).
-    expect(targetCalls.some(c => c.flipped === true)).toBe(true);
-    expect(targetCalls.some(c => c.flipped === false)).toBe(true);
+    const hero = container.querySelector("[data-h2h-overlay-hero-flipped]");
+    expect(hero).toBeTruthy();
+    // Occupied, but front-side (flipped === false).
+    expect(hero?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("false");
+  });
+
+  it("#7: tapping the hero card flips it front→back→front", () => {
+    const sender = makeHand("Mike", 178.4);
+    const recipient = makeHand("You", 182.4);
+    const targetId = recipient.cards[2].cardId;
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={sender}
+        recipient={recipient}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    // Select → front preview.
+    fireEvent.click(container.querySelector(
+      `[data-h2h-overlay-zone="user"] [data-card-id="${targetId}"]`
+    ) as HTMLElement);
+    const heroSel = "[data-h2h-overlay-hero-flipped]";
+    expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("false");
+    // Tap the hero card itself → back.
+    fireEvent.click(container.querySelector(heroSel) as HTMLElement);
+    expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("true");
+    // Tap again → back to front.
+    fireEvent.click(container.querySelector(heroSel) as HTMLElement);
+    expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("false");
+  });
+
+  it("#7: re-tapping the active mini card flips; switching cards resets to front", () => {
+    const sender = makeHand("Mike", 178.4);
+    const recipient = makeHand("You", 182.4);
+    const idA = recipient.cards[1].cardId;
+    const idB = recipient.cards[3].cardId;
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={sender}
+        recipient={recipient}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    const heroSel = "[data-h2h-overlay-hero-flipped]";
+    const cell = (id: string) => container.querySelector(
+      `[data-h2h-overlay-zone="user"] [data-card-id="${id}"]`
+    ) as HTMLElement;
+    const occupantId = () =>
+      container.querySelector(`${heroSel} [data-card-id]`)?.getAttribute("data-card-id");
+
+    fireEvent.click(cell(idA));              // select A → front
+    expect(occupantId()).toBe(idA);
+    expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("false");
+
+    fireEvent.click(cell(idA));              // re-tap A → flip to back
+    expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("true");
+
+    fireEvent.click(cell(idB));              // switch to B → MUST reset to front
+    expect(occupantId()).toBe(idB);
+    expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("false");
+  });
+
+  it("#7 req 1: the empty bottom hero cell shows a dashed border before any tap", () => {
+    const sender = makeHand("Mike", 178.4);
+    const recipient = makeHand("You", 182.4);
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={sender}
+        recipient={recipient}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    const heroCell = container.querySelector('[data-h2h-overlay-hero-cell="true"]');
+    expect(heroCell?.getAttribute("data-occupied")).toBe("false");
+    const innerBox = heroCell?.querySelector("div") as HTMLElement | null;
+    expect(innerBox?.style.border).toContain("dashed");
   });
 
   it("initialTopFlippedCardId + initialBottomFlippedCardId both seed selection state; only bottom hero renders", () => {

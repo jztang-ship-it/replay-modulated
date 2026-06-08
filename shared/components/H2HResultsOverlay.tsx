@@ -549,9 +549,25 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
 function HeroCell({
   card,
   renderCard,
+  flipped = false,
+  onTap,
+  showEmptyBorder = false,
 }: {
   card: H2HCard | null;
   renderCard: CardRenderer;
+  /** #7 (2026-06-08): the hero shows the card FRONT on first preview;
+   *  the back face appears only after a deliberate flip tap. Owned by
+   *  the parent so switching cards always resets to front. */
+  flipped?: boolean;
+  /** Tap on the OCCUPIED hero card → toggle its flip. The card's own
+   *  onToggleFlip is intentionally not wired in this surface, so the
+   *  overlay owns the flip at the wrapper. No stopPropagation exists in
+   *  PlayerCardShell/CardFront, so the card tap bubbles here cleanly. */
+  onTap?: () => void;
+  /** #7 req 1: when empty, the cell still reserves the same Y span AND
+   *  paints a dashed border so the slot reads as a tap target before
+   *  any mini-card has been tapped. */
+  showEmptyBorder?: boolean;
 }) {
   return (
     <div
@@ -565,17 +581,23 @@ function HeroCell({
       }}
     >
       <div
+        onClick={card ? onTap : undefined}
+        data-h2h-overlay-hero-flipped={card ? (flipped ? "true" : "false") : undefined}
         style={{
           width: "100%",
           maxWidth: HERO_CARD_MAX_WIDTH,
           // Locked: empty AND occupied cells reserve the same Y span
-          // (matches the arc's hero card size). The empty cell is
-          // visually invisible — the card content area is just an
-          // empty wrapper waiting for a tap-to-flip card to drop in.
+          // (matches the arc's hero card size). #7 req 1: when empty the
+          // wrapper paints a dashed border so the slot is a visible tap
+          // target; once occupied the card covers it.
           aspectRatio: "329 / 478",
+          cursor: card ? "pointer" : "default",
+          border: !card && showEmptyBorder ? "1.5px dashed rgba(255,255,255,0.22)" : undefined,
+          borderRadius: !card && showEmptyBorder ? 18 : undefined,
+          boxSizing: "border-box",
         }}
       >
-        {card && renderCard(card, { flipped: true })}
+        {card && renderCard(card, { flipped })}
       </div>
     </div>
   );
@@ -671,18 +693,38 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
   // to-face comparison. Null when that strip's hero slot is empty.
   const [topSelectedCardId, setTopSelectedCardId] = useState<string | null>(initialTopFlippedCardId);
   const [bottomSelectedCardId, setBottomSelectedCardId] = useState<string | null>(initialBottomFlippedCardId);
+  // #7 (2026-06-08): preview-then-flip for the user hero. Selecting a
+  // card shows it FRONT-up; a deliberate second tap (the active mini
+  // card OR the hero card) flips it. Switching to a different card
+  // always resets to front — never jump card-back→card-back across
+  // selections. `false` on mount so a seeded initialBottomFlippedCardId
+  // previews front, not back.
+  const [bottomHeroFlipped, setBottomHeroFlipped] = useState<boolean>(false);
   const handleTopCardTap = useCallback((cardId: string) => {
     setTopSelectedCardId(prev => (prev === cardId ? null : cardId));
   }, []);
   const handleBottomCardTap = useCallback((cardId: string) => {
-    setBottomSelectedCardId(prev => (prev === cardId ? null : cardId));
+    // Re-tap of the already-active card → flip in place. A different
+    // card → select it and reset to front. No deselect: the hero keeps
+    // showing the last-tapped card (confirmed product decision).
+    if (cardId === bottomSelectedCardId) {
+      setBottomHeroFlipped(f => !f);
+    } else {
+      setBottomSelectedCardId(cardId);
+      setBottomHeroFlipped(false);
+    }
+  }, [bottomSelectedCardId]);
+  // Tap on the occupied hero card itself → flip in place.
+  const handleBottomHeroTap = useCallback(() => {
+    setBottomHeroFlipped(f => !f);
   }, []);
-  // Reset both selections when the overlay becomes invisible so the
-  // next show starts with both hero slots empty.
+  // Reset selection + flip when the overlay becomes invisible so the
+  // next show starts with the hero slot empty (bordered) and front-side.
   useEffect(() => {
     if (!visible) {
       setTopSelectedCardId(null);
       setBottomSelectedCardId(null);
+      setBottomHeroFlipped(false);
     }
   }, [visible]);
 
@@ -1013,7 +1055,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               step) + user rail ScoreCell. Same suppress contract as
               the opponent rail above — the cell stays mounted, the
               inner glyph hides at glide lift-off. */}
-          <HeroCell card={bottomSelectedCard} renderCard={renderCard} />
+          <HeroCell card={bottomSelectedCard} renderCard={renderCard} flipped={bottomHeroFlipped} onTap={handleBottomHeroTap} showEmptyBorder />
           <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" teamPosition="user" suppressed={railSuppressed.user} />
         </div>
 
