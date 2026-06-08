@@ -201,3 +201,23 @@ the anchor take reads TRUE against the fixture's actualFp, all six cards are tie
 mention. Then PROD: a real choke challenge reads as "{anchor} and {other}. Busted." with the
 correct anchor framing, no FP number anywhere, the whole page legible to someone who's never
 played. The first-timer test: would a stranger understand the stakes and want to tap?
+
+---
+
+## Amendment 2026-06-08 — RD5: FP-spoiler rule split (number-forward landing)
+
+The original FP-spoiler rule above bundled two separate protections. RD5 splits them:
+
+**RETAINED (real spoiler protection):**
+- No per-card FP chip on the landing.
+- No recipient-outcome reference.
+- No reveal-result spoiler.
+
+**REVERSED (Phase-2d style bet):**
+- The "NO FP number ever appears" ban no longer applies to the *challenger's total*. The
+  challenger's total-to-beat is rendered as the hero (`{name} SCORED {N} FP`).
+
+**Rationale:** the total-to-beat is not a spoiler — it is the challenge. Hiding it hid the
+reason to play. Per the challenge hierarchy, Score leads on R1 (no outcome exists pre-play),
+so the number is the lead, not a stranger-legible stakes word. Per-card and outcome spoilers
+remain forbidden; only the challenger's aggregate target is now shown.

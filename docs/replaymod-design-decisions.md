@@ -947,3 +947,84 @@ confirm the bigger outcome + hero fit the row-1 cell with NO clip/overflow on ti
 (390×664 mid-scroll, 360×590, 320×520, in-app webviews — the cell's own overflow comments list
 these). Confirm win / loss / tie each on glass. Push held. RD1's glass IS also RD0's deferred
 output proof (the "−20.1 FP" hero proves the engine + surface together).
+
+## RD5 — landing: direct score challenge (number-forward): spec (2026-06-08)
+
+R1 surface (recipient landing). After RD1 locked the universal challenge hierarchy
+**Score → Outcome → Decision** on the results page, the **landing** must lead with **Score** —
+there is no outcome to lead with yet, and the challenger's total IS the challenge. Today's
+landing leads with a stakes-WORD (`UNBEATEN` / `BUSTED` / etc.) and hides the FP figure. RD5
+reverses that: render the target score as the deterministic hero, keep names + HOLD treatment
+intact, ask the dare directly. Closes the comprehension gap GATE-A is for.
+
+**Geography.** Hero / supporting line / CTA in `shared/components/ChallengeTakeCardLanding.tsx`
+(hero render ~`426`; `usp-subheadline` ~`471`; `evidence-line` ~`510`/`522`). Take-engine
+copy at `shared/challengeTakeCard/generateChallengeTakeCard.ts` (`buildPlainStakes` ~`223`,
+`evidenceLine` composition ~`348`) and `shared/challengeTakeCard/templates.ts` (the dormant
+target-forward template `"{targetScore.toFixed(1)} FP to beat"` already exists at ~`374`).
+
+**Lock amendment (companion in commit 1).** `docs/challenge-landing-v2-phase2d-plain-stakes-anchor-takes-lock.md`
+splits the FP-spoiler rule. Per-card FP / outcome / reveal spoiler bans STAY. The "no FP
+number ever appears" style is REVERSED for the **challenger's total only** — that total IS
+the challenge, not a spoiler.
+
+### Decisions locked this session (John)
+- Hero on the landing is **deterministic, templated, and number-forward** — replaces the
+  authored-narrative hero (`data.authored_headline || takeCard.take`) so the landing cannot
+  inherit a stale or pre-RD0 leak.
+- Per-card FP / recipient outcome / reveal spoiler bans remain absolute.
+- Stakes words (`STAKES_BUSTED` / `STAKES_UNBEATEN` / `STAKES_MISS_*` / etc.) may stay as
+  flavor; they may NOT serve as the number substitute on the landing lead.
+- Level-4 ("because he held Curry") still deferred — RD5 ships Score + Held names + Dare.
+
+### Copy (locked)
+- **Hero:**
+  - Named: `{challengerName} SCORED {targetScore.toFixed(1)} FP`
+  - No name: `THE SCORE TO BEAT — {targetScore.toFixed(1)} FP`
+  - Templated FP string — by construction it CANNOT emit "points." Hard contract.
+- **Supporting line:** `Held: {heldNames}` (names only; NO per-card FP, NO outcome word).
+- **CTA / dare:** `Can you beat him?` (no name → `Can you beat it?`). Replaces the
+  `PROVE YOUR LINE` / `finish the job` family.
+
+### Implementation
+- **Hero** (`ChallengeTakeCardLanding.tsx`): replace the `data.authored_headline ||
+  takeCard.take || "THIS IS THE LINE."` render with the templated string above.
+- **Supporting line:** new element that lists held-card names (the existing
+  `wasHeld === true` filter at ~`360` already produces them); NO per-card FP chips.
+- **Delete:** the `usp-subheadline` element ("Same starting hand. Different decisions."); the
+  stakes-word number-hiding lead path (`evidenceLine` rendering of `buildPlainStakes` output
+  on the landing); the authored-narrative hero path on the landing.
+- **CTA:** replace the `PROVE YOUR LINE` family with the dare CTA.
+- **Take-engine:** promote the `"{targetScore.toFixed(1)} FP to beat"` template in
+  `templates.ts` (~`374`) as the primary `evidenceLine` path; stakes words may remain as
+  flavor downstream but never as the number substitute.
+
+### Do NOT touch
+- Spoiler guards: NO per-card FP chip on the landing; NO recipient-outcome / reveal spoiler.
+- HOLD badges + bright/dim card treatment stay.
+- `api/headline.ts` is RD0's engine — NOT edited here. If a fresh authored output still leaks
+  `"points"` for an FP gap, surface as an RD0 follow-up; do not patch from inside RD5.
+- `authored_headline` is stored at create time, so a running dev server may show a stale
+  pre-RD0 seed — verification MUST use a FRESH challenge.
+
+### Tests
+- `ChallengeTakeCardLanding.test.tsx`: the `usp-subheadline` assertions (~`151`/`160`/`813`/
+  `1096`) and `evidence-line` stakes assertions (~`325`/`334`) move to the score-forward
+  structure.
+- ADD: hero = `{name} SCORED {N} FP`; held-names render; CTA is the dare; NO per-card FP
+  anywhere; NO `"points"` string for an FP figure.
+- Take-engine: targetScore-forward output path is exercised at the generator level.
+
+### Verification
+Shared touch → `bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**.
+**Glass MANDATORY**: open a **FRESH** challenge (do not reuse the stale dev-server seed).
+Confirm (a) hero shows `{name} SCORED {N} FP`, (b) `Held: …` names with no per-card FP,
+(c) dare CTA, (d) NO `"points"` anywhere for an FP figure, (e) HOLD badges intact, (f) no
+reveal spoiler. If fresh authored output still says `"points"` for an FP gap, that is the RD0
+follow-up — surface it, do not patch the engine inside RD5.
+
+### Done =
+Number-forward hero live; held-names supporting line; dare CTA; subline + stakes-word lead
+deleted; spoiler guards intact; HOLD badges intact; fresh-challenge glass clean of
+`"points"`; lock amended; full suite green; tri-sport build clean; branch committed; push
+held. **Then GATE-A.**
