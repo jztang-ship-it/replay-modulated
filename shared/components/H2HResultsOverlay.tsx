@@ -215,8 +215,12 @@ const DOCKED_SCORE_TARGET_MIN_WIDTH_PX = 68;
 const STRIP_GAP_PX = 4;
 const STRIP_CARD_NATURAL_WIDTH_PX = 150;
 const STRIP_CARD_NATURAL_HEIGHT_PX = (STRIP_CARD_NATURAL_WIDTH_PX * 478) / 329;
-const STRIP_CARD_DISPLAY_WIDTH_PX = (HAND_STRIP_HEIGHT_PX * 329) / 478;
-const STRIP_CARD_SCALE = STRIP_CARD_DISPLAY_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX;
+// RD2.1 (2026-06-09): inner card scale is container-derived (cqw) so
+// it tracks the flex-resolved cell width exactly. See H2HRevealScreen
+// for the lock rationale (and the validation that confirmed Chromium
+// + WebKit both resolve calc(100cqw / 150px) to a unitless transform
+// scale). The cell scaffold below sets container-type: inline-size.
+const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 
 const ZONE_HEADER_HEIGHT_PX = 24;
 
@@ -512,23 +516,24 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
               height: "100%",
               aspectRatio: "329 / 478",
               // Match HandStrip's cell model exactly so the reveal→results
-              // crossfade is byte-identical on both X and Y. The
-              // mini-slot geometry is unified across all four states of
-              // the H2H surface (hold/draw → play → reveal → results)
-              // via the shared HAND_STRIP_HEIGHT_PX constant imported
-              // above — the strip wrapper's height reads from it
-              // directly, this cell's height inherits from "100%", and
-              // the X model below mirrors HandStrip's flex behavior.
-              // HandStrip uses flexShrink:1 + overflow:visible: at
-              // viewports where the 6 natural-width cells + 5 gaps
-              // overflow the strip's available width (≤ ~422px wide,
-              // including iPhone 14 390×844), shrink fits the cells;
-              // overflow:visible lets the absolutely-positioned scaled
-              // card render inside the shrunk cell without right-edge
-              // clipping. flexShrink:1 alone with overflow:hidden would
-              // clip the inner card's right ~3px on every cell.
+              // crossfade is byte-identical on both X and Y. Mini-slot
+              // geometry unified across all four states of the H2H
+              // surface (hold/draw → play → reveal → results) via the
+              // shared HAND_STRIP_HEIGHT_PX constant imported above.
+              // flexShrink:1 + aspectRatio + minWidth:0 lets the cell
+              // shrink uniformly when the strip wrapper is narrower
+              // than 6×55 + 5×4 = 350 (every mobile portrait viewport).
+              // RD2.1: container-type:inline-size makes the cell a
+              // CSS containment context so the inner card's
+              // transform: scale(calc(100cqw / 150px)) tracks the
+              // flex-resolved cell width exactly — no scale/flex
+              // divorce, no 3px right-edge overhang, no card-back FP
+              // clip. The cell must keep box-sizing:border-box AND no
+              // internal border/padding so the content box == border
+              // box (cqw reads content box).
               flexShrink: 1,
               minWidth: 0,
+              containerType: "inline-size",
               position: "relative",
               overflow: "visible",
               cursor: "pointer",
@@ -547,7 +552,7 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
                 left: 0,
                 width: STRIP_CARD_NATURAL_WIDTH_PX,
                 height: STRIP_CARD_NATURAL_HEIGHT_PX,
-                transform: `scale(${STRIP_CARD_SCALE})`,
+                transform: `scale(${STRIP_CARD_SCALE_CSS})`,
                 transformOrigin: "top left",
                 pointerEvents: "none",
               }}

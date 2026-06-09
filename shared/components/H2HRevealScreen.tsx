@@ -226,10 +226,11 @@ const TIER_ACCENT: Record<string, string> = {
 // shipped results surface.
 //
 // Exported and consumed by all three H2H surfaces:
-//   - H2HRevealScreen.tsx (this file) — strip wrapper + derived
-//     STRIP_CARD_* mini-card scale.
-//   - H2HRecipientPlay.tsx — MINI_CELL_HEIGHT_PX + MINI_CELL_WIDTH_PX
-//     (the hold/draw + play strip).
+//   - H2HRevealScreen.tsx (this file) — strip wrapper height + mini
+//     cells (cqw-derived scale post-RD2.1).
+//   - H2HRecipientPlay.tsx — MINI_CELL_HEIGHT_PX alias (the strip
+//     wrapper's height; cells themselves derive their width from
+//     aspect-ratio + flex now, no hardcoded width post-RD2.1).
 //   - H2HResultsOverlay.tsx — its strip-cell height (the results
 //     surface that defines the floor).
 // Single source of truth. Drift across surfaces is impossible without
@@ -254,10 +255,22 @@ const HAND_STRIP_GAP_PX = 4;
 // at ~10px effective, and 32px initials at ~14px effective. Visible
 // but proportionally small, matching the user's "clearly smaller
 // version of the same card" intent.
+//
+// RD2.1 (2026-06-09, lock: docs/replaymod-design-decisions.md "RD2.1 —
+// strip-cell overflow"): the inner card's scale is no longer a fixed
+// constant. The cell box has `container-type: inline-size`, and the
+// inner uses `transform: scale(calc(100cqw / 150px))` — `100cqw`
+// reads the cell's actual content-box width at paint, so the scaled
+// inner tracks the flex-resolved cell width (52 in tight space, 55
+// when the cell fits its natural size). The old `STRIP_CARD_SCALE`
+// constant derived from `HAND_STRIP_HEIGHT_PX × 329/478 / 150` is
+// gone — it was the divorce that produced the 3px overhang. Validated
+// in Chromium + WebKit before commit. NOTE: requires the cell box to
+// have no internal border/padding (content box must equal border box)
+// — all three H2H strip surfaces satisfy this.
 const STRIP_CARD_NATURAL_WIDTH_PX = 150;
 const STRIP_CARD_NATURAL_HEIGHT_PX = (STRIP_CARD_NATURAL_WIDTH_PX * 478) / 329;
-const STRIP_CARD_DISPLAY_WIDTH_PX = (HAND_STRIP_HEIGHT_PX * 329) / 478;
-const STRIP_CARD_SCALE = STRIP_CARD_DISPLAY_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX;
+const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 
 // Battlefield card max-width. Matches the natural single-player card
 // width — single-player renders 3 cards across in a roster grid, so
@@ -454,7 +467,7 @@ function HandStrip({ cards, renderCard, activeCardId, revealedCardIds, entranceS
         const deckTranslateY = side === "sender"
           ? ENTRANCE_DECK_TRANSLATE_Y_TOP_PX
           : ENTRANCE_DECK_TRANSLATE_Y_BOTTOM_PX;
-        const slotTransform = `scale(${STRIP_CARD_SCALE})`;
+        const slotTransform = `scale(${STRIP_CARD_SCALE_CSS})`;
         const deckTransform =
           `translate(${deckTranslateX}px, ${deckTranslateY}px) scale(${HERO_CARD_SCALE})`;
 
@@ -543,6 +556,9 @@ function HandStrip({ cards, renderCard, activeCardId, revealedCardIds, entranceS
               aspectRatio: "329 / 478",
               flexShrink: 1,
               minWidth: 0,
+              // RD2.1: container query unit source for the inner card's
+              // scale (slotTransform reads 100cqw against this cell).
+              containerType: "inline-size",
               position: "relative",
               // overflow visible so card content in LAY/BEAT/TRAVEL
               // phases can render outside its strip cell (at the

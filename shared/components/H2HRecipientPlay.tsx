@@ -158,25 +158,32 @@ export const ARC_COMPOSITE_CROSSFADE_MS = 250;
 // Mini-cell dimensions — keyed to the imported HAND_STRIP_HEIGHT_PX
 // (single source of truth in H2HRevealScreen). Same Y/X footprint as
 // the reveal-arc HandStrip so the eye doesn't reflow when the play
-// surface hands off to the arc. The cell aspect ratio is the
-// AthleteCard portrait (329 × 478); width derives from height. Retired
-// the pre-RD2 hardcoded 55/80 literals — drift between the two surfaces
-// is no longer possible.
+// surface hands off to the arc.
+//
+// RD2.1 (2026-06-09): play strip cells now use the same
+// aspect-ratio + flexShrink:1 scaffold as the reveal/results cells
+// (was: explicit width MINI_CELL_WIDTH_PX + flexShrink:0). The fixed-
+// width model produced strip overflow on viewports where 6×55 + 5×4
+// (350) > strip wrapper width (~332 on iPhone 14 portrait); the
+// leftmost + rightmost cells got clipped by the top-strip wrapper's
+// overflow:hidden. Switching to aspect-ratio + flexShrink:1 lets the
+// cells shrink uniformly to fit, matching reveal/results behavior.
+// The inner card's scale now reads container queries (100cqw / 150px)
+// so it tracks the actual flex-resolved cell width with no overhang.
 const MINI_CELL_HEIGHT_PX = HAND_STRIP_HEIGHT_PX;
-const MINI_CELL_WIDTH_PX = Math.round((HAND_STRIP_HEIGHT_PX * 329) / 478);
 const STRIP_GAP_PX = 4;
 
-// Strip-scale factor — VALUES COPIED FROM H2HRevealScreen.tsx:215-218
-// (the working strip scaffold). Do not hand-derive: the natural-width
-// constant + transform-origin combo is layout-sensitive, and JSDOM
-// tests don't catch off-cell rendering caused by divergent values.
-// 150 (not 329) is the deliberate strip-pattern wrap width — the
-// renderer's intrinsic content sizes against 150 × 218, then a CSS
-// scale shrinks the rendered output to MINI_CELL_WIDTH_PX × MINI_CELL_HEIGHT_PX.
-// See the "Visual / layout changes" rule in CLAUDE.md.
+// Strip natural rendering size — the inner AthleteCard renders against
+// this 150 × 218.18 canvas, and the cell's container-query unit (cqw)
+// drives a transform: scale(calc(100cqw / 150px)) that lands the
+// scaled content at the cell's actual rendered width. 150 (not 329)
+// is the deliberate strip-pattern wrap width carried forward from the
+// pre-RD2.1 scaffold so AthleteCard's absolute-pixel font sizes
+// (16px salary, 22px FP, 32px initials) shrink uniformly with the
+// container — see H2HRevealScreen for the long-form rationale.
 const STRIP_CARD_NATURAL_WIDTH_PX = 150;
 const STRIP_CARD_NATURAL_HEIGHT_PX = (STRIP_CARD_NATURAL_WIDTH_PX * 478) / 329;
-const STRIP_CARD_SCALE = MINI_CELL_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX;
+const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 
 // Per piece 2a geometry (smoke artifact 2026-05-28): top strip
 // marginBottom 18 / hero marginBottom 4 / bottom strip marginBottom 0 /
@@ -282,9 +289,9 @@ export interface H2HRecipientPlayProps {
   calculateWinTier: (totalFp: number) => string;
   /** Pre-reveal strip card renderer (photo, salary, position, AVG).
    *  Used as the front face of every playing-mode strip cell. The
-   *  container applies STRIP_CARD_SCALE so a hero-sized renderer (e.g.
-   *  basketball's h2hArcRenderer with revealed=false) renders at strip
-   *  footprint. */
+   *  container applies a container-query-derived scale so a hero-sized
+   *  renderer (e.g. basketball's h2hArcRenderer with revealed=false)
+   *  renders at strip footprint. */
   renderPlayingStripCard: CardRenderer;
   /** Forwarded to the inner H2HRecipientReveal at handoff. */
   renderBattlefieldCard: CardRenderer;
@@ -1608,9 +1615,14 @@ function TopStripCell({
       data-h2h-play-top-cell={i}
       data-face-up="true"
       style={{
-        width: MINI_CELL_WIDTH_PX,
-        height: MINI_CELL_HEIGHT_PX,
-        flexShrink: 0,
+        // RD2.1: was width/height fixed + flexShrink:0 (produced strip
+        // overflow on narrow viewports). Now flex-shrinkable like the
+        // reveal/results cells; the inner front-face wrapper carries
+        // containerType so the scaled card tracks the resolved width.
+        height: "100%",
+        aspectRatio: "329 / 478",
+        flexShrink: 1,
+        minWidth: 0,
         position: "relative",
       }}
     >
@@ -1623,6 +1635,11 @@ function TopStripCell({
           borderRadius: 6,
           boxSizing: "border-box",
           overflow: "hidden",
+          // RD2.1: container-query source for the scaled card below.
+          // Placed on the bordered wrapper so 100cqw reads its content
+          // box (the area INSIDE the 1px border), making the scaled
+          // card fill exactly the visible area with no clip.
+          containerType: "inline-size",
         }}
       >
         {card ? (
@@ -1633,7 +1650,7 @@ function TopStripCell({
               left: 0,
               width: STRIP_CARD_NATURAL_WIDTH_PX,
               height: STRIP_CARD_NATURAL_HEIGHT_PX,
-              transform: `scale(${STRIP_CARD_SCALE})`,
+              transform: `scale(${STRIP_CARD_SCALE_CSS})`,
               transformOrigin: "top left",
               pointerEvents: "none",
             }}
@@ -1673,11 +1690,15 @@ function BottomStripCell({
         data-face-up="false"
         data-empty="true"
         style={{
-          width: MINI_CELL_WIDTH_PX,
-          height: MINI_CELL_HEIGHT_PX,
-          flexShrink: 0,
+          // RD2.1: flex-shrinkable to match the face-up cell scaffold;
+          // no card content here, so no containerType needed.
+          height: "100%",
+          aspectRatio: "329 / 478",
+          flexShrink: 1,
+          minWidth: 0,
           borderRadius: 6,
           border: "1px dashed rgba(255,255,255,0.18)",
+          boxSizing: "border-box",
           background: "transparent",
         }}
       />
@@ -1697,9 +1718,13 @@ function BottomStripCell({
       data-held={heldRing ? "true" : "false"}
       onClick={tappable ? onTap : undefined}
       style={{
-        width: MINI_CELL_WIDTH_PX,
-        height: MINI_CELL_HEIGHT_PX,
-        flexShrink: 0,
+        // RD2.1: flex-shrinkable (matches TopStripCell and the
+        // reveal/results cells); containerType is on the inner
+        // front-face wrapper below.
+        height: "100%",
+        aspectRatio: "329 / 478",
+        flexShrink: 1,
+        minWidth: 0,
         perspective: 600,
         cursor: tappable ? "pointer" : "default",
       }}
@@ -1751,6 +1776,13 @@ function BottomStripCell({
               borderRadius: 6,
               boxSizing: "border-box",
               overflow: "hidden",
+              // RD2.1: container-query source for the scaled card.
+              // The 1px (or 2px-when-held) border means cqw reads
+              // (cell-2) or (cell-4); scaled card sizes to that
+              // visible inner area exactly. Held-ring transition
+              // shifts the scale by 1px sub-pixel — imperceptible
+              // and arrives with the ring change visually.
+              containerType: "inline-size",
             }}
           >
             <div
@@ -1760,7 +1792,7 @@ function BottomStripCell({
                 left: 0,
                 width: STRIP_CARD_NATURAL_WIDTH_PX,
                 height: STRIP_CARD_NATURAL_HEIGHT_PX,
-                transform: `scale(${STRIP_CARD_SCALE})`,
+                transform: `scale(${STRIP_CARD_SCALE_CSS})`,
                 transformOrigin: "top left",
                 pointerEvents: "none",
               }}

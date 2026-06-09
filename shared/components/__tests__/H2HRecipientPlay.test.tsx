@@ -240,6 +240,64 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(bottomStrip!.style.height).toBe(`${HAND_STRIP_HEIGHT_PX}px`);
   });
 
+  it("RD2.1: top-strip cell carries containerType + inner uses cqw scale", () => {
+    // RD2.1 (2026-06-09): the inner card's scale must track the cell's
+    // flex-resolved width via container queries. Mechanism-wired proxy
+    // — the real-browser width===width gate runs in
+    // scripts/verify-rd21-strip-scaffold.mjs.
+    // The TopStripCell scaffold carries containerType on the inner
+    // front-face wrapper (not the outer cell), so cqw reads the
+    // border-inset content box. We assert presence of both the
+    // containerType wiring and the cqw transform.
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay
+        {...baseProps()}
+        challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })}
+      />
+    );
+    // Top-strip front-face wrapper carries containerType
+    const fronts = container.querySelectorAll('[data-h2h-play-top-front="true"]');
+    expect(fronts.length).toBe(6);
+    for (const front of Array.from(fronts)) {
+      const style = (front as HTMLElement).getAttribute("style") ?? "";
+      expect(style).toMatch(/container-type:\s*inline-size/);
+    }
+    // Inner scaled card uses calc(100cqw / 150px)
+    const innerWithTransform = container.querySelector(
+      '[data-h2h-play-top-front="true"] [style*="transform"]'
+    );
+    expect(innerWithTransform).not.toBeNull();
+    const innerStyle = (innerWithTransform as HTMLElement).getAttribute("style") ?? "";
+    expect(innerStyle).toMatch(/scale\(calc\(100cqw\s*\/\s*150px\)\)/);
+  });
+
+  it("RD2.1: outer cells use aspect-ratio + flexShrink:1 (no fixed width)", () => {
+    // RD2.1 lock — the play cells stop hardcoding width:55 + flexShrink:0
+    // (which produced strip overflow) and use the same flex-shrink
+    // aspect-ratio model as reveal/results so they shrink to fit the
+    // strip wrapper. Width-tracking depends on this.
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay
+        {...baseProps()}
+        challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })}
+      />
+    );
+    const topCells = container.querySelectorAll('[data-h2h-play-top-cell]');
+    const bottomEmpties = container.querySelectorAll('[data-h2h-play-bottom-cell][data-empty="true"]');
+    expect(topCells.length).toBe(6);
+    expect(bottomEmpties.length).toBe(6);
+    for (const cell of [...Array.from(topCells), ...Array.from(bottomEmpties)]) {
+      const style = (cell as HTMLElement).getAttribute("style") ?? "";
+      expect(style).toMatch(/aspect-ratio:\s*329\s*\/\s*478/);
+      expect(style).toMatch(/flex-shrink:\s*1/);
+      // No standalone `width: Npx` declaration (min-width: 0px is fine —
+      // the cell's width must derive from aspect-ratio, not a literal).
+      expect(style).not.toMatch(/(^|;\s*)width:\s*\d+px/);
+    }
+  });
+
   it("renders 6 empty placeholders on bottom strip at cardsLanded=0", () => {
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);

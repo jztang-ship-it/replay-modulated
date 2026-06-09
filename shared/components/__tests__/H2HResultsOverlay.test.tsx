@@ -854,3 +854,34 @@ describe("H2HResultsOverlay — RD2 unified-80 lock", () => {
     }
   });
 });
+
+describe("H2HResultsOverlay — RD2.1 scale-tracks-cell lock", () => {
+  // RD2.1 (2026-06-09): the inner card's scale is container-query
+  // derived (calc(100cqw / 150px)) so it tracks the flex-resolved cell
+  // width exactly — no 3px overhang, no card-back FP clip. Mechanism-
+  // wired proxy test (JSDOM doesn't compute layout, so the actual
+  // width===width assertion runs in scripts/verify-rd21-strip-scaffold
+  // .mjs against real Chromium + WebKit).
+  it("overlay cell carries containerType:inline-size + inner uses cqw scale", () => {
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 178.4)}
+        recipient={makeHand("You", 182.4)}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    const cells = container.querySelectorAll('[data-h2h-overlay-cell="true"]');
+    expect(cells.length).toBe(12); // 6 opponent + 6 user
+    for (const cell of Array.from(cells)) {
+      const style = (cell as HTMLElement).getAttribute("style") ?? "";
+      expect(style).toMatch(/container-type:\s*inline-size/);
+    }
+    const innerWithTransform = container.querySelector(
+      '[data-h2h-overlay-cell="true"] [style*="transform"]'
+    );
+    expect(innerWithTransform).not.toBeNull();
+    const innerStyle = (innerWithTransform as HTMLElement).getAttribute("style") ?? "";
+    expect(innerStyle).toMatch(/scale\(calc\(100cqw\s*\/\s*150px\)\)/);
+  });
+});

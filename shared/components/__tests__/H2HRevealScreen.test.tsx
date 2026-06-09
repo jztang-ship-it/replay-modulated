@@ -171,6 +171,34 @@ describe("H2HRevealScreen — static layout", () => {
     expect(recipientStrip!.querySelectorAll('[data-h2h-mini-cell="true"]').length).toBe(6);
   });
 
+  it("RD2.1: mini-cell carries containerType:inline-size + inner uses cqw-derived scale", () => {
+    // The RD2.1 lock: the inner card's scale tracks the cell's actual
+    // flex-resolved width via container queries (100cqw / 150px),
+    // instead of a fixed STRIP_CARD_SCALE derived from the natural
+    // aspect-correct width. The mechanism is value-agnostic — this
+    // test gates only that the wiring is in place. The real-browser
+    // width===width gate (scripts/verify-rd21-strip-scaffold.mjs)
+    // confirms the actual layout output.
+    const sender = makeHand();
+    const recipient = makeHand();
+    const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
+    const cells = container.querySelectorAll('[data-h2h-mini-cell="true"]');
+    expect(cells.length).toBe(12);
+    for (const cell of Array.from(cells)) {
+      const style = (cell as HTMLElement).getAttribute("style") ?? "";
+      expect(style).toMatch(/container-type:\s*inline-size/);
+    }
+    // The settled cell's inner card transform string uses calc(100cqw
+    // ...). JSDOM serializes computed style differently for transform,
+    // so we read the cell's first transform-carrying descendant.
+    const innerWithTransform = container.querySelector(
+      '[data-h2h-mini-cell="true"] [style*="transform"]'
+    );
+    expect(innerWithTransform).not.toBeNull();
+    const innerStyle = (innerWithTransform as HTMLElement).getAttribute("style") ?? "";
+    expect(innerStyle).toMatch(/scale\(calc\(100cqw\s*\/\s*150px\)\)/);
+  });
+
   it("shows the SWAP pill on non-held battlefield card", () => {
     const sender = makeHand({
       cards: [
