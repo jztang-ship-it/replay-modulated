@@ -1028,3 +1028,69 @@ Number-forward hero live; held-names supporting line; dare CTA; subline + stakes
 deleted; spoiler guards intact; HOLD badges intact; fresh-challenge glass clean of
 `"points"`; lock amended; full suite green; tri-sport build clean; branch committed; push
 held. **Then GATE-A.**
+
+## RD2 — shrink reveal hand strips ~50%: spec (2026-06-08)
+
+R2 surface (recipient reveal arc + the play-screen mini-cells that share its constant). RD2 is
+a **geometry-only** ticket. The shipped arc reads as three roughly co-equal bands — top strip,
+battlefield, bottom strip — which mutes the battlefield's hero status during the reveal climax.
+Halving `HAND_STRIP_HEIGHT_PX` cuts the strips to status-row proportions, restores the
+battlefield as the unambiguous hero, and preserves the strips' two jobs ("which six cards" +
+"reveal progress via dim-as-revealed") at the smaller size.
+
+**Geography.** `shared/components/H2HRevealScreen.tsx` (`HAND_STRIP_HEIGHT_PX` + the derived
+`STRIP_CARD_*` mini-card scale). `shared/components/H2HRecipientPlay.tsx` (the magic-80
+twin at ~`156` that today hand-syncs the play strips). Results overlay strips
+(`shared/components/H2HResultsOverlay.tsx`) are a **separate implementation that does NOT
+read `HAND_STRIP_HEIGHT_PX`** — RD1's shipped surface stays untouched. RD3's running-score
+behavior (`useH2HReveal` beats, running totals, settle-pause) is out of scope.
+
+**Lock amendment (companion in commit 1):** `docs/h2h-reveal-arc-design.md` "Layout decisions
+surfaced during phase 2 build" gets an "Amendment 2026-06-08 — RD2: hand strips halved
+(battlefield reinforced as the hero)" entry. Records the 80 → 40 anchor change, the ~48px
+legibility floor, the exported-constant rule, and the explicit out-of-scope list.
+
+### Decisions locked this session (John)
+- 80 → **40** is the target; **~48 is the legibility floor** — if 40 clips the
+  `AthleteCard` mini-content on glass, raise to the floor and re-glass; do not ship clipped
+  strips.
+- `HAND_STRIP_HEIGHT_PX` is **exported** from `H2HRevealScreen.tsx`; `H2HRecipientPlay.tsx`
+  **imports it** in place of the magic 80. Two surfaces, one source of truth.
+- Results overlay strips, battlefield card max-width, score rail, RD3 running-score behavior
+  — all untouched.
+
+### Implementation
+- **`H2HRevealScreen.tsx`:** `HAND_STRIP_HEIGHT_PX` 80 → 40. Export it. The existing
+  `STRIP_CARD_*` derivations (cell `aspectRatio: 329/478`, `STRIP_CARD_SCALE`) cascade
+  automatically — no math change needed.
+- **`H2HRecipientPlay.tsx`:** at ~`156`, replace the literal `80` with the imported
+  `HAND_STRIP_HEIGHT_PX`. Same import path the reveal screen uses for its own constants.
+- **No other component touched.** Battlefield card max-width, score column, rail widths,
+  midrail, zone gaps, safe-area padding, active-slot dim opacity — all unchanged.
+
+### Do NOT touch
+- Battlefield card max-width (the hero); score rail (rail widths, `ScoreCell`, delta).
+- **RD3 running-score behavior** — `useH2HReveal` beats, running totals, settle-pause are
+  RD3's territory, not RD2.
+- The **results overlay strips** — different code path; RD1's shipped surface is locked.
+
+### Tests
+- `H2HRevealScreen.test.tsx`: the strip-geometry assertion (~`126`) keyed to
+  `HAND_STRIP_HEIGHT_PX` updates to the new value. Add a gate that asserts strips still render
+  six cells and dim-as-revealed (active-slot dim) is intact.
+- `H2HRecipientPlay`: the mini-cell dimension test updates to assert the dimension is keyed to
+  the imported `HAND_STRIP_HEIGHT_PX` (not a magic literal). Add a gate that the import keeps
+  the two surfaces in sync.
+
+### Verification
+Shared touch → `bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**.
+**Glass MANDATORY** (animated): watch a full reveal at 390 / 360 / 320 and confirm (a) strips
+still legibly read as the six cards, (b) dim-as-revealed still reads, (c) battlefield + score
+race now clearly dominates, (d) no overflow on any viewport. **Also glass the play screen** —
+it shares the constant. If 40 clips the mini-card content, raise to the ~48 floor and re-glass.
+
+### Done =
+Reveal hand strips halved with their job intact (six cards + dim-progress); play strips shrink
+in lockstep via the exported constant; battlefield is the unambiguous hero; results overlay
+untouched; RD3 behavior untouched; lock amended; full suite green; tri-sport build clean; both
+reveal + play glass-confirmed; branch committed; push held.

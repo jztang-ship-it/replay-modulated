@@ -1800,6 +1800,44 @@ Result: hand-strip zones are framed glass panels (context); battlefield is open 
 - **Active-slot dim on hand-strip mini-cards (post-sixth-smoke amendment):** HandStrip takes an `activeSlotIndex` prop. The mini-cell whose slotIndex matches renders at opacity 0.35 (with a 200ms transition) — signaling "this card is currently in the battlefield, out of the hand." Cell stays in its slot (no layout shift); just the visual dim. Phase 3 (animation choreography) will drive activeSlotIndex dynamically as the reveal walks through matchups; phase 2 mirrors the static `battlefieldSlotIndex` (the same default slot the battlefield uses).
 - **Mock fixture types import directly from the H2H component (post-third-smoke amendment).** A prior iteration declared local `H2HMockHand` / `H2HMockCard` interfaces with a `playerName` field where the H2H component's `H2HHand` expected `displayName`. TypeScript structural-compatibility was lenient enough to let the mismatch through (`SENDER_HAND.displayName` arrived as `undefined`, the zone header rendered an empty cell — the "ROOKIE" tier label appeared where the player name should have been). Fix: the fixture now declares `SENDER_HAND: H2HHand` and `RECIPIENT_HAND: H2HHand` using the component's exported types directly. Any future field rename in the component immediately surfaces as a tsc error at the fixture site.
 
+### Amendment 2026-06-08 — RD2: hand strips halved (battlefield reinforced as the hero)
+
+`HAND_STRIP_HEIGHT_PX` lowered from **80** to **40** (cells follow via the existing
+`aspectRatio: 329/478` derivation: ~55px wide → ~28px wide; six cells × 28 + five gaps × 4 ≈
+188px, well under the 358px mobile content width). The strips' job — "show which six cards are
+on each side" + "dim as they're revealed" — is preserved at the smaller size; the battlefield
+hero pair now visually dominates without competition.
+
+**Reinforcement (not a new rule, restated):** battlefield is the hero; hand strips are
+subordinate context. The post-smoke lock above ("`HAND_STRIP_HEIGHT_PX = 100`, cells ~68×100,
+cap height so cells don't inflate on desktop") established the hierarchy. The pre-RD2 80px
+revision (the post-seventh-smoke amendment) tightened the mobile fit but didn't push the
+strips far enough below the battlefield. RD2 halves the anchor to make the gap obvious — the
+hero pair leads, the strips read as a status row.
+
+**Floor:** 40px is the design target. **~48px is the legibility floor** — if the AthleteCard
+content (initials placeholder, salary chip, FP figure) clips at 40px on glass, raise the
+constant to the floor and re-glass; do not ship clipped strips. Raising beyond ~48px would
+re-compete with the battlefield, so the upper bound stays tight.
+
+**Constant surface:** `HAND_STRIP_HEIGHT_PX` is exported from `H2HRevealScreen.tsx` and
+imported by `H2HRecipientPlay.tsx` so the play-screen mini-cells shrink in lockstep — the
+pre-RD2 magic `80` literal at `H2HRecipientPlay.tsx:~156` is retired. Two surfaces, one
+source of truth; the strips cannot drift apart again.
+
+**Out of scope (do not regress):** battlefield card max-width (`BATTLEFIELD_CARD_MAX_WIDTH =
+"min(145px, 32vw)"`), score-column width (`SCORE_COLUMN_WIDTH_PX = 80`), rail widths, the
+running-score behavior (RD3 owns the beats / running totals / settle-pause), and the results
+overlay strips — that surface is a separate implementation that does not read
+`HAND_STRIP_HEIGHT_PX`. RD2 is strip *geometry only*.
+
+- **Crossfade-delta (byte-identity no longer holds):** the reveal→results crossfade is no longer
+  byte-identical on Y. The reveal strip is now passive context at 40px; the results-overlay strip
+  stays 80px because it is a **tap target** (#7 tap-to-flip, ~44px minimum). The two strips serve
+  different jobs and cannot share a size — this is invalid-by-design, not an oversight. Glass-pending:
+  judge whether the 40↔80 transition pops; if so, the fix is an **RD3 strip-grow animation
+  (40→80 into the interactive results state)**, not a size-match. Deferred to RD3.
+
 ## What's not designed yet (followups)
 
 - Commentary engine: trigger taxonomy, bank shapes, silence rules.
