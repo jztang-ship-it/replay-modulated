@@ -1802,6 +1802,15 @@ Result: hand-strip zones are framed glass panels (context); battlefield is open 
 
 ### Amendment 2026-06-08 — RD2: hand strips halved (battlefield reinforced as the hero)
 
+> **Superseded 2026-06-08 (same day, post-glass) — see the "RD2 unified at 80px" amendment
+> immediately below.** Glass confirmed the predicted crossfade pop: a 40 → 80 jump at the
+> reveal→results boundary read as the layout breaking, not as a state change. The 40 target,
+> the ~48 legibility floor, the "battlefield gap obvious" framing, and the crossfade-delta
+> bullet at the bottom of this block are all withdrawn. The block is retained as history; the
+> active lock is unified 80px across hold/draw → play → reveal → results, results-referenced.
+> All numeric claims below (40, ~28-wide cells, ~188px footprint, ~48 floor) refer to the
+> superseded shrink and do not describe shipped geometry.
+
 `HAND_STRIP_HEIGHT_PX` lowered from **80** to **40** (cells follow via the existing
 `aspectRatio: 329/478` derivation: ~55px wide → ~28px wide; six cells × 28 + five gaps × 4 ≈
 188px, well under the 358px mobile content width). The strips' job — "show which six cards are
@@ -1831,12 +1840,62 @@ running-score behavior (RD3 owns the beats / running totals / settle-pause), and
 overlay strips — that surface is a separate implementation that does not read
 `HAND_STRIP_HEIGHT_PX`. RD2 is strip *geometry only*.
 
-- **Crossfade-delta (byte-identity no longer holds):** the reveal→results crossfade is no longer
-  byte-identical on Y. The reveal strip is now passive context at 40px; the results-overlay strip
-  stays 80px because it is a **tap target** (#7 tap-to-flip, ~44px minimum). The two strips serve
-  different jobs and cannot share a size — this is invalid-by-design, not an oversight. Glass-pending:
-  judge whether the 40↔80 transition pops; if so, the fix is an **RD3 strip-grow animation
-  (40→80 into the interactive results state)**, not a size-match. Deferred to RD3.
+- **Crossfade-delta (byte-identity no longer holds) — WITHDRAWN 2026-06-08 (same day,
+  post-glass):** the reasoning held under the 40 shrink — at reveal=40 vs results=80 the Y
+  delta was real and the RD3 strip-grow animation was the proposed follow-up. Glass invalidated
+  the premise: the 40↔80 jump read as the layout breaking, not as a state change. Unified-80
+  removes both the Y delta AND the need for any strip-grow animation; RD3 strip-grow is
+  **cancelled scope, not deferred**. Byte-identity holds again at reveal=results=80. See the
+  "RD2 unified at 80px" amendment below for the active lock.
+
+### Amendment 2026-06-08 — RD2 unified at 80px (results-referenced, supersedes the 40 shrink above)
+
+**Active lock.** `HAND_STRIP_HEIGHT_PX = 80` across **all four states** of the H2H surface:
+hold/draw → play → reveal → results. One shared constant, exported by `H2HRevealScreen.tsx`
+and imported by `H2HRecipientPlay.tsx` AND `H2HResultsOverlay.tsx`. Results is the canonical
+reference — its 80px tap target is the floor.
+
+**Why 80, not 40 or ~48:**
+- Results-overlay mini cells are #7 **tap targets** (tap-to-flip). Apple's ~44px hit-target
+  minimum is the floor for that surface; results was already shipped at 80 and glass-validated.
+- Reveal and play strips are **passive context** — no per-cell interaction — and could
+  technically read at any value ≥ legibility floor.
+- A split (reveal/play at 40, results at 80) means the reveal→results crossfade jumps the strip
+  height by 2×. Glass on the 40 build (RD2 commits `b7d68aa` + `63c67f8`, this branch) showed
+  the jump dominates the transition: it reads as the layout breaking, not as a state change.
+- The only values that *can* be shared across all four states are ≥ 44. Glass picked **80** —
+  results was already there, and matching it removes the jump without touching the shipped
+  results surface. 80 is the tap-valid, coherent choice.
+
+**What this changes vs the superseded 40 shrink:**
+- `HAND_STRIP_HEIGHT_PX` reverts 40 → 80 in `H2HRevealScreen.tsx`. The 40-target / ~48-floor
+  language is removed from the comment; the constant's contract is now "one mini-slot geometry
+  shared by every state of the H2H surface, results-referenced."
+- `H2HResultsOverlay.tsx`'s local `STRIP_HEIGHT_PX = 80` is **deleted** and replaced with an
+  import of `HAND_STRIP_HEIGHT_PX` from `H2HRevealScreen.tsx`. Value-preserving (80 → 80); the
+  point is the lock — results, reveal, and play now all read one constant, drift between them
+  is impossible.
+- `H2HRecipientPlay.tsx` already imports the constant (added in the superseded 40 commit). No
+  value change there — `MINI_CELL_HEIGHT_PX` follows the constant from 40 back up to 80.
+- The `H2HResultsOverlay.tsx:~507` "byte-identical on X only" comment from the 40 commit is
+  **reverted to byte-identical** (no axis qualifier needed at reveal=results=80). The comment
+  also notes the unified-constant source so a future reader doesn't reintroduce a local literal.
+
+**Battlefield-hero concern (the original RD2 motivation):** the 40 shrink was driven by the
+read that strips compete with the battlefield at 80. Glass on unified-80 says the competition
+read is acceptable given the tap-target floor on results — the unified anchor is the right
+trade. If the battlefield needs more weight later, the lever is the battlefield card max-width
+or a dimming treatment on idle strips, NOT a per-state strip-height split. The split path is
+closed.
+
+**RD3 strip-grow animation (40 → 80 into results) is cancelled scope.** It existed only to
+mask the Y delta the 40 shrink created. Unified-80 removes the delta, so the animation is
+removed too. Do not reintroduce it anywhere.
+
+**Out of scope (unchanged from the superseded block):** battlefield card max-width, score-rail
+widths, RD3 running-score behavior (`useH2HReveal` beats, running totals, settle-pause).
+Results overlay **behavior and visuals are unchanged** — only its constant *source* changes
+(from a local 80 to the imported `HAND_STRIP_HEIGHT_PX`, which is also 80).
 
 ## What's not designed yet (followups)
 

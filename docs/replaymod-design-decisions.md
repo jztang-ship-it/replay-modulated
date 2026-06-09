@@ -1094,3 +1094,69 @@ Reveal hand strips halved with their job intact (six cards + dim-progress); play
 in lockstep via the exported constant; battlefield is the unambiguous hero; results overlay
 untouched; RD3 behavior untouched; lock amended; full suite green; tri-sport build clean; both
 reveal + play glass-confirmed; branch committed; push held.
+
+## Update 2026-06-08 — RD2 superseded: unified 80px mini-slot (results-referenced)
+
+The 40 shrink shipped above is **superseded same-day, post-glass**. Glass on the 40 build
+(commits `b7d68aa` docs + `63c67f8` code, this branch) confirmed the predicted reveal→results
+crossfade pop: at reveal=40 vs results=80, the strip height jumps 2× at the transition and
+reads as the layout breaking, not as a state change. The split was invalid.
+
+**Revised decision:** lock **one** mini-slot geometry at **80px** across **all four states** of
+the H2H surface — hold/draw → play → reveal → results — via a single shared constant
+exported by `H2HRevealScreen.tsx` and imported by both `H2HRecipientPlay.tsx` AND
+`H2HResultsOverlay.tsx`. **Results is the canonical reference.**
+
+### Why 80 (so a future session doesn't re-shrink)
+- Results-overlay mini cells are #7 **tap targets** (tap-to-flip). Apple's ~44px hit-target
+  minimum is the floor for that surface. Results was already shipped at 80 and
+  glass-validated; it cannot drop to 40 without breaking the tap UX.
+- Reveal and play strips are **passive context** — no per-cell interaction — and could read at
+  any value ≥ legibility floor.
+- Any value < ~44 cannot be shared across all four states, so any "shrink reveal/play but
+  leave results alone" path reintroduces the crossfade pop.
+- The only values that *can* be shared across all four states are ≥ 44. Glass picked 80 —
+  results was already there, matching it removes the jump without touching the shipped
+  results surface. 80 is the tap-valid, coherent choice.
+
+### What changes vs the superseded 40 shrink
+- `HAND_STRIP_HEIGHT_PX` reverts 40 → 80 in `H2HRevealScreen.tsx`. The 40-target / ~48-floor
+  language is removed; the constant's contract becomes "one mini-slot geometry shared by
+  every state of the H2H surface, results-referenced."
+- `H2HResultsOverlay.tsx` deletes its local `STRIP_HEIGHT_PX = 80` and imports
+  `HAND_STRIP_HEIGHT_PX` from `H2HRevealScreen.tsx`. Value-preserving (80 → 80) — the point
+  is the lock. All three surfaces now read one constant; drift between them is impossible.
+- `H2HRecipientPlay.tsx` is unchanged in code — it already imports the constant from the
+  superseded 40 commit. Its `MINI_CELL_HEIGHT_PX` follows the constant from 40 back up to 80.
+- The `H2HResultsOverlay.tsx:~507` comment from the 40 commit ("byte-identical on X only;
+  Y-identity broken by design") reverts to **byte-identical**. At reveal=results=80 the
+  Y delta is gone; no axis qualifier is needed.
+
+### Scope removed
+- The **RD3 strip-grow animation** (40 → 80 into the interactive results state) existed only
+  to mask the Y delta the 40 shrink created. Unified-80 removes the delta. **Cancelled scope,
+  not deferred.** Do not reintroduce.
+- The "battlefield is the unambiguous hero" framing from the superseded RD2 is downgraded to
+  "battlefield is the hero, strips are subordinate context at the tap-target floor." The
+  battlefield-weighting lever, if needed later, is the battlefield card max-width or an
+  idle-strip dimming treatment — NOT a per-state strip-height split.
+
+### Tests
+- Existing coupling tests added in the 40 commit are **value-agnostic** (strip height ===
+  `HAND_STRIP_HEIGHT_PX`); they pass unchanged at 80. If any test asserts the literal 40 or
+  "half the old" framing, remove that assertion — the constant is the only source of truth.
+- ADD: `H2HResultsOverlay` strip height === the imported `HAND_STRIP_HEIGHT_PX`. This is the
+  lock test — proves all three surfaces are unified through the same constant.
+
+### Verification
+`bash scripts/build-vercel.sh` (tri-sport) + full root `npm test`.
+**Glass MANDATORY:** all four states — hold/draw, play, reveal, AND results — show the same
+mini-slot size with NO cross-state jump at the reveal→results transition; results looks
+unchanged from its shipped form; #7 tap-to-flip still works on the results strips.
+
+### Done =
+One shared 80px mini-slot constant across hold/draw → play → reveal → results; results overlay
+sources the shared constant (no visual change); crossfade byte-identity restored on both X and
+Y; RD3 strip-grow scope removed; coupling tests green (including the new results-overlay lock);
+full suite green; tri-sport build clean; all four states glass-confirmed with no jump; commits
+added on top of the RD2 branch; push held.
