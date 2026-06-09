@@ -950,213 +950,276 @@ output proof (the "−20.1 FP" hero proves the engine + surface together).
 
 ## RD5 — landing: direct score challenge (number-forward): spec (2026-06-08)
 
-R1 surface (recipient landing). After RD1 locked the universal challenge hierarchy
-**Score → Outcome → Decision** on the results page, the **landing** must lead with **Score** —
-there is no outcome to lead with yet, and the challenger's total IS the challenge. Today's
-landing leads with a stakes-WORD (`UNBEATEN` / `BUSTED` / etc.) and hides the FP figure. RD5
-reverses that: render the target score as the deterministic hero, keep names + HOLD treatment
-intact, ask the dare directly. Closes the comprehension gap GATE-A is for.
+**Branch off `fix/rd1-rivalry-results`** (carries RD0's engine + RD1; RD5's surface is disjoint
+from both — landing take-engine, not results overlay or `chadChallenge.ts`). Surface: **R1**
+(Accept Challenge) — `ChallengeTakeCardLanding.tsx` + `shared/challengeTakeCard/` take-engine +
+a lock-doc amendment. **NOT copy-only** (John) — a small take-engine + lock update.
 
-**Geography.** Hero / supporting line / CTA in `shared/components/ChallengeTakeCardLanding.tsx`
-(hero render ~`426`; `usp-subheadline` ~`471`; `evidence-line` ~`510`/`522`). Take-engine
-copy at `shared/challengeTakeCard/generateChallengeTakeCard.ts` (`buildPlainStakes` ~`223`,
-`evidenceLine` composition ~`348`) and `shared/challengeTakeCard/templates.ts` (the dormant
-target-forward template `"{targetScore.toFixed(1)} FP to beat"` already exists at ~`374`).
+**Decision (John): number-forward. Reverse the Phase-2d style bet; keep the spoiler guards.**
+The locked FP-spoiler rule bundled two things; RD5 splits them:
+- **KEEP (real spoiler protection):** no per-card FP chip; no recipient-outcome reference; no
+  reveal-result spoiler.
+- **REVERSE (Phase-2d style bet):** the "NO FP number ever appears" ban (templates.ts:221) — the
+  **challenger's total is not a spoiler, it is the challenge.** Hiding it hides the reason to
+  play. Show it as the hero.
 
-**Lock amendment (companion in commit 1).** `docs/challenge-landing-v2-phase2d-plain-stakes-anchor-takes-lock.md`
-splits the FP-spoiler rule. Per-card FP / outcome / reveal spoiler bans STAY. The "no FP
-number ever appears" style is REVERSED for the **challenger's total only** — that total IS
-the challenge, not a spoiler.
+### Target copy (locked)
+Deterministic, not LLM-narrative — which also moots the headline points-leak (a templated
+`FP` string cannot say "points"). Data: `challengerName = data.challenger_name`,
+`targetScore = data.target_score`, held names from the `wasHeld === true` filter.
 
-### Decisions locked this session (John)
-- Hero on the landing is **deterministic, templated, and number-forward** — replaces the
-  authored-narrative hero (`data.authored_headline || takeCard.take`) so the landing cannot
-  inherit a stale or pre-RD0 leak.
-- Per-card FP / recipient outcome / reveal spoiler bans remain absolute.
-- Stakes words (`STAKES_BUSTED` / `STAKES_UNBEATEN` / `STAKES_MISS_*` / etc.) may stay as
-  flavor; they may NOT serve as the number substitute on the landing lead.
-- Level-4 ("because he held Curry") still deferred — RD5 ships Score + Held names + Dare.
+```
+JOHN SCORED 184.9 FP        ← hero: {challengerName} SCORED {targetScore.toFixed(1)} FP
+Held: Beal, LaVine          ← supporting: "Held: {heldNames}"  (names only, NO per-card FP)
+Can you beat him?           ← dare / CTA
+```
+No-name fallback: hero `THE SCORE TO BEAT — {targetScore} FP`; dare `Can you beat it?`.
 
-### Copy (locked)
-- **Hero:**
-  - Named: `{challengerName} SCORED {targetScore.toFixed(1)} FP`
-  - No name: `THE SCORE TO BEAT — {targetScore.toFixed(1)} FP`
-  - Templated FP string — by construction it CANNOT emit "points." Hard contract.
-- **Supporting line:** `Held: {heldNames}` (names only; NO per-card FP, NO outcome word).
-- **CTA / dare:** `Can you beat him?` (no name → `Can you beat it?`). Replaces the
-  `PROVE YOUR LINE` / `finish the job` family.
+**Delete:** the USP subline "Same starting hand. Different decisions." (`usp-subheadline`); the
+stakes-word-only lead ("A NUMBER ON THE BOARD. BEAT IT." / "CAME UP SHORT" as the number-hiding
+framing); the authored LLM narrative as the hero ("NINE POINTS SHORT…"). **Keep:** HOLD badges +
+bright/dim card treatment; no per-card FP chip; no outcome/reveal spoilers.
 
-### Implementation
-- **Hero** (`ChallengeTakeCardLanding.tsx`): replace the `data.authored_headline ||
-  takeCard.take || "THIS IS THE LINE."` render with the templated string above.
-- **Supporting line:** new element that lists held-card names (the existing
-  `wasHeld === true` filter at ~`360` already produces them); NO per-card FP chips.
-- **Delete:** the `usp-subheadline` element ("Same starting hand. Different decisions."); the
-  stakes-word number-hiding lead path (`evidenceLine` rendering of `buildPlainStakes` output
-  on the landing); the authored-narrative hero path on the landing.
-- **CTA:** replace the `PROVE YOUR LINE` family with the dare CTA.
-- **Take-engine:** promote the `"{targetScore.toFixed(1)} FP to beat"` template in
-  `templates.ts` (~`374`) as the primary `evidenceLine` path; stakes words may remain as
-  flavor downstream but never as the number substitute.
+### Points-leak = RD0 verification spillover (fold the fix-verification into RD5)
+Image-1's "NINE POINTS SHORT… SEVENTY-FIVE ON THE BOARD" headline is `authored_headline` from
+`api/headline.ts` — **RD0's engine** (`buildVoiceContract` consumer), a landing consumer RD0
+never glassed. RD5 replaces the hero with the deterministic FP template, so the leak can't
+appear in the landing hero. **But the bug class is RD0's:** fresh challenge headlines from
+`api/headline.ts` must say **FP** (not "points") for fantasy score/gap language. RD5 verifies
+this visually on a freshly-created challenge (the stored headline in the dev server may be a
+stale pre-RD0 seed — create a new one to disambiguate). If fresh output still leaks "points,"
+that's a small **RD0 follow-up** in the engine (contract/typing), surfaced from here — not an
+RD5 code change.
 
-### Do NOT touch
-- Spoiler guards: NO per-card FP chip on the landing; NO recipient-outcome / reveal spoiler.
-- HOLD badges + bright/dim card treatment stay.
-- `api/headline.ts` is RD0's engine — NOT edited here. If a fresh authored output still leaks
-  `"points"` for an FP gap, surface as an RD0 follow-up; do not patch from inside RD5.
-- `authored_headline` is stored at create time, so a running dev server may show a stale
-  pre-RD0 seed — verification MUST use a FRESH challenge.
+### Lock-doc amendment (doc-before-code)
+Amend `docs/challenge-landing-v2-phase2d-plain-stakes-anchor-takes-lock.md`: split the
+FP-spoiler rule into (a) spoiler protection — RETAINED (per-card FP + outcome/reveal), and
+(b) the "no FP number" style — REVERSED for the challenger's total. Record the rationale: the
+total-to-beat is the challenge, not a spoiler; the hierarchy (Score leads on R1) governs.
+
+### Implementation surface
+- `shared/challengeTakeCard/templates.ts` + `generateChallengeTakeCard.ts`: promote the
+  targetScore-forward output (the dormant `"{targetScore} FP to beat"` templates already exist);
+  retire stakes-word-only as the number-hiding lead. Stakes words may survive as flavor, never
+  as the substitute for the number.
+- `ChallengeTakeCardLanding.tsx`: hero = score block, supporting = held names, CTA = dare;
+  delete `usp-subheadline`; demote/remove the authored-narrative hero.
+- `api/headline.ts`: verification only (RD0 spillover); fix only if fresh output still leaks.
 
 ### Tests
-- `ChallengeTakeCardLanding.test.tsx`: the `usp-subheadline` assertions (~`151`/`160`/`813`/
-  `1096`) and `evidence-line` stakes assertions (~`325`/`334`) move to the score-forward
-  structure.
-- ADD: hero = `{name} SCORED {N} FP`; held-names render; CTA is the dare; NO per-card FP
-  anywhere; NO `"points"` string for an FP figure.
-- Take-engine: targetScore-forward output path is exercised at the generator level.
+Update `ChallengeTakeCardLanding.test.tsx` (it pins the deletions): the `usp-subheadline`
+"Same starting hand" assertions (151/160/813/1096) and the `evidence-line` stakes assertions
+(325/334) change to the score-forward structure. ADD: hero renders `{name} SCORED {N} FP`;
+held names render; CTA is the dare; assert NO per-card FP present; assert NO "points" in the
+headline for FP. Take-engine tests for the targetScore-forward path.
+
+### Acceptance criteria (John)
+1. Fresh landing shows target score as **FP**, not hidden behind stakes words.
+2. No per-card FP appears.
+3. No recipient reveal spoiler appears.
+4. Authored headline (fresh) has no "points" leak for fantasy score/gap language.
+5. Existing HOLD badges remain.
+6. GATE-A tests number-forward vs stakes-word comprehension after this ships.
 
 ### Verification
-Shared touch → `bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**.
-**Glass MANDATORY**: open a **FRESH** challenge (do not reuse the stale dev-server seed).
-Confirm (a) hero shows `{name} SCORED {N} FP`, (b) `Held: …` names with no per-card FP,
-(c) dare CTA, (d) NO `"points"` anywhere for an FP figure, (e) HOLD badges intact, (f) no
-reveal spoiler. If fresh authored output still says `"points"` for an FP gap, that is the RD0
-follow-up — surface it, do not patch the engine inside RD5.
+`bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**. **Glass MANDATORY** —
+copy + layout change on a live surface; **create a fresh challenge** to verify both the new
+score-forward hero and the authored-headline FP-cleanliness (criterion 4). Push held.
 
-### Done =
-Number-forward hero live; held-names supporting line; dare CTA; subline + stakes-word lead
-deleted; spoiler guards intact; HOLD badges intact; fresh-challenge glass clean of
-`"points"`; lock amended; full suite green; tri-sport build clean; branch committed; push
-held. **Then GATE-A.**
+### RD5 follow-up (deferred) — decision-led landing (GATE-A to settle)
+
+RD5 shipped number-forward (`{name} SCORED {N} FP` hero); glass 2026-06-08 confirmed it's
+**clear but not compelling** — answers what/who/what-to-do, underserves "why should I care."
+Diagnosis (John): the bug isn't "narrative was removed," it's **"consequence was removed."**
+The score is the scorecard; the **held decision is the reason**, and the decision is Replay's
+unique asset (cf. 82-0 — the roster is the story). DEFERRED: do NOT rebuild RD5 now; finish the
+build sequence, settle here at the end via GATE-A.
+
+Proposed revision (element reorder of what already renders, not new narrative):
+- Hero → the **decision**, factual: `JOHN HELD HARDEN AND BEAL.` (promoted above the score)
+- Subhead → score: `170.9 FP` · Challenge → `Can you do better?` · CTA → `Accept Challenge`
+
+**Revises two locked items — reconcile, don't silently override:**
+- Challenge-hierarchy R1 application ("Score leads on R1") → "**Decision leads on R1**, Score is
+  subhead." R3 still leads with Outcome (unchanged) — R1/R3 heroes differ by design (pre-play =
+  sender's decision is the provocation; post-play = outcome is the payload).
+- RD5 "direct score, not accusation" → partially walked back. NOTE the landed hero
+  (`JOHN HELD HARDEN AND BEAL`) is a factual decision-*statement*, not an evaluation, so the
+  "don't make them judge the sender's decision without context" principle still holds. Open
+  dial: **charge level** — neutral ("held Harden and Beal") vs loaded ("Harden cost John the
+  win" / illustrative A/B/C).
+
+**GATE-A settles it (now an A/B):** test shipped number-forward baseline vs decision-led variant
+(+ charge level) for **motivation**, not just comprehension. Per the project's own principle —
+the builder is the least reliable judge of stranger motivation — the current conviction is a
+hypothesis, decided by the 10-fan test, not a second gut call. Build the winner as RD5.1.
+
+#### Update 2026-06-08 (post-stimulus review) — B adopted as direction
+
+**Decision (John): adopt B (decision-led) as the landing direction.** Supersedes number-forward
+(A) as the target; A stays the *shipped* baseline until the end-of-sequence headline refinement
+(RD5.1). Stronger rationale than the original spec: decision-first is **on-moat** — Replay's moat
+is "same roster, different decisions," and B is the only version that puts the *decision* (the
+unique asset) in the hero. A reports the outcome; B makes the recipient run the decision in their
+own head ("would I have held Harden?") before clicking — the challenge starts pre-click.
+
+**Target refinement (the ceiling, not the floor):** decision **+ consequence verb**, e.g.
+`JOHN TRUSTED / BET ON / RODE WITH HARDEN AND BEAL. / 170.9 FP`. First line must trigger
+"would I have made that call?" Factual "HELD" (current B) is better than A but is still
+*reporting*; the verb adds conviction/stakes.
+
+**CHOKE-badge contradiction (new sub-item, resolve in RD5.1):** "HELD … + CHOKE + 170.9" reads
+incoherent to a stranger (choke or not?). A masked it; B surfaces it. Same fix as the refinement
+— a consequence verb makes the badge *the story* ("…THEY CHOKED.") instead of contradicting it.
+Do not ship the decision-led headline with a bare trigger badge that the copy doesn't explain.
+
+**GATE-A — repointed (recommendation, pending John's nod; NOT yet locked):** B is chosen, so
+GATE-A is no longer A-vs-B. Its still-open jobs: (1) does decision-led actually make cold fans
+lean in (the motivation gate on the *expensive* reveal tickets), (2) consequence-verb charge
+level (bare "HELD" vs "TRUSTED…"). The build-gut chose the direction; the gate still owes the
+stranger-motivation proof.
+
+**Process flag:** proceeding to build before running the gate trades hook-validation for
+momentum. Mitigation on the table: let RD2 proceed (single-constant strip shrink, correct on its
+own merits) while **RD3/RD4 wait for GATE-A**, run in parallel against B.
 
 ## RD2 — shrink reveal hand strips ~50%: spec (2026-06-08)
 
-R2 surface (recipient reveal arc + the play-screen mini-cells that share its constant). RD2 is
-a **geometry-only** ticket. The shipped arc reads as three roughly co-equal bands — top strip,
-battlefield, bottom strip — which mutes the battlefield's hero status during the reveal climax.
-Halving `HAND_STRIP_HEIGHT_PX` cuts the strips to status-row proportions, restores the
-battlefield as the unambiguous hero, and preserves the strips' two jobs ("which six cards" +
-"reveal progress via dim-as-revealed") at the smaller size.
+Smallest reveal ticket. **RD2 proceeds now; RD3/RD4 wait for GATE-A** (per the split — RD2 is
+correct on its own merits regardless of the hook). Branch off the latest landed tip. Surface:
+**R2** (reveal) — `H2HRevealScreen.tsx` (+ `H2HRecipientPlay.tsx`, see cross-surface) + a
+reveal-arc lock amendment. Guardrail: understandability (de-emphasize the supporting visual so
+the score race is the unambiguous hero).
 
-**Geography.** `shared/components/H2HRevealScreen.tsx` (`HAND_STRIP_HEIGHT_PX` + the derived
-`STRIP_CARD_*` mini-card scale). `shared/components/H2HRecipientPlay.tsx` (the magic-80
-twin at ~`156` that today hand-syncs the play strips). Results overlay strips
-(`shared/components/H2HResultsOverlay.tsx`) are a **separate implementation that does NOT
-read `HAND_STRIP_HEIGHT_PX`** — RD1's shipped surface stays untouched. RD3's running-score
-behavior (`useH2HReveal` beats, running totals, settle-pause) is out of scope.
+**Decision (John):** "the tracker" = the **top/bottom small-card hand strips** during the
+reveal — NOT the battlefield, NOT the score rail. Shrink ~80px → ~half so they become supporting
+context, not a visual co-hero. **Preserve their job:** show which six-card hand is being revealed;
+show reveal progress (dim-as-revealed); don't compete with the central card/running-score race.
 
-**Lock amendment (companion in commit 1):** `docs/h2h-reveal-arc-design.md` "Layout decisions
-surfaced during phase 2 build" gets an "Amendment 2026-06-08 — RD2: hand strips halved
-(battlefield reinforced as the hero)" entry. Records the 80 → 40 anchor change, the ~48px
-legibility floor, the exported-constant rule, and the explicit out-of-scope list.
-
-### Decisions locked this session (John)
-- 80 → **40** is the target; **~48 is the legibility floor** — if 40 clips the
-  `AthleteCard` mini-content on glass, raise to the floor and re-glass; do not ship clipped
-  strips.
-- `HAND_STRIP_HEIGHT_PX` is **exported** from `H2HRevealScreen.tsx`; `H2HRecipientPlay.tsx`
-  **imports it** in place of the magic 80. Two surfaces, one source of truth.
-- Results overlay strips, battlefield card max-width, score rail, RD3 running-score behavior
-  — all untouched.
+### Recon
+- `HAND_STRIP_HEIGHT_PX = 80` — local const in `H2HRevealScreen.tsx:217`; cascades to the strip
+  card scale (`STRIP_CARD_DISPLAY_WIDTH_PX` :239) and the cell height (:403). Halving it
+  auto-rescales the mini-cards.
+- **Results overlay strips are a SEPARATE implementation (own constant) — RD1's shipped surface
+  is NOT affected.** Confirmed.
+- **`H2HRecipientPlay.tsx:156` hand-syncs its mini-cells to "80 (matches HAND_STRIP_HEIGHT_PX)"**
+  via comment, not import — a magic-number twin. If only the reveal changes, play drifts.
 
 ### Implementation
-- **`H2HRevealScreen.tsx`:** `HAND_STRIP_HEIGHT_PX` 80 → 40. Export it. The existing
-  `STRIP_CARD_*` derivations (cell `aspectRatio: 329/478`, `STRIP_CARD_SCALE`) cascade
-  automatically — no math change needed.
-- **`H2HRecipientPlay.tsx`:** at ~`156`, replace the literal `80` with the imported
-  `HAND_STRIP_HEIGHT_PX`. Same import path the reveal screen uses for its own constants.
-- **No other component touched.** Battlefield card max-width, score column, rail widths,
-  midrail, zone gaps, safe-area padding, active-slot dim opacity — all unchanged.
+- `H2HRevealScreen.tsx`: `HAND_STRIP_HEIGHT_PX` 80 → **~40** (start at 40; **glass-confirm the
+  mini-cards still read as the six cards + show dim-progress**; if 40 clips the card content,
+  floor at ~48 — "roughly half" with a legibility floor). Derived scale follows automatically.
+- **Export `HAND_STRIP_HEIGHT_PX`; `H2HRecipientPlay` imports it** (remove the hand-synced magic
+  80) so play strips shrink in lockstep and the two surfaces can't drift again. (Minimal-scope
+  alternative: update both numbers by hand — but the export is the drift-proof fix.)
+
+### Lock amendment (doc-before-code)
+Amend `docs/h2h-reveal-arc-design.md` "Phase 2 integration anchors": the strip-height anchor
+moves from ~80/90 to **~half**; reinforce the hierarchy rule (strips subordinate to the
+battlefield) and record that the strips' *job* (which-cards + reveal progress) is preserved at
+the smaller size.
 
 ### Do NOT touch
-- Battlefield card max-width (the hero); score rail (rail widths, `ScoreCell`, delta).
-- **RD3 running-score behavior** — `useH2HReveal` beats, running totals, settle-pause are
-  RD3's territory, not RD2.
-- The **results overlay strips** — different code path; RD1's shipped surface is locked.
+Battlefield card max-width (the hero); the score rail (rail widths, `ScoreCell`, delta readout);
+**RD3 running-score behavior** (`useH2HReveal` beats, running totals, settle-pause) — RD2 is
+geometry-of-strips only; the live YOU/JOHN/diff race is RD3; the results overlay strips.
 
 ### Tests
-- `H2HRevealScreen.test.tsx`: the strip-geometry assertion (~`126`) keyed to
-  `HAND_STRIP_HEIGHT_PX` updates to the new value. Add a gate that asserts strips still render
-  six cells and dim-as-revealed (active-slot dim) is intact.
-- `H2HRecipientPlay`: the mini-cell dimension test updates to assert the dimension is keyed to
-  the imported `HAND_STRIP_HEIGHT_PX` (not a magic literal). Add a gate that the import keeps
-  the two surfaces in sync.
+`H2HRevealScreen.test.tsx` (asserts strip geometry ~:126 via `HAND_STRIP_HEIGHT_PX`);
+`H2HRecipientPlay` mini-cell dimension test. Assert: strips still render 6 cells; dim-as-revealed
+behavior intact; the new height is ~half the old.
 
-### Verification
-Shared touch → `bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**.
-**Glass MANDATORY** (animated): watch a full reveal at 390 / 360 / 320 and confirm (a) strips
-still legibly read as the six cards, (b) dim-as-revealed still reads, (c) battlefield + score
-race now clearly dominates, (d) no overflow on any viewport. **Also glass the play screen** —
-it shares the constant. If 40 clips the mini-card content, raise to the ~48 floor and re-glass.
+### Verify
+`bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**. **Glass MANDATORY** —
+animated surface: watch a FULL reveal and confirm (a) strips still legibly show the six cards,
+(b) dim-progress still reads, (c) the battlefield/score-race now visually dominates, (d) no
+overflow; **also check the play screen** (shares the constant). Push held.
 
-### Done =
-Reveal hand strips halved with their job intact (six cards + dim-progress); play strips shrink
-in lockstep via the exported constant; battlefield is the unambiguous hero; results overlay
-untouched; RD3 behavior untouched; lock amended; full suite green; tri-sport build clean; both
-reveal + play glass-confirmed; branch committed; push held.
+---
 
-## Update 2026-06-08 — RD2 superseded: unified 80px mini-slot (results-referenced)
+### GATE-A — repointed to 3-arm copy-motivation test (John, 2026-06-08)
 
-The 40 shrink shipped above is **superseded same-day, post-glass**. Glass on the 40 build
-(commits `b7d68aa` docs + `63c67f8` code, this branch) confirmed the predicted reveal→results
-crossfade pop: at reveal=40 vs results=80, the strip height jumps 2× at the transition and
-reads as the layout breaking, not as a state change. The split was invalid.
+No longer A-vs-B. Question: **does decision-led + consequence copy make strangers want to click?**
+Three arms (one screen per person; same challenge; copy is the only variable):
+- **(1) Factual decision-led:** `JOHN HELD HARDEN AND BEAL.`
+- **(2) Decision + consequence:** `JOHN TRUSTED HARDEN AND BEAL. THEY CHOKED.` — resolves the
+  CHOKE badge by making it the story. **John's bet to win.**
+- **(3) Number-forward (control, = shipped):** `JOHN SCORED 170.9 FP.`
 
-**Revised decision:** lock **one** mini-slot geometry at **80px** across **all four states** of
-the H2H surface — hold/draw → play → reveal → results — via a single shared constant
-exported by `H2HRevealScreen.tsx` and imported by both `H2HRecipientPlay.tsx` AND
-`H2HResultsOverlay.tsx`. **Results is the canonical reference.**
+(Note: these (1)/(2)/(3) are NOT the earlier stimulus A/B labels.) Gate function preserved: if
+NONE motivate → CONCERN/FAIL → pause RD3/RD4. With 3 arms, run **~15 fans (5/arm)** to keep each
+cell at 5; still a directional read, not powered. Winner → built as RD5.1 (end of sequence).
 
-### Why 80 (so a future session doesn't re-shrink)
-- Results-overlay mini cells are #7 **tap targets** (tap-to-flip). Apple's ~44px hit-target
-  minimum is the floor for that surface. Results was already shipped at 80 and
-  glass-validated; it cannot drop to 40 without breaking the tap UX.
-- Reveal and play strips are **passive context** — no per-cell interaction — and could read at
-  any value ≥ legibility floor.
-- Any value < ~44 cannot be shared across all four states, so any "shrink reveal/play but
-  leave results alone" path reintroduces the crossfade pop.
-- The only values that *can* be shared across all four states are ≥ 44. Glass picked 80 —
-  results was already there, matching it removes the jump without touching the shipped
-  results surface. 80 is the tap-valid, coherent choice.
+#### Update 2026-06-08 — RD2 superseded: unify mini-slot geometry (results-referenced, 80px)
 
-### What changes vs the superseded 40 shrink
-- `HAND_STRIP_HEIGHT_PX` reverts 40 → 80 in `H2HRevealScreen.tsx`. The 40-target / ~48-floor
-  language is removed; the constant's contract becomes "one mini-slot geometry shared by
-  every state of the H2H surface, results-referenced."
-- `H2HResultsOverlay.tsx` deletes its local `STRIP_HEIGHT_PX = 80` and imports
-  `HAND_STRIP_HEIGHT_PX` from `H2HRevealScreen.tsx`. Value-preserving (80 → 80) — the point
-  is the lock. All three surfaces now read one constant; drift between them is impossible.
-- `H2HRecipientPlay.tsx` is unchanged in code — it already imports the constant from the
-  superseded 40 commit. Its `MINI_CELL_HEIGHT_PX` follows the constant from 40 back up to 80.
-- The `H2HResultsOverlay.tsx:~507` comment from the 40 commit ("byte-identical on X only;
-  Y-identity broken by design") reverts to **byte-identical**. At reveal=results=80 the
-  Y delta is gone; no axis qualifier is needed.
+Glass of RD2 (reveal/play 40 / results 80) confirmed the cross-state size shift is obvious and
+violates the "single coherent surface" lock (one visual board from first Deal tap through reveal).
+**Decision (John): do NOT animate the jump — eliminate it.** Lock ONE mini-slot geometry across
+hold/draw → play → reveal → results, **results-referenced at 80px** (results proportions read best
+on glass; results strips are #7 tap targets at the ~44px floor, so 80 is the tap-valid choice too
+— this is why RD2's 40 could never be the unified value).
 
-### Scope removed
-- The **RD3 strip-grow animation** (40 → 80 into the interactive results state) existed only
-  to mask the Y delta the 40 shrink created. Unified-80 removes the delta. **Cancelled scope,
-  not deferred.** Do not reintroduce.
-- The "battlefield is the unambiguous hero" framing from the superseded RD2 is downgraded to
-  "battlefield is the hero, strips are subordinate context at the tap-target floor." The
-  battlefield-weighting lever, if needed later, is the battlefield card max-width or an
-  idle-strip dimming treatment — NOT a per-state strip-height split.
+**Net effect (honest):** this REVERTS RD2's reveal/play shrink (40 → 80, i.e. back to the pre-RD2
+size). RD2's original "shrink the tracker for battlefield dominance" objective is **retired** —
+glass showed the hero cards dominate at 80 regardless, so the shrink bought incoherence, not
+dominance. RD2-revised's deliverable is **a lock, not a shrink**: one shared mini-slot constant
+across all states so they cannot drift apart again — the single-coherent-surface principle
+enforced in code, not in three hand-synced numbers.
+
+Implementation: `HAND_STRIP_HEIGHT_PX` → 80, stays exported; `H2HRecipientPlay` imports it (kept
+from RD2); **`H2HResultsOverlay` imports it too** (its separate `STRIP_HEIGHT_PX = 80` → the shared
+constant; value-preserving, no results visual change). Consequences: crossfade byte-identity on Y
+is **restored** (revert the RD2 crossfade-delta note — at 80=80 there is no delta); the **RD3
+strip-grow animation scope is killed**; the 40-target/~48-floor reasoning is moot. RD2-revised
+intentionally spans the results surface as the canonical reference.
+
+## RD2.1 — strip-cell overflow (scale/flex divorce): spec (2026-06-08)
+
+Pre-existing defect surfaced by RD2 glass (NOT introduced by RD2 — geometry is byte-identical to
+pre-RD2; CC live-DOM probe confirmed). Un-gated (a bug on already-built surfaces, correct
+regardless of GATE-A). **Sequenced before RD3** (RD3 builds on these reveal surfaces; don't stack
+the running-score race on a known overflow). Branch off RD2's tip (`fix/rd2-strip-shrink`).
+
+### Root cause (verified against code, 2026-06-08)
+The strip cell (`H2HRevealScreen.tsx:522–525`) is `height:"100%" / aspectRatio:"329/478" /
+flexShrink:1 / minWidth:0`. The strip wrapper renders ~332px (BoardShell 16+16 + ZonePanel 12+12
+chrome). Six cells need 6×55.06 + 5×4(gap) ≈ 350px > 332 → flex **squeezes each cell to ~52px**.
+But the inner card is drawn via a **fixed** `STRIP_CARD_SCALE` (line 240 =
+`STRIP_CARD_DISPLAY_WIDTH_PX(55.06)/150 = 0.367`), derived from the 80px height, **not** from the
+actual cell box → inner card stays **55.06px inside a 52px cell**. The 3.06px overhang per cell
+eats the 4px gap (reads as overlap) and, on the card-back/log view, pushes the right-edge FP figure
+past an `overflow:hidden` ancestor (the clip). Same scaffold on reveal + results + play (unified
+post-RD2), so it's one fix for all three.
+
+### The fix (principle locked; mechanism is CC's call, report before building)
+**Make the inner card track the ACTUAL (flex-resolved) cell width** so inner == cell at every
+viewport — the card lands at ~52px in tight space and fills its cell, no overhang. Contained to the
+strip scaffold. Acceptable mechanisms: a measured scale (ResizeObserver/container query driving the
+transform), or a CSS-fill mini-mode (inner `width:100%/height:100%` of the cell). CC investigates
+and reports the cleanest contained approach for sign-off.
+
+### Do NOT
+- **Do NOT** force `flexShrink:0` + fixed 55px width — that trades overlap for *overflow* (six 55px
+  cells still don't fit 332px); it moves the bug, doesn't fix it.
+- **Do NOT** do CC's "Fix C" (shrink ZonePanel/chrome padding) — blast radius across every H2H
+  surface (battlefield, rail), needs full re-glass.
+- **Do NOT** do CC's "Fix D" (gap → 0/1) — kills the "six discrete cards" read.
+- **Do NOT** do a full `AthleteCard` refactor if a contained strip-scaffold fix works.
+- Card SIZE is settled (unified 80px height / results-referenced) — this is a width-tracking fix,
+  not a resize.
 
 ### Tests
-- Existing coupling tests added in the 40 commit are **value-agnostic** (strip height ===
-  `HAND_STRIP_HEIGHT_PX`); they pass unchanged at 80. If any test asserts the literal 40 or
-  "half the old" framing, remove that assertion — the constant is the only source of truth.
-- ADD: `H2HResultsOverlay` strip height === the imported `HAND_STRIP_HEIGHT_PX`. This is the
-  lock test — proves all three surfaces are unified through the same constant.
+Add a gate that the inner card's rendered width equals its cell's rendered width (no overhang) —
+the property that was divorced. Existing coupling tests (height === shared constant) stay green.
 
-### Verification
-`bash scripts/build-vercel.sh` (tri-sport) + full root `npm test`.
-**Glass MANDATORY:** all four states — hold/draw, play, reveal, AND results — show the same
-mini-slot size with NO cross-state jump at the reveal→results transition; results looks
-unchanged from its shipped form; #7 tap-to-flip still works on the results strips.
+### Verify
+`bash scripts/build-vercel.sh` + **full root `npm test`**. **Glass**: at 390/360/320 confirm no
+overlap and no FP clip on **all three** surfaces (reveal, results, play), and #7 tap-to-flip still
+works on the results strips. Push held.
 
-### Done =
-One shared 80px mini-slot constant across hold/draw → play → reveal → results; results overlay
-sources the shared constant (no visual change); crossfade byte-identity restored on both X and
-Y; RD3 strip-grow scope removed; coupling tests green (including the new results-overlay lock);
-full suite green; tri-sport build clean; all four states glass-confirmed with no jump; commits
-added on top of the RD2 branch; push held.
+### RD3 input (captured here so it's not lost)
+During RD2 glass John flagged the reveal **score rail** (the gray box holding both FP totals + the
+delta) as oversized / crowding the hero slots — "downsize that distracting gray box." The score
+rail is **RD3's element** (RD3 rebuilds it for the running-score race), so this is logged as an
+**RD3 requirement**, not RD2/RD2.1 scope: RD3 downsizes the rail box + lands the live
+YOU/JOHN/diff race. Do not touch the rail in RD2.1.

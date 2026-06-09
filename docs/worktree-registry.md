@@ -166,3 +166,5 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **Equivalence on main:** VERIFIED — `2592555` is on main directly via fast-forward (same SHA, not squash); pushed to origin 2026-06-08, Vercel green.
 - **Intent:** safe to delete branch; worktree retained pending the queued 38-worktree audit (do NOT remove ad-hoc).
 - **Last reviewed:** 2026-06-08
+
+- `fix/rd2-strip-shrink` glass-confirmed @ `fa73455` 2026-06-09 — RD2 unify-lock (one 80px mini-slot across hold/draw → play → reveal → results, results-referenced); overlap deferred to RD2.1. Pushed to `origin/fix/rd2-strip-shrink`; no PR, no merge.
