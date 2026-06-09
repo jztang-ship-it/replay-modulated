@@ -504,16 +504,25 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
             style={{
               height: "100%",
               aspectRatio: "329 / 478",
-              // Match HandStrip's cell model exactly so the reveal→results
-              // crossfade is byte-identical on X. HandStrip uses
-              // flexShrink:1 + overflow:visible: at viewports where the
-              // 6 natural-width cells + 5 gaps overflow the strip's
-              // available width (≤ ~422px wide, including iPhone 14
-              // 390×844), shrink fits the cells; overflow:visible lets
-              // the absolutely-positioned scaled card render inside the
-              // shrunk cell without right-edge clipping. flexShrink:1
-              // alone with overflow:hidden would clip the inner card's
-              // right ~3px on every cell.
+              // Match HandStrip's cell model on X so the reveal→results
+              // crossfade is byte-identical on the horizontal axis.
+              // Y-identity no longer holds (RD2): the reveal strip is
+              // 40px (passive context); this overlay strip stays 80px
+              // because it is a tap target (#7 tap-to-flip, ~44px min).
+              // The two strips serve different jobs and cannot share a
+              // height — invalid-by-design, not an oversight. If the
+              // 40↔80 transition pops on glass, RD3 may animate a
+              // 40→80 strip-grow into the interactive results state;
+              // until then, the X-axis cell model below is the only
+              // continuity guarantee. HandStrip uses flexShrink:1 +
+              // overflow:visible: at viewports where the 6 natural-width
+              // cells + 5 gaps overflow the strip's available width
+              // (≤ ~422px wide, including iPhone 14 390×844), shrink
+              // fits the cells; overflow:visible lets the absolutely-
+              // positioned scaled card render inside the shrunk cell
+              // without right-edge clipping. flexShrink:1 alone with
+              // overflow:hidden would clip the inner card's right ~3px
+              // on every cell.
               flexShrink: 1,
               minWidth: 0,
               position: "relative",

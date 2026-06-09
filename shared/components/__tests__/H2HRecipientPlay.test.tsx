@@ -59,6 +59,7 @@ import {
 import type { ChallengeCtx, SenderHand } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types";
 import type { CardRenderer, H2HCard } from "../H2HRevealScreen";
+import { HAND_STRIP_HEIGHT_PX } from "../H2HRevealScreen";
 
 beforeAll(() => {
   // @ts-expect-error global fetch stub — the inner H2HRecipientReveal's
@@ -219,6 +220,24 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(stripWrapper?.getAttribute("aria-hidden")).toBe("true");
     expect(stripWrapper?.style.height).toBe("0px");
     expect(stripWrapper?.style.opacity).toBe("0");
+  });
+
+  it("bottom-strip mini-cell height equals the imported HAND_STRIP_HEIGHT_PX (RD2 lockstep gate)", () => {
+    // RD2 (2026-06-08): the play-screen mini-cells must shrink in
+    // lockstep with the reveal-arc strip. Pre-RD2 this surface hard-
+    // coded 80 next to a comment claiming "matches HAND_STRIP_HEIGHT_PX
+    // (80)" — the literal could (and did, briefly) drift from the
+    // constant. This test fails closed if the import is removed or the
+    // local MINI_CELL_HEIGHT_PX stops being keyed to it.
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
+    );
+    const bottomStrip = container.querySelector(
+      "[data-h2h-play-bottom-strip]",
+    ) as HTMLElement | null;
+    expect(bottomStrip).not.toBeNull();
+    expect(bottomStrip!.style.height).toBe(`${HAND_STRIP_HEIGHT_PX}px`);
   });
 
   it("renders 6 empty placeholders on bottom strip at cardsLanded=0", () => {
@@ -693,10 +712,10 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
 
 // ── 5b. A→B transition (new ab_transition state) ──────────────────
 // Design-lock §3 step 3: ~300ms coordinated beat after your_redraw_flip
-// completes. The opponent strip uncollapses (height:0→80px, opacity:0→1)
-// and the hero region expands (HOLD_SELECT floor → full floor). Both
-// motions animate via CSS transitions; this state exists to GATE which
-// values those transitions animate TO.
+// completes. The opponent strip uncollapses (height:0→HAND_STRIP_HEIGHT_PX,
+// opacity:0→1) and the hero region expands (HOLD_SELECT floor → full
+// floor). Both motions animate via CSS transitions; this state exists
+// to GATE which values those transitions animate TO.
 
 describe("H2HRecipientPlay — ab_transition (Layout A → Layout B beat)", () => {
   it("reaches ab_transition after your_redraw_flip; opponent strip uncollapses", async () => {

@@ -28,7 +28,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { H2HRevealScreen, type H2HHand, type H2HCard, type CardRenderer } from "../H2HRevealScreen";
+import { H2HRevealScreen, HAND_STRIP_HEIGHT_PX, type H2HHand, type H2HCard, type CardRenderer } from "../H2HRevealScreen";
 
 function makeCard(over: Partial<H2HCard> = {}): H2HCard {
   return {
@@ -132,6 +132,43 @@ describe("H2HRevealScreen — static layout", () => {
       // the pre-fix shape that caused the inflation bug.
       expect(style).not.toMatch(/grid-template-columns:\s*repeat/);
     }
+  });
+
+  it("hand strip inline height equals exported HAND_STRIP_HEIGHT_PX (RD2 anchor gate)", () => {
+    // RD2 (2026-06-08): the exported constant is the single source of
+    // truth for both this surface and H2HRecipientPlay's mini-cells.
+    // The height-capped test above stays height-agnostic on purpose
+    // (it gates the SHAPE of the regression — explicit px height, no
+    // repeat-grid). This test pins the strip to the exported value so
+    // a silent constant drift surfaces here.
+    const sender = makeHand();
+    const recipient = makeHand();
+    const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
+    const strips = container.querySelectorAll('[data-h2h-hand-strip="true"]');
+    expect(strips.length).toBe(2);
+    for (const strip of Array.from(strips)) {
+      const style = (strip as HTMLElement).getAttribute("style") || "";
+      const m = style.match(/height:\s*(\d+)px/);
+      expect(m).not.toBeNull();
+      expect(Number(m![1])).toBe(HAND_STRIP_HEIGHT_PX);
+    }
+  });
+
+  it("each hand strip renders exactly six mini-cells (basketball N=6)", () => {
+    // RD2 dim-progress + "show which six cards are on each side"
+    // depend on the per-strip cell count being exactly N. The
+    // sport-agnostic N-scales test below covers football N=11; this
+    // explicit basketball check guards against an off-by-one in the
+    // strip's flex layout post-shrink.
+    const sender = makeHand();
+    const recipient = makeHand();
+    const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
+    const senderStrip = container.querySelector('[data-h2h-hand-strip="true"][data-side="sender"]');
+    const recipientStrip = container.querySelector('[data-h2h-hand-strip="true"][data-side="recipient"]');
+    expect(senderStrip).not.toBeNull();
+    expect(recipientStrip).not.toBeNull();
+    expect(senderStrip!.querySelectorAll('[data-h2h-mini-cell="true"]').length).toBe(6);
+    expect(recipientStrip!.querySelectorAll('[data-h2h-mini-cell="true"]').length).toBe(6);
   });
 
   it("shows the SWAP pill on non-held battlefield card", () => {

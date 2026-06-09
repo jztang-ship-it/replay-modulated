@@ -76,7 +76,8 @@
 //   OPPONENT flip (killed): TopStripCell renders the sender card
 //     face-up DIRECTLY — no rotateY, no perspective, no back face.
 //     Visibility is gated by the strip-wrapper's height/opacity
-//     transition between Layout A (0px / 0) and Layout B (80px / 1).
+//     transition between Layout A (0px / 0) and Layout B
+//     (HAND_STRIP_HEIGHT_PX / 1).
 //
 // Held-position invariant (carried forward): held cards never change
 // slot position across states 1–5. wasHeld carries into arc's
@@ -103,6 +104,7 @@ import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
 import {
+  HAND_STRIP_HEIGHT_PX,
   TIER_ACCENT,
   usePrefersReducedMotion,
   type CardRenderer,
@@ -153,12 +155,15 @@ export const AB_TRANSITION_DURATION_MS = 300;
  *  fade-in finish in lockstep on the same canvas. */
 export const ARC_COMPOSITE_CROSSFADE_MS = 250;
 
-// Mini-cell dimensions — matches HAND_STRIP_HEIGHT_PX (80) and the
-// derived STRIP_CARD_DISPLAY_WIDTH_PX ((80 * 329) / 478 ≈ 55) used by
-// H2HRevealScreen's HandStrip. Same Y/X footprint so the eye doesn't
-// reflow when the surface hands off to the arc.
-const MINI_CELL_WIDTH_PX = 55;
-const MINI_CELL_HEIGHT_PX = 80;
+// Mini-cell dimensions — keyed to the imported HAND_STRIP_HEIGHT_PX
+// (single source of truth in H2HRevealScreen). Same Y/X footprint as
+// the reveal-arc HandStrip so the eye doesn't reflow when the play
+// surface hands off to the arc. The cell aspect ratio is the
+// AthleteCard portrait (329 × 478); width derives from height. Retired
+// the pre-RD2 hardcoded 55/80 literals — drift between the two surfaces
+// is no longer possible.
+const MINI_CELL_HEIGHT_PX = HAND_STRIP_HEIGHT_PX;
+const MINI_CELL_WIDTH_PX = Math.round((HAND_STRIP_HEIGHT_PX * 329) / 478);
 const STRIP_GAP_PX = 4;
 
 // Strip-scale factor — VALUES COPIED FROM H2HRevealScreen.tsx:215-218
@@ -705,9 +710,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // it's the beat WHERE the opponent strip animates in and the hero
   // expands. The CSS transitions on height/opacity/min-height do the
   // animation; classifying ab_transition as Layout B lets the strip
-  // wrapper read height:80px and the shell read the full hero
-  // min-height immediately on state entry, and the transitions
-  // animate the TO values.
+  // wrapper read height:HAND_STRIP_HEIGHT_PX and the shell read the
+  // full hero min-height immediately on state entry, and the
+  // transitions animate the TO values.
   const inLayoutA =
     state.kind === "loading" ||
     state.kind === "deal_in" ||
@@ -946,8 +951,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   //   - Layout A states (loading, deal_in, hold_select, redraw_running,
   //     your_redraw_flip): opponent strip ABSENT. The strip wrapper
   //     collapses to ZERO HEIGHT (overflow:hidden, opacity 0, aria-hidden,
-  //     pointer-events none) — reclaiming the 80px + 4px gap from the
-  //     budget. The TopStripCell components stay mounted so the strip's
+  //     pointer-events none) — reclaiming the HAND_STRIP_HEIGHT_PX +
+  //     4px gap from the budget. The TopStripCell components stay
+  //     mounted so the strip's
   //     reappearance in B doesn't trigger a layout-thrash on first paint.
   //   - Layout B states (ab_transition, handoff_resolving, arc): opponent
   //     strip PRESENT face-up. The CSS height/opacity transition (300ms,
@@ -1578,7 +1584,8 @@ function deriveCta(state: PlayingState): {
  *
  *  Visibility in Layout A is owned by the parent strip-wrapper's
  *  height/opacity transition (height:0 + opacity:0 during Layout A,
- *  height:80 + opacity:1 during Layout B). The cells stay mounted
+ *  height:HAND_STRIP_HEIGHT_PX + opacity:1 during Layout B). The cells
+ *  stay mounted
  *  throughout so the strip's reappearance in B doesn't trigger a
  *  layout-thrash on first paint.
  *

@@ -210,11 +210,30 @@ const TIER_ACCENT: Record<string, string> = {
 // must fit within the mobile content width (390 - 32 padding = 358px)
 // without clipping." Each cell width = strip_height × 329/478. Solving
 // for cells×6 + gaps×5 ≤ 358:
-//   80 × (329/478) ≈ 55px per cell. 6×55 + 5×4 gap = 350px. Fits 358.
-// Wider viewports get the same 80px-tall strip (cells stay 55×80);
+//   40 × (329/478) ≈ 28px per cell. 6×28 + 5×4 gap ≈ 188px. Fits 358
+//   with comfortable margin (the strips are now a status row, not a
+//   co-equal band).
+// Wider viewports get the same 40px-tall strip (cells stay ~28×40);
 // extra horizontal room ends up as flex padding around the centered
 // strip, NOT as wider cells (which would lose the "mini" register).
-const HAND_STRIP_HEIGHT_PX = 80;
+//
+// RD2 (2026-06-08, lock: docs/h2h-reveal-arc-design.md "Amendment
+// 2026-06-08 — RD2"): lowered 80 → 40 to reinforce the battlefield as
+// the unambiguous hero during the reveal climax. The strips' two jobs —
+// "show which six cards are on each side" + "dim-as-revealed reveal
+// progress" — are preserved at the smaller size; per-card stat text
+// (initials, salary chip, FP figure) is sub-legible by design at 40,
+// read by silhouette + tier color + headshot. **~48px is the
+// legibility floor:** if glass shows the strip no longer reads as the
+// six cards (not "text is small" — that's the design), raise toward
+// ~48 and re-glass. Raising beyond ~48 re-competes with the
+// battlefield, so the upper bound stays tight.
+//
+// Exported because H2HRecipientPlay.tsx imports it for its mini-cell
+// height (the play-screen hand row is the same surface, different
+// phase). Two surfaces, one source of truth — the magic-80 literal
+// the play screen previously hardcoded is retired.
+export const HAND_STRIP_HEIGHT_PX = 40;
 const HAND_STRIP_GAP_PX = 4;
 // ZONE_HEADER_HEIGHT_PX and ZONE_GAP_PX now live in H2HBoardShell (the
 // chrome owns them — H2HRevealScreen only uses HandStrip-cell geometry
