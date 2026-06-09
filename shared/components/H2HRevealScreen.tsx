@@ -206,34 +206,35 @@ const TIER_ACCENT: Record<string, string> = {
 // Set explicitly so visual hierarchy (battlefield hero, hand strips
 // compact) survives any viewport width.
 
-// Hand strip total height. Derived from the constraint "6 mini-cards
-// must fit within the mobile content width (390 - 32 padding = 358px)
-// without clipping." Each cell width = strip_height × 329/478. Solving
-// for cells×6 + gaps×5 ≤ 358:
-//   40 × (329/478) ≈ 28px per cell. 6×28 + 5×4 gap ≈ 188px. Fits 358
-//   with comfortable margin (the strips are now a status row, not a
-//   co-equal band).
-// Wider viewports get the same 40px-tall strip (cells stay ~28×40);
+// Hand strip total height — the unified mini-slot anchor for the H2H
+// surface. Derived from the constraint "6 mini-cards must fit within
+// the mobile content width (390 - 32 padding = 358px) without
+// clipping." Each cell width = strip_height × 329/478. At 80:
+//   80 × (329/478) ≈ 55px per cell. 6×55 + 5×4 gap = 350px. Fits 358.
+// Wider viewports get the same 80px-tall strip (cells stay 55×80);
 // extra horizontal room ends up as flex padding around the centered
 // strip, NOT as wider cells (which would lose the "mini" register).
 //
-// RD2 (2026-06-08, lock: docs/h2h-reveal-arc-design.md "Amendment
-// 2026-06-08 — RD2"): lowered 80 → 40 to reinforce the battlefield as
-// the unambiguous hero during the reveal climax. The strips' two jobs —
-// "show which six cards are on each side" + "dim-as-revealed reveal
-// progress" — are preserved at the smaller size; per-card stat text
-// (initials, salary chip, FP figure) is sub-legible by design at 40,
-// read by silhouette + tier color + headshot. **~48px is the
-// legibility floor:** if glass shows the strip no longer reads as the
-// six cards (not "text is small" — that's the design), raise toward
-// ~48 and re-glass. Raising beyond ~48 re-competes with the
-// battlefield, so the upper bound stays tight.
+// RD2 unified-80 lock (2026-06-08, supersedes the same-day 40 shrink
+// — see docs/h2h-reveal-arc-design.md "Amendment 2026-06-08 — RD2
+// unified at 80px"): one mini-slot geometry shared across all four
+// states of the H2H surface — hold/draw → play → reveal → results.
+// Results is the canonical reference: results-overlay cells are #7
+// tap targets (tap-to-flip) and Apple's ~44px hit-target minimum is
+// the floor. 80 is the value results already shipped at, so matching
+// it removes the reveal→results crossfade pop without touching the
+// shipped results surface.
 //
-// Exported because H2HRecipientPlay.tsx imports it for its mini-cell
-// height (the play-screen hand row is the same surface, different
-// phase). Two surfaces, one source of truth — the magic-80 literal
-// the play screen previously hardcoded is retired.
-export const HAND_STRIP_HEIGHT_PX = 40;
+// Exported and consumed by all three H2H surfaces:
+//   - H2HRevealScreen.tsx (this file) — strip wrapper + derived
+//     STRIP_CARD_* mini-card scale.
+//   - H2HRecipientPlay.tsx — MINI_CELL_HEIGHT_PX + MINI_CELL_WIDTH_PX
+//     (the hold/draw + play strip).
+//   - H2HResultsOverlay.tsx — its strip-cell height (the results
+//     surface that defines the floor).
+// Single source of truth. Drift across surfaces is impossible without
+// removing an import — value-agnostic coupling tests gate the lock.
+export const HAND_STRIP_HEIGHT_PX = 80;
 const HAND_STRIP_GAP_PX = 4;
 // ZONE_HEADER_HEIGHT_PX and ZONE_GAP_PX now live in H2HBoardShell (the
 // chrome owns them — H2HRevealScreen only uses HandStrip-cell geometry

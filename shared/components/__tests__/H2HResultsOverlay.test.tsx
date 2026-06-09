@@ -24,6 +24,7 @@ import {
   selectOutcomeColor,
 } from "../H2HResultsOverlay";
 import type { H2HHand, H2HCard, CardRenderer } from "../H2HRevealScreen";
+import { HAND_STRIP_HEIGHT_PX } from "../H2HRevealScreen";
 
 function makeCard(over: Partial<H2HCard> = {}): H2HCard {
   return {
@@ -819,5 +820,37 @@ describe("H2HResultsOverlay — strip layout contract", () => {
     expect(opponentCells[3].getAttribute("data-card-id")).toBe("card-E"); // slot 3 — held stays mid-strip
     expect(opponentCells[4].getAttribute("data-card-id")).toBe("card-F"); // slot 4
     expect(opponentCells[5].getAttribute("data-card-id")).toBe("card-B"); // slot 5
+  });
+});
+
+describe("H2HResultsOverlay — RD2 unified-80 lock", () => {
+  // The unified-80 amendment (2026-06-08, supersedes the same-day 40
+  // shrink) locks ONE mini-slot geometry across all four states of the
+  // H2H surface: hold/draw → play → reveal → results. This file used to
+  // declare its own `const STRIP_HEIGHT_PX = 80`; that local literal is
+  // retired in favor of importing HAND_STRIP_HEIGHT_PX from
+  // H2HRevealScreen. This test pins the overlay's strip height to the
+  // imported value — paired with the H2HRevealScreen and H2HRecipientPlay
+  // coupling tests, it proves all three surfaces are unified through one
+  // constant. Drift between them is impossible without removing an
+  // import (which would fail tsc).
+  it("overlay strip inline height equals the imported HAND_STRIP_HEIGHT_PX", () => {
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 178.4)}
+        recipient={makeHand("You", 182.4)}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    const strips = container.querySelectorAll('[data-h2h-overlay-strip="true"]');
+    // Two strips (opponent zone + user zone), both must read the constant.
+    expect(strips.length).toBe(2);
+    for (const strip of Array.from(strips)) {
+      const style = (strip as HTMLElement).getAttribute("style") || "";
+      const m = style.match(/height:\s*(\d+)px/);
+      expect(m).not.toBeNull();
+      expect(Number(m![1])).toBe(HAND_STRIP_HEIGHT_PX);
+    }
   });
 });

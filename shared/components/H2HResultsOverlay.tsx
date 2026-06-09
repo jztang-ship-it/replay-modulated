@@ -60,6 +60,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
+import { HAND_STRIP_HEIGHT_PX } from "./H2HRevealScreen";
 import {
   trashTalkBucket,
   type TrashTalkBucket,
@@ -202,13 +203,19 @@ const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed
 // comfortably wider than every realistic display name).
 const DOCKED_SCORE_TARGET_MIN_WIDTH_PX = 68;
 
-// Hand-strip cell sizing — matches H2HRevealScreen's HandStrip exactly so
-// strips look identical between arc and overlay.
-const STRIP_HEIGHT_PX = 80;
+// Hand-strip cell sizing — sourced from the shared HAND_STRIP_HEIGHT_PX
+// in H2HRevealScreen. RD2 unified-80 lock (2026-06-08): one mini-slot
+// geometry across all four states of the H2H surface (hold/draw → play
+// → reveal → results), with results as the canonical reference
+// (#7 tap-to-flip floor). The local STRIP_HEIGHT_PX = 80 literal this
+// file used to declare is retired; drift between reveal and results is
+// no longer possible without removing the import. See
+// docs/h2h-reveal-arc-design.md "Amendment 2026-06-08 — RD2 unified at
+// 80px (results-referenced)" for the lock.
 const STRIP_GAP_PX = 4;
 const STRIP_CARD_NATURAL_WIDTH_PX = 150;
 const STRIP_CARD_NATURAL_HEIGHT_PX = (STRIP_CARD_NATURAL_WIDTH_PX * 478) / 329;
-const STRIP_CARD_DISPLAY_WIDTH_PX = (STRIP_HEIGHT_PX * 329) / 478;
+const STRIP_CARD_DISPLAY_WIDTH_PX = (HAND_STRIP_HEIGHT_PX * 329) / 478;
 const STRIP_CARD_SCALE = STRIP_CARD_DISPLAY_WIDTH_PX / STRIP_CARD_NATURAL_WIDTH_PX;
 
 const ZONE_HEADER_HEIGHT_PX = 24;
@@ -474,7 +481,7 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
       style={{
         display: "flex",
         gap: STRIP_GAP_PX,
-        height: STRIP_HEIGHT_PX,
+        height: HAND_STRIP_HEIGHT_PX,
         width: "100%",
         justifyContent: "center",
         alignItems: "center",
@@ -504,25 +511,22 @@ function ResultsStrip({ cards, renderCard, selectedCardId, onCardTap, revealOrde
             style={{
               height: "100%",
               aspectRatio: "329 / 478",
-              // Match HandStrip's cell model on X so the reveal→results
-              // crossfade is byte-identical on the horizontal axis.
-              // Y-identity no longer holds (RD2): the reveal strip is
-              // 40px (passive context); this overlay strip stays 80px
-              // because it is a tap target (#7 tap-to-flip, ~44px min).
-              // The two strips serve different jobs and cannot share a
-              // height — invalid-by-design, not an oversight. If the
-              // 40↔80 transition pops on glass, RD3 may animate a
-              // 40→80 strip-grow into the interactive results state;
-              // until then, the X-axis cell model below is the only
-              // continuity guarantee. HandStrip uses flexShrink:1 +
-              // overflow:visible: at viewports where the 6 natural-width
-              // cells + 5 gaps overflow the strip's available width
-              // (≤ ~422px wide, including iPhone 14 390×844), shrink
-              // fits the cells; overflow:visible lets the absolutely-
-              // positioned scaled card render inside the shrunk cell
-              // without right-edge clipping. flexShrink:1 alone with
-              // overflow:hidden would clip the inner card's right ~3px
-              // on every cell.
+              // Match HandStrip's cell model exactly so the reveal→results
+              // crossfade is byte-identical on both X and Y. The
+              // mini-slot geometry is unified across all four states of
+              // the H2H surface (hold/draw → play → reveal → results)
+              // via the shared HAND_STRIP_HEIGHT_PX constant imported
+              // above — the strip wrapper's height reads from it
+              // directly, this cell's height inherits from "100%", and
+              // the X model below mirrors HandStrip's flex behavior.
+              // HandStrip uses flexShrink:1 + overflow:visible: at
+              // viewports where the 6 natural-width cells + 5 gaps
+              // overflow the strip's available width (≤ ~422px wide,
+              // including iPhone 14 390×844), shrink fits the cells;
+              // overflow:visible lets the absolutely-positioned scaled
+              // card render inside the shrunk cell without right-edge
+              // clipping. flexShrink:1 alone with overflow:hidden would
+              // clip the inner card's right ~3px on every cell.
               flexShrink: 1,
               minWidth: 0,
               position: "relative",
