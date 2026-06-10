@@ -1223,3 +1223,60 @@ delta) as oversized / crowding the hero slots — "downsize that distracting gra
 rail is **RD3's element** (RD3 rebuilds it for the running-score race), so this is logged as an
 **RD3 requirement**, not RD2/RD2.1 scope: RD3 downsizes the rail box + lands the live
 YOU/JOHN/diff race. Do not touch the rail in RD2.1.
+
+## § RD3-C (PARKED) — JOHN as a true fixed bar through reveal
+
+**Status:** PARKED. Captured during RD3 build (investigation was loaded — seeding, play()
+reset, leader-glow/pop, and the reveal→results no-snap were all freshly mapped). Sequenced
+AFTER RD3, recommended BEFORE RD3.1 (scores on both objective axes; RD3.1 is cosmetic). Not
+yet authorized to build.
+
+**Origin.** RD3 shipped Option B: the armed pre-reveal rail shows YOU 0.0 / JOHN 0.0 / delta
+0.0, neutral, because the arc rail seeds senderRunningTotal=0 at idle and animates John's number
+UP from 0 during the recipient's reveal. C fixes the deeper oddity B left intact.
+
+**The problem C solves.** John already played; his score (e.g. 258.3) is a finished fact.
+Today John's number rolls up from 0 alongside YOURS during YOUR reveal — incoherent (he isn't
+playing, you are) and weaker competitively (two numbers both growing from 0). The intended model
+— stated in the original RD3 framing as "John's fixed bar" — is a fixed target you climb toward:
+JOHN sits at his final score from the first frame; YOU climb; the gap visibly closes because YOU
+move and the target holds. Standard "score to beat" mental model (high score / leaderboard);
+strictly more tense. Hits BOTH objective axes (understandable + emotionally competitive); no new
+mechanic — the target value already exists (challengeCtx.targetScore == sender.totalFp,
+parity-confirmed in RD3).
+
+**Behavior change.**
+- JOHN's ScoreCell reads his final total (target) from idle through done — does NOT roll up from 0.
+- YOU still climb per reveal tap (unchanged from current).
+- Delta = YOU − JOHN, live (unchanged), but now closes toward a fixed bar instead of chasing a
+  moving one.
+- The armed pre-reveal beat (RD3's B rail) then naturally shows JOHN at target neutrally and YOU
+  at 0 — and armed→arc stays no-snap because BOTH frames now show JOHN at target. (C makes the
+  "JOHN=target in armed beat" option safe, which B could not.)
+
+**Why it's not in RD3 (the risk surface C must own).**
+- Changes arc reveal behavior — outside RD3's "does NOT build the animation" fence.
+- Sender-side **leader-glow** and **Phase-2 pop** both key off senderRunningTotal climbing
+  (useH2HReveal.ts; H2HRevealScreen ScoreCell). Fixing John at target removes that climb — the
+  glow/pop trigger logic must be re-specified (when does JOHN's cell show leading-glow if it
+  never climbs? presumably: leading whenever target > YOUR running total, flipping live as YOU
+  cross it — this becomes the dramatic beat).
+- The **reveal→results no-snap** invariant (H2HScoreRail.tsx:151-156) couples to sender display
+  state at phase===done. C must preserve it: last reveal frame === first results frame, with
+  John now fixed. New test gate required.
+- The hook seed (useH2HReveal.ts:616 senderRunningTotal init) and the play() reset (~:939) are
+  the edit points; the idle-0 assertions in __tests__/useH2HReveal.test.tsx:254/:265 will need
+  updating — confirm those tests encode intent, not just current behavior, before changing.
+
+**Open question for build-time:** does JOHN's bar still *grow in size* (sizeProgress / Z1 model)
+as YOU approach, or stay fixed-size? "Fixed bar" implies fixed value; the size/scale treatment
+(does the leader cell visually swell) is a separate glass call at C build time.
+
+**Acceptance (when built):**
+- JOHN's glyph shows target from first armed frame through results, never rolling from 0.
+- YOU climbs per tap; delta closes toward the fixed bar; leader-glow flips live as YOU cross JOHN.
+- redraw→arc no-snap holds (now JOHN=target on both sides of the cut).
+- reveal→results no-snap holds (re-tested with John fixed).
+- Single-player reveal + FTUE untouched.
+
+**Spec of record:** on C build, this § moves from PARKED to active and appends final behavior.
