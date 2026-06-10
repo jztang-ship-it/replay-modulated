@@ -104,7 +104,8 @@ export type LandingMockCase =
   | "big_score"
   | "rare_pull"
   | "default"
-  | "legacy_choke";
+  | "choke_bad_beat_normalized"
+  | "replay_already_attempted";
 
 interface LandingMockFixture {
   /** ChallengeData shape, ready to pass into ChallengeTakeCardLanding's
@@ -382,9 +383,13 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
   // no-holds choke disagreement, and the component renders 6 plain
   // cards. The hook + outcome still read as choke; the disagreement
   // skips named players (the "Same hand, same trap" frame).
-  legacy_choke: {
+  // Data-shape test — NOT a fifth trigger. Exercises the
+  // normalizeTriggerType path that maps the stored legacy DB value
+  // `trigger_type: "bad_beat"` to the current `choke` vocabulary so the
+  // landing renders identically to a freshly-stored choke row.
+  choke_bad_beat_normalized: {
     data: {
-      challenge_id: "ch_mock_legacy_choke",
+      challenge_id: "ch_mock_choke_bad_beat_normalized",
       created_by: "u_mike",
       ...baseAttribution,
       target_score: 142.0,
@@ -407,6 +412,51 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
     },
     statsLine: "3 attempts · 67% failed",
     alreadyAttempted: false,
+  },
+
+  // RD5.1 audit follow-up — replay/already-attempted glass case.
+  // Mirrors the choke fixture's data shape so the bank seed sweep
+  // lands on the same lines for parity glass between fresh and
+  // replay. The only meaningful differences:
+  //   - alreadyAttempted: true   (the real RD5.1 branch under test —
+  //     ChallengeTakeCardLanding's CTA relabels to "Play Again")
+  //   - attempt_count: 3, winner_count: 1 (real prior-attempt state;
+  //     the shell's challengeStatsLine builds an "attempts" string
+  //     from these — but the take card NEVER renders statsLine in the
+  //     current RD5.1 build, so this number does not leak into the
+  //     rendered surface. The fixture sets it for completeness.)
+  //   - distinct challenge_id (kept distinct so the bank's seeded
+  //     selection is independent of the choke fixture; glass via
+  //     &seed=<value> URL param produces identical bank lines across
+  //     both cases since seed overrides challenge_id).
+  //
+  // Drives the REAL alreadyAttempted prop on ChallengeTakeCardLanding;
+  // no fabricated render path. Mirrors the existing &alreadyAttempted=1
+  // URL flag, but as a first-class case so reviewers don't need to
+  // know about the URL override.
+  replay_already_attempted: {
+    data: {
+      challenge_id: "ch_mock_replay_already_attempted",
+      created_by: "u_mike",
+      ...baseAttribution,
+      attempt_count: 3,
+      winner_count: 1,
+      target_score: 142.0,
+      trigger_type: "choke",
+      initial_roster: rosterSnapshot(
+        baseSix({
+          heldPair: ["emb", "voo"],
+          heldOutcomes: { emb: 47.0, voo: 17.0 },
+        }),
+        true,
+      ),
+      anchor_base_player_id: "emb",
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: "3 attempts · 67% failed",
+    alreadyAttempted: true,
   },
 };
 

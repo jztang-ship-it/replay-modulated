@@ -39,11 +39,15 @@
 //   CTA           — generator's `ctaText`, the "PLAY YOUR LINE" family.
 //   Attribution   — minor below CTA.
 
+import { useEffect } from "react";
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
 import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
+import type { WinTierKey } from "@shared/utils/payoutLogic";
+import { track } from "@shared/analytics/analytics";
+import { pickHeadlineAndCta, FALLBACK_CTA, type SealVisual } from "./landingHeadlines";
 
 // ── Data shape coming in from the shell ────────────────────────────────
 
@@ -82,6 +86,12 @@ interface Props {
   /** Tiny stats line composed by the shell (`challengeStatsLine`). */
   statsLine: string | null;
   alreadyAttempted: boolean;
+  /** RD5.1 v3 — sport-bound win-tier resolver, threaded from the sport
+   *  adapter via the landing shell. The take card uses it to resolve
+   *  big_score's seal (LEGEND / MVP / ALL-STAR) from the persisted
+   *  target_score. Mirrors how H2HRecipientPlay receives it from the
+   *  same adapter. */
+  calculateWinTier: (totalFp: number) => string;
   onAccept: () => void;
   /** Phase 2e — optional supporting culture line below the take.
    *  OFF by default per the lock §"Optional supporting culture line" —
@@ -121,57 +131,23 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-const RARE_PULL_TIER_LABEL: Record<string, string> = {
-  record: "NEW RECORD",
-  career: "CAREER HIGH",
-  season: "SEASON HIGH",
-};
-
-// ── In-flow badge (the stamp's permanent home on this surface) ─────────
+// ── Evidence seal — TierGauge vocabulary, slanted stamp ────────────────
 //
-// Phase 2b reused TeamStamp's thud/absolute wrapper here and the
-// translate(-50%, -50%) bled the chip off the viewport at every width
-// it touched. 2c builds a separate inline tag for the landing — pure
-// CSS pill, rotate(-5deg) for the slant aesthetic, no animation, no
-// absolute, no negative-translate, no anchor. Cannot bleed off the edge
-// at any viewport width because it occupies normal document flow.
-//
-// TeamStamp.tsx itself is NOT modified — the results-screen panel keeps
-// its existing thud + absolute behavior. The badge label and color
-// family mirror TeamStamp's so the visual identity (CHOKE / {TIER} MISS
-// / BIG SCORE / RARE PULL) reads as the same vocabulary.
+// RD5.1 v3 — the seal label + colors come from landingHeadlines.resolveSeal,
+// which mirrors TierGauge.tsx's in-game stamp vocabulary (CHOKE / {TIER}
+// MISS / win-tier label / sub-tier label). The pre-v3 invented strings
+// "BIG SCORE" and "NEW RECORD" are RETIRED — they live in no other live
+// surface in the codebase. The visual shell (slanted stamp, no thud, no
+// translate) is unchanged from 2b — only the label + color sourcing
+// changed.
 
-interface InFlowBadgeProps {
+interface EvidenceSealProps {
+  seal: SealVisual | null;
   trigger: TakeCardTrigger;
-  missTier?: string | null;
-  topGameTier?: "record" | "career" | "season" | null;
 }
 
-function InFlowBadge({ trigger, missTier, topGameTier }: InFlowBadgeProps) {
-  let label: string | null = null;
-  let background = "linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%)";
-  let color = "#fff5f5";
-
-  if (trigger === "choke") {
-    label = "CHOKE";
-    // background defaults to the savage-red gradient
-  } else if (trigger === "miss") {
-    const prefix = (missTier ?? "").replace(/_/g, " ").trim().toUpperCase();
-    label = prefix ? `${prefix} MISS` : "MISS";
-    background = "linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)";
-    color = "#3a2000";
-  } else if (trigger === "big_score") {
-    label = "BIG SCORE";
-    background = "linear-gradient(135deg, #FFB14A 0%, #F59E0B 100%)";
-    color = "#070A12";
-  } else if (trigger === "rare_pull") {
-    label = topGameTier ? (RARE_PULL_TIER_LABEL[topGameTier] ?? "RARE PULL") : "RARE PULL";
-    background = "linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%)";
-    color = "#070A12";
-  }
-
-  if (!label) return null; // default → no badge
-
+function EvidenceSeal({ seal, trigger }: EvidenceSealProps) {
+  if (!seal) return null; // default trigger → no seal
   return (
     <span
       data-testid="landing-badge"
@@ -180,23 +156,21 @@ function InFlowBadge({ trigger, missTier, topGameTier }: InFlowBadgeProps) {
         display: "inline-block",
         padding: "5px 11px",
         borderRadius: 3,
-        background,
-        color,
+        background: seal.background,
+        color: seal.color,
         fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
         fontSize: 13,
         fontWeight: 900,
         letterSpacing: 1.4,
         lineHeight: 1,
         textTransform: "uppercase",
-        // The slant aesthetic, applied as a static rotate. No translate,
-        // no animation — purely in-flow.
         transform: "rotate(-5deg)",
         border: "1.5px solid currentColor",
         boxShadow: "0 3px 7px rgba(0,0,0,0.45)",
         marginRight: 4,
       }}
     >
-      {label}
+      {seal.label}
     </span>
   );
 }
@@ -243,27 +217,41 @@ function HandCard({ card, isHeld }: HandCardProps) {
         textAlign: "center",
         opacity,
         boxShadow: isHeld ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
+        overflow: "hidden", // contains the yellow-H corner glyph inside the rounded card
       }}
     >
       {isHeld && (
+        // RD5.1 hold indicator — same yellow-H corner glyph the live game /
+        // H2H card uses (CardFront.tsx:872-883). Triangle in the top-left
+        // corner + "H" letter. Reuses the real glyph rather than a separate
+        // red "HOLD" pill so the landing's "you held these" reads as the
+        // same visual vocabulary the recipient will see during play.
         <div
           data-testid="hold-badge"
-          style={{
-            position: "absolute",
-            top: -8,
-            right: -6,
-            background: accent,
-            color: "#070A12",
-            borderRadius: 999,
-            padding: "2px 8px",
-            fontSize: 10,
-            fontWeight: 900,
-            letterSpacing: 1.1,
-            lineHeight: 1.2,
-            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-          }}
+          style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}
         >
-          HOLD
+          <svg
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "hidden" }}
+            viewBox="0 0 1 1"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            <polygon points="0,0 0.30,0 0,0.45" fill="#F5C850" />
+          </svg>
+          <span
+            style={{
+              position: "absolute",
+              top: 2,
+              left: 4,
+              fontSize: 10,
+              fontWeight: 950,
+              color: "rgba(0,0,0,0.85)",
+              lineHeight: 1,
+              userSelect: "none",
+            }}
+          >
+            H
+          </span>
         </div>
       )}
       <div
@@ -319,7 +307,7 @@ function pickSupportingCultureLine(culture: CultureShape | null): string | null 
 
 // ── The component ─────────────────────────────────────────────────────
 
-export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, onAccept, showCultureLine = false }: Props) {
+export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, calculateWinTier, onAccept, showCultureLine = false }: Props) {
   const trigger = (normalizeTriggerType(data.trigger_type) ?? "default") as TakeCardTrigger;
   const snapshot = (data.initial_roster ?? {}) as RosterSnapshot;
   const cards: SnapshotCard[] = snapshot.cards ?? [];
@@ -377,38 +365,61 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   // generator stays available to non-landing surfaces.
   const supportingCultureLine = showCultureLine ? pickSupportingCultureLine(anchorCulture) : null;
 
-  // RD5 — deterministic, number-forward hero (lock amendment
-  // 2026-06-08, docs/challenge-landing-v2-phase2d-...-lock.md). The
-  // challenger's total IS the challenge; Score leads on R1 per the
-  // challenge hierarchy (no outcome exists pre-play). The h1 styling
-  // already enforces textTransform:uppercase, so the templated string
-  // renders the same visual weight as the legacy authored hero.
-  // Templated FP — by construction cannot emit "points."
+  // RD5.1 v3 — decision-frame headline + frame-aware CTA + standalone
+  // seal that mirrors TierGauge vocabulary. Spec: docs/rd5-1-headline-
+  // system-spec.md (v3). The win tier for big_score is resolved here
+  // from target_score via the sport-adapter prop — the only trigger
+  // whose seal depends on a derived value, since the others get their
+  // tier via persisted columns (near_miss_next_tier, top_game_tier).
+  // Resolve up-front so the assertion (big_score must have a winTier)
+  // lives at one site.
+  const challengerDisplay = namedChallenger ? data.challenger_name : "THE CHALLENGER";
+  const heldDisplayNames = heldCardsForGenerator.map(c => c.name);
+  const resolvedWinTier: WinTierKey | null = trigger === "big_score"
+    ? (calculateWinTier(data.target_score) as WinTierKey)
+    : null;
+  const headlineOutput = pickHeadlineAndCta({
+    trigger,
+    challengerName: challengerDisplay,
+    heldNamesList: heldDisplayNames,
+    challengeId: data.challenge_id,
+    missTier: data.near_miss_next_tier ?? null,
+    topGameTier: data.top_game_tier ?? null,
+    winTier: resolvedWinTier,
+  });
+
+  // Analytics — fire-once per mount with the selected variant key so
+  // per-line acceptance rates can be correlated later. Keyed on
+  // (challenge_id + variantKey) so re-renders don't double-count; the
+  // selection is deterministic for a given challenge so variantKey is
+  // stable across re-renders of the same hand.
+  useEffect(() => {
+    track("challenges", "challenge_landing_variant", {
+      challenge_id: data.challenge_id,
+      sport: data.sport,
+      trigger,
+      variant_key: headlineOutput.variantKey,
+    });
+  }, [data.challenge_id, data.sport, trigger, headlineOutput.variantKey]);
+
+  // Target line — the one place the score appears on this screen.
+  // Mirrors the spec §"Score rule": never in a headline; sole numeric.
   const targetFpFixed = data.target_score.toFixed(1);
-  const heroLine = namedChallenger
-    ? `${data.challenger_name} SCORED ${targetFpFixed} FP`
-    : `THE SCORE TO BEAT — ${targetFpFixed} FP`;
 
-  // RD5 — held-names supporting line. Names only; per-card FP stays
-  // suppressed (spoiler guard). Empty list (legacy holdsRecorded:false
-  // or roster with no held cards) → element omitted entirely so a
-  // bare "Held:" label never renders.
-  const heldNames = heldCardsForGenerator.map(c => c.name).join(", ");
-
-  // RD5 — dare CTA. Direct second-person verb replaces the "PROVE YOUR
-  // LINE / finish the job" family.
-  const dareLine = namedChallenger ? "Can you beat him?" : "Can you beat it?";
+  // Recipient CTA = frame-aware (from the headline system). Owner /
+  // alreadyAttempted path keeps its existing "Play Again" copy
+  // verbatim — out of scope for RD5.1 (spec §"CTA rule" and directive
+  // §"CTA — frame-aware, recipient path only").
+  const recipientCta = headlineOutput.ctaLabel || FALLBACK_CTA;
+  const ctaLabel = alreadyAttempted ? "Play Again" : recipientCta;
 
   return (
     <div data-testid="challenge-take-card-landing">
-      {/* TAKE — largest type at the top, the claim. The Phase-2d
-          layout moves the stamp INLINE at the end of the headline (it
-          flows after the headline text wherever the wrap lands, not
-          stacked above and not absolutely positioned). Inline-block
-          on the badge means it sits at the end of the last line of
-          the heading regardless of how the take wraps.
-          textTransform forces substituted tokens (e.g. {anchorName} or
-          {challengerName}) into caps for one-voice presentation. */}
+      {/* HEADLINE — the argument. RD5.1: decision-frame prose only;
+          the seal is rendered as a standalone element below. The h1
+          no longer carries an inline badge. textTransform:uppercase
+          covers any future template that emits mixed-case tokens;
+          landingHeadlines.ts pre-uppercases everything today. */}
       <h1
         data-testid="take-headline"
         style={{
@@ -417,44 +428,35 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           fontWeight: 950,
           color: "#FFB14A",
           letterSpacing: 0.3,
-          margin: "4px 0 16px",
+          margin: "4px 0 12px",
           maxWidth: 600,
           textTransform: "uppercase",
         }}
       >
-        {/* RD5 (2026-06-08): deterministic, templated hero replaces the
-            pre-RD5 authored-narrative path (`data.authored_headline ||
-            takeCard.take`). The templated FP string cannot emit
-            "points" by construction, so the landing is structurally
-            immune to the leak shape RD0 retires at the engine. See
-            docs/replaymod-design-decisions.md §"RD5 — landing: direct
-            score challenge (number-forward): spec" and the lock
-            amendment in docs/challenge-landing-v2-phase2d-...-lock.md
-            ("Amendment 2026-06-08 — RD5: FP-spoiler rule split"). */}
-        {heroLine}
-        {trigger !== "default" && (
-          <>
-            {" "}
-            <span
-              data-testid="badge-row"
-              style={{ display: "inline-block", verticalAlign: "middle" }}
-            >
-              <InFlowBadge
-                trigger={trigger}
-                missTier={data.near_miss_next_tier}
-                topGameTier={data.top_game_tier}
-              />
-            </span>
-          </>
-        )}
+        {headlineOutput.headline}
       </h1>
 
+      {/* SEAL — evidence, set apart from the headline. Label + colors
+          mirror TierGauge.tsx's in-game stamp vocabulary; resolved in
+          landingHeadlines.resolveSeal. Rendered only for triggers that
+          have a seal; `default` is the intentional no-seal case
+          (spec §"default — clean direct challenge, no stamp"). */}
+      {headlineOutput.seal !== null && (
+        <div
+          data-testid="evidence-seal"
+          style={{ margin: "0 0 18px" }}
+        >
+          <EvidenceSeal seal={headlineOutput.seal} trigger={trigger} />
+        </div>
+      )}
+
       {/* Phase 2e — OPTIONAL supporting culture line. Off by default;
-          shipped behind `showCultureLine` prop. Drops in below the
-          headline, above the USP. Mixed-case prose (the take is the
-          uppercase argument; this is the image). Reads as a quote /
-          texture, not another header. The localhost loop screenshots
-          both states to decide keep/cut. */}
+          shipped behind `showCultureLine` prop. RD5.1 carries the prop
+          through unchanged — auto-generation of player-specific
+          cultural copy stays LOCKED OUT (spec §"Cultural trash-talk
+          banks — LOCKED OUT"), but the `knownFor` path the prop
+          surfaces is human-ratified, so the optional surface stays
+          available behind the explicit flag. */}
       {supportingCultureLine && (
         <div
           data-testid="supporting-culture-line"
@@ -471,23 +473,16 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         </div>
       )}
 
-      {/* RD5 (2026-06-08): the Phase-2d usp-subheadline
-          ("Same starting hand. Different decisions.") was deleted. The
-          number-forward hero now carries the lead; the held-names line
-          below names the actual decisions. The fairness-mechanic
-          framing is no longer prose-form on the landing — the held
-          set + HOLD badges show it. */}
-
-      {/* EVIDENCE — the six cards. Held bright + HOLD badge + name +
-          salary + rarity (no per-card FP chip — spoiler rule). Discards
-          dim, also no chip. */}
+      {/* EVIDENCE — the six cards (proof of what was held). Held =
+          yellow-H corner glyph (same as live game / H2H per spec
+          §"Layout"). No per-card FP chip. */}
       <div
         data-testid="starting-hand"
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: 8,
-          marginBottom: 16,
+          marginBottom: 18,
           justifyContent: "center",
         }}
       >
@@ -497,54 +492,29 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         })}
       </div>
 
-      {/* HELD LIST (RD5) — names of the held cards, mirroring the
-          highlighted set above. Per-card FP is structurally absent
-          (HandCard does not render an FP chip) — that spoiler guard
-          stays absolute. The element renders only when there is at
-          least one held card; otherwise omitted so a bare "Held:"
-          label never ships. */}
-      {heldNames.length > 0 && (
-        <div
-          data-testid="held-list"
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "rgba(234,240,255,0.55)",
-            fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
-            letterSpacing: 0.6,
-            textAlign: "center",
-            textTransform: "uppercase",
-            marginBottom: 16,
-          }}
-        >
-          Held: {heldNames}
-        </div>
-      )}
-
-      {/* DARE (RD5) — direct second-person question. Replaces the
-          pre-RD5 generator-authored "PROVE YOUR LINE / finish the job"
-          family; the dare is now the same across all modes. */}
+      {/* TARGET LINE — sole numeric on the screen (spec §"Score rule").
+          Sits directly above the CTA so the recipient sees the number
+          to beat at the point of decision. */}
       <div
-        data-testid="dare-line"
+        data-testid="target-line"
         style={{
-          fontSize: 18,
-          fontWeight: 800,
-          color: "#EAF0FF",
-          lineHeight: 1.35,
+          fontSize: 14,
+          fontWeight: 700,
+          color: "rgba(234,240,255,0.85)",
+          fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
+          letterSpacing: 0.6,
           textAlign: "center",
-          marginBottom: 22,
-          maxWidth: 560,
-          marginLeft: "auto",
-          marginRight: "auto",
+          textTransform: "uppercase",
+          marginBottom: 12,
         }}
       >
-        {dareLine}
+        Target to beat: {targetFpFixed} FP
       </div>
 
-      {/* CTA (RD5) — "Accept Challenge" replaces the pre-RD5
-          generator-authored CTA family (PLAY YOUR LINE etc.). The
-          alreadyAttempted relabel still surfaces "Play Again" for
-          replays. */}
+      {/* CTA — RD5.1 frame-aware on the recipient (fresh) path; the
+          owner path (`alreadyAttempted === true`) is OUT OF SCOPE and
+          keeps the existing "Play Again" copy verbatim (directive
+          §"CTA — frame-aware, recipient path only"). */}
       <button
         data-testid="accept-cta"
         onClick={onAccept}
@@ -560,30 +530,11 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           letterSpacing: 0.5,
           cursor: "pointer",
           marginBottom: 10,
+          textTransform: "uppercase",
         }}
       >
-        {alreadyAttempted ? "Play Again" : "Accept Challenge"}
+        {ctaLabel}
       </button>
-
-      {/* Attribution — sender + optional stats line. #4a declutter
-          removed the inline "X'S LINE / HOLD: …" exhibit, so this is
-          now the sole sender mention. Renders whenever there's a real
-          challenger name or a stats line; anonymous + no-stats stays
-          empty (nothing to attribute). */}
-      {(namedChallenger || statsLine) && (
-        <div
-          data-testid="attribution"
-          style={{
-            fontSize: 11,
-            color: "rgba(255,255,255,0.35)",
-            textAlign: "center",
-          }}
-        >
-          {namedChallenger && <span>from {data.challenger_name}</span>}
-          {namedChallenger && statsLine && <span> · </span>}
-          {statsLine && <span>{statsLine}</span>}
-        </div>
-      )}
     </div>
   );
 }

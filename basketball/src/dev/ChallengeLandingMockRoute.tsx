@@ -4,7 +4,13 @@
 // Mounts ChallengeTakeCardLanding with fixture data so the localhost
 // visual loop can iterate on phone-width without going PROD.
 //
-// URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|legacy_choke|choke_culture_rich|choke_generic_no_culture>
+// URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|choke_bad_beat_normalized|choke_culture_rich|choke_generic_no_culture|replay_already_attempted>
+//      &showCultureLine=1
+//      &alreadyAttempted=1   (RD5.1 v3 — overrides fixture.alreadyAttempted to glass the
+//                             owner "Play Again" CTA path without needing a real prior attempt)
+//      &seed=<anything>      (RD5.1 bank — overrides data.challenge_id so the bank's seeded
+//                             selection renders a different variant for the same case. Useful
+//                             for glassing multiple lines per trigger.)
 //                                                &showCultureLine=1
 //
 // Phase 2e — additional URL params:
@@ -20,6 +26,7 @@
 
 import { ChallengeTakeCardLanding } from "@shared/components/ChallengeTakeCardLanding";
 import { LANDING_MOCK_FIXTURES, getMockCaseFromUrl } from "./challengeLandingMockFixture";
+import { calculateWinTier } from "../utils/payoutLogic";
 
 function getBoolParam(name: string): boolean {
   if (typeof window === "undefined") return false;
@@ -28,10 +35,23 @@ function getBoolParam(name: string): boolean {
   return raw === "1" || raw === "true";
 }
 
+function getStringParam(name: string): string | null {
+  if (typeof window === "undefined") return null;
+  const sp = new URLSearchParams(window.location.search);
+  return sp.get(name);
+}
+
 export default function ChallengeLandingMockRoute() {
   const caseKey = getMockCaseFromUrl();
   const fixture = LANDING_MOCK_FIXTURES[caseKey];
   const showCultureLine = getBoolParam("showCultureLine");
+  const seedOverride = getStringParam("seed");
+  // RD5.1 bank: seed= URL param overrides data.challenge_id so the
+  // seeded variant selection produces a different bank line for the
+  // same trigger. Doesn't affect any other prop.
+  const dataWithSeed = seedOverride
+    ? { ...fixture.data, challenge_id: seedOverride }
+    : fixture.data;
 
   return (
     <div
@@ -75,7 +95,7 @@ export default function ChallengeLandingMockRoute() {
         }}
       >
         DEV mock · case=<code>{caseKey}</code>{showCultureLine ? " · showCultureLine=ON" : ""} · try:{" "}
-        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "legacy_choke"] as const).map((c) => {
+        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "choke_bad_beat_normalized", "replay_already_attempted"] as const).map((c) => {
           const next = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
           next.set("case", c);
           return (
@@ -95,9 +115,10 @@ export default function ChallengeLandingMockRoute() {
       </div>
 
       <ChallengeTakeCardLanding
-        data={fixture.data}
+        data={dataWithSeed}
         statsLine={fixture.statsLine}
-        alreadyAttempted={fixture.alreadyAttempted}
+        alreadyAttempted={getBoolParam("alreadyAttempted") || fixture.alreadyAttempted}
+        calculateWinTier={calculateWinTier as (totalFp: number) => string}
         onAccept={() => { console.warn("[challenge-landing-mock] onAccept clicked (dev no-op)"); }}
         showCultureLine={showCultureLine}
       />

@@ -107,9 +107,15 @@ import {
   HAND_STRIP_HEIGHT_PX,
   TIER_ACCENT,
   usePrefersReducedMotion,
+  BATTLEFIELD_ROW_GAP_PX,
   type CardRenderer,
   type H2HCard,
 } from "./H2HRevealScreen";
+import {
+  ScoreCell,
+  RIGHT_RAIL_WIDTH_PX,
+  DELTA_NEUTRAL,
+} from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
@@ -1228,11 +1234,27 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // arc mounts).
   const SETTLE_HERO_GAP_PX = 14;
 
+  // RD3 — armed-rail visibility. Spans the full pre-arc window so the
+  // rail is one continuous mount across redraw_running → your_redraw_flip
+  // → ab_transition → handoff_resolving. Unmounts on arc entry; the
+  // composited H2HRecipientReveal owns the rail from there. HARDENING 2:
+  // no appear→vanish→reappear — see no-snap test gate.
+  const showArmedRail =
+    state.kind === "redraw_running" ||
+    state.kind === "your_redraw_flip" ||
+    state.kind === "ab_transition" ||
+    state.kind === "handoff_resolving";
+
   const heroSlot = (
     <div
       data-h2h-play-hero-zone="true"
       style={{
         flex: "1 1 auto",
+        // RD3: position:relative anchors the armed-rail right-column
+        // overlay (absolute) to the hero region bounds. No change to
+        // existing flow content — center text/preview/settle-hero still
+        // resolves through the normal flex centering below.
+        position: "relative",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1240,6 +1262,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         padding: "0 20px",
       }}
     >
+      {showArmedRail && <ArmedRail targetScore={challengeCtx.targetScore} />}
       {inSettlePauseRender ? (
         // Layout B settle-pause: two stacked empty hero slots
         // (opponent top, yours bottom). Dashed-border boxes, sized one
@@ -1505,6 +1528,101 @@ type BottomSlot =
   | { mode: "face_down" }
   | { mode: "face_up"; card: GeneratedCard; held: boolean };
 
+// ── RD3 armed rail ──────────────────────────────────────────────────
+// Slim YOU/JOHN/delta rail overlaid on the right column of the playing
+// hero region. Mounted continuously across redraw_running →
+// your_redraw_flip → ab_transition → handoff_resolving (HARDENING 2 —
+// one mount, one handoff). Replaces the prior dead "Drawing…" beat
+// (HARDENING 1 — armed last frame matches the arc rail's first
+// revealing frame: both ScoreCells show "0.0" / trailing / sizeProgress
+// 0 / scale 1.0, both glyphs grey via TRAILING_COLOR, delta "0.0" /
+// DELTA_NEUTRAL with "MATCHUP" eyebrow — see the no-snap test in
+// __tests__/H2HRecipientPlay.test.tsx).
+//
+// Geometry mirrors H2HRevealScreen's battlefield right rail: same
+// RIGHT_RAIL_WIDTH_PX column, same BATTLEFIELD_ROW_GAP_PX between rows,
+// MidRail-style delta float at top:50%. ScoreCell internals untouched
+// — composition only.
+//
+// JOHN's target is communicated by the existing "{X.X} to beat." intro
+// line (H2HRecipientPlay.tsx introTypography render path) — the rail
+// shows live progress from zero, like a scoreboard before tip-off.
+function ArmedRail({ targetScore }: { targetScore: number }) {
+  return (
+    <div
+      data-h2h-armed-rail="true"
+      aria-hidden="true"
+      style={{
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        right: 0,
+        width: RIGHT_RAIL_WIDTH_PX,
+        display: "grid",
+        gridTemplateRows: "1fr 1fr",
+        rowGap: BATTLEFIELD_ROW_GAP_PX,
+        pointerEvents: "none",
+      }}
+    >
+      <ScoreCell
+        total={targetScore}
+        displayTotal={0}
+        state="trailing"
+        sizeProgress={0}
+        surface="reveal"
+        teamPosition="opponent"
+      />
+      <ScoreCell
+        total={targetScore}
+        displayTotal={0}
+        state="trailing"
+        sizeProgress={0}
+        surface="reveal"
+        teamPosition="user"
+      />
+      <div
+        data-h2h-armed-rail-delta="true"
+        style={{
+          position: "absolute",
+          top: "50%",
+          right: 0,
+          width: RIGHT_RAIL_WIDTH_PX,
+          transform: "translateY(-50%)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: DELTA_NEUTRAL,
+            fontVariantNumeric: "tabular-nums",
+            textAlign: "center",
+            lineHeight: 1.1,
+          }}
+        >
+          <div>0.0</div>
+          <div
+            style={{
+              fontSize: 7,
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.4)",
+              letterSpacing: 1,
+              textTransform: "uppercase",
+            }}
+          >
+            matchup
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function deriveHeadline(
   state: PlayingState,
   namedChallenger: string | null,
@@ -1531,7 +1649,11 @@ function deriveHeadline(
       return "Tap a card to preview. Tap again to hold.";
     case "redraw_running":
     case "your_redraw_flip":
-      return "Drawing…";
+      // RD3 (2026-06-11): the "Drawing…" headline beat is dead — the
+      // armed YOU/JOHN/delta rail in the hero owns this window instead
+      // (see the right-rail overlay below). Empty string + the existing
+      // hero-headline div renders the rail beneath it without copy.
+      return "";
     case "ab_transition":
     case "handoff_resolving":
       // Design-lock §3 step 4: settle-pause is stillness — empty
@@ -1564,21 +1686,19 @@ function deriveCta(state: PlayingState): {
       return { label: "Draw", disabled: false, onClick: "draw" };
     case "redraw_running":
     case "your_redraw_flip":
-      return { label: "Drawing…", disabled: true, onClick: null };
     case "ab_transition":
     case "handoff_resolving":
     case "arc":
-      // Bug 4: settle-pause + reveal states have no real user action —
-      // the prior "Revealing…" disabled label was a dead placeholder
-      // (no onClick, no visual progress, just static text). HIDE the
-      // CTA entirely during these beats. The empty label is the
-      // structural signal to the render below not to mount the
-      // button — the reserved-bottom wrapper STAYS so the layout
-      // height is reserved (no jump when the results overlay
-      // crossfades in with its own CTA). When the play-shell fades
-      // out at arc-composite and H2HResultsOverlay mounts, the
-      // overlay's own primary CTA (Send It Back / Try Again /
-      // Play your own hand) takes over.
+      // RD3 (2026-06-11) folds redraw_running + your_redraw_flip into
+      // this hidden-CTA branch — the prior "Drawing…" disabled label
+      // read as dead/broken. Same pattern Bug 4 already used for the
+      // settle-pause + reveal states: empty label is the structural
+      // signal to the render below not to mount the button — the
+      // reserved-bottom wrapper STAYS so the layout height is reserved
+      // (no jump when the results overlay crossfades in with its own
+      // CTA). When the play-shell fades out at arc-composite and
+      // H2HResultsOverlay mounts, the overlay's own primary CTA (Send
+      // It Back / Try Again / Play your own hand) takes over.
       return { label: "", disabled: true, onClick: null };
   }
 }
