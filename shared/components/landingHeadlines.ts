@@ -64,58 +64,60 @@ export interface BankVariant {
 // to first-name slot for `{name}`.
 
 const CHOKE_BANK: readonly BankVariant[] = [
-  { voice: "bar", weight: 3, named: true, key: "choke_bar_embiidvuc",  headline: "{name1} and {name2}? Really?",                                cta: "You keeping them too?" },
-  { voice: "bar", weight: 3,             key: "choke_bar_holds",       headline: "Those were the holds?",                                         cta: "Fix it." },
-  { voice: "bar", weight: 5,             key: "choke_bar_tipoff",      headline: "This looked smarter before tipoff.",                            cta: "Show him what smart looks like." },
-  { voice: "bar", weight: 3,             key: "choke_bar_honest",      headline: "Be honest. You were holding him too.",                          cta: "Still think that's the move?" },
-  { voice: "bar", weight: 3,             key: "choke_bar_yesterday",   headline: "Everybody loved this hand yesterday.",                          cta: "Love it now?" },
-  { voice: "bar", weight: 3,             key: "choke_bar_fiveminutes", headline: "This looked like a winner for about five minutes.",             cta: "Can you actually win with it?" },
-  { voice: "bar", weight: 3,             key: "choke_bar_talkedinto",  headline: "Somebody talked themselves into this.",                         cta: "Don't make the same mistake." },
-  { voice: "bar", weight: 3,             key: "choke_bar_name",        headline: "He trusted the name.",                                          cta: "Would you?" },
-  { voice: "bar", weight: 3, named: true, key: "choke_bar_vucecon",    headline: "{name1}. In this economy?",                                     cta: "Do better." },
-  { voice: "bar", weight: 3,             key: "choke_bar_squint",      headline: "You don't have to squint to find the problem.",                 cta: "Fix it." },
-  { voice: "analyst", weight: 3,         key: "choke_anly_warnings",   headline: "The warning signs were all there.",                             cta: "Would you have ignored them?" },
-  { voice: "analyst", weight: 3,         key: "choke_anly_jersey",     headline: "The jersey carried more weight than the stats.",                cta: "Pick with your head." },
-  { voice: "analyst", weight: 3,         key: "choke_anly_confident",  headline: "Everybody thinks they're right until the games start.",         cta: "Still feeling confident?" },
-  { voice: "analyst", weight: 3,         key: "choke_anly_betluck",    headline: "Bad bet or bad luck?",                                          cta: "You decide. Then beat it." },
-  { voice: "copy",    weight: 2,         key: "choke_copy_milk",       headline: "This hand aged like milk.",                                     cta: "Build one that ages better." },
+  { voice: "bar", weight: 3, named: true, key: "choke_bar_embiidvuc",  headline: "{name1} and {name2}? Really?",                                  cta: "You keeping them too?" },
+  { voice: "bar", weight: 3,              key: "choke_bar_holds",       headline: "Those were the holds?",                                         cta: "Fix it." },
+  { voice: "bar", weight: 5,              key: "choke_bar_tipoff",      headline: "This looked a lot smarter before tipoff.",                      cta: "Show him what smart looks like." },
+  { voice: "bar", weight: 3,              key: "choke_bar_honest",      headline: "Be honest — you were holding him too.",                         cta: "Still think that's the move?" },
+  { voice: "bar", weight: 3,              key: "choke_bar_yesterday",   headline: "Everybody loved this hand yesterday.",                          cta: "Love it now?" },
+  { voice: "bar", weight: 3,              key: "choke_bar_fiveminutes", headline: "This looked like a winner for about five minutes.",             cta: "Can you actually win with it?" },
+  { voice: "bar", weight: 3,              key: "choke_bar_talkedinto",  headline: "Somebody really talked themselves into this lineup.",           cta: "Don't make the same mistake." },
+  { voice: "bar", weight: 3,              key: "choke_bar_name",        headline: "He trusted the name and forgot to check the matchup.",          cta: "Would you have?" },
+  { voice: "bar", weight: 3, named: true, key: "choke_bar_vucecon",     headline: "{name1}. Really?",                                              cta: "Do better." },
+  { voice: "bar", weight: 3,              key: "choke_bar_squint",      headline: "The problem's not hard to find.",                               cta: "Fix it." },
+  { voice: "analyst", weight: 3,          key: "choke_anly_warnings",   headline: "The warning signs were everywhere.",                            cta: "Would you have ignored them?" },
+  { voice: "analyst", weight: 3,          key: "choke_anly_jersey",     headline: "The jersey carried more weight than the stats.",                cta: "Pick with your head." },
+  { voice: "analyst", weight: 3,          key: "choke_anly_confident",  headline: "Everybody's a genius until the games start.",                   cta: "Still feeling confident?" },
+  { voice: "analyst", weight: 3,          key: "choke_anly_betluck",    headline: "Bad bet, or bad luck?",                                         cta: "You decide. Then beat it." },
+  { voice: "copy",    weight: 2,          key: "choke_copy_milk",       headline: "This hand aged like milk.",                                     cta: "Build one that ages better." },
 ];
 
 const MISS_BANK: readonly BankVariant[] = [
-  { voice: "bar",     weight: 3, key: "miss_bar_mistake",     headline: "You can see the mistake, can't you?",        cta: "Fix it." },
-  { voice: "bar",     weight: 3, key: "miss_bar_95",          headline: "He got 95% of the way there.",               cta: "Get the other 5%." },
-  { voice: "bar",     weight: 3, key: "miss_bar_bother",      headline: "This one's gonna bother him.",               cta: "Finish it." },
-  { voice: "bar",     weight: 3, key: "miss_bar_hurts",       headline: "So close it hurts.",                         cta: "Finish the job." },
-  { voice: "bar",     weight: 3, key: "miss_bar_closer",      headline: "He was closer than he realizes.",            cta: "Get all the way there." },
-  { voice: "analyst", weight: 5, key: "miss_anly_onehold",    headline: "One hold changed the whole story.",          cta: "Which one?" },
-  { voice: "analyst", weight: 3, key: "miss_anly_staring",    headline: "The answer was staring him in the face.",    cta: "Do you see it?" },
-  { voice: "analyst", weight: 3, key: "miss_anly_fixfront",   headline: "The fix is right in front of you.",          cta: "Take it." },
-  { voice: "analyst", weight: 3, key: "miss_anly_onedecision", headline: "One better decision changes everything.",   cta: "Make it." },
-  { voice: "copy",    weight: 2, key: "miss_copy_unfinished", headline: "This hand is unfinished business.",          cta: "Finish it." },
+  { voice: "bar",     weight: 3, key: "miss_bar_mistake",     headline: "You can see the mistake, can't you?",         cta: "Fix it." },
+  { voice: "bar",     weight: 3, key: "miss_bar_95",          headline: "He got 95% of the way there.",                cta: "Get the other 5%." },
+  { voice: "bar",     weight: 3, key: "miss_bar_bother",      headline: "This one's going to bother him for a while.", cta: "Finish it." },
+  { voice: "bar",     weight: 3, key: "miss_bar_hurts",       headline: "So close it hurts.",                          cta: "Finish the job." },
+  { voice: "bar",     weight: 3, key: "miss_bar_closer",      headline: "He was closer than he realizes.",             cta: "Get all the way there." },
+  { voice: "analyst", weight: 5, key: "miss_anly_onehold",    headline: "One hold changed this entire hand.",          cta: "Which one?" },
+  { voice: "analyst", weight: 3, key: "miss_anly_staring",    headline: "The answer was staring him in the face.",     cta: "Do you see it?" },
+  { voice: "analyst", weight: 3, key: "miss_anly_fixfront",   headline: "The fix is right in front of you.",           cta: "Take it." },
+  { voice: "analyst", weight: 3, key: "miss_anly_onedecision", headline: "One better decision and this hand wins.",    cta: "Make it." },
+  { voice: "copy",    weight: 2, key: "miss_copy_unfinished", headline: "This hand is unfinished business.",           cta: "Finish it." },
 ];
 
 const RESPECT_BANK: readonly BankVariant[] = [
   // Respectful (70%)
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_goodluck",   headline: "Yeah, good luck with this one.",       cta: "You're gonna need it." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                cta: "Beat it." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nailed",     headline: "He might actually have nailed it.",     cta: "Prove he didn't." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_survive",    headline: "Not many hands survive this test.",     cta: "Take it anyway." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nuts",       headline: "He found the nuts.",                    cta: "Can you?" },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_heater",     headline: "This is what a heater looks like.",     cta: "Bring your own." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard isn't lying.",           cta: "Do something about it." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",          cta: "This one deserves competition." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_goodluck",   headline: "Yeah, good luck with this one.",          cta: "You're gonna need it." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                  cta: "Beat it." },
+  { voice: "bar", weight: 5, stance: "respect", key: "resp_r_nailed",     headline: "He might have actually nailed this one.", cta: "Prove he didn't." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_survive",    headline: "Not many hands survive this.",            cta: "Take it anyway." },
+  // resp_r_nuts (poker idiom) retired this commit — replaced by
+  // resp_r_brokeright with a plain-English read.
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_brokeright", headline: "Everything broke his way.",               cta: "Can you?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_heater",     headline: "This is what a heater looks like.",       cta: "Bring your own." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard's not lying.",             cta: "Do something about it." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",            cta: "This one deserves competition." },
   // Disrespectful (30%)
   { voice: "bar", weight: 5, stance: "disrespect", key: "resp_d_scared",      headline: "That's the score we're supposed to be scared of?", cta: "Prove me wrong." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really sent this out?",                          cta: "Beat it." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_besthand",    headline: "That's your best hand?",                            cta: "Let's see mine." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_thinkswins",  headline: "He thinks this wins.",                              cta: "Does it?" },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really hit send on this?",                       cta: "Beat it." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_besthand",    headline: "This is your best hand?",                           cta: "Let's see mine." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_thinkswins",  headline: "He thinks this wins?",                              cta: "Does it?" },
   { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_credit",      headline: "He wants credit for that?",                         cta: "Earn yours." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_impressed",   headline: "We're impressed by this now?",                      cta: "Show me something better." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_impressed",   headline: "This is what impresses people now?",                cta: "Show me something better." },
 ];
 
 const DEFAULT_BANK: readonly BankVariant[] = [
-  { voice: "bar", weight: 3, key: "def_board",  headline: "He's on the board.",            cta: "Knock him off." },
   { voice: "bar", weight: 3, key: "def_number", headline: "He set a number.",              cta: "Beat it." },
+  { voice: "bar", weight: 3, key: "def_board",  headline: "He put up a number.",           cta: "Knock him off." },
   { voice: "bar", weight: 3, key: "def_picks",  headline: "He made his picks.",            cta: "Make better ones." },
   { voice: "bar", weight: 3, key: "def_talk",   headline: "Beat this and talk your talk.", cta: "Go ahead." },
 ];
@@ -317,7 +319,12 @@ function pickStanceWeighted(pool: readonly BankVariant[], rng: () => number): Ba
  *  - 3+ held → generic only (named excluded per spec).
  *  - 1-2 held → named lines eligible iff their `{nameN}` templates can be
  *    satisfied (a {name2} line needs 2 held; {name1}/{name} needs 1).
- *  - 0 held → generic only (no names to substitute). */
+ *  - 0 held → generic only (no names to substitute).
+ *
+ *  This returns the FULL eligible pool (named + generic). The 20% named
+ *  cap (spec §Behavior tweaks) is applied at selection time in
+ *  pickHeadlineAndCta, not here — the eligibility set is the input to
+ *  that decision, not a substitute for it. */
 export function eligibleChokeLines(heldNamesList: readonly string[]): readonly BankVariant[] {
   const n = heldNamesList.length;
   if (n === 0 || n >= 3) return CHOKE_BANK.filter(v => !v.named);
@@ -328,6 +335,11 @@ export function eligibleChokeLines(heldNamesList: readonly string[]): readonly B
     return true;
   });
 }
+
+/** Probability of drawing from the named sub-pool when named lines are
+ *  eligible (rest of the time, draw from generic). Spec §Behavior
+ *  tweaks: "named is a spike, not the default." Exported for tests. */
+export const NAMED_CAP_PROBABILITY = 0.20;
 
 // ── Public API ──────────────────────────────────────────────────────────
 
@@ -359,7 +371,18 @@ export function pickHeadlineAndCta(args: PickHeadlineArgs): LandingHeadlineOutpu
   let variant: BankVariant;
   switch (args.trigger) {
     case "choke": {
-      const pool = eligibleChokeLines(args.heldNamesList);
+      // Named cap (spec §Behavior tweaks #1): when both named + generic
+      // are eligible, draw from named only NAMED_CAP_PROBABILITY of the
+      // time; otherwise draw from generic. Voice weighting + per-line
+      // weight then apply within the chosen sub-pool. Named lines are
+      // currently all "bar" voice, so voice weighting inside the named
+      // sub-pool degenerates to a straight weighted pick — that's
+      // expected and not a code smell.
+      const eligible = eligibleChokeLines(args.heldNamesList);
+      const namedPool = eligible.filter(v => v.named === true);
+      const genericPool = eligible.filter(v => v.named !== true);
+      const useNamed = namedPool.length > 0 && rng() < NAMED_CAP_PROBABILITY;
+      const pool = useNamed ? namedPool : genericPool;
       variant = pickVoiceWeighted(pool, rng);
       break;
     }

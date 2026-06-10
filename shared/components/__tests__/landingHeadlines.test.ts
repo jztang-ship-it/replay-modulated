@@ -14,6 +14,7 @@ import {
   rngFromChallengeId,
   mulberry32,
   BANKS,
+  NAMED_CAP_PROBABILITY,
   FALLBACK_CTA,
   type BankVariant,
 } from "../landingHeadlines";
@@ -239,15 +240,44 @@ describe("voice weighting — 70% bar / 25% analyst / 5% copy (choke + miss)", (
     return dist;
   }
 
-  it("choke voice distribution within ±5% of 70/25/5 over 5000 samples", () => {
+  it("choke voice distribution with 2 holds — named cap re-weights bar (~76%/20%/4%)", () => {
+    // The 20% named cap routes one-in-five choke draws through the
+    // named-only sub-pool, which is 100% "bar" voice. Expected mix:
+    //   bar     = 0.20·1.0 + 0.80·0.70 = 0.76
+    //   analyst = 0.20·0   + 0.80·0.25 = 0.20
+    //   copy    = 0.20·0   + 0.80·0.05 = 0.04
+    // Bounds ±5% around those expectations.
     const samples = 5000;
     const d = distribution("choke", samples);
-    expect(d.bar / samples).toBeGreaterThan(0.65);
-    expect(d.bar / samples).toBeLessThan(0.75);
-    expect(d.analyst / samples).toBeGreaterThan(0.20);
-    expect(d.analyst / samples).toBeLessThan(0.30);
-    expect(d.copy / samples).toBeGreaterThan(0.02);
+    expect(d.bar / samples).toBeGreaterThan(0.71);
+    expect(d.bar / samples).toBeLessThan(0.81);
+    expect(d.analyst / samples).toBeGreaterThan(0.15);
+    expect(d.analyst / samples).toBeLessThan(0.25);
+    expect(d.copy / samples).toBeGreaterThan(0.01);
     expect(d.copy / samples).toBeLessThan(0.08);
+  });
+
+  it("choke voice distribution with 3+ holds — named cap DOES NOT fire → straight 70/25/5", () => {
+    // 3+ holds → named pool is empty → useNamed always false → straight
+    // voice prior over generic pool only.
+    const samples = 5000;
+    const dist: Record<string, number> = { bar: 0, analyst: 0, copy: 0 };
+    for (let i = 0; i < samples; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: ["A B", "C D", "E F"],
+        challengeId: `ch_3hold_${i}`,
+      });
+      const v = BANKS.choke.find(x => x.key === out.variantKey)?.voice ?? "?";
+      dist[v] = (dist[v] ?? 0) + 1;
+    }
+    expect(dist.bar / samples).toBeGreaterThan(0.65);
+    expect(dist.bar / samples).toBeLessThan(0.75);
+    expect(dist.analyst / samples).toBeGreaterThan(0.20);
+    expect(dist.analyst / samples).toBeLessThan(0.30);
+    expect(dist.copy / samples).toBeGreaterThan(0.02);
+    expect(dist.copy / samples).toBeLessThan(0.08);
   });
 
   it("miss voice distribution within ±5% of 70/25/5 over 5000 samples", () => {
@@ -356,6 +386,107 @@ describe("choke named-line gating end-to-end", () => {
       }
     }
     expect(found, "choke_bar_embiidvuc never fired across 5000 seeds with 2 holds").toBe(true);
+  });
+});
+
+// ── Named cap — ~20% fire rate when eligible (spec §Behavior tweaks #1) ─
+
+describe("Named cap — named lines fire ~20% of the time when eligible", () => {
+  it("constant is exported as 0.20", () => {
+    expect(NAMED_CAP_PROBABILITY).toBe(0.20);
+  });
+
+  it("2 holds → named-line share of all choke draws is within ±3% of 20% (10000 samples)", () => {
+    const samples = 10000;
+    let named = 0;
+    for (let i = 0; i < samples; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_namedrate_${i}`,
+      });
+      const v = BANKS.choke.find(x => x.key === out.variantKey);
+      if (v?.named) named++;
+    }
+    const rate = named / samples;
+    expect(rate).toBeGreaterThan(0.17);
+    expect(rate).toBeLessThan(0.23);
+  });
+
+  it("1 hold → named-line share of choke draws is still ~20% (named pool not empty)", () => {
+    // With 1 hold, choke_bar_vucecon (needs 1 name) is the only named
+    // line eligible; choke_bar_embiidvuc (needs 2) is filtered out.
+    // The 20% cap still applies — when named eligible, draw from named
+    // 20% of the time.
+    const samples = 5000;
+    let named = 0;
+    for (let i = 0; i < samples; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: ["Stephen Curry"],
+        challengeId: `ch_one_${i}`,
+      });
+      const v = BANKS.choke.find(x => x.key === out.variantKey);
+      if (v?.named) named++;
+    }
+    const rate = named / samples;
+    expect(rate).toBeGreaterThan(0.15);
+    expect(rate).toBeLessThan(0.25);
+  });
+
+  it("3+ holds → named-line share is 0 (cap moot; pool only contains generic)", () => {
+    for (let i = 0; i < 2000; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: ["A B", "C D", "E F"],
+        challengeId: `ch_threeagain_${i}`,
+      });
+      const v = BANKS.choke.find(x => x.key === out.variantKey);
+      expect(v?.named).not.toBe(true);
+    }
+  });
+});
+
+// ── Key rename: resp_r_nuts → resp_r_brokeright ────────────────────────
+
+describe("Key rename — resp_r_nuts retired, resp_r_brokeright is its replacement", () => {
+  it("RESPECT bank contains resp_r_brokeright but NOT resp_r_nuts", () => {
+    const keys = BANKS.respect.map(v => v.key);
+    expect(keys).toContain("resp_r_brokeright");
+    expect(keys).not.toContain("resp_r_nuts");
+  });
+
+  it("resp_r_brokeright entry has the new plain-English copy + KEEP CTA", () => {
+    const v = BANKS.respect.find(x => x.key === "resp_r_brokeright");
+    expect(v).toBeDefined();
+    expect(v!.headline).toBe("Everything broke his way.");
+    expect(v!.cta).toBe("Can you?");
+    expect(v!.stance).toBe("respect");
+  });
+
+  it("no respect-pool line still references the retired poker idiom 'nuts'", () => {
+    for (const v of BANKS.respect) {
+      expect(v.headline.toLowerCase()).not.toContain("nuts");
+      expect(v.cta.toLowerCase()).not.toContain("nuts");
+    }
+  });
+
+  it("the renamed key is reachable via the seeded selection (variantKey === 'resp_r_brokeright' fires across many seeds)", () => {
+    let found = false;
+    for (let i = 0; i < 5000 && !found; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "big_score",
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_brokeright_${i}`,
+        winTier: "MVP",
+      });
+      if (out.variantKey === "resp_r_brokeright") found = true;
+    }
+    expect(found, "resp_r_brokeright never fired across 5000 seeds with trigger=big_score").toBe(true);
   });
 });
 
