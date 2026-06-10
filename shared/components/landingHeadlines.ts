@@ -1,29 +1,33 @@
 // shared/components/landingHeadlines.ts
 //
-// RD5.1 — Decision-frame headline + CTA + seal system for the recipient
-// challenge landing. Spec of record: docs/rd5-1-headline-system-spec.md.
+// RD5.1 v3 — Decision-frame headline + CTA + seal system for the
+// recipient challenge landing. Spec of record: docs/rd5-1-headline-
+// system-spec.md (v3 — native vocabulary lock).
 //
-// Governing principle: the headline starts an argument, the stamp provides
-// evidence, the CTA lets the recipient answer. The headline must NEVER
-// contain the stamp's label word (no-duplication guardrail).
+// Governing principle: the headline starts an argument, the stamp
+// provides evidence, the CTA lets the recipient answer. The vocabulary
+// mirrors the game's own — `HELD` for the sender's decision (matches
+// the in-game state name `wasHeld`) and `KEEP` on the CTA (matches the
+// recipient's literal next-screen instruction "Tap the players you'd
+// keep. Draw the rest." in H2HRecipientPlay.tsx:406).
 //
-// This module is pure: given the trigger + held-card names + sender name +
-// (for the miss/rare_pull seal label) the trigger-detail fields, it returns
-// the rendered strings for the h1, the seal, and the CTA. No data fetching,
-// no React, no side effects. The landing component renders them.
+// Stamp labels + colors mirror `TierGauge.tsx` (the in-game commentary
+// chip that fires alongside the result). The string "BIG SCORE" is
+// retired — big_score renders the tier label only.
 //
-// Tier-agnostic headlines: only the seal LABEL depends on missTier /
-// topGameTier. The headline copy is the same shape for every miss or
-// rare_pull. This is by design — the seal carries the tier.
+// This module is pure: no React, no DOM, no side effects. The landing
+// component renders the strings returned by pickHeadlineAndCta and the
+// stamp label / color returned by resolveSeal.
 
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
+import type { WinTierKey } from "@shared/utils/payoutLogic";
 
 // ── Held-card name listing ───────────────────────────────────────────────
 //
-// Spec: 1 → "HARDEN", 2 → "HARDEN AND BEAL", 3+ → "HIS STARS" /
-// "THE BIG NAMES". The card grid still shows the full roster — this is for
-// the headline string only. Single-name picks the last token of the player's
-// name (matches the "HARDEN", "BEAL" examples in the spec).
+// Spec §Name rules: 1 → "LAST", 2 → "LAST AND LAST", 3+ → "HIS STARS".
+// The headline templates prefix these with HELD ("HELD HARDEN AND BEAL").
+// Single-name picks the last token (matches the spec's HARDEN / BEAL
+// worked examples).
 
 function lastName(full: string): string {
   const trimmed = full.trim();
@@ -33,9 +37,6 @@ function lastName(full: string): string {
 }
 
 export function formatHeldNamesForHeadline(names: readonly string[]): string {
-  // Pre-uppercase so the rendered string survives even if the consumer
-  // doesn't apply textTransform. The h1 in the landing also applies
-  // uppercase via CSS — this double-cover is intentional.
   if (names.length === 0) return "HIS STARS";
   if (names.length === 1) return lastName(names[0]).toUpperCase();
   if (names.length === 2) {
@@ -46,43 +47,63 @@ export function formatHeldNamesForHeadline(names: readonly string[]): string {
   return "HIS STARS";
 }
 
-// ── Choke setup verbs (decision-verb pool) ───────────────────────────────
-//
-// Per the spec: "Setup verbs to vary the decision clause: trusted · backed
-// · rode with · bet on · stuck with · handed the keys to."
-// Exported for future deterministic-pick wiring; the live choke default
-// uses "TRUSTED" (the worked example).
+// ── Hold-verb pool (spec §Name rules) ────────────────────────────────────
+// Build default is `HELD`; the alternates are documented on the tree for a
+// later variation pass. NOT wired as an A/B harness in v3.
 
-export const CHOKE_SETUP_VERBS = [
-  "TRUSTED",
-  "BACKED",
-  "RODE WITH",
-  "BET ON",
-  "STUCK WITH",
-  "HANDED THE KEYS TO",
-] as const;
+export const HOLD_VERBS = ["HELD", "KEPT", "STUCK WITH", "RODE WITH"] as const;
 
-// ── Choke consequence-clause alternates ──────────────────────────────────
-//
-// Spec leaves all three in for a later A/B; build default = THE CALL COST
-// HIM. Kept as a const array (not an A/B harness) so the alternates are
-// authored on the tree without a flag.
+// ── Choke consequence-clause (spec §choke) ───────────────────────────────
+// Build default is `IT COST HIM.` The two alternates ride on the tree as a
+// const array for a later A/B; do NOT wire a harness in v3.
 
-export const CHOKE_CONSEQUENCE_DEFAULT = "THE CALL COST HIM.";
+export const CHOKE_CONSEQUENCE_DEFAULT = "IT COST HIM.";
 export const CHOKE_CONSEQUENCE_ALTERNATES = [
-  "IT COST HIM.",        // outcome-focused
-  "WRONG CALL.",         // argument-focused
+  "WRONG HOLD.",   // argument-focused
+  "IT BACKFIRED.", // outcome-focused
 ] as const;
 
-// ── Seal label resolution ────────────────────────────────────────────────
+// ── Stamp seal — labels + colors mirror TierGauge.tsx ───────────────────
 //
-// Resolves the trigger's stamp label. Returns null for `default` (no seal).
-// For `miss`, the spec retires "NEAR MISS" — only ALL STAR / MVP / LEGEND
-// MISS exist; bare "MISS" is a defensive fallback when the tier is missing.
-// For `rare_pull`, the tier label map is verified.
+// Source-of-truth file references in comments. The landing's InFlowBadge
+// component renders this label + color; the headline guardrail uses the
+// label string to compute the forbidden vocabulary dynamically.
 
+export interface SealVisual {
+  /** Visible label, uppercase. */
+  label: string;
+  /** CSS background (gradient or solid color from TIER_CFG). */
+  background: string;
+  /** Text color on the chip. */
+  color: string;
+}
+
+// TierGauge.tsx:101-108 — TIER_CFG for win_tier stamps. big_score reuses
+// these solid colors (no gradient) because that's what TierGauge renders.
+const WIN_TIER_COLOR: Record<WinTierKey, string> = {
+  LEGEND:   "#EF4444",
+  MVP:      "#FB923C",
+  ALL_STAR: "#C084FC",
+  STARTER:  "#3B82F6",
+  ROOKIE:   "#22C55E",
+  BUST:     "#6B7280",
+};
+
+// TierGauge.tsx:101-108 — the on-chip label for ALL_STAR is "ALL-STAR"
+// (hyphen, not space). MVP and LEGEND need no transformation.
+const WIN_TIER_LABEL: Record<WinTierKey, string> = {
+  LEGEND:   "LEGEND",
+  MVP:      "MVP",
+  ALL_STAR: "ALL-STAR",
+  STARTER:  "STARTER",
+  ROOKIE:   "ROOKIE",
+  BUST:     "BUST",
+};
+
+// TierGauge.tsx:451-455 — rare_pull sub-tier labels. NO "NEW" prefix;
+// the in-game chip renders RECORD / CAREER HIGH / SEASON HIGH.
 const RARE_PULL_TIER_LABEL: Record<string, string> = {
-  record: "NEW RECORD",
+  record: "RECORD",
   career: "CAREER HIGH",
   season: "SEASON HIGH",
 };
@@ -92,52 +113,92 @@ function formatMissTier(raw: string | null | undefined): string {
   return raw.replace(/_/g, " ").trim().toUpperCase();
 }
 
-export function resolveSealLabel(
-  trigger: TakeCardTrigger,
-  missTier?: string | null,
-  topGameTier?: "record" | "career" | "season" | null,
-): string | null {
-  switch (trigger) {
+export interface ResolveSealArgs {
+  trigger: TakeCardTrigger;
+  missTier?: string | null;
+  topGameTier?: "record" | "career" | "season" | null;
+  /** Resolved win tier for big_score (sport adapter computes it from
+   *  target_score). Required only for big_score; null/undefined for the
+   *  other triggers. When big_score lacks a winTier (legacy / fallback),
+   *  the seal degrades to a transparent "RESULT" pill so the surface
+   *  still reads as evidence — caller treats as a soft-fail, not a hard
+   *  null. */
+  winTier?: WinTierKey | null;
+}
+
+/** Resolves the visible seal for the trigger. Returns null when the
+ *  trigger is `default` (no seal — the headline starts the argument
+ *  unaided per spec §default). */
+export function resolveSeal(args: ResolveSealArgs): SealVisual | null {
+  switch (args.trigger) {
     case "choke":
-      return "CHOKE";
-    case "big_score":
-      return "BIG SCORE";
+      return {
+        label: "CHOKE",
+        background: "linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%)",
+        color: "#fff5f5",
+      };
     case "miss": {
-      const prefix = formatMissTier(missTier);
-      return prefix ? `${prefix} MISS` : "MISS";
+      const prefix = formatMissTier(args.missTier);
+      return {
+        label: prefix ? `${prefix} MISS` : "MISS",
+        background: "linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)",
+        color: "#3a2000",
+      };
     }
-    case "rare_pull":
-      return topGameTier ? (RARE_PULL_TIER_LABEL[topGameTier] ?? "RARE PULL") : "RARE PULL";
+    case "big_score": {
+      // The win_tier stamp from TierGauge: label is the tier, color is
+      // the TIER_CFG color. big_score gates on ALL_STAR / MVP / LEGEND
+      // upstream (triggerEvaluation.ts:185). The resolver here is
+      // defensive against cross-season threshold drift — if the
+      // recipient-side calculateWinTier returns a lower tier than
+      // big_score's eligibility floor (the sender hit MVP at season X
+      // thresholds, but the recipient applies the current season's
+      // thresholds and the same FP value lands at STARTER), we soft-
+      // fail to the floor (ALL-STAR) rather than render a "STARTER"
+      // seal that contradicts the trigger.
+      const eligible: ReadonlySet<WinTierKey> = new Set<WinTierKey>(["ALL_STAR", "MVP", "LEGEND"]);
+      const tier: WinTierKey = (args.winTier && eligible.has(args.winTier)) ? args.winTier : "ALL_STAR";
+      return {
+        label: WIN_TIER_LABEL[tier],
+        background: WIN_TIER_COLOR[tier],
+        color: "#070A12",
+      };
+    }
+    case "rare_pull": {
+      const key = args.topGameTier ?? "";
+      const label = RARE_PULL_TIER_LABEL[key] ?? "RARE PULL";
+      return {
+        label,
+        background: "linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%)",
+        color: "#070A12",
+      };
+    }
     case "default":
     default:
       return null;
   }
 }
 
-// ── Headline templates ───────────────────────────────────────────────────
-//
-// All five trigger shapes are tier-agnostic prose; the seal carries any
-// tier specificity. Headlines must pass the Why?/Really?/What happened?
-// test (spec §"The Headline Test") — they start an argument, they don't
-// finish one. Score is never in a headline (spec §"Score rule"); the
-// target line above the CTA is the sole numeric.
+// ── Headline templates (v3 — HELD verb throughout) ──────────────────────
 
 interface HeadlineInputs {
-  trigger: TakeCardTrigger;
-  challengerName: string;            // already passed isRealName upstream
-  heldNamesList: readonly string[];  // ordered held-card display names
+  challengerName: string;
+  heldNamesList: readonly string[];
 }
 
 function chokeHeadline({ challengerName, heldNamesList }: HeadlineInputs): string {
-  // Worked example: JOHN TRUSTED HARDEN AND BEAL. THE CALL COST HIM.
+  // Worked example: JOHN HELD HARDEN AND BEAL. IT COST HIM.
   const name = challengerName.toUpperCase();
   const held = formatHeldNamesForHeadline(heldNamesList);
-  return `${name} ${CHOKE_SETUP_VERBS[0]} ${held}. ${CHOKE_CONSEQUENCE_DEFAULT}`;
+  return `${name} HELD ${held}. ${CHOKE_CONSEQUENCE_DEFAULT}`;
 }
 
 function bigScoreHeadline({ challengerName }: HeadlineInputs): string {
+  // The held lineup delivered — generic "HIS STARS" carries the spec's
+  // big_score template without needing per-name listing (the cards below
+  // name the actual lineup).
   const name = challengerName.toUpperCase();
-  return `${name} PUT TOGETHER A MONSTER HAND.`;
+  return `${name} HELD HIS STARS AND THEY DELIVERED.`;
 }
 
 function rarePullHeadline({ challengerName }: HeadlineInputs): string {
@@ -146,8 +207,11 @@ function rarePullHeadline({ challengerName }: HeadlineInputs): string {
 }
 
 function missHeadline({ challengerName }: HeadlineInputs): string {
+  // v3: de-swapped to KEEP. The recipient mechanic is keep/draw, not
+  // swap — the headline now uses the verb the recipient will see on the
+  // next screen.
   const name = challengerName.toUpperCase();
-  return `ONE SWAP STOOD BETWEEN ${name} AND GREATNESS.`;
+  return `${name} WAS ONE KEEP AWAY FROM GREATNESS.`;
 }
 
 function defaultHeadline({ challengerName }: HeadlineInputs): string {
@@ -155,31 +219,24 @@ function defaultHeadline({ challengerName }: HeadlineInputs): string {
   return `${name} SET THE BAR.`;
 }
 
-// ── CTA per trigger ──────────────────────────────────────────────────────
-//
-// Spec §"CTA rule": outcome-aware AND frame-aware. Each CTA answers its
-// headline's argument. ACCEPT CHALLENGE is the fallback ONLY (used when the
-// trigger isn't known on the data path).
+// ── CTA per trigger (v3 — keep-action where appropriate) ────────────────
 
 const CTA_BY_TRIGGER: Record<TakeCardTrigger, string> = {
-  choke: "MAKE THE BETTER CALL",
+  choke:     "KEEP THE RIGHT ONES",
   big_score: "TRY TO TOP IT",
   rare_pull: "TAKE YOUR SHOT",
-  miss: "FIND THE SWAP",
-  default: "CLEAR IT",
+  miss:      "KEEP WHO YOU'D KEEP",
+  default:   "KEEP THE RIGHT ONES",
 };
 
 export const FALLBACK_CTA = "ACCEPT CHALLENGE";
 
-// ── Public API ───────────────────────────────────────────────────────────
-//
-// Single entry point the landing component uses. Returns ready-to-render
-// strings (headline + ctaLabel) and the seal label (or null for default).
+// ── Public API ──────────────────────────────────────────────────────────
 
 export interface LandingHeadlineOutput {
   headline: string;
   ctaLabel: string;
-  sealLabel: string | null;
+  seal: SealVisual | null;
 }
 
 export interface PickHeadlineArgs {
@@ -188,11 +245,13 @@ export interface PickHeadlineArgs {
   heldNamesList: readonly string[];
   missTier?: string | null;
   topGameTier?: "record" | "career" | "season" | null;
+  /** Resolved win tier for big_score (passed in from the sport adapter
+   *  via the landing shell). */
+  winTier?: WinTierKey | null;
 }
 
 export function pickHeadlineAndCta(args: PickHeadlineArgs): LandingHeadlineOutput {
   const inputs: HeadlineInputs = {
-    trigger: args.trigger,
     challengerName: args.challengerName,
     heldNamesList: args.heldNamesList,
   };
@@ -210,55 +269,72 @@ export function pickHeadlineAndCta(args: PickHeadlineArgs): LandingHeadlineOutpu
   return {
     headline,
     ctaLabel: CTA_BY_TRIGGER[args.trigger] ?? FALLBACK_CTA,
-    sealLabel: resolveSealLabel(args.trigger, args.missTier, args.topGameTier),
+    seal: resolveSeal({
+      trigger: args.trigger,
+      missTier: args.missTier,
+      topGameTier: args.topGameTier,
+      winTier: args.winTier,
+    }),
   };
 }
 
-// ── No-duplication guardrail (spec §Governing principle) ────────────────
+// ── No-duplication guardrail (v3 — dynamic per rendered stamp) ──────────
 //
-// Whole-word, case-insensitive. Headline must NOT contain any token from
-// the stamp's label vocabulary. Exported so the component test can
-// parametrize over all five triggers without re-deriving the rules.
+// Spec §No-duplication guardrail. Computes the forbidden vocabulary from
+// the seal that the trigger will actually render — NOT a hardcoded const
+// array. Whole-word, case-insensitive.
 //
-// Vocabulary derives from the seal labels and obvious inflections:
-//   choke     → choke, choked, choking
-//   big_score → big, score, scored, scoring, scoreboard? — no, scoreboard
-//               would never appear in a tier-agnostic prose headline AND
-//               whole-word matching means "scoreboard" wouldn't trip
-//               "score" anyway. The literal stamp words are "BIG SCORE";
-//               we forbid those two stems.
-//   miss      → miss, missed, missing  (plus the tier tokens that appear
-//               on the seal: ALL, STAR, MVP, LEGEND — but those CAN
-//               appear in a headline that doesn't restate the seal, e.g.
-//               "GREATNESS" lives near MVP semantically without being the
-//               same word. The guardrail enforces the stamp's literal
-//               vocabulary, not its semantics.)
-//   rare_pull → rare, pull, record, career, season  (the seal label is
-//               one of NEW RECORD / CAREER HIGH / SEASON HIGH; if any of
-//               those root words shows up in the headline, the no-
-//               duplication rule is violated.)
-//   default   → no seal → no forbidden tokens.
+// Why dynamic: a static list either over-blocks (e.g. ban "MVP" from
+// every miss headline even when missTier is ALL_STAR) or under-blocks
+// (let "MVP" through a miss whose seal IS "MVP MISS"). The actual
+// duplication risk is between the headline and the rendered stamp; the
+// dynamic check matches that risk exactly.
+//
+// Tokenization: split the seal label on whitespace + hyphen, drop very
+// short tokens (≤2 chars — "ALL" stays in, but "OF" / "AT" / etc never
+// appear in stamp labels anyway). Each token becomes a whole-word case-
+// insensitive regex. Also fold in common inflections of the base stamp
+// verbs (CHOKE → CHOKED/CHOKING; MISS → MISSED/MISSING) so a future
+// author can't write "JOHN CHOKED THIS HAND" without a guardrail hit
+// even though the chip says "CHOKE" (not "CHOKED").
 
-const FORBIDDEN_BY_TRIGGER: Record<TakeCardTrigger, readonly string[]> = {
-  choke: ["choke", "choked", "choking"],
-  big_score: ["big", "score", "scored", "scoring"],
-  miss: ["miss", "missed", "missing"],
-  rare_pull: ["rare", "pull", "record", "career", "season"],
-  default: [],
+const STEM_INFLECTIONS: Record<string, readonly string[]> = {
+  CHOKE: ["choke", "choked", "choking"],
+  MISS:  ["miss", "missed", "missing"],
 };
 
-export function forbiddenWordsForTrigger(trigger: TakeCardTrigger): readonly string[] {
-  return FORBIDDEN_BY_TRIGGER[trigger] ?? [];
+/** Tokens forbidden in a headline that will render this seal, lower-cased
+ *  for the case-insensitive regex. Empty array for seal=null (default
+ *  trigger → guardrail N/A). */
+export function forbiddenTokensFromSeal(seal: SealVisual | null): string[] {
+  if (!seal) return [];
+  const out = new Set<string>();
+  // Split on whitespace and hyphen so "ALL-STAR" and "ALL STAR" both
+  // contribute the same token set (ALL + STAR).
+  for (const raw of seal.label.split(/[\s-]+/)) {
+    const t = raw.trim().toLowerCase();
+    if (t.length === 0) continue;
+    if (STEM_INFLECTIONS[t.toUpperCase()]) {
+      for (const inf of STEM_INFLECTIONS[t.toUpperCase()]) out.add(inf);
+    } else {
+      out.add(t);
+    }
+  }
+  return Array.from(out);
 }
 
-export function headlineContainsForbiddenWord(
-  trigger: TakeCardTrigger,
+export interface HeadlineDuplicationResult {
+  hit: boolean;
+  /** When hit, the token that fired. */
+  word?: string;
+}
+
+export function headlineContainsSealVocabulary(
   headline: string,
-): { hit: true; word: string } | { hit: false } {
-  const words = FORBIDDEN_BY_TRIGGER[trigger] ?? [];
-  for (const w of words) {
-    // Whole-word, case-insensitive. \b handles ASCII word boundaries,
-    // which the spec headlines stay within (no diacritics).
+  seal: SealVisual | null,
+): HeadlineDuplicationResult {
+  const tokens = forbiddenTokensFromSeal(seal);
+  for (const w of tokens) {
     const re = new RegExp(`\\b${w}\\b`, "i");
     if (re.test(headline)) return { hit: true, word: w };
   }

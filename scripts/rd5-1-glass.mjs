@@ -24,11 +24,15 @@ const outDir = path.join(
 mkdirSync(outDir, { recursive: true });
 
 const cases = [
-  { key: "choke",     label: "choke"     },
-  { key: "miss",      label: "miss"      },
-  { key: "big_score", label: "big_score" },
-  { key: "rare_pull", label: "rare_pull" },
-  { key: "default",   label: "default"   },
+  { key: "choke",     label: "choke",     extra: "" },
+  { key: "miss",      label: "miss",      extra: "" },
+  { key: "big_score", label: "big_score", extra: "" },
+  { key: "rare_pull", label: "rare_pull", extra: "" },
+  { key: "default",   label: "default",   extra: "" },
+  // RD5.1 v3 — owner Play Again path. Same data, alreadyAttempted=1
+  // forced from URL so the surface renders the owner CTA without
+  // needing a real prior attempt in localStorage.
+  { key: "choke",     label: "owner_play_again", extra: "&alreadyAttempted=1" },
 ];
 
 const browser = await chromium.launch();
@@ -39,7 +43,7 @@ const ctx = await browser.newContext({
 const page = await ctx.newPage();
 
 for (const c of cases) {
-  const url = `${DEV_URL}/basketball/dev/challenge-landing-mock?case=${c.key}`;
+  const url = `${DEV_URL}/basketball/dev/challenge-landing-mock?case=${c.key}${c.extra ?? ""}`;
   await page.goto(url, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts && document.fonts.ready);
   const file = path.join(outDir, `rd5-1-${c.label}.png`);

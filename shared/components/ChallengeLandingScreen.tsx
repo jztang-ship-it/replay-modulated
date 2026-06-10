@@ -63,6 +63,13 @@ interface Props {
   currentUserId?: string | null;
   deserializeRoster: (snapshot: Record<string, unknown>) => GeneratedCard[];
   validateRosterSnapshot: (snapshot: Record<string, unknown>) => boolean;
+  /** RD5.1 v3 — sport-bound win-tier resolver. Used by the take-card
+   *  landing to resolve the big_score seal (LEGEND / MVP / ALL-STAR)
+   *  from the persisted target_score. Mirrors how H2HRecipientPlay
+   *  receives it from the same sport adapter (H2HRecipientPlay.tsx:289).
+   *  Returns the win-tier string in the WinTierKey vocabulary
+   *  (LEGEND / MVP / ALL_STAR / STARTER / ROOKIE / BUST). */
+  calculateWinTier: (totalFp: number) => string;
   onAccept: (ctx: ChallengeCtx) => void;
   onClose: () => void;
 }
@@ -85,7 +92,7 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-export function ChallengeLandingScreen({ challengeId, sport, currentUserId, deserializeRoster, validateRosterSnapshot, onAccept, onClose }: Props) {
+export function ChallengeLandingScreen({ challengeId, sport, currentUserId, deserializeRoster, validateRosterSnapshot, calculateWinTier, onAccept, onClose }: Props) {
   const [data, setData] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +199,7 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
             data={data}
             statsLine={statsLine}
             alreadyAttempted={alreadyAttempted}
+            calculateWinTier={calculateWinTier}
             onAccept={handleAccept}
           />
         );

@@ -5,6 +5,9 @@
 // visual loop can iterate on phone-width without going PROD.
 //
 // URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|choke_bad_beat_normalized|choke_culture_rich|choke_generic_no_culture>
+//      &showCultureLine=1
+//      &alreadyAttempted=1   (RD5.1 v3 — overrides fixture.alreadyAttempted to glass the
+//                             owner "Play Again" CTA path without needing a real prior attempt)
 //                                                &showCultureLine=1
 //
 // Phase 2e — additional URL params:
@@ -20,6 +23,7 @@
 
 import { ChallengeTakeCardLanding } from "@shared/components/ChallengeTakeCardLanding";
 import { LANDING_MOCK_FIXTURES, getMockCaseFromUrl } from "./challengeLandingMockFixture";
+import { calculateWinTier } from "../utils/payoutLogic";
 
 function getBoolParam(name: string): boolean {
   if (typeof window === "undefined") return false;
@@ -97,7 +101,8 @@ export default function ChallengeLandingMockRoute() {
       <ChallengeTakeCardLanding
         data={fixture.data}
         statsLine={fixture.statsLine}
-        alreadyAttempted={fixture.alreadyAttempted}
+        alreadyAttempted={getBoolParam("alreadyAttempted") || fixture.alreadyAttempted}
+        calculateWinTier={calculateWinTier as (totalFp: number) => string}
         onAccept={() => { console.warn("[challenge-landing-mock] onAccept clicked (dev no-op)"); }}
         showCultureLine={showCultureLine}
       />

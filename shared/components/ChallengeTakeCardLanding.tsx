@@ -44,7 +44,8 @@ import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
-import { pickHeadlineAndCta, FALLBACK_CTA } from "./landingHeadlines";
+import type { WinTierKey } from "@shared/utils/payoutLogic";
+import { pickHeadlineAndCta, FALLBACK_CTA, type SealVisual } from "./landingHeadlines";
 
 // ── Data shape coming in from the shell ────────────────────────────────
 
@@ -83,6 +84,12 @@ interface Props {
   /** Tiny stats line composed by the shell (`challengeStatsLine`). */
   statsLine: string | null;
   alreadyAttempted: boolean;
+  /** RD5.1 v3 — sport-bound win-tier resolver, threaded from the sport
+   *  adapter via the landing shell. The take card uses it to resolve
+   *  big_score's seal (LEGEND / MVP / ALL-STAR) from the persisted
+   *  target_score. Mirrors how H2HRecipientPlay receives it from the
+   *  same adapter. */
+  calculateWinTier: (totalFp: number) => string;
   onAccept: () => void;
   /** Phase 2e — optional supporting culture line below the take.
    *  OFF by default per the lock §"Optional supporting culture line" —
@@ -122,57 +129,23 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-const RARE_PULL_TIER_LABEL: Record<string, string> = {
-  record: "NEW RECORD",
-  career: "CAREER HIGH",
-  season: "SEASON HIGH",
-};
-
-// ── In-flow badge (the stamp's permanent home on this surface) ─────────
+// ── Evidence seal — TierGauge vocabulary, slanted stamp ────────────────
 //
-// Phase 2b reused TeamStamp's thud/absolute wrapper here and the
-// translate(-50%, -50%) bled the chip off the viewport at every width
-// it touched. 2c builds a separate inline tag for the landing — pure
-// CSS pill, rotate(-5deg) for the slant aesthetic, no animation, no
-// absolute, no negative-translate, no anchor. Cannot bleed off the edge
-// at any viewport width because it occupies normal document flow.
-//
-// TeamStamp.tsx itself is NOT modified — the results-screen panel keeps
-// its existing thud + absolute behavior. The badge label and color
-// family mirror TeamStamp's so the visual identity (CHOKE / {TIER} MISS
-// / BIG SCORE / RARE PULL) reads as the same vocabulary.
+// RD5.1 v3 — the seal label + colors come from landingHeadlines.resolveSeal,
+// which mirrors TierGauge.tsx's in-game stamp vocabulary (CHOKE / {TIER}
+// MISS / win-tier label / sub-tier label). The pre-v3 invented strings
+// "BIG SCORE" and "NEW RECORD" are RETIRED — they live in no other live
+// surface in the codebase. The visual shell (slanted stamp, no thud, no
+// translate) is unchanged from 2b — only the label + color sourcing
+// changed.
 
-interface InFlowBadgeProps {
+interface EvidenceSealProps {
+  seal: SealVisual | null;
   trigger: TakeCardTrigger;
-  missTier?: string | null;
-  topGameTier?: "record" | "career" | "season" | null;
 }
 
-function InFlowBadge({ trigger, missTier, topGameTier }: InFlowBadgeProps) {
-  let label: string | null = null;
-  let background = "linear-gradient(135deg, #ef4444 0%, #b91c1c 60%, #7f1d1d 100%)";
-  let color = "#fff5f5";
-
-  if (trigger === "choke") {
-    label = "CHOKE";
-    // background defaults to the savage-red gradient
-  } else if (trigger === "miss") {
-    const prefix = (missTier ?? "").replace(/_/g, " ").trim().toUpperCase();
-    label = prefix ? `${prefix} MISS` : "MISS";
-    background = "linear-gradient(135deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)";
-    color = "#3a2000";
-  } else if (trigger === "big_score") {
-    label = "BIG SCORE";
-    background = "linear-gradient(135deg, #FFB14A 0%, #F59E0B 100%)";
-    color = "#070A12";
-  } else if (trigger === "rare_pull") {
-    label = topGameTier ? (RARE_PULL_TIER_LABEL[topGameTier] ?? "RARE PULL") : "RARE PULL";
-    background = "linear-gradient(135deg, #7FFF00 0%, #5BBE00 100%)";
-    color = "#070A12";
-  }
-
-  if (!label) return null; // default → no badge
-
+function EvidenceSeal({ seal, trigger }: EvidenceSealProps) {
+  if (!seal) return null; // default trigger → no seal
   return (
     <span
       data-testid="landing-badge"
@@ -181,23 +154,21 @@ function InFlowBadge({ trigger, missTier, topGameTier }: InFlowBadgeProps) {
         display: "inline-block",
         padding: "5px 11px",
         borderRadius: 3,
-        background,
-        color,
+        background: seal.background,
+        color: seal.color,
         fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
         fontSize: 13,
         fontWeight: 900,
         letterSpacing: 1.4,
         lineHeight: 1,
         textTransform: "uppercase",
-        // The slant aesthetic, applied as a static rotate. No translate,
-        // no animation — purely in-flow.
         transform: "rotate(-5deg)",
         border: "1.5px solid currentColor",
         boxShadow: "0 3px 7px rgba(0,0,0,0.45)",
         marginRight: 4,
       }}
     >
-      {label}
+      {seal.label}
     </span>
   );
 }
@@ -334,7 +305,7 @@ function pickSupportingCultureLine(culture: CultureShape | null): string | null 
 
 // ── The component ─────────────────────────────────────────────────────
 
-export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, onAccept, showCultureLine = false }: Props) {
+export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, calculateWinTier, onAccept, showCultureLine = false }: Props) {
   const trigger = (normalizeTriggerType(data.trigger_type) ?? "default") as TakeCardTrigger;
   const snapshot = (data.initial_roster ?? {}) as RosterSnapshot;
   const cards: SnapshotCard[] = snapshot.cards ?? [];
@@ -392,21 +363,26 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   // generator stays available to non-landing surfaces.
   const supportingCultureLine = showCultureLine ? pickSupportingCultureLine(anchorCulture) : null;
 
-  // RD5.1 — decision-frame headline + frame-aware CTA + standalone seal.
-  // Spec: docs/rd5-1-headline-system-spec.md. The headline starts an
-  // argument (what John DID), the seal provides evidence (what HAPPENED),
-  // the CTA lets the recipient answer ("would you have made a better
-  // call?"). No-duplication guardrail: headline never contains the seal's
-  // word — that rule is encoded in landingHeadlines.ts and asserted in
-  // its unit tests.
+  // RD5.1 v3 — decision-frame headline + frame-aware CTA + standalone
+  // seal that mirrors TierGauge vocabulary. Spec: docs/rd5-1-headline-
+  // system-spec.md (v3). The win tier for big_score is resolved here
+  // from target_score via the sport-adapter prop — the only trigger
+  // whose seal depends on a derived value, since the others get their
+  // tier via persisted columns (near_miss_next_tier, top_game_tier).
+  // Resolve up-front so the assertion (big_score must have a winTier)
+  // lives at one site.
   const challengerDisplay = namedChallenger ? data.challenger_name : "THE CHALLENGER";
   const heldDisplayNames = heldCardsForGenerator.map(c => c.name);
+  const resolvedWinTier: WinTierKey | null = trigger === "big_score"
+    ? (calculateWinTier(data.target_score) as WinTierKey)
+    : null;
   const headlineOutput = pickHeadlineAndCta({
     trigger,
     challengerName: challengerDisplay,
     heldNamesList: heldDisplayNames,
     missTier: data.near_miss_next_tier ?? null,
     topGameTier: data.top_game_tier ?? null,
+    winTier: resolvedWinTier,
   });
 
   // Target line — the one place the score appears on this screen.
@@ -443,23 +419,17 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         {headlineOutput.headline}
       </h1>
 
-      {/* SEAL — evidence, set apart from the headline. Same visual
-          vocabulary as the pre-RD5.1 inline InFlowBadge (gradient,
-          border, slant, font) but rendered as a standalone element so
-          the headline and the stamp's word can never collide. Rendered
-          only for triggers that have a seal label; `default` is the
-          intentional no-seal case (spec §"default — clean direct
-          challenge, no stamp"). */}
-      {headlineOutput.sealLabel !== null && (
+      {/* SEAL — evidence, set apart from the headline. Label + colors
+          mirror TierGauge.tsx's in-game stamp vocabulary; resolved in
+          landingHeadlines.resolveSeal. Rendered only for triggers that
+          have a seal; `default` is the intentional no-seal case
+          (spec §"default — clean direct challenge, no stamp"). */}
+      {headlineOutput.seal !== null && (
         <div
           data-testid="evidence-seal"
           style={{ margin: "0 0 18px" }}
         >
-          <InFlowBadge
-            trigger={trigger}
-            missTier={data.near_miss_next_tier}
-            topGameTier={data.top_game_tier}
-          />
+          <EvidenceSeal seal={headlineOutput.seal} trigger={trigger} />
         </div>
       )}
 

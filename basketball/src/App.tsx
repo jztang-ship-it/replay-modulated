@@ -481,6 +481,7 @@ function AppInner() {
           currentUserId={isAuthenticated && !isAnonymous ? (uid ?? null) : null}
           deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}
           validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
+          calculateWinTier={calculateWinTier as (totalFp: number) => string}
           onAccept={(ctx) => {
             chDebug("setChallengeCtx", {
               from: "onAccept",
