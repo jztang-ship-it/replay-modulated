@@ -104,7 +104,7 @@ const RESPECT_BANK: readonly BankVariant[] = [
   // resp_r_brokeright is its plain-English replacement.
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_brokeright", headline: "Everything broke his way.",               cta: "Think you can match it?" },
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_heater",     headline: "This is what a heater looks like.",       cta: "Got one of your own?" },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard's not lying.",             cta: "Think you can top it?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard's not lying.",             cta: "Tell me it's wrong." },
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",            cta: "Show me one that doesn't." },
   // Disrespectful (30%)
   { voice: "bar", weight: 5, stance: "disrespect", key: "resp_d_scared",      headline: "That's the score we're supposed to be scared of?", cta: "Prove me wrong." },
