@@ -65,61 +65,61 @@ export interface BankVariant {
 
 const CHOKE_BANK: readonly BankVariant[] = [
   { voice: "bar", weight: 3, named: true, key: "choke_bar_embiidvuc",  headline: "{name1} and {name2}? Really?",                                  cta: "You keeping them too?" },
-  { voice: "bar", weight: 3,              key: "choke_bar_holds",       headline: "Those were the holds?",                                         cta: "Fix it." },
+  { voice: "bar", weight: 3,              key: "choke_bar_holds",       headline: "Those were the holds?",                                         cta: "What would you have done?" },
   { voice: "bar", weight: 5,              key: "choke_bar_tipoff",      headline: "This looked a lot smarter before tipoff.",                      cta: "Show him what smart looks like." },
   { voice: "bar", weight: 3,              key: "choke_bar_honest",      headline: "Be honest — you were holding him too.",                         cta: "Still think that's the move?" },
   { voice: "bar", weight: 3,              key: "choke_bar_yesterday",   headline: "Everybody loved this hand yesterday.",                          cta: "Love it now?" },
   { voice: "bar", weight: 3,              key: "choke_bar_fiveminutes", headline: "This looked like a winner for about five minutes.",             cta: "Can you actually win with it?" },
-  { voice: "bar", weight: 3,              key: "choke_bar_talkedinto",  headline: "Somebody really talked themselves into this lineup.",           cta: "Don't make the same mistake." },
-  { voice: "bar", weight: 3,              key: "choke_bar_name",        headline: "He trusted the name and forgot to check the matchup.",          cta: "Would you have?" },
-  { voice: "bar", weight: 3, named: true, key: "choke_bar_vucecon",     headline: "{name1}. Really?",                                              cta: "Do better." },
-  { voice: "bar", weight: 3,              key: "choke_bar_squint",      headline: "The problem's not hard to find.",                               cta: "Fix it." },
+  { voice: "bar", weight: 3,              key: "choke_bar_talkedinto",  headline: "Somebody really talked themselves into this lineup.",           cta: "Would you have?" },
+  { voice: "bar", weight: 3,              key: "choke_bar_name",        headline: "He trusted the name and forgot to check the matchup.",          cta: "Who would you hold?" },
+  { voice: "bar", weight: 3, named: true, key: "choke_bar_vucecon",     headline: "{name1}. Really?",                                              cta: "You holding him?" },
+  { voice: "bar", weight: 3,              key: "choke_bar_squint",      headline: "The problem's not hard to find.",                               cta: "Think you can solve it?" },
   { voice: "analyst", weight: 3,          key: "choke_anly_warnings",   headline: "The warning signs were everywhere.",                            cta: "Would you have ignored them?" },
-  { voice: "analyst", weight: 3,          key: "choke_anly_jersey",     headline: "The jersey carried more weight than the stats.",                cta: "Pick with your head." },
+  { voice: "analyst", weight: 3,          key: "choke_anly_jersey",     headline: "The jersey carried more weight than the stats.",                cta: "You buying the name?" },
   { voice: "analyst", weight: 3,          key: "choke_anly_confident",  headline: "Everybody's a genius until the games start.",                   cta: "Still feeling confident?" },
-  { voice: "analyst", weight: 3,          key: "choke_anly_betluck",    headline: "Bad bet, or bad luck?",                                         cta: "You decide. Then beat it." },
-  { voice: "copy",    weight: 2,          key: "choke_copy_milk",       headline: "This hand aged like milk.",                                     cta: "Build one that ages better." },
+  { voice: "analyst", weight: 3,          key: "choke_anly_betluck",    headline: "Bad bet, or bad luck?",                                         cta: "Would you have made that bet?" },
+  { voice: "copy",    weight: 2,          key: "choke_copy_milk",       headline: "This hand aged like milk.",                                     cta: "Think you'd have called it?" },
 ];
 
 const MISS_BANK: readonly BankVariant[] = [
-  { voice: "bar",     weight: 3, key: "miss_bar_mistake",     headline: "You can see the mistake, can't you?",         cta: "Fix it." },
-  { voice: "bar",     weight: 3, key: "miss_bar_95",          headline: "He got 95% of the way there.",                cta: "Get the other 5%." },
-  { voice: "bar",     weight: 3, key: "miss_bar_bother",      headline: "This one's going to bother him for a while.", cta: "Finish it." },
-  { voice: "bar",     weight: 3, key: "miss_bar_hurts",       headline: "So close it hurts.",                          cta: "Finish the job." },
-  { voice: "bar",     weight: 3, key: "miss_bar_closer",      headline: "He was closer than he realizes.",             cta: "Get all the way there." },
+  { voice: "bar",     weight: 3, key: "miss_bar_mistake",     headline: "You can see the mistake, can't you?",         cta: "What would you change?" },
+  { voice: "bar",     weight: 3, key: "miss_bar_95",          headline: "He got 95% of the way there.",                cta: "What's the last 5%?" },
+  { voice: "bar",     weight: 3, key: "miss_bar_bother",      headline: "This one's going to bother him for a while.", cta: "Can you finish it?" },
+  { voice: "bar",     weight: 3, key: "miss_bar_hurts",       headline: "So close it hurts.",                          cta: "Think you'd have closed it?" },
+  { voice: "bar",     weight: 3, key: "miss_bar_closer",      headline: "He was closer than he realizes.",             cta: "What did he miss?" },
   { voice: "analyst", weight: 5, key: "miss_anly_onehold",    headline: "One hold changed this entire hand.",          cta: "Which one?" },
   { voice: "analyst", weight: 3, key: "miss_anly_staring",    headline: "The answer was staring him in the face.",     cta: "Do you see it?" },
-  { voice: "analyst", weight: 3, key: "miss_anly_fixfront",   headline: "The fix is right in front of you.",           cta: "Take it." },
-  { voice: "analyst", weight: 3, key: "miss_anly_onedecision", headline: "One better decision and this hand wins.",    cta: "Make it." },
-  { voice: "copy",    weight: 2, key: "miss_copy_unfinished", headline: "This hand is unfinished business.",           cta: "Finish it." },
+  { voice: "analyst", weight: 3, key: "miss_anly_fixfront",   headline: "The fix is right in front of you.",           cta: "What's the fix?" },
+  { voice: "analyst", weight: 5, key: "miss_anly_onedecision", headline: "One better decision and this hand wins.",    cta: "What's the decision?" },
+  { voice: "copy",    weight: 2, key: "miss_copy_unfinished", headline: "This hand is unfinished business.",           cta: "Want to finish it?" },
 ];
 
 const RESPECT_BANK: readonly BankVariant[] = [
   // Respectful (70%)
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_goodluck",   headline: "Yeah, good luck with this one.",          cta: "You're gonna need it." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                  cta: "Beat it." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                  cta: "Think you'd have played it differently?" },
   { voice: "bar", weight: 5, stance: "respect", key: "resp_r_nailed",     headline: "He might have actually nailed this one.", cta: "Prove he didn't." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_survive",    headline: "Not many hands survive this.",            cta: "Take it anyway." },
-  // resp_r_nuts (poker idiom) retired this commit — replaced by
-  // resp_r_brokeright with a plain-English read.
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_brokeright", headline: "Everything broke his way.",               cta: "Can you?" },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_heater",     headline: "This is what a heater looks like.",       cta: "Bring your own." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard's not lying.",             cta: "Do something about it." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",            cta: "This one deserves competition." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_survive",    headline: "Not many hands survive this.",            cta: "Think yours will?" },
+  // resp_r_nuts (poker idiom) retired in the prior bank revision —
+  // resp_r_brokeright is its plain-English replacement.
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_brokeright", headline: "Everything broke his way.",               cta: "Think you can match it?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_heater",     headline: "This is what a heater looks like.",       cta: "Got one of your own?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard's not lying.",             cta: "Think you can top it?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",            cta: "Show me one that doesn't." },
   // Disrespectful (30%)
   { voice: "bar", weight: 5, stance: "disrespect", key: "resp_d_scared",      headline: "That's the score we're supposed to be scared of?", cta: "Prove me wrong." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really hit send on this?",                       cta: "Beat it." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really hit send on this?",                       cta: "What are we missing?" },
   { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_besthand",    headline: "This is your best hand?",                           cta: "Let's see mine." },
   { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_thinkswins",  headline: "He thinks this wins?",                              cta: "Does it?" },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_credit",      headline: "He wants credit for that?",                         cta: "Earn yours." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_impressed",   headline: "This is what impresses people now?",                cta: "Show me something better." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_credit",      headline: "He wants credit for that?",                         cta: "Did he earn it?" },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_impressed",   headline: "This is what impresses people now?",                cta: "Can you do better?" },
 ];
 
 const DEFAULT_BANK: readonly BankVariant[] = [
-  { voice: "bar", weight: 3, key: "def_number", headline: "He set a number.",              cta: "Beat it." },
-  { voice: "bar", weight: 3, key: "def_board",  headline: "He put up a number.",           cta: "Knock him off." },
-  { voice: "bar", weight: 3, key: "def_picks",  headline: "He made his picks.",            cta: "Make better ones." },
-  { voice: "bar", weight: 3, key: "def_talk",   headline: "Beat this and talk your talk.", cta: "Go ahead." },
+  { voice: "bar", weight: 3, key: "def_number", headline: "He set a number.",              cta: "Think you can beat it?" },
+  { voice: "bar", weight: 3, key: "def_board",  headline: "He put up a number.",           cta: "Got a better one?" },
+  { voice: "bar", weight: 3, key: "def_picks",  headline: "He made his picks.",            cta: "Let's see yours." },
+  { voice: "bar", weight: 3, key: "def_talk",   headline: "Beat this and talk your talk.", cta: "Got game?" },
 ];
 
 /** Read-only access for tests + future tooling. */

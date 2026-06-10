@@ -459,11 +459,11 @@ describe("Key rename — resp_r_nuts retired, resp_r_brokeright is its replaceme
     expect(keys).not.toContain("resp_r_nuts");
   });
 
-  it("resp_r_brokeright entry has the new plain-English copy + KEEP CTA", () => {
+  it("resp_r_brokeright entry has the new plain-English copy", () => {
     const v = BANKS.respect.find(x => x.key === "resp_r_brokeright");
     expect(v).toBeDefined();
     expect(v!.headline).toBe("Everything broke his way.");
-    expect(v!.cta).toBe("Can you?");
+    expect(v!.cta).toBe("Think you can match it?");
     expect(v!.stance).toBe("respect");
   });
 
