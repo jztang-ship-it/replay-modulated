@@ -44,6 +44,7 @@ import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
+import { pickHeadlineAndCta, FALLBACK_CTA } from "./landingHeadlines";
 
 // ── Data shape coming in from the shell ────────────────────────────────
 
@@ -243,27 +244,41 @@ function HandCard({ card, isHeld }: HandCardProps) {
         textAlign: "center",
         opacity,
         boxShadow: isHeld ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
+        overflow: "hidden", // contains the yellow-H corner glyph inside the rounded card
       }}
     >
       {isHeld && (
+        // RD5.1 hold indicator — same yellow-H corner glyph the live game /
+        // H2H card uses (CardFront.tsx:872-883). Triangle in the top-left
+        // corner + "H" letter. Reuses the real glyph rather than a separate
+        // red "HOLD" pill so the landing's "you held these" reads as the
+        // same visual vocabulary the recipient will see during play.
         <div
           data-testid="hold-badge"
-          style={{
-            position: "absolute",
-            top: -8,
-            right: -6,
-            background: accent,
-            color: "#070A12",
-            borderRadius: 999,
-            padding: "2px 8px",
-            fontSize: 10,
-            fontWeight: 900,
-            letterSpacing: 1.1,
-            lineHeight: 1.2,
-            boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-          }}
+          style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}
         >
-          HOLD
+          <svg
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "hidden" }}
+            viewBox="0 0 1 1"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            <polygon points="0,0 0.30,0 0,0.45" fill="#F5C850" />
+          </svg>
+          <span
+            style={{
+              position: "absolute",
+              top: 2,
+              left: 4,
+              fontSize: 10,
+              fontWeight: 950,
+              color: "rgba(0,0,0,0.85)",
+              lineHeight: 1,
+              userSelect: "none",
+            }}
+          >
+            H
+          </span>
         </div>
       )}
       <div
@@ -377,38 +392,41 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
   // generator stays available to non-landing surfaces.
   const supportingCultureLine = showCultureLine ? pickSupportingCultureLine(anchorCulture) : null;
 
-  // RD5 — deterministic, number-forward hero (lock amendment
-  // 2026-06-08, docs/challenge-landing-v2-phase2d-...-lock.md). The
-  // challenger's total IS the challenge; Score leads on R1 per the
-  // challenge hierarchy (no outcome exists pre-play). The h1 styling
-  // already enforces textTransform:uppercase, so the templated string
-  // renders the same visual weight as the legacy authored hero.
-  // Templated FP — by construction cannot emit "points."
+  // RD5.1 — decision-frame headline + frame-aware CTA + standalone seal.
+  // Spec: docs/rd5-1-headline-system-spec.md. The headline starts an
+  // argument (what John DID), the seal provides evidence (what HAPPENED),
+  // the CTA lets the recipient answer ("would you have made a better
+  // call?"). No-duplication guardrail: headline never contains the seal's
+  // word — that rule is encoded in landingHeadlines.ts and asserted in
+  // its unit tests.
+  const challengerDisplay = namedChallenger ? data.challenger_name : "THE CHALLENGER";
+  const heldDisplayNames = heldCardsForGenerator.map(c => c.name);
+  const headlineOutput = pickHeadlineAndCta({
+    trigger,
+    challengerName: challengerDisplay,
+    heldNamesList: heldDisplayNames,
+    missTier: data.near_miss_next_tier ?? null,
+    topGameTier: data.top_game_tier ?? null,
+  });
+
+  // Target line — the one place the score appears on this screen.
+  // Mirrors the spec §"Score rule": never in a headline; sole numeric.
   const targetFpFixed = data.target_score.toFixed(1);
-  const heroLine = namedChallenger
-    ? `${data.challenger_name} SCORED ${targetFpFixed} FP`
-    : `THE SCORE TO BEAT — ${targetFpFixed} FP`;
 
-  // RD5 — held-names supporting line. Names only; per-card FP stays
-  // suppressed (spoiler guard). Empty list (legacy holdsRecorded:false
-  // or roster with no held cards) → element omitted entirely so a
-  // bare "Held:" label never renders.
-  const heldNames = heldCardsForGenerator.map(c => c.name).join(", ");
-
-  // RD5 — dare CTA. Direct second-person verb replaces the "PROVE YOUR
-  // LINE / finish the job" family.
-  const dareLine = namedChallenger ? "Can you beat him?" : "Can you beat it?";
+  // Recipient CTA = frame-aware (from the headline system). Owner /
+  // alreadyAttempted path keeps its existing "Play Again" copy
+  // verbatim — out of scope for RD5.1 (spec §"CTA rule" and directive
+  // §"CTA — frame-aware, recipient path only").
+  const recipientCta = headlineOutput.ctaLabel || FALLBACK_CTA;
+  const ctaLabel = alreadyAttempted ? "Play Again" : recipientCta;
 
   return (
     <div data-testid="challenge-take-card-landing">
-      {/* TAKE — largest type at the top, the claim. The Phase-2d
-          layout moves the stamp INLINE at the end of the headline (it
-          flows after the headline text wherever the wrap lands, not
-          stacked above and not absolutely positioned). Inline-block
-          on the badge means it sits at the end of the last line of
-          the heading regardless of how the take wraps.
-          textTransform forces substituted tokens (e.g. {anchorName} or
-          {challengerName}) into caps for one-voice presentation. */}
+      {/* HEADLINE — the argument. RD5.1: decision-frame prose only;
+          the seal is rendered as a standalone element below. The h1
+          no longer carries an inline badge. textTransform:uppercase
+          covers any future template that emits mixed-case tokens;
+          landingHeadlines.ts pre-uppercases everything today. */}
       <h1
         data-testid="take-headline"
         style={{
@@ -417,44 +435,41 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           fontWeight: 950,
           color: "#FFB14A",
           letterSpacing: 0.3,
-          margin: "4px 0 16px",
+          margin: "4px 0 12px",
           maxWidth: 600,
           textTransform: "uppercase",
         }}
       >
-        {/* RD5 (2026-06-08): deterministic, templated hero replaces the
-            pre-RD5 authored-narrative path (`data.authored_headline ||
-            takeCard.take`). The templated FP string cannot emit
-            "points" by construction, so the landing is structurally
-            immune to the leak shape RD0 retires at the engine. See
-            docs/replaymod-design-decisions.md §"RD5 — landing: direct
-            score challenge (number-forward): spec" and the lock
-            amendment in docs/challenge-landing-v2-phase2d-...-lock.md
-            ("Amendment 2026-06-08 — RD5: FP-spoiler rule split"). */}
-        {heroLine}
-        {trigger !== "default" && (
-          <>
-            {" "}
-            <span
-              data-testid="badge-row"
-              style={{ display: "inline-block", verticalAlign: "middle" }}
-            >
-              <InFlowBadge
-                trigger={trigger}
-                missTier={data.near_miss_next_tier}
-                topGameTier={data.top_game_tier}
-              />
-            </span>
-          </>
-        )}
+        {headlineOutput.headline}
       </h1>
 
+      {/* SEAL — evidence, set apart from the headline. Same visual
+          vocabulary as the pre-RD5.1 inline InFlowBadge (gradient,
+          border, slant, font) but rendered as a standalone element so
+          the headline and the stamp's word can never collide. Rendered
+          only for triggers that have a seal label; `default` is the
+          intentional no-seal case (spec §"default — clean direct
+          challenge, no stamp"). */}
+      {headlineOutput.sealLabel !== null && (
+        <div
+          data-testid="evidence-seal"
+          style={{ margin: "0 0 18px" }}
+        >
+          <InFlowBadge
+            trigger={trigger}
+            missTier={data.near_miss_next_tier}
+            topGameTier={data.top_game_tier}
+          />
+        </div>
+      )}
+
       {/* Phase 2e — OPTIONAL supporting culture line. Off by default;
-          shipped behind `showCultureLine` prop. Drops in below the
-          headline, above the USP. Mixed-case prose (the take is the
-          uppercase argument; this is the image). Reads as a quote /
-          texture, not another header. The localhost loop screenshots
-          both states to decide keep/cut. */}
+          shipped behind `showCultureLine` prop. RD5.1 carries the prop
+          through unchanged — auto-generation of player-specific
+          cultural copy stays LOCKED OUT (spec §"Cultural trash-talk
+          banks — LOCKED OUT"), but the `knownFor` path the prop
+          surfaces is human-ratified, so the optional surface stays
+          available behind the explicit flag. */}
       {supportingCultureLine && (
         <div
           data-testid="supporting-culture-line"
@@ -471,23 +486,16 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         </div>
       )}
 
-      {/* RD5 (2026-06-08): the Phase-2d usp-subheadline
-          ("Same starting hand. Different decisions.") was deleted. The
-          number-forward hero now carries the lead; the held-names line
-          below names the actual decisions. The fairness-mechanic
-          framing is no longer prose-form on the landing — the held
-          set + HOLD badges show it. */}
-
-      {/* EVIDENCE — the six cards. Held bright + HOLD badge + name +
-          salary + rarity (no per-card FP chip — spoiler rule). Discards
-          dim, also no chip. */}
+      {/* EVIDENCE — the six cards (proof of what was held). Held =
+          yellow-H corner glyph (same as live game / H2H per spec
+          §"Layout"). No per-card FP chip. */}
       <div
         data-testid="starting-hand"
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: 8,
-          marginBottom: 16,
+          marginBottom: 18,
           justifyContent: "center",
         }}
       >
@@ -497,54 +505,29 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
         })}
       </div>
 
-      {/* HELD LIST (RD5) — names of the held cards, mirroring the
-          highlighted set above. Per-card FP is structurally absent
-          (HandCard does not render an FP chip) — that spoiler guard
-          stays absolute. The element renders only when there is at
-          least one held card; otherwise omitted so a bare "Held:"
-          label never ships. */}
-      {heldNames.length > 0 && (
-        <div
-          data-testid="held-list"
-          style={{
-            fontSize: 13,
-            fontWeight: 700,
-            color: "rgba(234,240,255,0.55)",
-            fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
-            letterSpacing: 0.6,
-            textAlign: "center",
-            textTransform: "uppercase",
-            marginBottom: 16,
-          }}
-        >
-          Held: {heldNames}
-        </div>
-      )}
-
-      {/* DARE (RD5) — direct second-person question. Replaces the
-          pre-RD5 generator-authored "PROVE YOUR LINE / finish the job"
-          family; the dare is now the same across all modes. */}
+      {/* TARGET LINE — sole numeric on the screen (spec §"Score rule").
+          Sits directly above the CTA so the recipient sees the number
+          to beat at the point of decision. */}
       <div
-        data-testid="dare-line"
+        data-testid="target-line"
         style={{
-          fontSize: 18,
-          fontWeight: 800,
-          color: "#EAF0FF",
-          lineHeight: 1.35,
+          fontSize: 14,
+          fontWeight: 700,
+          color: "rgba(234,240,255,0.85)",
+          fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
+          letterSpacing: 0.6,
           textAlign: "center",
-          marginBottom: 22,
-          maxWidth: 560,
-          marginLeft: "auto",
-          marginRight: "auto",
+          textTransform: "uppercase",
+          marginBottom: 12,
         }}
       >
-        {dareLine}
+        Target to beat: {targetFpFixed} FP
       </div>
 
-      {/* CTA (RD5) — "Accept Challenge" replaces the pre-RD5
-          generator-authored CTA family (PLAY YOUR LINE etc.). The
-          alreadyAttempted relabel still surfaces "Play Again" for
-          replays. */}
+      {/* CTA — RD5.1 frame-aware on the recipient (fresh) path; the
+          owner path (`alreadyAttempted === true`) is OUT OF SCOPE and
+          keeps the existing "Play Again" copy verbatim (directive
+          §"CTA — frame-aware, recipient path only"). */}
       <button
         data-testid="accept-cta"
         onClick={onAccept}
@@ -560,30 +543,11 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, on
           letterSpacing: 0.5,
           cursor: "pointer",
           marginBottom: 10,
+          textTransform: "uppercase",
         }}
       >
-        {alreadyAttempted ? "Play Again" : "Accept Challenge"}
+        {ctaLabel}
       </button>
-
-      {/* Attribution — sender + optional stats line. #4a declutter
-          removed the inline "X'S LINE / HOLD: …" exhibit, so this is
-          now the sole sender mention. Renders whenever there's a real
-          challenger name or a stats line; anonymous + no-stats stays
-          empty (nothing to attribute). */}
-      {(namedChallenger || statsLine) && (
-        <div
-          data-testid="attribution"
-          style={{
-            fontSize: 11,
-            color: "rgba(255,255,255,0.35)",
-            textAlign: "center",
-          }}
-        >
-          {namedChallenger && <span>from {data.challenger_name}</span>}
-          {namedChallenger && statsLine && <span> · </span>}
-          {statsLine && <span>{statsLine}</span>}
-        </div>
-      )}
     </div>
   );
 }
