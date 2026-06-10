@@ -97,7 +97,7 @@ const MISS_BANK: readonly BankVariant[] = [
 const RESPECT_BANK: readonly BankVariant[] = [
   // Respectful (70%)
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_goodluck",   headline: "Yeah, good luck with this one.",          cta: "You're gonna need it." },
-  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                  cta: "Think you'd have played it differently?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                  cta: "Think you can top it?" },
   { voice: "bar", weight: 5, stance: "respect", key: "resp_r_nailed",     headline: "He might have actually nailed this one.", cta: "Prove he didn't." },
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_survive",    headline: "Not many hands survive this.",            cta: "Think yours will?" },
   // resp_r_nuts (poker idiom) retired in the prior bank revision —
@@ -108,7 +108,7 @@ const RESPECT_BANK: readonly BankVariant[] = [
   { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",            cta: "Show me one that doesn't." },
   // Disrespectful (30%)
   { voice: "bar", weight: 5, stance: "disrespect", key: "resp_d_scared",      headline: "That's the score we're supposed to be scared of?", cta: "Prove me wrong." },
-  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really hit send on this?",                       cta: "What are we missing?" },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really hit send on this?",                       cta: "Send me something better." },
   { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_besthand",    headline: "This is your best hand?",                           cta: "Let's see mine." },
   { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_thinkswins",  headline: "He thinks this wins?",                              cta: "Does it?" },
   { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_credit",      headline: "He wants credit for that?",                         cta: "Did he earn it?" },
