@@ -1291,3 +1291,107 @@ shell never passes true. Applies uniformly to recipient AND replay views.
 line-by-line bank lives in the dated bank-export artifact
 (~/Desktop/replaymod-handoff/.../rd5-1-bank.md), regenerated on bank changes.
 docs/challenge-copy-system-canonical.md is retired to a one-line pointer to this §.
+
+## § RD3 — Kill the "Drawing…" beat, arm the rail (2026-06-11)
+
+**Problem.** The ~2.4s window after the recipient taps Draw (a keep-and-draw = redraw in
+code) was dead air. Three sites in `shared/components/H2HRecipientPlay.tsx` rendered the
+literal string "Drawing…" — the top-zone headline (`:1534`), the disabled CTA label
+(`:1567`), and the hero-region headline div (`:1342–1356`) — while the bottom strip ran
+its column-by-column flip cascade. The reveal area showed empty space; the disabled
+"Drawing…" button read as broken; the rail wasn't visible yet (rail mounts on `state.kind
+=== "arc"` only, AFTER handoff_resolving completes).
+
+**Treatment.** Three coordinated edits, composition-only.
+
+1. **Kill the strings.** `deriveHeadline` returns `""` for `redraw_running`/
+   `your_redraw_flip`; `deriveCta` folds those states into the existing
+   `ab_transition | handoff_resolving | arc` hidden-CTA branch (`{ label: "", disabled:
+   true, onClick: null }`). The reserved-bottom spacer stays (no layout jump); the button
+   doesn't mount via the existing `ctaVisible = cta.label !== ""` gate.
+2. **Mount an armed rail.** A slim YOU/JOHN/delta composition is overlaid on the right
+   column of the playing hero region — `<ArmedRail/>`, defined inline in
+   `H2HRecipientPlay.tsx` above `deriveHeadline`. Two `ScoreCell` instances (imported
+   from `H2HScoreRail`) plus a MidRail-style delta float. ScoreCell internals are NOT
+   modified; only composition around them.
+3. **One continuous mount across the full pre-arc window.** The armed rail mounts on
+   entry to `redraw_running` and stays mounted through `your_redraw_flip` →
+   `ab_transition` (300ms) → `handoff_resolving` (1000ms). At `state.kind === "arc"`,
+   `H2HRecipientReveal` mounts (`H2HRecipientPlay.tsx:1443`) and the arc surface owns
+   the rail from there. One mount, one handoff, no appear→vanish→reappear.
+
+**Armed values (the Option-B reconciliation).** Both cells render `displayTotal: 0`,
+`state: "trailing"`, `sizeProgress: 0`, `surface: "reveal"`, `teamPosition: "opponent"`
+(JOHN) or `"user"` (YOU). Delta floats at `0.0` with `DELTA_NEUTRAL` color and "MATCHUP"
+eyebrow. **No leader-glow on either side** — green/leading on JOHN before any card is
+revealed would misread as "John already won." JOHN's target is communicated by the
+existing `"{X.X} to beat."` intro line above the hero, unchanged. The rail reads as a
+scoreboard at 0-0 before tip-off.
+
+**HARDENING 1 — redraw→arc no-snap (named test gate).** Armed last frame ===
+arc revealing-first-frame ScoreCell state. Test: `H2HRecipientPlay.test.tsx` →
+`"redraw→arc no-snap: armed ScoreCell DOM matches arc revealing-first-frame ScoreCell
+DOM (HARDENING 1, named gate)"`. Compares load-bearing data attributes
+(`data-h2h-team-score-display`, `data-h2h-score-state`, `data-h2h-score-size-progress`,
+`data-h2h-score-rest-scale`, `data-h2h-score-pop-*`, `data-h2h-score-suppressed`) between
+the armed rail's ScoreCells inside a real `H2HRecipientPlay` render at `redraw_running`
+and a directly-mounted ScoreCell with the props H2HRevealScreen passes at
+revealing-first-frame. ScoreCell is the SAME component on both surfaces — the no-snap is
+structural, not coincidence.
+
+**Note on phase=idle wording.** The first written-spec hardening said "armed last frame
+=== arc IDLE first frame." Implementation note: `useH2HReveal.ts:1062` returns
+`activeMatchup = { sender: null, recipient: null }` at idle, so
+`H2HRevealScreen.tsx:1778` renders empty `<div />` placeholders for the ScoreCell slots
+(not visible ScoreCells). The first frame at which the arc paints visible ScoreCells is
+the first `revealing` tick (`skipEntrance: true` → play() goes idle → revealing directly
+via `H2HRecipientReveal.tsx:172`). The named gate compares against that frame.
+
+**HARDENING 2 — continuous mount (named test gate).** Same React DOM node throughout the
+four pre-arc states (reference equality across `your_redraw_flip` →
+`ab_transition` → `handoff_resolving`). Test: same file →
+`"armed rail persists continuously across redraw_running → your_redraw_flip →
+ab_transition → handoff_resolving (HARDENING 2)"`.
+
+**Hero render before/after RD3.**
+| State | Before RD3 | After RD3 |
+| -- | -- | -- |
+| `redraw_running` | Hero headline div: "Drawing…" at opacity 0.7. CTA: disabled, label "Drawing…". | Empty hero headline (`""`). CTA hidden via existing `ctaVisible = ""` gate. **Armed rail visible in right column.** |
+| `your_redraw_flip` | Same as above (Drawing… everywhere) | Same as above. **Armed rail still visible (continuous mount).** |
+| `ab_transition` | Two stacked empty hero slots (`data-h2h-play-settle-hero`), CTA hidden | Two stacked empty hero slots, CTA hidden. **Armed rail visible (continuous mount).** |
+| `handoff_resolving` | Same as ab_transition (settle-pause) | Same as ab_transition. **Armed rail visible (continuous mount).** |
+| `arc` | H2HRecipientReveal mounts, owns rail | H2HRecipientReveal mounts, owns rail. **Armed rail unmounts.** |
+
+**Geometry.** `RIGHT_RAIL_WIDTH_PX = 80` UNCHANGED. `LEFT_RAIL_WIDTH_PX = 100` UNCHANGED.
+RD3.1 (battlefield-backing panel downsize) decoupled from RD3 per the directive: armed
+rail uses the existing 80px column constant via composition (`import { RIGHT_RAIL_WIDTH_PX,
+ScoreCell, DELTA_NEUTRAL } from "./H2HScoreRail"`), so RD3.1's panel work can move
+independently. `BATTLEFIELD_ROW_GAP_PX = 14` exported from `H2HRevealScreen.tsx` (one-line
+surface widening, NOT a value change) so the armed rail's 2-row grid matches the arc
+battlefield's row geometry — ScoreCells land at identical Y positions across the handoff.
+
+**Fences (all upheld).**
+- RD3.1 battlefield-backing panel (`data-h2h-reveal-score-panel`,
+  `H2HRevealScreen.tsx:1733–1752`) — UNTOUCHED.
+- RD2 lock (`HAND_STRIP_HEIGHT_PX = 80` at `H2HRevealScreen.tsx:238`) — UNTOUCHED.
+- Single-player `DRAWING_DWELL_MS` (`shared/hooks/useEmotionalReveal.ts:84`) — UNTOUCHED.
+- FTUE coach bubble (`isFTUE && gameState === "DRAWING"`) — UNTOUCHED.
+- `CardFront.tsx`, copy bank, `TierGauge.tsx`, RD5.1 landing — UNTOUCHED.
+- Strip-grow animation — STAYS CANCELLED.
+
+**ScoreCell internals.** UNTOUCHED. Composition only; the reveal→results no-snap chain
+(`H2HScoreRail.tsx:151–156`, the locked invariant) is structurally intact — same
+ScoreCell component renders on reveal, in the armed rail, and on the results overlay.
+
+**Parked follow-up (Option C from the H1 reconciliation).** The user's mental model
+("JOHN's fixed bar") doesn't match current arc behavior — JOHN's side rolls up
+card-by-card via `senderRunningTotal` during revealing. RD3 chose Option B (armed at 0.0)
+to avoid the snap; Option C (genuinely fix JOHN at target throughout reveal) would
+require modifying `useH2HReveal`'s sender-side rollup, breaking the
+`senderRunningTotal`-keyed leader-glow / Phase-2 pop / Phase-3 anchor frame contracts.
+Out of RD3 scope; captured as a separate parked ticket.
+
+**Glass URL.** `/basketball/dev/h2h-play-mock` — deal cascade auto-runs on mount; tap any
+bottom-strip cell twice to hold, then tap Draw to drive into the redraw window. The
+armed rail appears at the right edge of the hero region; persists through the column
+flip, settle-pause, and into the arc handoff.

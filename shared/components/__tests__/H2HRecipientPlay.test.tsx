@@ -602,14 +602,20 @@ describe("H2HRecipientPlay — state 3a/3b — top intro renders the redraw-targ
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 
-  it("hero region still shows 'Drawing…' during redraw_running (deriveHeadline unchanged)", async () => {
-    const { resolveRedraw } = await holdAndDraw();
-    // The "Drawing…" copy comes from deriveHeadline (hero headline) and
-    // also from the CTA label (deriveCta) during redraw_running — both
-    // intentional, both unchanged. Use getAllByText to assert at least
-    // one element with that text remains in the DOM; this proves the
-    // top-region edit didn't displace the hero-region "Drawing…".
-    expect(screen.getAllByText("Drawing…").length).toBeGreaterThan(0);
+  it("redraw window renders NO 'Drawing…' copy at any site (RD3)", async () => {
+    const { container, resolveRedraw } = await holdAndDraw();
+    // RD3 (2026-06-11): the "Drawing…" beat is dead. deriveHeadline +
+    // deriveCta both return empty string for redraw_running /
+    // your_redraw_flip; the armed YOU/JOHN/delta rail in the hero owns
+    // the window instead. Assert the literal string is absent from the
+    // whole subtree so the kill is enforced wherever it might leak
+    // back in (headline, hero, CTA label, settle-pause copy, ...).
+    expect(screen.queryByText("Drawing…")).toBeNull();
+    // CTA is hidden via the existing ctaVisible="" pattern (reserved-
+    // bottom spacer stays, no layout jump). The hidden-CTA assertion
+    // is in the RD3 — kill the Drawing beat block at the bottom of the
+    // file; here we just guard the copy.
+    expect(container.querySelector('[data-cta-label="Drawing…"]')).toBeNull();
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 
@@ -1796,5 +1802,216 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     expect(container.querySelector('[data-h2h-play-preview="card"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-preview="empty"]')).toBeNull();
     expect(container.querySelector("[data-h2h-play-vs]")).toBeNull();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// RD3 — armed rail + redraw→arc no-snap
+// ─────────────────────────────────────────────────────────────────
+//
+// Lock: docs/replaymod-design-decisions.md § RD3. The "Drawing…" beat
+// (~2.4s after recipient keeps-and-draws) was dead air. RD3 replaces it
+// with a slim YOU/JOHN/delta rail in the hero region's right column,
+// continuously mounted across redraw_running → your_redraw_flip →
+// ab_transition → handoff_resolving (one mount, one handoff). Both
+// cells render at "0.0" / trailing / sizeProgress=0 so the armed rail's
+// last frame is byte-identical to the arc rail's first revealing frame
+// (HARDENING 1, the named "redraw→arc no-snap" gate below).
+//
+// JOHN's target communicates through the existing "{X.X} to beat."
+// intro line above the hero (covered separately by the redraw-target
+// describe block above). The rail itself reads as a pre-tipoff
+// scoreboard at 0-0.
+
+describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () => {
+  async function holdAndDrawHeld() {
+    // Reusable: drive into redraw_running with the redraw promise held
+    // open (state pinned). Returns the container + an unblock fn so
+    // each test can advance to subsequent states deterministically.
+    let resolveRedraw: (val: { roster: GeneratedCard[] }) => void = () => { };
+    const heldRedraw = new Promise<{ roster: GeneratedCard[] }>((r) => { resolveRedraw = r; });
+    const props = baseProps({
+      redrawRoster: vi.fn(() => heldRedraw),
+    } as any);
+    vi.useFakeTimers();
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    vi.useRealTimers();
+    fireEvent.click(screen.getByText("Draw"));
+    await waitFor(() => {
+      const root = document.querySelector("[data-h2h-recipient-play]");
+      expect(root?.getAttribute("data-playing-state")).toBe("redraw_running");
+    });
+    return { container, resolveRedraw };
+  }
+
+  it("armed rail mounts during redraw_running with both ScoreCells at neutral 0.0", async () => {
+    const { container, resolveRedraw } = await holdAndDrawHeld();
+    const armedRail = container.querySelector('[data-h2h-armed-rail="true"]');
+    expect(armedRail).not.toBeNull();
+    // Two ScoreCells — opponent (JOHN) on top, user (YOU) on bottom.
+    const opponent = armedRail!.querySelector('[data-h2h-team-score-position="opponent"]');
+    const user = armedRail!.querySelector('[data-h2h-team-score-position="user"]');
+    expect(opponent).not.toBeNull();
+    expect(user).not.toBeNull();
+    // Both display "0.0" — armed cells are neutral, JOHN target is
+    // communicated by the intro line above, not the rail.
+    expect(opponent!.getAttribute("data-h2h-team-score-display")).toBe("0.0");
+    expect(user!.getAttribute("data-h2h-team-score-display")).toBe("0.0");
+    // Both "trailing" — no leader-glow on either (the "leading" green
+    // would misread as "John already won" before any card is revealed).
+    expect(opponent!.getAttribute("data-h2h-score-state")).toBe("trailing");
+    expect(user!.getAttribute("data-h2h-score-state")).toBe("trailing");
+    // sizeProgress=0 → rest-scale 1.000 (1 + 0*SIZE_PROGRESS_MAX + 0
+    // trailing bonus). Confirms no Z1 size growth on the armed rail.
+    expect(opponent!.getAttribute("data-h2h-score-size-progress")).toBe("0.000");
+    expect(user!.getAttribute("data-h2h-score-size-progress")).toBe("0.000");
+    expect(opponent!.getAttribute("data-h2h-score-rest-scale")).toBe("1.000");
+    expect(user!.getAttribute("data-h2h-score-rest-scale")).toBe("1.000");
+    resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
+  });
+
+  it("armed rail persists continuously across redraw_running → your_redraw_flip → ab_transition → handoff_resolving (HARDENING 2)", async () => {
+    // HARDENING 2: one mount across all four pre-arc states, exactly
+    // one handoff at arc. The rail must NOT appear→vanish→reappear at
+    // any transition. We assert the [data-h2h-armed-rail] presence at
+    // each state. Fake timers throughout; pattern mirrors the existing
+    // ab_transition reach test above.
+    vi.useFakeTimers();
+    const props = baseProps();
+    const { container } = render(
+      <H2HRecipientPlay {...props} challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })} />,
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
+    });
+    // Tap-tap to hold slot 2 (preview-then-hold).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByText("Draw"));
+    // Drain redraw promise microtasks.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const root = document.querySelector("[data-h2h-recipient-play]")!;
+
+    // Sample 1: your_redraw_flip (right after Draw + redraw resolution
+    // — the held mock resolves synchronously, redraw_running is
+    // observable only mid-microtask, so we sample at your_redraw_flip
+    // which is where the rail must definitely be mounted given the
+    // approved continuous-mount window starts at redraw_running).
+    expect(root.getAttribute("data-playing-state")).toBe("your_redraw_flip");
+    const railAtFlip = container.querySelector('[data-h2h-armed-rail="true"]');
+    expect(railAtFlip).not.toBeNull();
+
+    // Sample 2: ab_transition (after the 6-column flip cascade).
+    await act(async () => {
+      vi.advanceTimersByTime(
+        ROSTER_SIZE_LOCAL * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS),
+      );
+    });
+    expect(root.getAttribute("data-playing-state")).toBe("ab_transition");
+    const railAtAb = container.querySelector('[data-h2h-armed-rail="true"]');
+    expect(railAtAb).not.toBeNull();
+
+    // Sample 3: handoff_resolving (after AB_TRANSITION_DURATION_MS).
+    await act(async () => {
+      vi.advanceTimersByTime(350);
+    });
+    expect(root.getAttribute("data-playing-state")).toBe("handoff_resolving");
+    const railAtHandoff = container.querySelector('[data-h2h-armed-rail="true"]');
+    expect(railAtHandoff).not.toBeNull();
+
+    // Continuous-mount proof: same DOM node throughout (React did not
+    // unmount/remount the rail across any of the three state
+    // transitions). Reference equality is the cleanest "no
+    // appear→vanish→reappear" guard.
+    expect(railAtAb).toBe(railAtFlip);
+    expect(railAtHandoff).toBe(railAtFlip);
+
+    // Don't drive to arc here — that mounts H2HRecipientReveal which
+    // pulls in useChallengeAttempt's POST. The four-state continuous
+    // mount is what RD3 owns; the arc handoff (rail unmounts, arc
+    // rail takes over) is covered by the state-4 handoff describe
+    // block above + the no-snap value test below.
+    vi.useRealTimers();
+  });
+
+  it("redraw→arc no-snap: armed ScoreCell DOM matches arc revealing-first-frame ScoreCell DOM (HARDENING 1, named gate)", async () => {
+    // The named test gate: armed-last-frame ScoreCell state ===
+    // arc-idle-first-frame ScoreCell state. With Option B both states
+    // are 0.0 / trailing / sizeProgress=0 — byte-identical.
+    //
+    // Important wiring detail (surfaced during H1 investigation): the
+    // hook's true "phase=idle" frame renders <div /> placeholders for
+    // the ScoreCell slots (senderBattle is null at idle). The first
+    // frame at which the arc paints VISIBLE ScoreCells is the first
+    // phase=revealing tick, where senderRunningTotal=0 and
+    // recipientRunningTotal=0 by hook init. That's the frame the
+    // armed rail must match.
+    //
+    // We assert this by reading the armed rail's data attrs from a
+    // real H2HRecipientPlay render at redraw_running, and reading the
+    // arc's via a directly-rendered ScoreCell with the exact props
+    // H2HRevealScreen passes at revealing-first-frame: total=
+    // sender.totalFp (any), displayTotal=0, state="trailing",
+    // sizeProgress=0, surface="reveal", teamPosition="opponent"|
+    // "user". The ScoreCell component is shared between the two
+    // surfaces (no-snap is structural, not coincidence).
+    const { ScoreCell } = await import("../H2HScoreRail");
+    const { container: armedContainer, resolveRedraw } = await holdAndDrawHeld();
+    const armedOpp = armedContainer.querySelector('[data-h2h-armed-rail="true"] [data-h2h-team-score-position="opponent"]')!;
+    const armedUser = armedContainer.querySelector('[data-h2h-armed-rail="true"] [data-h2h-team-score-position="user"]')!;
+
+    const arcHarness = render(
+      <div data-arc-harness="true">
+        {/* Mirror the props H2HRevealScreen passes at revealing-first-
+            frame for both cells. The `total` prop differs from armed
+            (armed passes targetScore, arc passes sender.totalFp /
+            recipient.totalFp) — both fall through to displayTotal=0
+            on the visible glyph since ScoreCell renders displayTotal
+            when defined. The data-h2h-team-score-display attribute
+            reflects displayTotal, NOT total — same number on both
+            surfaces. */}
+        <ScoreCell total={200} displayTotal={0} state="trailing" sizeProgress={0} surface="reveal" teamPosition="opponent" />
+        <ScoreCell total={200} displayTotal={0} state="trailing" sizeProgress={0} surface="reveal" teamPosition="user" />
+      </div>,
+    );
+    const arcOpp = arcHarness.container.querySelector('[data-arc-harness] [data-h2h-team-score-position="opponent"]')!;
+    const arcUser = arcHarness.container.querySelector('[data-arc-harness] [data-h2h-team-score-position="user"]')!;
+
+    // The load-bearing data attributes for the no-snap. Mirroring the
+    // reveal→results no-snap gate (which compares these same attrs
+    // between H2HRevealScreen's done-frame ScoreCell and
+    // H2HResultsOverlay's mount-frame ScoreCell).
+    const attrs = [
+      "data-h2h-team-score-display",
+      "data-h2h-score-state",
+      "data-h2h-score-size-progress",
+      "data-h2h-score-rest-scale",
+      "data-h2h-score-pop-magnitude",
+      "data-h2h-score-pop-duration-ms",
+      "data-h2h-score-pop-kind",
+      "data-h2h-score-suppressed",
+    ] as const;
+    for (const a of attrs) {
+      expect(
+        armedOpp.getAttribute(a),
+        `armed opponent ${a} should equal arc opponent ${a}`,
+      ).toBe(arcOpp.getAttribute(a));
+      expect(
+        armedUser.getAttribute(a),
+        `armed user ${a} should equal arc user ${a}`,
+      ).toBe(arcUser.getAttribute(a));
+    }
+    arcHarness.unmount();
+    resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 });

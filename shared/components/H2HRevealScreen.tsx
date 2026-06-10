@@ -308,7 +308,11 @@ const BATTLEFIELD_CARD_MAX_WIDTH = "min(145px, 32vw)";
 // Earlier history: 6 → 2 when the mid-rail moved to the right rail
 // (still as a grid row), and 2 → 14 when it became absolutely
 // positioned so it no longer contributed to row height.
-const BATTLEFIELD_ROW_GAP_PX = 14;
+// Exported so the H2HRecipientPlay armed rail (RD3) can match the arc
+// battlefield's vertical row geometry — its 2-row right-column overlay
+// uses the same row gap so the armed ScoreCells sit at identical Y as
+// the arc's ScoreCells at first revealing frame (no-snap on handoff).
+export const BATTLEFIELD_ROW_GAP_PX = 14;
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
