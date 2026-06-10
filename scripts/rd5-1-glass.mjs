@@ -23,15 +23,22 @@ const outDir = path.join(
 );
 mkdirSync(outDir, { recursive: true });
 
+// RD5.1 bank glass: three seeds per recipient trigger so a few bank
+// lines fire per category. seed= overrides data.challenge_id; the
+// seeded selection is deterministic so each (case, seed) renders the
+// same variant every call. Plus the owner Play Again path.
 const cases = [
-  { key: "choke",     label: "choke",     extra: "" },
-  { key: "miss",      label: "miss",      extra: "" },
-  { key: "big_score", label: "big_score", extra: "" },
-  { key: "rare_pull", label: "rare_pull", extra: "" },
-  { key: "default",   label: "default",   extra: "" },
-  // RD5.1 v3 — owner Play Again path. Same data, alreadyAttempted=1
-  // forced from URL so the surface renders the owner CTA without
-  // needing a real prior attempt in localStorage.
+  { key: "choke",     label: "choke_seed_a",     extra: "&seed=ch_glass_a" },
+  { key: "choke",     label: "choke_seed_b",     extra: "&seed=ch_glass_b" },
+  { key: "choke",     label: "choke_seed_c",     extra: "&seed=ch_glass_c" },
+  { key: "miss",      label: "miss_seed_a",      extra: "&seed=ch_glass_a" },
+  { key: "miss",      label: "miss_seed_b",      extra: "&seed=ch_glass_b" },
+  { key: "big_score", label: "big_score_seed_a", extra: "&seed=ch_glass_a" },
+  { key: "big_score", label: "big_score_seed_b", extra: "&seed=ch_glass_b" },
+  { key: "rare_pull", label: "rare_pull_seed_a", extra: "&seed=ch_glass_a" },
+  { key: "rare_pull", label: "rare_pull_seed_b", extra: "&seed=ch_glass_b" },
+  { key: "default",   label: "default_seed_a",   extra: "&seed=ch_glass_a" },
+  { key: "default",   label: "default_seed_b",   extra: "&seed=ch_glass_b" },
   { key: "choke",     label: "owner_play_again", extra: "&alreadyAttempted=1" },
 ];
 

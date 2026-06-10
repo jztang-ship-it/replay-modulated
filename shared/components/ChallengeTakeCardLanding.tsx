@@ -39,12 +39,14 @@
 //   CTA           — generator's `ctaText`, the "PLAY YOUR LINE" family.
 //   Attribution   — minor below CTA.
 
+import { useEffect } from "react";
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
 import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
+import { track } from "@shared/analytics/analytics";
 import { pickHeadlineAndCta, FALLBACK_CTA, type SealVisual } from "./landingHeadlines";
 
 // ── Data shape coming in from the shell ────────────────────────────────
@@ -380,10 +382,25 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
     trigger,
     challengerName: challengerDisplay,
     heldNamesList: heldDisplayNames,
+    challengeId: data.challenge_id,
     missTier: data.near_miss_next_tier ?? null,
     topGameTier: data.top_game_tier ?? null,
     winTier: resolvedWinTier,
   });
+
+  // Analytics — fire-once per mount with the selected variant key so
+  // per-line acceptance rates can be correlated later. Keyed on
+  // (challenge_id + variantKey) so re-renders don't double-count; the
+  // selection is deterministic for a given challenge so variantKey is
+  // stable across re-renders of the same hand.
+  useEffect(() => {
+    track("challenges", "challenge_landing_variant", {
+      challenge_id: data.challenge_id,
+      sport: data.sport,
+      trigger,
+      variant_key: headlineOutput.variantKey,
+    });
+  }, [data.challenge_id, data.sport, trigger, headlineOutput.variantKey]);
 
   // Target line — the one place the score appears on this screen.
   // Mirrors the spec §"Score rule": never in a headline; sole numeric.

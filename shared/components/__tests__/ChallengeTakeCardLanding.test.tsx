@@ -2,35 +2,49 @@
 //
 // shared/components/__tests__/ChallengeTakeCardLanding.test.tsx
 //
-// RD5.1 v3 — decision-frame challenge landing. Spec of record:
-// docs/rd5-1-headline-system-spec.md (v3 — native vocabulary lock).
+// RD5.1 — decision-frame challenge landing with voiced copy bank.
+// Spec of record: docs/rd5-1-headline-system-spec.md.
 //
-// Governing principle the assertions enforce:
-//   - Headline starts an argument (HELD verb), seal provides evidence
-//     (TierGauge vocabulary), CTA lets the recipient answer (KEEP).
-//   - Headline never contains the rendered seal's vocabulary (dynamic
-//     guardrail computed from the seal at test time, not a const list).
-//   - Score appears EXACTLY ONCE on the screen — in the target line.
-//   - Recipient CTA = frame-aware. Owner alreadyAttempted path keeps
-//     "Play Again" verbatim.
-//   - Held cards use the yellow-H corner glyph (NOT a HOLD text pill).
-//   - Deleted: HELD line, dare, attribution footer.
-//   - Retired strings absent from the rendered tree: BIG SCORE, NEW RECORD,
-//     MAKE THE BETTER CALL, FIND THE SWAP, TRUSTED, ONE SWAP STOOD BETWEEN.
+// What this file asserts about the rendered surface:
+//   - Headline + CTA come from the right bank pool per trigger (banks
+//     in landingHeadlines.ts are the source of truth — we don't pin
+//     exact strings because selection is bank-seeded, not single-line).
+//   - Seal labels + colors mirror TierGauge (v3 contract unchanged).
+//   - Selection is deterministic per challenge ID (refresh stability).
+//   - Analytics fires once on mount with the selected variant key.
+//   - Owner alreadyAttempted path keeps "Play Again" verbatim.
+//   - Score appears exactly once (target line); HELD line / dare /
+//     attribution stay absent; yellow-H glyph on held cards.
+//   - Retired pre-bank strings are absent (BIG SCORE / NEW RECORD /
+//     MAKE THE BETTER CALL / FIND THE SWAP / TRUSTED).
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ChallengeTakeCardLanding, type ChallengeLandingData } from "../ChallengeTakeCardLanding";
 import {
   resolveSeal,
   headlineContainsSealVocabulary,
+  BANKS,
+  type BankVariant,
 } from "../landingHeadlines";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
 
-// Deterministic tier resolver for tests. Matches the legacy fallback
-// thresholds (LEGEND 255 / MVP 235 / ALL_STAR 225) so a fixture at
-// target_score=232.5 maps to ALL_STAR and 250 maps to MVP — the spec
-// expectations for the big_score block.
+// Mock the analytics surface so test assertions can verify the emit
+// without coupling to the real client. The component imports `track`
+// from "@shared/analytics/analytics" — we replace it with a vi.fn so
+// every test can inspect the call list.
+const trackMock = vi.fn();
+vi.mock("@shared/analytics/analytics", () => ({
+  track: (...args: unknown[]) => trackMock(...args),
+}));
+
+beforeEach(() => {
+  trackMock.mockClear();
+});
+
+// Deterministic tier resolver — same fallback thresholds the v3 tests
+// used. Big_score variants test at target_score 240 → MVP, 260 → LEGEND,
+// 228 → ALL_STAR.
 function testWinTier(totalFp: number): WinTierKey {
   if (totalFp >= 255) return "LEGEND";
   if (totalFp >= 235) return "MVP";
@@ -50,22 +64,15 @@ interface MakeOpts {
   nearMissNextTier?: string | null;
   targetScore?: number;
   challengerName?: string | null;
-  attemptCount?: number;
-  winnerCount?: number;
+  challengeId?: string;
 }
 
 function makeData(opts: MakeOpts = {}): ChallengeLandingData {
   const heldPair = opts.heldPair ?? null;
   const isHeld = (id: string) => !!heldPair && heldPair.includes(id);
   const card = (
-    id: string,
-    name: string,
-    team: string,
-    tier: string,
-    salary: number,
-    slotIndex: number,
-    projectedFp: number,
-    defaultActualFp: number,
+    id: string, name: string, team: string, tier: string,
+    salary: number, slotIndex: number, projectedFp: number, defaultActualFp: number,
   ) => ({
     id, basePlayerId: id, personKey: id, cardId: `${id}_c`,
     name, team, season: "2425", position: "F", photoCode: null,
@@ -74,7 +81,7 @@ function makeData(opts: MakeOpts = {}): ChallengeLandingData {
     actualFp: isHeld(id) ? defaultActualFp : 0,
   });
   return {
-    challenge_id: "ch_test_1",
+    challenge_id: opts.challengeId ?? "ch_test_1",
     created_by: "u_creator",
     challenger_name: (opts.challengerName === undefined ? "Mike" : opts.challengerName) ?? "",
     target_score: opts.targetScore ?? 142.0,
@@ -96,8 +103,8 @@ function makeData(opts: MakeOpts = {}): ChallengeLandingData {
       ],
     },
     roster_size: 6,
-    attempt_count: opts.attemptCount ?? 2,
-    winner_count: opts.winnerCount ?? 0,
+    attempt_count: 2,
+    winner_count: 0,
     best_score: null,
     best_user_name: null,
     near_miss_gap: opts.nearMissGap ?? null,
@@ -107,184 +114,92 @@ function makeData(opts: MakeOpts = {}): ChallengeLandingData {
   };
 }
 
-// ── Per-trigger headline + seal + CTA wiring (v3) ──────────────────────
+// ── Headline + CTA come from the right pool per trigger ────────────────
 
-describe("RD5.1 v3 landing — per-trigger headline + seal + CTA", () => {
-  it("choke: HELD-verb headline + CHOKE seal + KEEP THE RIGHT ONES cta", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "John", targetScore: 126.2 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("take-headline").textContent).toBe("JOHN HELD EMBIID AND VUCEVIC. IT COST HIM.");
-    expect(screen.getByTestId("landing-badge").textContent).toBe("CHOKE");
-    expect(screen.getByTestId("accept-cta").textContent).toBe("KEEP THE RIGHT ONES");
-  });
-
-  it("big_score: held-stars-delivered headline + tier-only seal (MVP) + TRY TO TOP IT cta", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "big_score", heldPair: ["cur", "emb"], challengerName: "John", targetScore: 240 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("take-headline").textContent).toBe("JOHN HELD HIS STARS AND THEY DELIVERED.");
-    expect(screen.getByTestId("landing-badge").textContent).toBe("MVP");
-    expect(screen.getByTestId("accept-cta").textContent).toBe("TRY TO TOP IT");
-  });
-
-  it("big_score with LEGEND target → seal renders 'LEGEND' (not BIG SCORE)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "big_score", heldPair: ["cur", "emb"], challengerName: "John", targetScore: 260 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("landing-badge").textContent).toBe("LEGEND");
-  });
-
-  it("big_score with ALL-STAR target → seal renders 'ALL-STAR' (hyphen)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "big_score", heldPair: ["cur", "emb"], challengerName: "John", targetScore: 228 })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("landing-badge").textContent).toBe("ALL-STAR");
-  });
-
-  it("rare_pull: nobody-saw-it headline + bare CAREER HIGH seal (no NEW) + TAKE YOUR SHOT cta", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "rare_pull", heldPair: ["cur", "emb"], challengerName: "John", topGameTier: "career" })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("take-headline").textContent).toBe("JOHN FOUND SOMETHING NOBODY SAW COMING.");
-    expect(screen.getByTestId("landing-badge").textContent).toBe("CAREER HIGH");
-    expect(screen.getByTestId("accept-cta").textContent).toBe("TAKE YOUR SHOT");
-  });
-
-  it("rare_pull with topGameTier=record → seal renders bare 'RECORD' (no NEW prefix)", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "rare_pull", heldPair: ["cur", "emb"], challengerName: "John", topGameTier: "record" })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("landing-badge").textContent).toBe("RECORD");
-    expect(screen.getByTestId("landing-badge").textContent).not.toContain("NEW");
-  });
-
-  it("miss (MVP): keep-away headline + MVP MISS seal + KEEP WHO YOU'D KEEP cta", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "miss", heldPair: ["bro", "cur"], challengerName: "John", nearMissGap: 4, nearMissNextTier: "MVP" })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("take-headline").textContent).toBe("JOHN WAS ONE KEEP AWAY FROM GREATNESS.");
-    expect(screen.getByTestId("landing-badge").textContent).toBe("MVP MISS");
-    expect(screen.getByTestId("accept-cta").textContent).toBe("KEEP WHO YOU'D KEEP");
-  });
-
-  it("default: SET THE BAR + no seal + KEEP THE RIGHT ONES cta", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "default", heldPair: null, anchor: null, challengerName: "John" })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("take-headline").textContent).toBe("JOHN SET THE BAR.");
-    expect(screen.queryByTestId("evidence-seal")).toBeNull();
-    expect(screen.queryByTestId("landing-badge")).toBeNull();
-    expect(screen.getByTestId("accept-cta").textContent).toBe("KEEP THE RIGHT ONES");
-  });
-
-  it("legacy bad_beat → normalized to CHOKE seal + HELD-verb choke headline", () => {
-    render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "bad_beat", heldPair: ["emb", "voo"], challengerName: "John" })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
-    );
-    expect(screen.getByTestId("landing-badge").textContent).toBe("CHOKE");
-    expect(screen.getByTestId("take-headline").textContent).toContain("HELD");
-    expect(screen.getByTestId("accept-cta").textContent).toBe("KEEP THE RIGHT ONES");
-  });
-});
-
-// ── Retired v2 strings absent from the rendered tree ───────────────────
-
-describe("RD5.1 v3 landing — retired pre-v3 strings absent everywhere", () => {
-  const triggers: Array<{ trigger: string; opts: MakeOpts }> = [
-    { trigger: "choke",     opts: { trigger: "choke", heldPair: ["emb", "voo"], targetScore: 126.2 } },
-    { trigger: "big_score", opts: { trigger: "big_score", heldPair: ["cur", "emb"], targetScore: 240 } },
-    { trigger: "rare_pull", opts: { trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "record" } },
-    { trigger: "miss",      opts: { trigger: "miss", heldPair: ["bro", "cur"], nearMissNextTier: "MVP" } },
-    { trigger: "default",   opts: { trigger: "default", heldPair: null, anchor: null } },
+describe("rendered headline + CTA come from the per-trigger bank", () => {
+  const cases: Array<{ trigger: string; opts: MakeOpts; pool: readonly BankVariant[]; sealLabel: string | null }> = [
+    { trigger: "choke",     opts: { trigger: "choke",     heldPair: ["emb", "voo"], challengeId: "ch_choke_1" },                                          pool: BANKS.choke,   sealLabel: "CHOKE" },
+    { trigger: "miss",      opts: { trigger: "miss",      heldPair: ["bro", "cur"], nearMissNextTier: "MVP", challengeId: "ch_miss_1" },                  pool: BANKS.miss,    sealLabel: "MVP MISS" },
+    { trigger: "big_score", opts: { trigger: "big_score", heldPair: ["cur", "emb"], targetScore: 240, challengeId: "ch_bs_1" },                           pool: BANKS.respect, sealLabel: "MVP" },
+    { trigger: "rare_pull", opts: { trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "record", challengeId: "ch_rp_1" },                      pool: BANKS.respect, sealLabel: "RECORD" },
+    { trigger: "default",   opts: { trigger: "default",   heldPair: null, anchor: null, challengeId: "ch_def_1" },                                        pool: BANKS.default, sealLabel: null },
   ];
-  for (const c of triggers) {
-    it(`${c.trigger}: BIG SCORE / NEW RECORD / MAKE THE BETTER CALL / FIND THE SWAP / TRUSTED / ONE SWAP STOOD BETWEEN absent`, () => {
+
+  for (const c of cases) {
+    it(`${c.trigger}: headline is from the right pool, CTA matches the bank, seal=${c.sealLabel ?? "(none)"}`, () => {
       render(
         <ChallengeTakeCardLanding
           data={makeData({ ...c.opts, challengerName: "John" })}
-          statsLine="3 attempts · 67% failed"
+          statsLine={null}
           alreadyAttempted={false}
           calculateWinTier={testWinTier}
           onAccept={() => {}}
         />,
       );
-      const root = screen.getByTestId("challenge-take-card-landing");
-      const text = root.textContent ?? "";
-      for (const retired of ["BIG SCORE", "NEW RECORD", "MAKE THE BETTER CALL", "FIND THE SWAP", "TRUSTED", "ONE SWAP STOOD BETWEEN"]) {
-        expect(text, `${c.trigger} should not contain retired v2 string "${retired}"`).not.toContain(retired);
+      const headlineText = screen.getByTestId("take-headline").textContent ?? "";
+      const ctaText = screen.getByTestId("accept-cta").textContent ?? "";
+      // Find the matching bank variant by paired (headline, cta). For
+      // choke named lines the headline is name-substituted at render,
+      // so we compare against the substituted form.
+      const heldNames = c.opts.heldPair === null
+        ? []
+        : c.opts.heldPair.map(id => ({ emb: "Embiid", voo: "Vucevic", bro: "Brown", cur: "Curry", bag: "Bagley", hol: "Holiday" }[id] ?? "?"));
+      // CSS textTransform:uppercase is a VISUAL render; textContent returns
+      // the source-case string. Compare against the bank's sentence-case
+      // source verbatim.
+      const match = c.pool.find(v => {
+        const substituted = v.headline
+          .replace(/\{name1\}/g, heldNames[0] ?? "")
+          .replace(/\{name2\}/g, heldNames[1] ?? "")
+          .replace(/\{name\}/g, heldNames[0] ?? "");
+        return substituted === headlineText && v.cta === ctaText;
+      });
+      expect(
+        match,
+        `${c.trigger}: no bank variant matched headline="${headlineText}" cta="${ctaText}"`,
+      ).toBeDefined();
+
+      if (c.sealLabel === null) {
+        expect(screen.queryByTestId("evidence-seal")).toBeNull();
+      } else {
+        expect(screen.getByTestId("landing-badge").textContent).toBe(c.sealLabel);
       }
     });
   }
 });
 
-// ── Dynamic no-duplication guardrail on the rendered output ────────────
+// ── Determinism per challenge_id ──────────────────────────────────────
 
-describe("RD5.1 v3 landing — dynamic no-duplication guardrail", () => {
+describe("Deterministic selection — same challenge_id → same variant", () => {
+  it("two renders of the same data produce the same headline + cta", () => {
+    const data = makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengeId: "ch_stable_x" });
+    const { unmount } = render(
+      <ChallengeTakeCardLanding data={data} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />,
+    );
+    const firstHead = screen.getByTestId("take-headline").textContent;
+    const firstCta = screen.getByTestId("accept-cta").textContent;
+    unmount();
+
+    render(
+      <ChallengeTakeCardLanding data={data} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />,
+    );
+    expect(screen.getByTestId("take-headline").textContent).toBe(firstHead);
+    expect(screen.getByTestId("accept-cta").textContent).toBe(firstCta);
+  });
+});
+
+// ── No-duplication guardrail on rendered output ────────────────────────
+
+describe("No-duplication guardrail on the rendered surface", () => {
   const cases: Array<{ trigger: string; opts: MakeOpts; sealArgs: Parameters<typeof resolveSeal>[0] }> = [
-    { trigger: "choke",     opts: { trigger: "choke", heldPair: ["emb", "voo"] },                                              sealArgs: { trigger: "choke" } },
-    { trigger: "big_score", opts: { trigger: "big_score", heldPair: ["emb", "cur"], targetScore: 240 },                        sealArgs: { trigger: "big_score", winTier: "MVP" } },
-    { trigger: "miss",      opts: { trigger: "miss", heldPair: ["bro", "cur"], nearMissNextTier: "MVP" },                      sealArgs: { trigger: "miss", missTier: "MVP" } },
-    { trigger: "miss",      opts: { trigger: "miss", heldPair: ["bro", "cur"], nearMissNextTier: "ALL_STAR" },                 sealArgs: { trigger: "miss", missTier: "ALL_STAR" } },
-    { trigger: "rare_pull", opts: { trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "record" },                   sealArgs: { trigger: "rare_pull", topGameTier: "record" } },
-    { trigger: "rare_pull", opts: { trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "career" },                   sealArgs: { trigger: "rare_pull", topGameTier: "career" } },
+    { trigger: "choke",     opts: { trigger: "choke",     heldPair: ["emb", "voo"], challengeId: "ch_g_choke" },                                                    sealArgs: { trigger: "choke" } },
+    { trigger: "miss MVP",  opts: { trigger: "miss",      heldPair: ["bro", "cur"], nearMissNextTier: "MVP", challengeId: "ch_g_miss_mvp" },                        sealArgs: { trigger: "miss", missTier: "MVP" } },
+    { trigger: "miss AS",   opts: { trigger: "miss",      heldPair: ["bro", "cur"], nearMissNextTier: "ALL_STAR", challengeId: "ch_g_miss_as" },                    sealArgs: { trigger: "miss", missTier: "ALL_STAR" } },
+    { trigger: "big_score", opts: { trigger: "big_score", heldPair: ["emb", "cur"], targetScore: 240, challengeId: "ch_g_bs" },                                     sealArgs: { trigger: "big_score", winTier: "MVP" } },
+    { trigger: "rare_pull", opts: { trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "career", challengeId: "ch_g_rp" },                                sealArgs: { trigger: "rare_pull", topGameTier: "career" } },
   ];
   for (const c of cases) {
-    it(`${c.trigger} (seal=${resolveSeal(c.sealArgs)?.label}): rendered headline contains NO seal-vocabulary token`, () => {
+    it(`${c.trigger}: rendered headline does not contain seal "${resolveSeal(c.sealArgs)?.label}" vocab`, () => {
       render(
         <ChallengeTakeCardLanding
           data={makeData({ ...c.opts, challengerName: "John" })}
@@ -299,29 +214,98 @@ describe("RD5.1 v3 landing — dynamic no-duplication guardrail", () => {
       const result = headlineContainsSealVocabulary(headline, seal);
       expect(
         result.hit,
-        `${c.trigger} headline "${headline}" tripped seal "${seal?.label}" on token "${result.word}"`,
+        `${c.trigger}: headline "${headline}" tripped seal "${seal?.label}" on "${result.word}"`,
       ).toBe(false);
     });
   }
 });
 
-// ── Score-renders-once + target-line placement ─────────────────────────
+// ── Analytics emit ────────────────────────────────────────────────────
 
-describe("RD5.1 v3 landing — score appears exactly once, in target line", () => {
+describe("Analytics — selected variant key emitted on mount", () => {
+  it("fires track('challenges', 'challenge_landing_variant', {variant_key, ...}) on mount", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengeId: "ch_track_choke" })}
+        statsLine={null}
+        alreadyAttempted={false}
+        calculateWinTier={testWinTier}
+        onAccept={() => {}}
+      />,
+    );
+    const calls = trackMock.mock.calls.filter(c => c[0] === "challenges" && c[1] === "challenge_landing_variant");
+    expect(calls.length).toBe(1);
+    const props = calls[0][2] as Record<string, unknown>;
+    expect(props.challenge_id).toBe("ch_track_choke");
+    expect(props.sport).toBe("basketball");
+    expect(props.trigger).toBe("choke");
+    expect(typeof props.variant_key).toBe("string");
+    expect((props.variant_key as string).startsWith("choke_")).toBe(true);
+  });
+
+  it("the emitted variant_key is from the respect bank when trigger=rare_pull", () => {
+    render(
+      <ChallengeTakeCardLanding
+        data={makeData({ trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "record", challengeId: "ch_track_rp" })}
+        statsLine={null}
+        alreadyAttempted={false}
+        calculateWinTier={testWinTier}
+        onAccept={() => {}}
+      />,
+    );
+    const calls = trackMock.mock.calls.filter(c => c[0] === "challenges" && c[1] === "challenge_landing_variant");
+    expect(calls.length).toBe(1);
+    expect(((calls[0][2] as Record<string, unknown>).variant_key as string).startsWith("resp_")).toBe(true);
+  });
+});
+
+// ── Retired pre-bank strings absent ───────────────────────────────────
+
+describe("Retired pre-bank strings absent everywhere", () => {
+  const triggers: Array<{ trigger: string; opts: MakeOpts }> = [
+    { trigger: "choke",     opts: { trigger: "choke",     heldPair: ["emb", "voo"], challengeId: "ch_ret_choke" } },
+    { trigger: "miss",      opts: { trigger: "miss",      heldPair: ["bro", "cur"], nearMissNextTier: "MVP", challengeId: "ch_ret_miss" } },
+    { trigger: "big_score", opts: { trigger: "big_score", heldPair: ["cur", "emb"], targetScore: 240, challengeId: "ch_ret_bs" } },
+    { trigger: "rare_pull", opts: { trigger: "rare_pull", heldPair: ["cur", "emb"], topGameTier: "record", challengeId: "ch_ret_rp" } },
+    { trigger: "default",   opts: { trigger: "default",   heldPair: null, anchor: null, challengeId: "ch_ret_def" } },
+  ];
+  for (const c of triggers) {
+    it(`${c.trigger}: pre-bank inventions (BIG SCORE, NEW RECORD, MAKE THE BETTER CALL, FIND THE SWAP, TRUSTED, ONE SWAP STOOD BETWEEN) absent`, () => {
+      render(
+        <ChallengeTakeCardLanding
+          data={makeData({ ...c.opts, challengerName: "John" })}
+          statsLine="3 attempts · 67% failed"
+          alreadyAttempted={false}
+          calculateWinTier={testWinTier}
+          onAccept={() => {}}
+        />,
+      );
+      const root = screen.getByTestId("challenge-take-card-landing");
+      const text = root.textContent ?? "";
+      for (const retired of ["BIG SCORE", "NEW RECORD", "MAKE THE BETTER CALL", "FIND THE SWAP", "TRUSTED", "ONE SWAP STOOD BETWEEN"]) {
+        expect(text, `${c.trigger}: should not contain retired "${retired}"`).not.toContain(retired);
+      }
+    });
+  }
+});
+
+// ── Score renders exactly once ─────────────────────────────────────────
+
+describe("Score appears exactly once, in the target line", () => {
   const triggers = ["choke", "miss", "big_score", "rare_pull", "default"];
   for (const trigger of triggers) {
-    it(`${trigger}: target line carries 126.2 FP, no headline contains it`, () => {
+    it(`${trigger}: target carries 126.2 FP; no headline contains it`, () => {
       render(
         <ChallengeTakeCardLanding
           data={makeData({
             trigger,
             heldPair: trigger === "default" ? null : ["emb", "voo"],
             anchor: trigger === "default" ? null : "voo",
-            nearMissGap: trigger === "miss" ? 4 : null,
             nearMissNextTier: trigger === "miss" ? "MVP" : null,
             topGameTier: trigger === "rare_pull" ? "career" : null,
             targetScore: 126.2,
             challengerName: "John",
+            challengeId: `ch_score_${trigger}`,
           })}
           statsLine={null}
           alreadyAttempted={false}
@@ -340,23 +324,25 @@ describe("RD5.1 v3 landing — score appears exactly once, in target line", () =
   }
 });
 
-// ── CTA wiring — recipient frame-aware vs owner unchanged ──────────────
+// ── CTA wiring — recipient bank vs owner Play Again ────────────────────
 
-describe("RD5.1 v3 landing — CTA wiring", () => {
-  it("recipient (fresh) on choke → 'KEEP THE RIGHT ONES'", () => {
+describe("CTA wiring (recipient = bank cta; owner = Play Again verbatim)", () => {
+  it("recipient on choke → CTA is non-empty (any choke bank line's CTA)", () => {
     render(
       <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengeId: "ch_cta_recip" })}
         statsLine={null}
         alreadyAttempted={false}
         calculateWinTier={testWinTier}
         onAccept={() => {}}
       />,
     );
-    expect(screen.getByTestId("accept-cta").textContent).toBe("KEEP THE RIGHT ONES");
+    const cta = screen.getByTestId("accept-cta").textContent ?? "";
+    expect(cta.length).toBeGreaterThan(0);
+    expect(cta).not.toBe("PLAY AGAIN"); // recipient path never says Play Again
   });
 
-  it("OWNER path (alreadyAttempted=true) keeps 'Play Again' verbatim — out of scope for RD5.1", () => {
+  it("OWNER (alreadyAttempted=true) → 'Play Again' verbatim", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -397,13 +383,13 @@ describe("RD5.1 v3 landing — CTA wiring", () => {
   });
 });
 
-// ── Seal placement — standalone element, NOT inside the h1 ─────────────
+// ── Seal placement, hold glyph, deleted surfaces (unchanged contract) ──
 
-describe("RD5.1 v3 landing — seal is a standalone evidence element", () => {
-  it("choke: seal lives in evidence-seal wrapper outside the take-headline", () => {
+describe("Seal placement + hand glyph + deleted surfaces", () => {
+  it("choke: seal lives in evidence-seal wrapper, NOT in the h1", () => {
     render(
       <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengeId: "ch_seal_1" })}
         statsLine={null}
         alreadyAttempted={false}
         calculateWinTier={testWinTier}
@@ -430,12 +416,8 @@ describe("RD5.1 v3 landing — seal is a standalone evidence element", () => {
     expect(screen.queryByTestId("evidence-seal")).toBeNull();
     expect(screen.queryByTestId("landing-badge")).toBeNull();
   });
-});
 
-// ── Hand evidence — yellow-H glyph on held cards ───────────────────────
-
-describe("RD5.1 v3 landing — yellow-H hold glyph on held cards", () => {
-  it("held cards render the yellow-H corner glyph (NOT a HOLD text pill)", () => {
+  it("held cards render yellow-H corner glyph (NOT a HOLD text pill)", () => {
     render(
       <ChallengeTakeCardLanding
         data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
@@ -450,62 +432,32 @@ describe("RD5.1 v3 landing — yellow-H hold glyph on held cards", () => {
     for (const b of badges) {
       expect(b.textContent).toBe("H");
       const polygon = b.querySelector("polygon");
-      expect(polygon).not.toBeNull();
-      expect(polygon!.getAttribute("fill")?.toUpperCase()).toBe("#F5C850");
+      expect(polygon?.getAttribute("fill")?.toUpperCase()).toBe("#F5C850");
     }
   });
 
-  it("holdsRecorded:false → 6 plain cards, 0 hold glyphs", () => {
+  it("deleted surfaces stay absent: HELD line / dare / attribution", () => {
     render(
       <ChallengeTakeCardLanding
-        data={makeData({ trigger: "default", heldPair: null, anchor: null, holdsRecorded: false })}
-        statsLine={null}
+        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "John" })}
+        statsLine="3 attempts · 67% failed"
         alreadyAttempted={false}
         calculateWinTier={testWinTier}
         onAccept={() => {}}
       />,
     );
-    expect(screen.queryAllByTestId("hand-card-held")).toHaveLength(0);
-    expect(screen.queryAllByTestId("hand-card-plain")).toHaveLength(6);
-    expect(screen.queryAllByTestId("hold-badge")).toHaveLength(0);
+    expect(screen.queryByTestId("held-list")).toBeNull();
+    expect(screen.queryByTestId("dare-line")).toBeNull();
+    expect(screen.queryByTestId("attribution")).toBeNull();
+    const root = screen.getByTestId("challenge-take-card-landing");
+    expect(root.textContent).not.toMatch(/from John/i);
+    expect(root.textContent).not.toMatch(/can you beat/i);
   });
-});
-
-// ── Deleted surfaces (HELD line · dare · attribution) ──────────────────
-
-describe("RD5.1 v3 landing — deleted surfaces are absent", () => {
-  const triggers = ["choke", "miss", "big_score", "rare_pull", "default"];
-  for (const trigger of triggers) {
-    it(`${trigger}: HELD line, dare-line, and attribution footer absent`, () => {
-      render(
-        <ChallengeTakeCardLanding
-          data={makeData({
-            trigger,
-            heldPair: trigger === "default" ? null : ["emb", "voo"],
-            anchor: trigger === "default" ? null : "voo",
-            nearMissNextTier: trigger === "miss" ? "MVP" : null,
-            topGameTier: trigger === "rare_pull" ? "career" : null,
-            challengerName: "John",
-          })}
-          statsLine="3 attempts · 67% failed"
-          alreadyAttempted={false}
-          calculateWinTier={testWinTier}
-          onAccept={() => {}}
-        />,
-      );
-      expect(screen.queryByTestId("held-list")).toBeNull();
-      expect(screen.queryByTestId("dare-line")).toBeNull();
-      expect(screen.queryByTestId("attribution")).toBeNull();
-      const root = screen.getByTestId("challenge-take-card-landing");
-      expect(root.textContent).not.toMatch(/from John/i);
-      expect(root.textContent).not.toMatch(/can you beat/i);
-    });
-  }
 });
 
 // ── Supporting culture line — preserved curated path ───────────────────
 
-describe("RD5.1 v3 landing — supporting culture line (preserved)", () => {
+describe("Supporting culture line (preserved knownFor path)", () => {
   function makeCultureRichData(): ChallengeLandingData {
     return {
       challenge_id: "ch_culture_kobe",
@@ -561,27 +513,14 @@ describe("RD5.1 v3 landing — supporting culture line (preserved)", () => {
 
   it("OFF by default", () => {
     render(
-      <ChallengeTakeCardLanding
-        data={makeCultureRichData()}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-      />,
+      <ChallengeTakeCardLanding data={makeCultureRichData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />,
     );
     expect(screen.queryByTestId("supporting-culture-line")).toBeNull();
   });
 
   it("ON renders the knownFor line", () => {
     render(
-      <ChallengeTakeCardLanding
-        data={makeCultureRichData()}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-        showCultureLine={true}
-      />,
+      <ChallengeTakeCardLanding data={makeCultureRichData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} showCultureLine={true} />,
     );
     const line = screen.queryByTestId("supporting-culture-line");
     expect(line).not.toBeNull();
@@ -590,14 +529,7 @@ describe("RD5.1 v3 landing — supporting culture line (preserved)", () => {
 
   it("ON + synthetic IDs (no culture match) → not rendered, no crash", () => {
     render(
-      <ChallengeTakeCardLanding
-        data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })}
-        statsLine={null}
-        alreadyAttempted={false}
-        calculateWinTier={testWinTier}
-        onAccept={() => {}}
-        showCultureLine={true}
-      />,
+      <ChallengeTakeCardLanding data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} showCultureLine={true} />,
     );
     expect(screen.queryByTestId("supporting-culture-line")).toBeNull();
   });

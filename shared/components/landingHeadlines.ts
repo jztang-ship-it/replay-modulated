@@ -1,33 +1,134 @@
 // shared/components/landingHeadlines.ts
 //
-// RD5.1 v3 — Decision-frame headline + CTA + seal system for the
-// recipient challenge landing. Spec of record: docs/rd5-1-headline-
-// system-spec.md (v3 — native vocabulary lock).
+// RD5.1 — Decision-frame challenge landing: voiced copy bank + seeded
+// selection. Spec of record: docs/rd5-1-headline-system-spec.md.
 //
-// Governing principle: the headline starts an argument, the stamp
-// provides evidence, the CTA lets the recipient answer. The vocabulary
-// mirrors the game's own — `HELD` for the sender's decision (matches
-// the in-game state name `wasHeld`) and `KEEP` on the CTA (matches the
-// recipient's literal next-screen instruction "Tap the players you'd
-// keep. Draw the rest." in H2HRecipientPlay.tsx:406).
+// What changed vs v3 (the all-caps templated single-line per trigger):
+//   - Each trigger now draws from a weighted variant bank instead of
+//     emitting a single hard-coded line.
+//   - Each variant carries voice (bar / analyst / copy), per-line
+//     weight, optional `named` flag, optional stance (for the respect
+//     pool only), and a stable `key` for analytics correlation.
+//   - Selection is seeded by the challenge ID so a given challenge
+//     always renders the same variant across refreshes; different
+//     challenges vary.
+//   - CTAs are per-variant (the previous fixed per-trigger CTAs are
+//     retired). Headlines stay sentence-case in source; the CTA + h1
+//     CSS rules continue to handle uppercase rendering.
+//   - big_score AND rare_pull both draw from the shared "respect"
+//     pool with a stance split (70% respectful / 30% disrespectful) —
+//     the trigger only determines the SEAL, not the headline pool.
+//   - Stamps + colors continue to mirror TierGauge.tsx (v3 contract
+//     unchanged).
 //
-// Stamp labels + colors mirror `TierGauge.tsx` (the in-game commentary
-// chip that fires alongside the result). The string "BIG SCORE" is
-// retired — big_score renders the tier label only.
-//
-// This module is pure: no React, no DOM, no side effects. The landing
-// component renders the strings returned by pickHeadlineAndCta and the
-// stamp label / color returned by resolveSeal.
+// The module is pure — no React, no DOM, no analytics calls. The
+// caller emits the selected `variantKey` to analytics.
 
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
 
-// ── Held-card name listing ───────────────────────────────────────────────
+// ── Bank shape ───────────────────────────────────────────────────────────
+
+export type Voice = "bar" | "analyst" | "copy";
+export type Stance = "respect" | "disrespect";
+
+export interface BankVariant {
+  /** Headline template. May contain `{name1}` / `{name2}` (named lines
+   *  only); substituted at selection time with last names from the
+   *  held-card list. */
+  headline: string;
+  /** Per-line CTA, sentence-case in source; CSS upper-cases on render. */
+  cta: string;
+  /** Voice register. Used for choke + miss selection; tagged on respect
+   *  + default lines for forward compatibility but NOT consulted in
+   *  selection on those triggers. */
+  voice: Voice;
+  /** Relative frequency within the line's voice/stance pool. */
+  weight: number;
+  /** Choke only: line requires substituted player names — eligible
+   *  only when 1-2 named held cards are available (the {nameN} token
+   *  needs satisfying). */
+  named?: boolean;
+  /** Respect pool only: marks line as respectful or disrespectful for
+   *  the 70/30 stance split. */
+  stance?: Stance;
+  /** Stable analytics key — never changes across edits. */
+  key: string;
+}
+
+// ── Banks (spec §the bank) ──────────────────────────────────────────────
 //
-// Spec §Name rules: 1 → "LAST", 2 → "LAST AND LAST", 3+ → "HIS STARS".
-// The headline templates prefix these with HELD ("HELD HARDEN AND BEAL").
-// Single-name picks the last token (matches the spec's HARDEN / BEAL
-// worked examples).
+// Order is meaningful only for documentation — selection is purely
+// weight-driven. Templates use `{name1}` for the first held player's
+// last name and `{name2}` for the second. The substituter falls back
+// to first-name slot for `{name}`.
+
+const CHOKE_BANK: readonly BankVariant[] = [
+  { voice: "bar", weight: 3, named: true, key: "choke_bar_embiidvuc",  headline: "{name1} and {name2}? Really?",                                cta: "You keeping them too?" },
+  { voice: "bar", weight: 3,             key: "choke_bar_holds",       headline: "Those were the holds?",                                         cta: "Fix it." },
+  { voice: "bar", weight: 5,             key: "choke_bar_tipoff",      headline: "This looked smarter before tipoff.",                            cta: "Show him what smart looks like." },
+  { voice: "bar", weight: 3,             key: "choke_bar_honest",      headline: "Be honest. You were holding him too.",                          cta: "Still think that's the move?" },
+  { voice: "bar", weight: 3,             key: "choke_bar_yesterday",   headline: "Everybody loved this hand yesterday.",                          cta: "Love it now?" },
+  { voice: "bar", weight: 3,             key: "choke_bar_fiveminutes", headline: "This looked like a winner for about five minutes.",             cta: "Can you actually win with it?" },
+  { voice: "bar", weight: 3,             key: "choke_bar_talkedinto",  headline: "Somebody talked themselves into this.",                         cta: "Don't make the same mistake." },
+  { voice: "bar", weight: 3,             key: "choke_bar_name",        headline: "He trusted the name.",                                          cta: "Would you?" },
+  { voice: "bar", weight: 3, named: true, key: "choke_bar_vucecon",    headline: "{name1}. In this economy?",                                     cta: "Do better." },
+  { voice: "bar", weight: 3,             key: "choke_bar_squint",      headline: "You don't have to squint to find the problem.",                 cta: "Fix it." },
+  { voice: "analyst", weight: 3,         key: "choke_anly_warnings",   headline: "The warning signs were all there.",                             cta: "Would you have ignored them?" },
+  { voice: "analyst", weight: 3,         key: "choke_anly_jersey",     headline: "The jersey carried more weight than the stats.",                cta: "Pick with your head." },
+  { voice: "analyst", weight: 3,         key: "choke_anly_confident",  headline: "Everybody thinks they're right until the games start.",         cta: "Still feeling confident?" },
+  { voice: "analyst", weight: 3,         key: "choke_anly_betluck",    headline: "Bad bet or bad luck?",                                          cta: "You decide. Then beat it." },
+  { voice: "copy",    weight: 2,         key: "choke_copy_milk",       headline: "This hand aged like milk.",                                     cta: "Build one that ages better." },
+];
+
+const MISS_BANK: readonly BankVariant[] = [
+  { voice: "bar",     weight: 3, key: "miss_bar_mistake",     headline: "You can see the mistake, can't you?",        cta: "Fix it." },
+  { voice: "bar",     weight: 3, key: "miss_bar_95",          headline: "He got 95% of the way there.",               cta: "Get the other 5%." },
+  { voice: "bar",     weight: 3, key: "miss_bar_bother",      headline: "This one's gonna bother him.",               cta: "Finish it." },
+  { voice: "bar",     weight: 3, key: "miss_bar_hurts",       headline: "So close it hurts.",                         cta: "Finish the job." },
+  { voice: "bar",     weight: 3, key: "miss_bar_closer",      headline: "He was closer than he realizes.",            cta: "Get all the way there." },
+  { voice: "analyst", weight: 5, key: "miss_anly_onehold",    headline: "One hold changed the whole story.",          cta: "Which one?" },
+  { voice: "analyst", weight: 3, key: "miss_anly_staring",    headline: "The answer was staring him in the face.",    cta: "Do you see it?" },
+  { voice: "analyst", weight: 3, key: "miss_anly_fixfront",   headline: "The fix is right in front of you.",          cta: "Take it." },
+  { voice: "analyst", weight: 3, key: "miss_anly_onedecision", headline: "One better decision changes everything.",   cta: "Make it." },
+  { voice: "copy",    weight: 2, key: "miss_copy_unfinished", headline: "This hand is unfinished business.",          cta: "Finish it." },
+];
+
+const RESPECT_BANK: readonly BankVariant[] = [
+  // Respectful (70%)
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_goodluck",   headline: "Yeah, good luck with this one.",       cta: "You're gonna need it." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nasty",      headline: "That's a nasty number.",                cta: "Beat it." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nailed",     headline: "He might actually have nailed it.",     cta: "Prove he didn't." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_survive",    headline: "Not many hands survive this test.",     cta: "Take it anyway." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_nuts",       headline: "He found the nuts.",                    cta: "Can you?" },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_heater",     headline: "This is what a heater looks like.",     cta: "Bring your own." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_scoreboard", headline: "The scoreboard isn't lying.",           cta: "Do something about it." },
+  { voice: "bar", weight: 3, stance: "respect", key: "resp_r_deserve",    headline: "Some scores deserve respect.",          cta: "This one deserves competition." },
+  // Disrespectful (30%)
+  { voice: "bar", weight: 5, stance: "disrespect", key: "resp_d_scared",      headline: "That's the score we're supposed to be scared of?", cta: "Prove me wrong." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_sentthis",    headline: "He really sent this out?",                          cta: "Beat it." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_besthand",    headline: "That's your best hand?",                            cta: "Let's see mine." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_thinkswins",  headline: "He thinks this wins.",                              cta: "Does it?" },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_credit",      headline: "He wants credit for that?",                         cta: "Earn yours." },
+  { voice: "bar", weight: 3, stance: "disrespect", key: "resp_d_impressed",   headline: "We're impressed by this now?",                      cta: "Show me something better." },
+];
+
+const DEFAULT_BANK: readonly BankVariant[] = [
+  { voice: "bar", weight: 3, key: "def_board",  headline: "He's on the board.",            cta: "Knock him off." },
+  { voice: "bar", weight: 3, key: "def_number", headline: "He set a number.",              cta: "Beat it." },
+  { voice: "bar", weight: 3, key: "def_picks",  headline: "He made his picks.",            cta: "Make better ones." },
+  { voice: "bar", weight: 3, key: "def_talk",   headline: "Beat this and talk your talk.", cta: "Go ahead." },
+];
+
+/** Read-only access for tests + future tooling. */
+export const BANKS = {
+  choke: CHOKE_BANK,
+  miss: MISS_BANK,
+  respect: RESPECT_BANK,
+  default: DEFAULT_BANK,
+} as const;
+
+// ── Name listing + substitution ─────────────────────────────────────────
 
 function lastName(full: string): string {
   const trimmed = full.trim();
@@ -36,50 +137,25 @@ function lastName(full: string): string {
   return parts[parts.length - 1];
 }
 
-export function formatHeldNamesForHeadline(names: readonly string[]): string {
-  if (names.length === 0) return "HIS STARS";
-  if (names.length === 1) return lastName(names[0]).toUpperCase();
-  if (names.length === 2) {
-    const a = lastName(names[0]).toUpperCase();
-    const b = lastName(names[1]).toUpperCase();
-    return `${a} AND ${b}`;
-  }
-  return "HIS STARS";
+/** Substitutes `{name1}` / `{name2}` / `{name}` in a template with held
+ *  players' LAST names (title case; CSS upper-cases for render). */
+export function substituteNames(template: string, heldNames: readonly string[]): string {
+  const n1 = heldNames[0] ? lastName(heldNames[0]) : "";
+  const n2 = heldNames[1] ? lastName(heldNames[1]) : "";
+  return template
+    .replace(/\{name1\}/g, n1)
+    .replace(/\{name2\}/g, n2)
+    .replace(/\{name\}/g, n1);
 }
 
-// ── Hold-verb pool (spec §Name rules) ────────────────────────────────────
-// Build default is `HELD`; the alternates are documented on the tree for a
-// later variation pass. NOT wired as an A/B harness in v3.
-
-export const HOLD_VERBS = ["HELD", "KEPT", "STUCK WITH", "RODE WITH"] as const;
-
-// ── Choke consequence-clause (spec §choke) ───────────────────────────────
-// Build default is `IT COST HIM.` The two alternates ride on the tree as a
-// const array for a later A/B; do NOT wire a harness in v3.
-
-export const CHOKE_CONSEQUENCE_DEFAULT = "IT COST HIM.";
-export const CHOKE_CONSEQUENCE_ALTERNATES = [
-  "WRONG HOLD.",   // argument-focused
-  "IT BACKFIRED.", // outcome-focused
-] as const;
-
-// ── Stamp seal — labels + colors mirror TierGauge.tsx ───────────────────
-//
-// Source-of-truth file references in comments. The landing's InFlowBadge
-// component renders this label + color; the headline guardrail uses the
-// label string to compute the forbidden vocabulary dynamically.
+// ── Seal — labels + colors mirror TierGauge.tsx (unchanged v3 contract)──
 
 export interface SealVisual {
-  /** Visible label, uppercase. */
   label: string;
-  /** CSS background (gradient or solid color from TIER_CFG). */
   background: string;
-  /** Text color on the chip. */
   color: string;
 }
 
-// TierGauge.tsx:101-108 — TIER_CFG for win_tier stamps. big_score reuses
-// these solid colors (no gradient) because that's what TierGauge renders.
 const WIN_TIER_COLOR: Record<WinTierKey, string> = {
   LEGEND:   "#EF4444",
   MVP:      "#FB923C",
@@ -88,20 +164,10 @@ const WIN_TIER_COLOR: Record<WinTierKey, string> = {
   ROOKIE:   "#22C55E",
   BUST:     "#6B7280",
 };
-
-// TierGauge.tsx:101-108 — the on-chip label for ALL_STAR is "ALL-STAR"
-// (hyphen, not space). MVP and LEGEND need no transformation.
 const WIN_TIER_LABEL: Record<WinTierKey, string> = {
-  LEGEND:   "LEGEND",
-  MVP:      "MVP",
-  ALL_STAR: "ALL-STAR",
-  STARTER:  "STARTER",
-  ROOKIE:   "ROOKIE",
-  BUST:     "BUST",
+  LEGEND: "LEGEND", MVP: "MVP", ALL_STAR: "ALL-STAR",
+  STARTER: "STARTER", ROOKIE: "ROOKIE", BUST: "BUST",
 };
-
-// TierGauge.tsx:451-455 — rare_pull sub-tier labels. NO "NEW" prefix;
-// the in-game chip renders RECORD / CAREER HIGH / SEASON HIGH.
 const RARE_PULL_TIER_LABEL: Record<string, string> = {
   record: "RECORD",
   career: "CAREER HIGH",
@@ -117,18 +183,9 @@ export interface ResolveSealArgs {
   trigger: TakeCardTrigger;
   missTier?: string | null;
   topGameTier?: "record" | "career" | "season" | null;
-  /** Resolved win tier for big_score (sport adapter computes it from
-   *  target_score). Required only for big_score; null/undefined for the
-   *  other triggers. When big_score lacks a winTier (legacy / fallback),
-   *  the seal degrades to a transparent "RESULT" pill so the surface
-   *  still reads as evidence — caller treats as a soft-fail, not a hard
-   *  null. */
   winTier?: WinTierKey | null;
 }
 
-/** Resolves the visible seal for the trigger. Returns null when the
- *  trigger is `default` (no seal — the headline starts the argument
- *  unaided per spec §default). */
 export function resolveSeal(args: ResolveSealArgs): SealVisual | null {
   switch (args.trigger) {
     case "choke":
@@ -146,23 +203,9 @@ export function resolveSeal(args: ResolveSealArgs): SealVisual | null {
       };
     }
     case "big_score": {
-      // The win_tier stamp from TierGauge: label is the tier, color is
-      // the TIER_CFG color. big_score gates on ALL_STAR / MVP / LEGEND
-      // upstream (triggerEvaluation.ts:185). The resolver here is
-      // defensive against cross-season threshold drift — if the
-      // recipient-side calculateWinTier returns a lower tier than
-      // big_score's eligibility floor (the sender hit MVP at season X
-      // thresholds, but the recipient applies the current season's
-      // thresholds and the same FP value lands at STARTER), we soft-
-      // fail to the floor (ALL-STAR) rather than render a "STARTER"
-      // seal that contradicts the trigger.
       const eligible: ReadonlySet<WinTierKey> = new Set<WinTierKey>(["ALL_STAR", "MVP", "LEGEND"]);
       const tier: WinTierKey = (args.winTier && eligible.has(args.winTier)) ? args.winTier : "ALL_STAR";
-      return {
-        label: WIN_TIER_LABEL[tier],
-        background: WIN_TIER_COLOR[tier],
-        color: "#070A12",
-      };
+      return { label: WIN_TIER_LABEL[tier], background: WIN_TIER_COLOR[tier], color: "#070A12" };
     }
     case "rare_pull": {
       const key = args.topGameTier ?? "";
@@ -179,96 +222,167 @@ export function resolveSeal(args: ResolveSealArgs): SealVisual | null {
   }
 }
 
-// ── Headline templates (v3 — HELD verb throughout) ──────────────────────
+// ── Seeded RNG ──────────────────────────────────────────────────────────
+//
+// FNV-1a 32-bit hash → mulberry32 PRNG. The same challenge ID always
+// produces the same variant; different IDs vary. The hash is consistent
+// with the existing `stableSeedFromId` pattern in ChallengeTakeCardLanding.tsx
+// (which seeds the optional culture-line gate off the same scheme).
 
-interface HeadlineInputs {
-  challengerName: string;
-  heldNamesList: readonly string[];
+function fnv1a32(s: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
 }
 
-function chokeHeadline({ challengerName, heldNamesList }: HeadlineInputs): string {
-  // Worked example: JOHN HELD HARDEN AND BEAL. IT COST HIM.
-  const name = challengerName.toUpperCase();
-  const held = formatHeldNamesForHeadline(heldNamesList);
-  return `${name} HELD ${held}. ${CHOKE_CONSEQUENCE_DEFAULT}`;
+/** Mulberry32 PRNG; deterministic 32-bit. Returns a function that yields
+ *  a new [0,1) float on each call. */
+export function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return function next(): number {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-function bigScoreHeadline({ challengerName }: HeadlineInputs): string {
-  // The held lineup delivered — generic "HIS STARS" carries the spec's
-  // big_score template without needing per-name listing (the cards below
-  // name the actual lineup).
-  const name = challengerName.toUpperCase();
-  return `${name} HELD HIS STARS AND THEY DELIVERED.`;
+export function rngFromChallengeId(challengeId: string): () => number {
+  return mulberry32(fnv1a32(challengeId));
 }
 
-function rarePullHeadline({ challengerName }: HeadlineInputs): string {
-  const name = challengerName.toUpperCase();
-  return `${name} FOUND SOMETHING NOBODY SAW COMING.`;
+// ── Weighted pick utility ───────────────────────────────────────────────
+
+function pickByWeight<T>(items: readonly T[], weightOf: (it: T) => number, rng: () => number): T {
+  let total = 0;
+  for (const it of items) total += weightOf(it);
+  if (total <= 0) return items[0];
+  let r = rng() * total;
+  for (const it of items) {
+    const w = weightOf(it);
+    if (r < w) return it;
+    r -= w;
+  }
+  return items[items.length - 1];
 }
 
-function missHeadline({ challengerName }: HeadlineInputs): string {
-  // v3: de-swapped to KEEP. The recipient mechanic is keep/draw, not
-  // swap — the headline now uses the verb the recipient will see on the
-  // next screen.
-  const name = challengerName.toUpperCase();
-  return `${name} WAS ONE KEEP AWAY FROM GREATNESS.`;
+// ── Voice + stance selection ────────────────────────────────────────────
+
+const VOICE_WEIGHT: Record<Voice, number> = { bar: 0.70, analyst: 0.25, copy: 0.05 };
+const STANCE_WEIGHT: Record<Stance, number> = { respect: 0.70, disrespect: 0.30 };
+
+/** Pick a voice from the available set using VOICE_WEIGHT, renormalized
+ *  over the voices that actually have eligible lines. */
+function pickVoice(available: ReadonlySet<Voice>, rng: () => number): Voice {
+  const candidates = (["bar", "analyst", "copy"] as Voice[]).filter(v => available.has(v));
+  if (candidates.length === 1) return candidates[0];
+  return pickByWeight(candidates, v => VOICE_WEIGHT[v], rng);
 }
 
-function defaultHeadline({ challengerName }: HeadlineInputs): string {
-  const name = challengerName.toUpperCase();
-  return `${name} SET THE BAR.`;
+/** Choke + miss: voice-then-weighted-line selection. */
+function pickVoiceWeighted(pool: readonly BankVariant[], rng: () => number): BankVariant {
+  const byVoice = new Map<Voice, BankVariant[]>();
+  for (const v of pool) {
+    const arr = byVoice.get(v.voice) ?? [];
+    arr.push(v);
+    byVoice.set(v.voice, arr);
+  }
+  const voice = pickVoice(new Set(byVoice.keys()), rng);
+  return pickByWeight(byVoice.get(voice)!, v => v.weight, rng);
 }
 
-// ── CTA per trigger (v3 — keep-action where appropriate) ────────────────
+/** Respect: stance-then-weighted-line selection. */
+function pickStanceWeighted(pool: readonly BankVariant[], rng: () => number): BankVariant {
+  const byStance = new Map<Stance, BankVariant[]>();
+  for (const v of pool) {
+    if (!v.stance) continue; // defensive — respect bank entries should all carry stance
+    const arr = byStance.get(v.stance) ?? [];
+    arr.push(v);
+    byStance.set(v.stance, arr);
+  }
+  const available = (["respect", "disrespect"] as Stance[]).filter(s => byStance.has(s));
+  const stance: Stance = available.length === 1
+    ? available[0]
+    : pickByWeight(available, s => STANCE_WEIGHT[s], rng);
+  return pickByWeight(byStance.get(stance)!, v => v.weight, rng);
+}
 
-const CTA_BY_TRIGGER: Record<TakeCardTrigger, string> = {
-  choke:     "KEEP THE RIGHT ONES",
-  big_score: "TRY TO TOP IT",
-  rare_pull: "TAKE YOUR SHOT",
-  miss:      "KEEP WHO YOU'D KEEP",
-  default:   "KEEP THE RIGHT ONES",
-};
+// ── Choke named-line eligibility ────────────────────────────────────────
 
-export const FALLBACK_CTA = "ACCEPT CHALLENGE";
+/** Filters the choke bank to the lines that can fire given the held set:
+ *  - 3+ held → generic only (named excluded per spec).
+ *  - 1-2 held → named lines eligible iff their `{nameN}` templates can be
+ *    satisfied (a {name2} line needs 2 held; {name1}/{name} needs 1).
+ *  - 0 held → generic only (no names to substitute). */
+export function eligibleChokeLines(heldNamesList: readonly string[]): readonly BankVariant[] {
+  const n = heldNamesList.length;
+  if (n === 0 || n >= 3) return CHOKE_BANK.filter(v => !v.named);
+  return CHOKE_BANK.filter(v => {
+    if (!v.named) return true;
+    if (v.headline.includes("{name2}") && n < 2) return false;
+    if ((v.headline.includes("{name1}") || v.headline.includes("{name}")) && n < 1) return false;
+    return true;
+  });
+}
 
 // ── Public API ──────────────────────────────────────────────────────────
 
 export interface LandingHeadlineOutput {
+  /** Final headline string with any {nameN} placeholders substituted. */
   headline: string;
+  /** Final CTA string. CSS handles uppercase on render. */
   ctaLabel: string;
+  /** Seal (trigger-keyed; null for `default`). */
   seal: SealVisual | null;
+  /** Stable analytics key for the picked variant — emit to analytics
+   *  on render so per-line acceptance rates can be measured later. */
+  variantKey: string;
 }
 
 export interface PickHeadlineArgs {
   trigger: TakeCardTrigger;
   challengerName: string;
   heldNamesList: readonly string[];
+  /** Seeds the RNG; a given challenge always renders the same variant. */
+  challengeId: string;
   missTier?: string | null;
   topGameTier?: "record" | "career" | "season" | null;
-  /** Resolved win tier for big_score (passed in from the sport adapter
-   *  via the landing shell). */
   winTier?: WinTierKey | null;
 }
 
 export function pickHeadlineAndCta(args: PickHeadlineArgs): LandingHeadlineOutput {
-  const inputs: HeadlineInputs = {
-    challengerName: args.challengerName,
-    heldNamesList: args.heldNamesList,
-  };
-
-  let headline: string;
+  const rng = rngFromChallengeId(args.challengeId);
+  let variant: BankVariant;
   switch (args.trigger) {
-    case "choke":     headline = chokeHeadline(inputs); break;
-    case "big_score": headline = bigScoreHeadline(inputs); break;
-    case "rare_pull": headline = rarePullHeadline(inputs); break;
-    case "miss":      headline = missHeadline(inputs); break;
+    case "choke": {
+      const pool = eligibleChokeLines(args.heldNamesList);
+      variant = pickVoiceWeighted(pool, rng);
+      break;
+    }
+    case "miss":
+      variant = pickVoiceWeighted(MISS_BANK, rng);
+      break;
+    case "big_score":
+    case "rare_pull":
+      // Both pull from the shared respect pool — the trigger only
+      // determines the seal, not the line.
+      variant = pickStanceWeighted(RESPECT_BANK, rng);
+      break;
     case "default":
-    default:          headline = defaultHeadline(inputs); break;
+    default:
+      variant = pickByWeight(DEFAULT_BANK, v => v.weight, rng);
+      break;
   }
 
+  const headline = substituteNames(variant.headline, args.heldNamesList);
   return {
     headline,
-    ctaLabel: CTA_BY_TRIGGER[args.trigger] ?? FALLBACK_CTA,
+    ctaLabel: variant.cta,
+    variantKey: variant.key,
     seal: resolveSeal({
       trigger: args.trigger,
       missTier: args.missTier,
@@ -278,44 +392,22 @@ export function pickHeadlineAndCta(args: PickHeadlineArgs): LandingHeadlineOutpu
   };
 }
 
-// ── No-duplication guardrail (v3 — dynamic per rendered stamp) ──────────
-//
-// Spec §No-duplication guardrail. Computes the forbidden vocabulary from
-// the seal that the trigger will actually render — NOT a hardcoded const
-// array. Whole-word, case-insensitive.
-//
-// Why dynamic: a static list either over-blocks (e.g. ban "MVP" from
-// every miss headline even when missTier is ALL_STAR) or under-blocks
-// (let "MVP" through a miss whose seal IS "MVP MISS"). The actual
-// duplication risk is between the headline and the rendered stamp; the
-// dynamic check matches that risk exactly.
-//
-// Tokenization: split the seal label on whitespace + hyphen, drop very
-// short tokens (≤2 chars — "ALL" stays in, but "OF" / "AT" / etc never
-// appear in stamp labels anyway). Each token becomes a whole-word case-
-// insensitive regex. Also fold in common inflections of the base stamp
-// verbs (CHOKE → CHOKED/CHOKING; MISS → MISSED/MISSING) so a future
-// author can't write "JOHN CHOKED THIS HAND" without a guardrail hit
-// even though the chip says "CHOKE" (not "CHOKED").
+// ── Dynamic no-duplication guardrail (unchanged from v3) ────────────────
 
 const STEM_INFLECTIONS: Record<string, readonly string[]> = {
   CHOKE: ["choke", "choked", "choking"],
   MISS:  ["miss", "missed", "missing"],
 };
 
-/** Tokens forbidden in a headline that will render this seal, lower-cased
- *  for the case-insensitive regex. Empty array for seal=null (default
- *  trigger → guardrail N/A). */
 export function forbiddenTokensFromSeal(seal: SealVisual | null): string[] {
   if (!seal) return [];
   const out = new Set<string>();
-  // Split on whitespace and hyphen so "ALL-STAR" and "ALL STAR" both
-  // contribute the same token set (ALL + STAR).
   for (const raw of seal.label.split(/[\s-]+/)) {
     const t = raw.trim().toLowerCase();
     if (t.length === 0) continue;
-    if (STEM_INFLECTIONS[t.toUpperCase()]) {
-      for (const inf of STEM_INFLECTIONS[t.toUpperCase()]) out.add(inf);
+    const upper = t.toUpperCase();
+    if (STEM_INFLECTIONS[upper]) {
+      for (const inf of STEM_INFLECTIONS[upper]) out.add(inf);
     } else {
       out.add(t);
     }
@@ -325,7 +417,6 @@ export function forbiddenTokensFromSeal(seal: SealVisual | null): string[] {
 
 export interface HeadlineDuplicationResult {
   hit: boolean;
-  /** When hit, the token that fired. */
   word?: string;
 }
 
@@ -340,3 +431,7 @@ export function headlineContainsSealVocabulary(
   }
   return { hit: false };
 }
+
+// ── Legacy exports (kept for callers that imported FALLBACK_CTA pre-bank) ─
+
+export const FALLBACK_CTA = "ACCEPT CHALLENGE";

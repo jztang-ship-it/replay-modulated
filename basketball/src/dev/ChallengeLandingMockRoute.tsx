@@ -8,6 +8,9 @@
 //      &showCultureLine=1
 //      &alreadyAttempted=1   (RD5.1 v3 — overrides fixture.alreadyAttempted to glass the
 //                             owner "Play Again" CTA path without needing a real prior attempt)
+//      &seed=<anything>      (RD5.1 bank — overrides data.challenge_id so the bank's seeded
+//                             selection renders a different variant for the same case. Useful
+//                             for glassing multiple lines per trigger.)
 //                                                &showCultureLine=1
 //
 // Phase 2e — additional URL params:
@@ -32,10 +35,23 @@ function getBoolParam(name: string): boolean {
   return raw === "1" || raw === "true";
 }
 
+function getStringParam(name: string): string | null {
+  if (typeof window === "undefined") return null;
+  const sp = new URLSearchParams(window.location.search);
+  return sp.get(name);
+}
+
 export default function ChallengeLandingMockRoute() {
   const caseKey = getMockCaseFromUrl();
   const fixture = LANDING_MOCK_FIXTURES[caseKey];
   const showCultureLine = getBoolParam("showCultureLine");
+  const seedOverride = getStringParam("seed");
+  // RD5.1 bank: seed= URL param overrides data.challenge_id so the
+  // seeded variant selection produces a different bank line for the
+  // same trigger. Doesn't affect any other prop.
+  const dataWithSeed = seedOverride
+    ? { ...fixture.data, challenge_id: seedOverride }
+    : fixture.data;
 
   return (
     <div
@@ -99,7 +115,7 @@ export default function ChallengeLandingMockRoute() {
       </div>
 
       <ChallengeTakeCardLanding
-        data={fixture.data}
+        data={dataWithSeed}
         statsLine={fixture.statsLine}
         alreadyAttempted={getBoolParam("alreadyAttempted") || fixture.alreadyAttempted}
         calculateWinTier={calculateWinTier as (totalFp: number) => string}

@@ -1,298 +1,436 @@
 // shared/components/__tests__/landingHeadlines.test.ts
 //
-// RD5.1 v3 — unit tests for the headline / seal / CTA system. Spec:
-// docs/rd5-1-headline-system-spec.md (v3). These are pure (no React,
-// no DOM); the component tests in ChallengeTakeCardLanding.test.tsx
-// cover the rendered surface.
+// RD5.1 — unit tests for the voiced copy bank + seeded selection.
+// Spec: docs/rd5-1-headline-system-spec.md. Pure (no React, no DOM).
 
 import { describe, it, expect } from "vitest";
 import {
   pickHeadlineAndCta,
-  formatHeldNamesForHeadline,
+  substituteNames,
   resolveSeal,
   forbiddenTokensFromSeal,
   headlineContainsSealVocabulary,
-  HOLD_VERBS,
-  CHOKE_CONSEQUENCE_DEFAULT,
-  CHOKE_CONSEQUENCE_ALTERNATES,
+  eligibleChokeLines,
+  rngFromChallengeId,
+  mulberry32,
+  BANKS,
   FALLBACK_CTA,
+  type BankVariant,
 } from "../landingHeadlines";
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
 
-// ── Name listing ─────────────────────────────────────────────────────────
+// ── Bank schema ────────────────────────────────────────────────────────
 
-describe("formatHeldNamesForHeadline — spec §Name rules", () => {
-  it("0 held → HIS STARS (defensive, usually paired with the no-held-cards branch upstream)", () => {
-    expect(formatHeldNamesForHeadline([])).toBe("HIS STARS");
+describe("bank schema — every line has the required fields", () => {
+  const allBanks: Record<string, readonly BankVariant[]> = {
+    choke: BANKS.choke, miss: BANKS.miss, respect: BANKS.respect, default: BANKS.default,
+  };
+  for (const [name, bank] of Object.entries(allBanks)) {
+    it(`${name}: every entry has headline, cta, voice, weight ≥ 1, and unique key`, () => {
+      expect(bank.length).toBeGreaterThan(0);
+      const keys = new Set<string>();
+      for (const v of bank) {
+        expect(v.headline, `${name}: headline missing on ${v.key}`).toBeTruthy();
+        expect(v.cta, `${name}: cta missing on ${v.key}`).toBeTruthy();
+        expect(v.voice, `${name}: voice missing on ${v.key}`).toBeTruthy();
+        expect(v.weight).toBeGreaterThanOrEqual(1);
+        expect(v.key).toMatch(/^[a-z0-9_]+$/);
+        expect(keys.has(v.key), `${name}: duplicate key ${v.key}`).toBe(false);
+        keys.add(v.key);
+      }
+    });
+  }
+
+  it("respect lines all carry a stance", () => {
+    for (const v of BANKS.respect) {
+      expect(v.stance, `respect line ${v.key} missing stance`).toMatch(/^(respect|disrespect)$/);
+    }
   });
-  it("1 held → last name, uppercase", () => {
-    expect(formatHeldNamesForHeadline(["James Harden"])).toBe("HARDEN");
-    expect(formatHeldNamesForHeadline(["Stephen Curry"])).toBe("CURRY");
-  });
-  it("2 held → 'A AND B', both last names uppercased", () => {
-    expect(formatHeldNamesForHeadline(["James Harden", "Bradley Beal"])).toBe("HARDEN AND BEAL");
-  });
-  it("3+ held → HIS STARS", () => {
-    expect(formatHeldNamesForHeadline(["James Harden", "Bradley Beal", "Stephen Curry"])).toBe("HIS STARS");
+
+  it("choke named lines reference {name1}/{name}/{name2}; generic lines do not", () => {
+    for (const v of BANKS.choke) {
+      const hasToken = /\{name[12]?\}/.test(v.headline);
+      if (v.named) expect(hasToken, `choke named line ${v.key} has no {nameN} token`).toBe(true);
+      else expect(hasToken, `choke generic line ${v.key} has a {nameN} token`).toBe(false);
+    }
   });
 });
 
-// ── Seal resolution (mirrors TierGauge) ──────────────────────────────────
+// ── substituteNames ────────────────────────────────────────────────────
 
-describe("resolveSeal — spec §Stamp = evidence (mirrors TierGauge.tsx)", () => {
-  it("choke → CHOKE with red gradient", () => {
-    const s = resolveSeal({ trigger: "choke" });
-    expect(s).not.toBeNull();
-    expect(s!.label).toBe("CHOKE");
-    expect(s!.background).toContain("#ef4444");
+describe("substituteNames — last-name substitution", () => {
+  it("replaces {name1} and {name2} with last names", () => {
+    expect(substituteNames("{name1} and {name2}? Really?", ["James Harden", "Bradley Beal"]))
+      .toBe("Harden and Beal? Really?");
   });
-
-  it("miss + MVP → 'MVP MISS' with amber gradient", () => {
-    const s = resolveSeal({ trigger: "miss", missTier: "MVP" });
-    expect(s!.label).toBe("MVP MISS");
-    expect(s!.background).toContain("#f59e0b");
+  it("{name} aliases to first held player's last name", () => {
+    expect(substituteNames("{name}. In this economy?", ["Nikola Vucevic"]))
+      .toBe("Vucevic. In this economy?");
   });
-
-  it("miss + ALL_STAR → 'ALL STAR MISS' (underscore→space)", () => {
-    expect(resolveSeal({ trigger: "miss", missTier: "ALL_STAR" })!.label).toBe("ALL STAR MISS");
+  it("missing slot → empty substitution (caller is expected to gate eligibility)", () => {
+    expect(substituteNames("{name1} and {name2}", ["James Harden"])).toBe("Harden and ");
   });
-
-  it("miss + null tier → bare MISS fallback", () => {
-    expect(resolveSeal({ trigger: "miss" })!.label).toBe("MISS");
+  it("templates without tokens are passthrough", () => {
+    expect(substituteNames("This hand aged like milk.", ["James Harden"])).toBe("This hand aged like milk.");
   });
+});
 
-  it("big_score → tier label only, NOT 'BIG SCORE'", () => {
-    const legend = resolveSeal({ trigger: "big_score", winTier: "LEGEND" });
-    expect(legend!.label).toBe("LEGEND");
-    expect(legend!.label).not.toBe("BIG SCORE");
-    expect(legend!.background).toBe("#EF4444");
+// ── eligibleChokeLines ─────────────────────────────────────────────────
 
-    const mvp = resolveSeal({ trigger: "big_score", winTier: "MVP" });
-    expect(mvp!.label).toBe("MVP");
-    expect(mvp!.background).toBe("#FB923C");
-
-    const allstar = resolveSeal({ trigger: "big_score", winTier: "ALL_STAR" });
-    expect(allstar!.label).toBe("ALL-STAR"); // hyphen, matches TIER_CFG
-    expect(allstar!.background).toBe("#C084FC");
+describe("eligibleChokeLines — named gating", () => {
+  it("0 held → generic only (no named lines)", () => {
+    const elig = eligibleChokeLines([]);
+    for (const v of elig) expect(v.named).not.toBe(true);
   });
-
-  it("big_score with cross-season threshold drift (winTier falls below eligibility) → soft-fails to ALL-STAR", () => {
-    // Real failure mode: sender hit MVP at season X (235 threshold);
-    // recipient renders under season Y (248 MVP); same 240 FP value now
-    // calculateWinTier-resolves to STARTER. Don't render a "STARTER"
-    // seal under a big_score trigger.
-    const s = resolveSeal({ trigger: "big_score", winTier: "STARTER" });
-    expect(s!.label).toBe("ALL-STAR");
+  it("3+ held → generic only (per spec — named eligible only when 1-2 fit)", () => {
+    const elig = eligibleChokeLines(["A B", "C D", "E F"]);
+    for (const v of elig) expect(v.named).not.toBe(true);
   });
+  it("2 held → 2-name named lines + 1-name named lines + generic lines all eligible", () => {
+    const elig = eligibleChokeLines(["James Harden", "Bradley Beal"]);
+    const keys = new Set(elig.map(v => v.key));
+    expect(keys.has("choke_bar_embiidvuc")).toBe(true);  // needs 2
+    expect(keys.has("choke_bar_vucecon")).toBe(true);    // needs 1
+    expect(keys.has("choke_bar_holds")).toBe(true);      // generic
+  });
+  it("1 held → 2-name named line excluded; 1-name named line included; generic lines included", () => {
+    const elig = eligibleChokeLines(["Stephen Curry"]);
+    const keys = new Set(elig.map(v => v.key));
+    expect(keys.has("choke_bar_embiidvuc")).toBe(false); // needs 2 → out
+    expect(keys.has("choke_bar_vucecon")).toBe(true);    // needs 1
+    expect(keys.has("choke_bar_holds")).toBe(true);      // generic
+  });
+});
 
-  it("big_score with null winTier → soft-fails to ALL-STAR", () => {
-    expect(resolveSeal({ trigger: "big_score", winTier: null })!.label).toBe("ALL-STAR");
+// ── Seal resolution (unchanged contract from v3) ───────────────────────
+
+describe("resolveSeal — TierGauge vocabulary (no BIG SCORE, no NEW prefix)", () => {
+  it("choke → CHOKE", () => { expect(resolveSeal({ trigger: "choke" })!.label).toBe("CHOKE"); });
+  it("miss + MVP → 'MVP MISS'", () => { expect(resolveSeal({ trigger: "miss", missTier: "MVP" })!.label).toBe("MVP MISS"); });
+  it("miss + ALL_STAR → 'ALL STAR MISS'", () => { expect(resolveSeal({ trigger: "miss", missTier: "ALL_STAR" })!.label).toBe("ALL STAR MISS"); });
+  it("miss + null → bare MISS fallback", () => { expect(resolveSeal({ trigger: "miss" })!.label).toBe("MISS"); });
+  it("big_score MVP → 'MVP'", () => { expect(resolveSeal({ trigger: "big_score", winTier: "MVP" })!.label).toBe("MVP"); });
+  it("big_score LEGEND → 'LEGEND'", () => { expect(resolveSeal({ trigger: "big_score", winTier: "LEGEND" })!.label).toBe("LEGEND"); });
+  it("big_score ALL_STAR → 'ALL-STAR' (hyphen)", () => { expect(resolveSeal({ trigger: "big_score", winTier: "ALL_STAR" })!.label).toBe("ALL-STAR"); });
+  it("big_score with sub-eligibility tier → soft-fails to ALL-STAR floor", () => {
+    expect(resolveSeal({ trigger: "big_score", winTier: "STARTER" })!.label).toBe("ALL-STAR");
     expect(resolveSeal({ trigger: "big_score" })!.label).toBe("ALL-STAR");
   });
-
-  it("rare_pull → bare RECORD / CAREER HIGH / SEASON HIGH (NO 'NEW' prefix — matches TierGauge)", () => {
+  it("rare_pull → bare RECORD/CAREER HIGH/SEASON HIGH (no NEW)", () => {
     expect(resolveSeal({ trigger: "rare_pull", topGameTier: "record" })!.label).toBe("RECORD");
     expect(resolveSeal({ trigger: "rare_pull", topGameTier: "career" })!.label).toBe("CAREER HIGH");
     expect(resolveSeal({ trigger: "rare_pull", topGameTier: "season" })!.label).toBe("SEASON HIGH");
-    expect(resolveSeal({ trigger: "rare_pull", topGameTier: "record" })!.label).not.toContain("NEW");
   });
+  it("default → null (no seal)", () => { expect(resolveSeal({ trigger: "default" })).toBeNull(); });
+});
 
-  it("rare_pull with no topGameTier → defensive 'RARE PULL' fallback", () => {
-    expect(resolveSeal({ trigger: "rare_pull" })!.label).toBe("RARE PULL");
+// ── Seeded RNG + determinism ───────────────────────────────────────────
+
+describe("rngFromChallengeId — deterministic seeded selection", () => {
+  it("same challenge_id → identical RNG sequence", () => {
+    const a = rngFromChallengeId("ch_xyz_123");
+    const b = rngFromChallengeId("ch_xyz_123");
+    for (let i = 0; i < 100; i++) expect(a()).toBe(b());
   });
-
-  it("default → null (no seal)", () => {
-    expect(resolveSeal({ trigger: "default" })).toBeNull();
+  it("different challenge_ids → different sequences", () => {
+    const a = rngFromChallengeId("ch_abc");
+    const b = rngFromChallengeId("ch_def");
+    const aFirst = [a(), a(), a()];
+    const bFirst = [b(), b(), b()];
+    expect(aFirst).not.toEqual(bFirst);
   });
 });
 
-// ── Per-trigger headline + CTA (v3 — HELD verb, KEEP CTAs) ──────────────
-
-describe("pickHeadlineAndCta — spec §Voice profiles (v3)", () => {
-  const baseArgs = { challengerName: "John", heldNamesList: ["James Harden", "Bradley Beal"] };
-
-  it("choke — JOHN HELD HARDEN AND BEAL. IT COST HIM. + CHOKE seal + KEEP THE RIGHT ONES cta", () => {
-    const out = pickHeadlineAndCta({ ...baseArgs, trigger: "choke" });
-    expect(out.headline).toBe("JOHN HELD HARDEN AND BEAL. IT COST HIM.");
-    expect(out.seal!.label).toBe("CHOKE");
-    expect(out.ctaLabel).toBe("KEEP THE RIGHT ONES");
+describe("pickHeadlineAndCta — deterministic per challenge ID", () => {
+  it("same challenge_id → same variant key across calls (refresh stability)", () => {
+    const args = {
+      trigger: "choke" as TakeCardTrigger,
+      challengerName: "John",
+      heldNamesList: ["James Harden", "Bradley Beal"],
+      challengeId: "ch_stable_seed",
+    };
+    const a = pickHeadlineAndCta(args);
+    const b = pickHeadlineAndCta(args);
+    expect(a.variantKey).toBe(b.variantKey);
+    expect(a.headline).toBe(b.headline);
+    expect(a.ctaLabel).toBe(b.ctaLabel);
   });
 
-  it("big_score — JOHN HELD HIS STARS AND THEY DELIVERED. + tier seal + TRY TO TOP IT cta", () => {
-    const out = pickHeadlineAndCta({ ...baseArgs, trigger: "big_score", winTier: "MVP" });
-    expect(out.headline).toBe("JOHN HELD HIS STARS AND THEY DELIVERED.");
-    expect(out.seal!.label).toBe("MVP");
-    expect(out.ctaLabel).toBe("TRY TO TOP IT");
-  });
-
-  it("rare_pull — JOHN FOUND SOMETHING NOBODY SAW COMING. + tier seal + TAKE YOUR SHOT cta", () => {
-    const out = pickHeadlineAndCta({ ...baseArgs, trigger: "rare_pull", topGameTier: "career" });
-    expect(out.headline).toBe("JOHN FOUND SOMETHING NOBODY SAW COMING.");
-    expect(out.seal!.label).toBe("CAREER HIGH");
-    expect(out.ctaLabel).toBe("TAKE YOUR SHOT");
-  });
-
-  it("miss — JOHN WAS ONE KEEP AWAY FROM GREATNESS + tier seal + KEEP WHO YOU'D KEEP cta", () => {
-    const out = pickHeadlineAndCta({ ...baseArgs, trigger: "miss", missTier: "MVP" });
-    expect(out.headline).toBe("JOHN WAS ONE KEEP AWAY FROM GREATNESS.");
-    expect(out.seal!.label).toBe("MVP MISS");
-    expect(out.ctaLabel).toBe("KEEP WHO YOU'D KEEP");
-  });
-
-  it("miss headline is tier-agnostic — identical for ALL_STAR / MVP / LEGEND", () => {
-    const a = pickHeadlineAndCta({ ...baseArgs, trigger: "miss", missTier: "ALL_STAR" }).headline;
-    const b = pickHeadlineAndCta({ ...baseArgs, trigger: "miss", missTier: "MVP" }).headline;
-    const c = pickHeadlineAndCta({ ...baseArgs, trigger: "miss", missTier: "LEGEND" }).headline;
-    expect(a).toBe(b);
-    expect(b).toBe(c);
-  });
-
-  it("default — JOHN SET THE BAR. + no seal + KEEP THE RIGHT ONES cta", () => {
-    const out = pickHeadlineAndCta({ ...baseArgs, trigger: "default" });
-    expect(out.headline).toBe("JOHN SET THE BAR.");
-    expect(out.seal).toBeNull();
-    expect(out.ctaLabel).toBe("KEEP THE RIGHT ONES");
-  });
-
-  it("challenger name uppercased in every trigger", () => {
-    for (const trigger of ["choke", "big_score", "rare_pull", "miss", "default"] as TakeCardTrigger[]) {
-      const out = pickHeadlineAndCta({ ...baseArgs, trigger, winTier: "MVP" });
-      expect(out.headline).toContain("JOHN");
-      expect(out.headline).not.toContain("john");
-    }
-  });
-});
-
-// ── Dynamic no-duplication guardrail ────────────────────────────────────
-
-describe("Dynamic no-duplication guardrail — derived from rendered stamp", () => {
-  it("seal=null (default trigger) → no forbidden tokens", () => {
-    expect(forbiddenTokensFromSeal(null)).toEqual([]);
-    expect(headlineContainsSealVocabulary("JOHN SET THE BAR.", null).hit).toBe(false);
-  });
-
-  it("CHOKE seal → forbids choke/choked/choking, whole-word, case-insensitive", () => {
-    const seal = resolveSeal({ trigger: "choke" })!;
-    const tokens = forbiddenTokensFromSeal(seal);
-    expect(tokens).toEqual(expect.arrayContaining(["choke", "choked", "choking"]));
-    expect(headlineContainsSealVocabulary("JOHN CHOKED THE HAND", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("john choking under pressure", seal).hit).toBe(true);
-    // The spec headline must NOT trip.
-    expect(headlineContainsSealVocabulary("JOHN HELD HARDEN AND BEAL. IT COST HIM.", seal).hit).toBe(false);
-  });
-
-  it("MISS seal → forbids miss/missed/missing", () => {
-    const seal = resolveSeal({ trigger: "miss" })!;
-    expect(headlineContainsSealVocabulary("JOHN MISSED BY ONE", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("ONE BUCKET MISSING", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("JOHN WAS ONE KEEP AWAY FROM GREATNESS.", seal).hit).toBe(false);
-  });
-
-  it("'MVP MISS' seal → forbids both MVP and MISS as whole words", () => {
-    const seal = resolveSeal({ trigger: "miss", missTier: "MVP" })!;
-    const tokens = forbiddenTokensFromSeal(seal);
-    expect(tokens).toEqual(expect.arrayContaining(["mvp", "miss", "missed", "missing"]));
-    expect(headlineContainsSealVocabulary("CLOSE TO MVP", seal).hit).toBe(true);
-    // The spec miss headline doesn't contain MVP or MISS.
-    expect(headlineContainsSealVocabulary("JOHN WAS ONE KEEP AWAY FROM GREATNESS.", seal).hit).toBe(false);
-  });
-
-  it("'ALL STAR MISS' seal → forbids all/star/miss as whole words", () => {
-    const seal = resolveSeal({ trigger: "miss", missTier: "ALL_STAR" })!;
-    const tokens = forbiddenTokensFromSeal(seal);
-    expect(tokens).toEqual(expect.arrayContaining(["all", "star", "miss"]));
-    expect(headlineContainsSealVocabulary("ALL THE PIECES FELL", seal).hit).toBe(true);
-    // Spec miss headline OK.
-    expect(headlineContainsSealVocabulary("JOHN WAS ONE KEEP AWAY FROM GREATNESS.", seal).hit).toBe(false);
-  });
-
-  it("big_score 'MVP' seal → forbids MVP, whole-word", () => {
-    const seal = resolveSeal({ trigger: "big_score", winTier: "MVP" })!;
-    const tokens = forbiddenTokensFromSeal(seal);
-    expect(tokens).toEqual(["mvp"]);
-    expect(headlineContainsSealVocabulary("CLOSE TO MVP", seal).hit).toBe(true);
-    // Spec big_score headline OK.
-    expect(headlineContainsSealVocabulary("JOHN HELD HIS STARS AND THEY DELIVERED.", seal).hit).toBe(false);
-  });
-
-  it("big_score 'ALL-STAR' seal → forbids ALL and STAR (hyphen splits)", () => {
-    const seal = resolveSeal({ trigger: "big_score", winTier: "ALL_STAR" })!;
-    const tokens = forbiddenTokensFromSeal(seal);
-    expect(tokens).toEqual(expect.arrayContaining(["all", "star"]));
-    expect(headlineContainsSealVocabulary("STAR-LED COMEBACK", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("JOHN HELD HIS STARS AND THEY DELIVERED.", seal).hit).toBe(false);
-  });
-
-  it("rare_pull 'RECORD' seal → forbids record alone (no NEW since the v3 label drops it)", () => {
-    const seal = resolveSeal({ trigger: "rare_pull", topGameTier: "record" })!;
-    const tokens = forbiddenTokensFromSeal(seal);
-    expect(tokens).toEqual(["record"]);
-    expect(headlineContainsSealVocabulary("HE SET A RECORD TONIGHT", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("JOHN FOUND SOMETHING NOBODY SAW COMING.", seal).hit).toBe(false);
-  });
-
-  it("rare_pull 'CAREER HIGH' seal → forbids career and high", () => {
-    const seal = resolveSeal({ trigger: "rare_pull", topGameTier: "career" })!;
-    expect(forbiddenTokensFromSeal(seal)).toEqual(expect.arrayContaining(["career", "high"]));
-    expect(headlineContainsSealVocabulary("CAREER NIGHT", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("HIGH ABOVE THE RIM", seal).hit).toBe(true);
-    expect(headlineContainsSealVocabulary("JOHN FOUND SOMETHING NOBODY SAW COMING.", seal).hit).toBe(false);
-  });
-
-  it("whole-word boundary: SCOREBOARD does not trip a 'record' or other seal-vocab guard", () => {
-    const seal = resolveSeal({ trigger: "rare_pull", topGameTier: "record" })!;
-    // "scoreboard" doesn't contain "record" as a whole word.
-    expect(headlineContainsSealVocabulary("WATCH THE SCOREBOARD", seal).hit).toBe(false);
-  });
-
-  it("every spec-canonical headline passes its own dynamic guardrail", () => {
-    const cases: Array<{ trigger: TakeCardTrigger; missTier?: string; topGameTier?: "record" | "career" | "season"; winTier?: WinTierKey }> = [
-      { trigger: "choke" },
-      { trigger: "big_score", winTier: "MVP" },
-      { trigger: "big_score", winTier: "ALL_STAR" },
-      { trigger: "big_score", winTier: "LEGEND" },
-      { trigger: "rare_pull", topGameTier: "career" },
-      { trigger: "rare_pull", topGameTier: "record" },
-      { trigger: "rare_pull", topGameTier: "season" },
-      { trigger: "miss", missTier: "MVP" },
-      { trigger: "miss", missTier: "ALL_STAR" },
-      { trigger: "miss", missTier: "LEGEND" },
-      { trigger: "default" },
-    ];
-    for (const c of cases) {
+  it("different challenge_ids → over many seeds, the bank is well-distributed", () => {
+    // Sanity: across many random IDs, no single key dominates and every
+    // line gets some traction. This is a smoke test of "selection
+    // actually fans out" — not a strict distribution test.
+    const seen = new Map<string, number>();
+    for (let i = 0; i < 2000; i++) {
       const out = pickHeadlineAndCta({
+        trigger: "choke",
         challengerName: "John",
         heldNamesList: ["James Harden", "Bradley Beal"],
-        trigger: c.trigger,
-        missTier: c.missTier ?? null,
-        topGameTier: c.topGameTier ?? null,
-        winTier: c.winTier ?? null,
+        challengeId: `ch_${i}`,
       });
-      const result = headlineContainsSealVocabulary(out.headline, out.seal);
-      expect(
-        result.hit,
-        `headline "${out.headline}" tripped its own seal vocabulary (seal=${out.seal?.label ?? "null"}, token=${result.word ?? "—"})`,
-      ).toBe(false);
+      seen.set(out.variantKey, (seen.get(out.variantKey) ?? 0) + 1);
+    }
+    expect(seen.size).toBeGreaterThan(5); // many distinct lines fired
+    // No single line takes more than 30% of mass.
+    for (const [, count] of seen) {
+      expect(count / 2000).toBeLessThan(0.3);
     }
   });
 });
 
-// ── Choke alternates + hold-verb pool are documented (no A/B harness) ──
+// ── Per-trigger pool sourcing ──────────────────────────────────────────
 
-describe("Choke spec — alternates + hold-verb pool on the tree", () => {
-  it("IT COST HIM. is the build default; WRONG HOLD. / IT BACKFIRED. are documented alternates", () => {
-    expect(CHOKE_CONSEQUENCE_DEFAULT).toBe("IT COST HIM.");
-    expect(CHOKE_CONSEQUENCE_ALTERNATES).toContain("WRONG HOLD.");
-    expect(CHOKE_CONSEQUENCE_ALTERNATES).toContain("IT BACKFIRED.");
+describe("trigger → pool routing", () => {
+  function poolKeys(trigger: TakeCardTrigger, opts: Partial<{ topGameTier: "record" | "career" | "season"; missTier: string; winTier: "MVP" }> = {}): Set<string> {
+    const keys = new Set<string>();
+    for (let i = 0; i < 5000; i++) {
+      const out = pickHeadlineAndCta({
+        trigger,
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_pool_${i}`,
+        topGameTier: opts.topGameTier ?? null,
+        missTier: opts.missTier ?? null,
+        winTier: opts.winTier ?? null,
+      });
+      keys.add(out.variantKey);
+    }
+    return keys;
+  }
+
+  it("choke → only choke_* keys", () => {
+    for (const k of poolKeys("choke")) expect(k.startsWith("choke_")).toBe(true);
   });
-  it("hold-verb pool matches the spec list", () => {
-    expect(HOLD_VERBS).toEqual(["HELD", "KEPT", "STUCK WITH", "RODE WITH"]);
+  it("miss → only miss_* keys", () => {
+    for (const k of poolKeys("miss", { missTier: "MVP" })) expect(k.startsWith("miss_")).toBe(true);
+  });
+  it("big_score → only resp_* keys (shares the respect pool)", () => {
+    for (const k of poolKeys("big_score", { winTier: "MVP" })) expect(k.startsWith("resp_")).toBe(true);
+  });
+  it("rare_pull → only resp_* keys (shares the respect pool)", () => {
+    for (const k of poolKeys("rare_pull", { topGameTier: "record" })) expect(k.startsWith("resp_")).toBe(true);
+  });
+  it("default → only def_* keys", () => {
+    for (const k of poolKeys("default")) expect(k.startsWith("def_")).toBe(true);
   });
 });
 
-describe("Fallback CTA", () => {
-  it("exposes the ACCEPT CHALLENGE fallback string", () => {
+// ── Voice + stance distributions (statistical smoke tests) ────────────
+
+describe("voice weighting — 70% bar / 25% analyst / 5% copy (choke + miss)", () => {
+  function voiceFromKey(key: string, bank: readonly BankVariant[]): string {
+    const v = bank.find(x => x.key === key);
+    return v?.voice ?? "?";
+  }
+
+  function distribution(trigger: TakeCardTrigger, samples: number): Record<string, number> {
+    const dist: Record<string, number> = { bar: 0, analyst: 0, copy: 0 };
+    for (let i = 0; i < samples; i++) {
+      const out = pickHeadlineAndCta({
+        trigger,
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_dist_${trigger}_${i}`,
+        missTier: trigger === "miss" ? "MVP" : null,
+      });
+      const v = voiceFromKey(out.variantKey, trigger === "choke" ? BANKS.choke : BANKS.miss);
+      dist[v] = (dist[v] ?? 0) + 1;
+    }
+    return dist;
+  }
+
+  it("choke voice distribution within ±5% of 70/25/5 over 5000 samples", () => {
+    const samples = 5000;
+    const d = distribution("choke", samples);
+    expect(d.bar / samples).toBeGreaterThan(0.65);
+    expect(d.bar / samples).toBeLessThan(0.75);
+    expect(d.analyst / samples).toBeGreaterThan(0.20);
+    expect(d.analyst / samples).toBeLessThan(0.30);
+    expect(d.copy / samples).toBeGreaterThan(0.02);
+    expect(d.copy / samples).toBeLessThan(0.08);
+  });
+
+  it("miss voice distribution within ±5% of 70/25/5 over 5000 samples", () => {
+    const samples = 5000;
+    const d = distribution("miss", samples);
+    expect(d.bar / samples).toBeGreaterThan(0.65);
+    expect(d.bar / samples).toBeLessThan(0.75);
+    expect(d.analyst / samples).toBeGreaterThan(0.20);
+    expect(d.analyst / samples).toBeLessThan(0.30);
+    expect(d.copy / samples).toBeGreaterThan(0.02);
+    expect(d.copy / samples).toBeLessThan(0.08);
+  });
+});
+
+describe("stance weighting — 70% respect / 30% disrespect (big_score + rare_pull share)", () => {
+  function stanceFromKey(key: string): string {
+    const v = BANKS.respect.find(x => x.key === key);
+    return v?.stance ?? "?";
+  }
+
+  it("big_score stance distribution within ±5% of 70/30 over 5000 samples", () => {
+    const samples = 5000;
+    let respect = 0, disrespect = 0;
+    for (let i = 0; i < samples; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "big_score",
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_bs_${i}`,
+        winTier: "MVP",
+      });
+      const s = stanceFromKey(out.variantKey);
+      if (s === "respect") respect++;
+      else if (s === "disrespect") disrespect++;
+    }
+    expect(respect / samples).toBeGreaterThan(0.65);
+    expect(respect / samples).toBeLessThan(0.75);
+    expect(disrespect / samples).toBeGreaterThan(0.25);
+    expect(disrespect / samples).toBeLessThan(0.35);
+  });
+
+  it("rare_pull stance distribution within ±5% of 70/30 over 5000 samples", () => {
+    const samples = 5000;
+    let respect = 0, disrespect = 0;
+    for (let i = 0; i < samples; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "rare_pull",
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_rp_${i}`,
+        topGameTier: "career",
+      });
+      const s = stanceFromKey(out.variantKey);
+      if (s === "respect") respect++;
+      else if (s === "disrespect") disrespect++;
+    }
+    expect(respect / samples).toBeGreaterThan(0.65);
+    expect(respect / samples).toBeLessThan(0.75);
+    expect(disrespect / samples).toBeGreaterThan(0.25);
+    expect(disrespect / samples).toBeLessThan(0.35);
+  });
+});
+
+// ── Choke named-line gating end-to-end ─────────────────────────────────
+
+describe("choke named-line gating end-to-end", () => {
+  it("3+ held → never fires a named line (5000-seed sweep)", () => {
+    for (let i = 0; i < 5000; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: ["A B", "C D", "E F"],
+        challengeId: `ch_three_${i}`,
+      });
+      const v = BANKS.choke.find(x => x.key === out.variantKey);
+      expect(v?.named, `seed ${i} fired named line ${out.variantKey} with 3 holds`).not.toBe(true);
+    }
+  });
+
+  it("0 held → never fires a named line (no names to substitute)", () => {
+    for (let i = 0; i < 1000; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: [],
+        challengeId: `ch_zero_${i}`,
+      });
+      const v = BANKS.choke.find(x => x.key === out.variantKey);
+      expect(v?.named).not.toBe(true);
+    }
+  });
+
+  it("2 held → can fire choke_bar_embiidvuc with substituted names", () => {
+    // Find a seed that picks choke_bar_embiidvuc.
+    let found = false;
+    for (let i = 0; i < 5000 && !found; i++) {
+      const out = pickHeadlineAndCta({
+        trigger: "choke",
+        challengerName: "John",
+        heldNamesList: ["James Harden", "Bradley Beal"],
+        challengeId: `ch_named_${i}`,
+      });
+      if (out.variantKey === "choke_bar_embiidvuc") {
+        expect(out.headline).toBe("Harden and Beal? Really?");
+        found = true;
+      }
+    }
+    expect(found, "choke_bar_embiidvuc never fired across 5000 seeds with 2 holds").toBe(true);
+  });
+});
+
+// ── No-duplication guardrail across every bank line ────────────────────
+
+describe("no-duplication guardrail — every bank line passes against its seal", () => {
+  it("every choke line: headline with substituted names contains no CHOKE/CHOKED/CHOKING", () => {
+    const seal = resolveSeal({ trigger: "choke" });
+    const names = ["James Harden", "Bradley Beal"];
+    for (const v of BANKS.choke) {
+      const substituted = substituteNames(v.headline, names);
+      const r = headlineContainsSealVocabulary(substituted, seal);
+      expect(r.hit, `choke line ${v.key} ("${substituted}") tripped seal vocab on "${r.word}"`).toBe(false);
+    }
+  });
+
+  it("every miss line passes the MISS/MVP MISS/ALL STAR MISS/LEGEND MISS seals", () => {
+    const seals = [
+      resolveSeal({ trigger: "miss" }),                          // bare MISS
+      resolveSeal({ trigger: "miss", missTier: "MVP" }),         // MVP MISS
+      resolveSeal({ trigger: "miss", missTier: "ALL_STAR" }),    // ALL STAR MISS
+      resolveSeal({ trigger: "miss", missTier: "LEGEND" }),      // LEGEND MISS
+    ];
+    for (const v of BANKS.miss) {
+      for (const seal of seals) {
+        const r = headlineContainsSealVocabulary(v.headline, seal);
+        expect(r.hit, `miss line ${v.key} tripped seal "${seal?.label}" on "${r.word}"`).toBe(false);
+      }
+    }
+  });
+
+  it("every respect line passes the big_score tier seals AND the rare_pull sub-tier seals", () => {
+    const seals = [
+      // big_score → tier label
+      resolveSeal({ trigger: "big_score", winTier: "ALL_STAR" }),
+      resolveSeal({ trigger: "big_score", winTier: "MVP" }),
+      resolveSeal({ trigger: "big_score", winTier: "LEGEND" }),
+      // rare_pull → sub-tier
+      resolveSeal({ trigger: "rare_pull", topGameTier: "record" }),
+      resolveSeal({ trigger: "rare_pull", topGameTier: "career" }),
+      resolveSeal({ trigger: "rare_pull", topGameTier: "season" }),
+    ];
+    for (const v of BANKS.respect) {
+      for (const seal of seals) {
+        const r = headlineContainsSealVocabulary(v.headline, seal);
+        expect(r.hit, `respect line ${v.key} ("${v.headline}") tripped "${seal?.label}" on "${r.word}"`).toBe(false);
+      }
+    }
+  });
+
+  it("default lines: no seal renders → no forbidden vocabulary (trivially passes)", () => {
+    for (const v of BANKS.default) {
+      const r = headlineContainsSealVocabulary(v.headline, null);
+      expect(r.hit).toBe(false);
+    }
+  });
+});
+
+// ── Mulberry32 sanity ──────────────────────────────────────────────────
+
+describe("mulberry32 sanity", () => {
+  it("returns values in [0, 1)", () => {
+    const rng = mulberry32(12345);
+    for (let i = 0; i < 1000; i++) {
+      const v = rng();
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
+    }
+  });
+});
+
+// ── Legacy export ──────────────────────────────────────────────────────
+
+describe("Legacy exports", () => {
+  it("FALLBACK_CTA stays exported as ACCEPT CHALLENGE (used by callers that haven't migrated)", () => {
     expect(FALLBACK_CTA).toBe("ACCEPT CHALLENGE");
   });
 });
