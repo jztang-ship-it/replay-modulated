@@ -1223,3 +1223,71 @@ delta) as oversized / crowding the hero slots — "downsize that distracting gra
 rail is **RD3's element** (RD3 rebuilds it for the running-score race), so this is logged as an
 **RD3 requirement**, not RD2/RD2.1 scope: RD3 downsizes the rail box + lands the live
 YOU/JOHN/diff race. Do not touch the rail in RD2.1.
+
+## § RD5.1 — Decision-frame challenge landing + CTA copy system
+
+**Thesis.** The landing makes an argument, not a stat readout: the headline starts the
+argument, the stamp is the evidence, the CTA answers it. Replaced the number-forward
+"JOHN SCORED 126.2 FP." Copy/frame only — no new mechanics.
+
+**Surface.** Headlines are decision-framed and mechanic-native (HELD-verb vocabulary).
+Stamp mirrors the in-game TierGauge vocabulary (no invented BIG SCORE / NEW RECORD). Hand
+renders the real yellow-H hold glyph (lifted from CardFront). Target-to-beat line present.
+CTAs are frame-aware.
+
+**The four CTA emotions.** Every CTA is classified into exactly one:
+- **Call-your-shot** — the decision-bias emotion (dares the same call).
+- **Doubt-me** — challenges the result's validity.
+- **Show-me** — demands proof.
+- **Bring-it** — straight competitive throwdown.
+
+**Decision-bias rule (per pool):**
+- CHOKE (failure) — heavily decision-biased; Call-your-shot dominant.
+- MISS (regret) — heavily decision-biased; Call-your-shot dominant.
+- RESPECT (threat) — must AVOID decision-bias; **Call-your-shot count = 0 (hard invariant)**.
+- DEFAULT (fallback) — minimal; Bring-it.
+
+**Paired, never pooled.** Each headline carries its own tuned CTA — the headline→CTA
+dialogue is the mechanism. No two headlines share a CTA string within a pool (swept
+pairwise; RESPECT verified 0 duplicates at bc35e6a). CTAs are not drawn from a shared
+pool at render.
+
+**Emotion is DERIVED, not coded.** BankVariant carries voice / weight / named / stance /
+key — there is no emotion column. CTA-emotion classification lives in THIS § (+ the
+bank-export artifact), not in TS. Re-classifying a CTA's emotion is a doc edit, not code.
+
+**Wiring invariants:**
+- Named-line cap: NAMED_CAP_PROBABILITY = 0.20 (named lines ≤20% of selections).
+- Voice prior (CHOKE + MISS): Sports Bar 70 / Analyst 25 / Copywriter 5.
+- Stance prior (RESPECT): 70 respectful / 30 disrespectful.
+- DEFAULT: flat weighted.
+- Selection RNG: mulberry32 seeded off FNV-1a hash of challenge_id → deterministic
+  per challenge.
+- Each emitted variant logs an analytics key.
+- Per-line integer weights (e.g. resp_r_scoreboard = w3).
+- Pool sizes (lines): CHOKE 15 / MISS 10 / RESPECT 14 / DEFAULT 4.
+
+**Cultural-copy lockout.** Player-cultural copy is LOCKED OUT of cold-recipient screens:
+playerCulture.controversySafe ships empty; showCultureLine defaults false and the landing
+shell never passes true. Applies uniformly to recipient AND replay views.
+
+**Owner / replay paths.**
+- True self-match (signed-in creator on own challenge): isSelfMatch
+  (currentUserId === created_by) routes FIRST to SelfMatchView — share/leaderboard screen,
+  no Accept flow, no bank copy.
+- Replay (alreadyAttempted, browser-local localStorage flag, any viewer): take-card landing
+  with CTA relabeled "Play Again"; all other elements identical to recipient.
+- "N attempts" social-proof string: REMOVED in the v3 rewrite (attribution footer deleted).
+  statsLine is computed by the shell but unread — retain/remove pending the social-proof
+  follow-up.
+
+**Open follow-ups (not RD5.1 scope):**
+- Replay copy reads recipient-provocation at signed-out creators replaying their own hand
+  (signed-in owners route to SelfMatchView). Auth-gap edge.
+- Attempts social proof ("Unbeaten · 3 attempts", "67% failed") dropped with the footer —
+  decide whether it returns (resolves the dead statsLine prop).
+
+**Doc home.** This § is canonical for copy-system rules + invariants. The exhaustive
+line-by-line bank lives in the dated bank-export artifact
+(~/Desktop/replaymod-handoff/.../rd5-1-bank.md), regenerated on bank changes.
+docs/challenge-copy-system-canonical.md is retired to a one-line pointer to this §.
