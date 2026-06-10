@@ -4,7 +4,7 @@
 // Mounts ChallengeTakeCardLanding with fixture data so the localhost
 // visual loop can iterate on phone-width without going PROD.
 //
-// URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|legacy_choke|choke_culture_rich|choke_generic_no_culture>
+// URL: /basketball/dev/challenge-landing-mock?case=<choke|miss|big_score|rare_pull|default|choke_bad_beat_normalized|choke_culture_rich|choke_generic_no_culture>
 //                                                &showCultureLine=1
 //
 // Phase 2e — additional URL params:
@@ -75,7 +75,7 @@ export default function ChallengeLandingMockRoute() {
         }}
       >
         DEV mock · case=<code>{caseKey}</code>{showCultureLine ? " · showCultureLine=ON" : ""} · try:{" "}
-        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "legacy_choke"] as const).map((c) => {
+        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "choke_bad_beat_normalized"] as const).map((c) => {
           const next = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
           next.set("case", c);
           return (

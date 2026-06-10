@@ -104,7 +104,7 @@ export type LandingMockCase =
   | "big_score"
   | "rare_pull"
   | "default"
-  | "legacy_choke";
+  | "choke_bad_beat_normalized";
 
 interface LandingMockFixture {
   /** ChallengeData shape, ready to pass into ChallengeTakeCardLanding's
@@ -382,9 +382,13 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
   // no-holds choke disagreement, and the component renders 6 plain
   // cards. The hook + outcome still read as choke; the disagreement
   // skips named players (the "Same hand, same trap" frame).
-  legacy_choke: {
+  // Data-shape test — NOT a fifth trigger. Exercises the
+  // normalizeTriggerType path that maps the stored legacy DB value
+  // `trigger_type: "bad_beat"` to the current `choke` vocabulary so the
+  // landing renders identically to a freshly-stored choke row.
+  choke_bad_beat_normalized: {
     data: {
-      challenge_id: "ch_mock_legacy_choke",
+      challenge_id: "ch_mock_choke_bad_beat_normalized",
       created_by: "u_mike",
       ...baseAttribution,
       target_score: 142.0,
