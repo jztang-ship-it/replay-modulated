@@ -73,7 +73,7 @@ import {
   type EntranceStage,
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
-import { H2HBoardShell } from "./H2HBoardShell";
+import { H2HBoardShell, TargetCornerScore } from "./H2HBoardShell";
 import {
   ScoreCell,
   RIGHT_RAIL_WIDTH_PX,
@@ -177,16 +177,6 @@ export interface H2HRevealScreenProps {
    *  `reveal.phase === "done"`, this renders the same end-state as
    *  the phase-2 static path. */
   reveal?: UseH2HRevealReturn;
-  /** Step-4 glide / C2 — per-team glide-handoff suppression. When a
-   *  team's flag is true, its ScoreCell's INNER GLYPH gets
-   *  `visibility: hidden` so C4's glide clone can carry the only
-   *  visible copy of the number to the docked target. The outer
-   *  ScoreCell box, the score panel behind it, the delta float, and
-   *  every adjacent rect stay byte-identical — only the glyph
-   *  becomes invisible. Default-false on both sides means C2 is a
-   *  no-op on the live reveal screen; C4 will flip flags true at the
-   *  glide's start. */
-  glideHandoff?: { opponent: boolean; user: boolean };
 }
 
 // ── Tier colors ──────────────────────────────────────────────────────────
@@ -1403,7 +1393,7 @@ function BattlefieldSlot({ card, renderCard, visibleFp, revealed, shakeType, glo
 // ── H2HRevealScreen ──────────────────────────────────────────────────────
 
 export function H2HRevealScreen(props: H2HRevealScreenProps) {
-  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal, glideHandoff } = props;
+  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal } = props;
   const reducedMotion = usePrefersReducedMotion();
 
   // Resolve battlefield + display state from either the reveal hook
@@ -1704,56 +1694,23 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         gridTemplateRows: "auto auto",
         rowGap: BATTLEFIELD_ROW_GAP_PX,
         width: "100%",
-        // Stacking context for the reveal score panel below. Without
-        // it the panel's z-index:-1 escapes toward `body` and the
-        // panel disappears under the page gradient. `isolation:isolate`
-        // is a stacking-only property — zero layout impact, so the
-        // numbers-rect proof and the no-jump strip parity contract
-        // both survive untouched.
+        // RD6.1: the score panel (formerly the only negative-z
+        // descendant) is gone. `isolation:isolate` is kept as a
+        // defensive stacking boundary — zero layout impact — so any
+        // future absolute-positioned children with explicit z-index
+        // (delta float, momentum tag, anchor frame) can't leak
+        // upward into surrounding chrome.
         isolation: "isolate",
       }}
     >
-          {/* Step 2 of the results-page lock — reveal-side score-cluster
-              backing panel. The two right-rail totals + the delta float
-              + the (transient) momentum tag were reading as floating in
-              air; this panel gives them a surface to rest on without
-              changing where they sit. Sized 100px wide × full
-              battlefield height, centered on the 80px right rail via
-              right: -10. Paints BEHIND the in-flow ScoreCells and the
-              absolute floats via z-index:-1 + the isolation:isolate
-              above. The alternative z-order (panel z-index:0 + score
-              wrappers above in natural paint order) would require
-              putting z-index on the score wrappers — which lives in
-              H2HScoreRail.tsx and would leak into the overlay surface;
-              we keep this change reveal-only by sinking the panel
-              instead. No backdrop-filter: would smear the hero-card
-              motion behind it, muddy the leader-glow contrast, and
-              behave inconsistently across browsers / stacking contexts.
-              No border: the rounded soft-shadowed surface reads as a
-              surface the numbers rest on rather than a box that
-              contains them. Static decoration — reduced-motion has
-              nothing to gate. */}
-          <div
-            data-h2h-reveal-score-panel="true"
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              top: 0,
-              bottom: 0,
-              right: -10,
-              width: 100,
-              zIndex: -1,
-              pointerEvents: "none",
-              borderRadius: 16,
-              background: "rgba(255,255,255,0.12)",
-              border: "1px solid rgba(255,255,255,0.14)",
-              // box-sizing: border-box so the 1px border doesn't add 2px
-              // to the rendered width/height — keeps the panel's outer
-              // rect at the approved 100 × full-battlefield-height.
-              boxSizing: "border-box",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-            }}
-          />
+          {/* RD6.1 (2026-06-11): the reveal-side score-cluster backing
+              panel (data-h2h-reveal-score-panel) was deleted with the
+              right-rail ScoreCells. Both team totals now live in the
+              box corners via H2HBoardShell.ZoneHeader's `score` slot
+              (see senderScoreCell / recipientScoreCell below).
+              The delta float + momentum tag stay anchored to the
+              right grid column. This subsumes the parked RD3.1
+              ticket (panel downsize) — RD3.1 is now moot. */}
 
           {/* Left rail — empty on the arc. Spans both hero rows so the
               overlay's headline + trash-talk land at the same vertical
@@ -1779,9 +1736,13 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 side="top"
                 reducedMotion={reducedMotion}
               />}
-          {senderBattle && !showEntranceDeck
-            ? <ScoreCell total={sender.totalFp} displayTotal={senderDisplayTotal} state={senderState} sizeProgress={senderSizeProgress} surface="reveal" pop={popState.senderPop} suppressed={glideHandoff?.opponent ?? false} teamPosition="opponent" />
-            : <div />}
+          {/* RD6.1: the row-1 right-column ScoreCell is deleted —
+              opponent total now renders in the top box's name band
+              via H2HBoardShell.topScore (built once below as
+              senderScoreCell). This placeholder reserves the grid
+              cell so the row layout + delta-float anchor are
+              unchanged. */}
+          <div aria-hidden="true" />
 
           {/* Row 2: recipient's battlefield card + score */}
           {showEntranceDeck && reveal !== undefined
@@ -1802,9 +1763,10 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 side="bottom"
                 reducedMotion={reducedMotion}
               />}
-          {recipientBattle && !showEntranceDeck
-            ? <ScoreCell total={recipient.totalFp} displayTotal={recipientDisplayTotal} state={recipientState} sizeProgress={recipientSizeProgress} surface="reveal" pop={popState.recipientPop} suppressed={glideHandoff?.user ?? false} teamPosition="user" />
-            : <div />}
+          {/* RD6.1: row-2 right-column ScoreCell deleted; user total
+              renders in the bottom box's name band via
+              H2HBoardShell.bottomScore (recipientScoreCell below). */}
+          <div aria-hidden="true" />
 
           {/* Matchup delta — floats in the right-rail GAP between the
               two score cells. Absolute so it does not push the hero
@@ -1940,6 +1902,20 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
 
   return (
     <>
+      {/* RD6.1 (2026-06-11): team totals now render in the box-corner
+          name bands instead of the right rail. Same ScoreCell
+          component, same value/state derivation, new DOM home —
+          leader-glow, scale-pop, sizeProgress, and the per-team
+          data-attrs all carry over unchanged. The reveal→results
+          no-snap upgrades from value-equal to component+geometric
+          identity (the overlay's ZoneHeader renders an identically-
+          positioned ScoreCell). The right grid column persists for
+          the MidRailContent delta float + momentum tag (see :1790+).
+          Static-mock path (no `reveal` hook): senderBattle /
+          recipientBattle may be null at idle/entering — the cells
+          still render against the prop totals so the box corners
+          show the final values, matching the static end-state path
+          the dev mock route exercises. */}
       <H2HBoardShell
         surfaceKind="reveal"
         topLabel={sender.displayName}
@@ -1947,6 +1923,37 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
         topStrip={topStripSlot}
         bottomStrip={bottomStripSlot}
         hero={heroSlot}
+        topScore={
+          // RD6.1-c: Mike's corner total reads "Target: X" — same
+          // ScoreCell, wrapped in the static label. The ScoreCell DOM
+          // (data-h2h-team-score-position="opponent") is unchanged so
+          // the reveal→results no-snap gate still asserts on the inner
+          // value node.
+          <TargetCornerScore
+            scoreCell={
+              <ScoreCell
+                total={sender.totalFp}
+                displayTotal={senderDisplayTotal}
+                state={senderState}
+                sizeProgress={senderSizeProgress}
+                surface="reveal"
+                pop={popState.senderPop}
+                teamPosition="opponent"
+              />
+            }
+          />
+        }
+        bottomScore={
+          <ScoreCell
+            total={recipient.totalFp}
+            displayTotal={recipientDisplayTotal}
+            state={recipientState}
+            sizeProgress={recipientSizeProgress}
+            surface="reveal"
+            pop={popState.recipientPop}
+            teamPosition="user"
+          />
+        }
       />
       {/* Phase 2.5 dev-only relay debug overlay. JSX-gated on
           `import.meta.env.DEV` so Vite constant-folds the expression

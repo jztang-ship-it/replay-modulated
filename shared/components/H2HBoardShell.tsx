@@ -106,15 +106,97 @@ export function ZonePanel({
   );
 }
 
+/** RD6.1: minimum width reserved on the right side of the header band
+ *  for the corner ScoreCell. Mirrors the value the overlay used for
+ *  the docked-score target so reveal-side and overlay-side bands
+ *  reserve identical space. Used by the name-span's max-width guard
+ *  so long names ellipsis-truncate BEFORE colliding with the score.
+ *
+ *  RD6.1-c (2026-06-11): bumped 68 → 110 to host the new "Target:"
+ *  label that wraps Mike's corner score (see TargetCornerScore). The
+ *  label is ~50px at fontSize 11 weight 700 uppercase + 4px gap, plus
+ *  the ScoreCell's ~60px glyph at MAX_SCALE; 110 reserves comfortable
+ *  room without crowding the name band. The overlay's pre-RD6.1-c
+ *  local DOCKED_SCORE_TARGET_MIN_WIDTH_PX is retired in favor of this
+ *  single source of truth — both surfaces' name-span maxWidth calcs
+ *  reference the same constant so the bands stay symmetric. */
+export const CORNER_SCORE_MIN_WIDTH_PX = 110;
+
+/** RD6.1-c (2026-06-11): wraps Mike's corner ScoreCell with a static
+ *  "Target:" label so the value's framing is consistent across every
+ *  H2H screen (loading / pick / draw / reveal / results — image set 1
+ *  through 6). Pre-RD6.1-c the target was shown three inconsistent
+ *  ways: a body-text "Draw to beat X." line in the pick/draw intro,
+ *  a "<X> to beat." line in the redraw intro, and a bare corner
+ *  number on reveal/results. RD6.1-c collapses all three into ONE
+ *  format: "Target: X" right-aligned on Mike's name line.
+ *
+ *  Contract for the reveal→results no-snap: the label is STATIC chrome
+ *  rendered as a SIBLING of the ScoreCell; the ScoreCell DOM node + its
+ *  data-h2h-team-score-position attrs are untouched. The no-snap gates
+ *  query for those attrs on the inner ScoreCell, so the prefix wrap
+ *  does not disturb them.
+ *
+ *  Only consumed on the TOP zone (Mike / opponent). The bottom zone
+ *  (YOU / recipient) hosts a bare ScoreCell — YOU's climbing total
+ *  reads as live progress, not a static target.
+ */
+export function TargetCornerScore({ scoreCell }: { scoreCell: React.ReactNode }) {
+  return (
+    <>
+      <span
+        data-h2h-target-label="true"
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          color: "rgba(255,255,255,0.7)",
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          marginRight: 4,
+          whiteSpace: "nowrap",
+          fontVariantNumeric: "tabular-nums",
+          lineHeight: 1,
+        }}
+      >
+        Target:
+      </span>
+      {scoreCell}
+    </>
+  );
+}
+
 /** Name label band shown inside a ZonePanel — uppercase, weight 900,
  *  letterSpacing 1. The displayName is the recipient's nickname for
  *  the bottom zone and the challenger's name (via isRealName) for the
- *  top zone. Shell consumers pass the resolved label string. */
-export function ZoneHeader({ label, position }: { label: string; position?: "top" | "bottom" }) {
+ *  top zone. Shell consumers pass the resolved label string.
+ *
+ *  RD6.1 (2026-06-11): the header band now hosts an OPTIONAL corner
+ *  score on the right side. The score is rendered ABSOLUTELY so it
+ *  does NOT consume flex space — the name stays centered by the flex
+ *  parent regardless of the score's width. Long names truncate via
+ *  the maxWidth guard before they could collide with the score
+ *  envelope. Pattern mirrors the overlay's pre-RD6.1 OverlayHeaderRow
+ *  (H2HResultsOverlay.tsx pre-edit :357-448) so reveal-done and
+ *  overlay-mount frames render structurally identical headers — the
+ *  RD3-C reveal→results no-snap upgrades from value-equal to
+ *  component+geometric identity. */
+export function ZoneHeader({
+  label,
+  position,
+  score,
+}: {
+  label: string;
+  position?: "top" | "bottom";
+  /** Optional ScoreCell (or other React node) anchored to the right
+   *  edge of the header band. Absolute-positioned so the name's
+   *  centering is unaffected by the score's intrinsic width. */
+  score?: React.ReactNode;
+}) {
   return (
     <div
       data-h2h-board-zone-label={position}
       style={{
+        position: "relative",
         padding: "0 6px",
         height: ZONE_HEADER_HEIGHT_PX,
         display: "flex",
@@ -125,6 +207,12 @@ export function ZoneHeader({ label, position }: { label: string; position?: "top
     >
       <span
         style={{
+          maxWidth: score
+            ? `calc(100% - 2 * (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
+            : undefined,
+          overflow: score ? "hidden" : undefined,
+          textOverflow: score ? "ellipsis" : undefined,
+          whiteSpace: score ? "nowrap" : undefined,
           fontSize: 18,
           fontWeight: 900,
           color: "rgba(255,255,255,0.95)",
@@ -134,6 +222,24 @@ export function ZoneHeader({ label, position }: { label: string; position?: "top
       >
         {label}
       </span>
+      {score && (
+        <div
+          data-h2h-board-corner-score={position}
+          style={{
+            position: "absolute",
+            right: 6,
+            top: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            minWidth: CORNER_SCORE_MIN_WIDTH_PX,
+            pointerEvents: "none",
+          }}
+        >
+          {score}
+        </div>
+      )}
     </div>
   );
 }
@@ -216,6 +322,18 @@ export interface H2HBoardShellProps {
    *  the content. No visual effect when content fits (sticky degrades to
    *  relative). */
   belowBoardSticky?: boolean;
+  /** RD6.1 (2026-06-11): optional ScoreCell (or other node) anchored
+   *  to the right edge of the top zone's name band. The reveal,
+   *  armed/redraw, and results surfaces all pass the sender
+   *  (opponent) ScoreCell here so the team total renders in the box
+   *  corner instead of the right rail. Renders absolute-positioned so
+   *  the name stays centered. Omit to leave the band score-less (no
+   *  current consumer wants that, but the API stays optional for
+   *  forward compatibility). */
+  topScore?: React.ReactNode;
+  /** RD6.1: same as topScore, but for the bottom zone (recipient /
+   *  user). */
+  bottomScore?: React.ReactNode;
 }
 
 // ── Shell ───────────────────────────────────────────────────────────
@@ -225,6 +343,7 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
     topLabel, bottomLabel, topStrip, bottomStrip, hero, belowBoard, surfaceKind,
     rootDataAttrs, innerOpacity, innerTransitionMs, innerDataAttr, compositeOverlay,
     heroMinHeight, topZoneMarginBottom, heroMarginBottom, innerScrollable, belowBoardSticky,
+    topScore, bottomScore,
   } = props;
   const resolvedHeroMinHeight = heroMinHeight ?? HERO_MIN_HEIGHT_CSS;
   const resolvedTopZoneMargin = topZoneMarginBottom ?? TOP_ZONE_MARGIN_BOTTOM_PX;
@@ -293,10 +412,16 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
           } : {}),
         }}
       >
-        {/* Top framed container (opponent zone) — header above strip */}
+        {/* Top framed container (opponent zone). RD6.1-b (2026-06-11):
+            ZoneHeader moves BELOW the strip so the name+corner-score
+            band sits at the box's INNER edge (closer to the hero).
+            Mike's corner-total now lands at the bottom-right of the
+            top box, visually adjacent to the center delta and YOU's
+            corner-total — the cluster 6.2's dual-blink targets. Zero
+            vertical growth (reorder, not a second band). */}
         <ZonePanel zone="top" style={{ marginBottom: resolvedTopZoneMargin }}>
-          <ZoneHeader label={topLabel} position="top" />
           {topStrip}
+          <ZoneHeader label={topLabel} position="top" score={topScore} />
         </ZonePanel>
 
         {/* Hero region — minHeight defaults to HERO_MIN_HEIGHT_CSS but
@@ -323,10 +448,14 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
           {hero}
         </div>
 
-        {/* Bottom framed container (recipient zone) — strip above header */}
+        {/* Bottom framed container (recipient zone). RD6.1-b: ZoneHeader
+            moves ABOVE the strip so the band sits at the box's INNER
+            (top) edge — YOU's corner-total lands at the top-right of
+            the bottom box, completing the Mike/delta/YOU vertical
+            cluster near the hero region. */}
         <ZonePanel zone="bottom" style={{ marginBottom: BOTTOM_ZONE_MARGIN_BOTTOM_PX }}>
+          <ZoneHeader label={bottomLabel} position="bottom" score={bottomScore} />
           {bottomStrip}
-          <ZoneHeader label={bottomLabel} position="bottom" />
         </ZonePanel>
 
         {/* Reserved bottom space — flex-grow region BELOW the bottom

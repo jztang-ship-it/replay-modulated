@@ -551,18 +551,18 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
   });
 });
 
-// ── 4b. redraw-target persistence in the top intro region ──────────
+// ── 4b. Drawing-window copy retired (RD3 → RD6.1-c) ───────────────
 //
-// Continuation of docs/h2h-recipient-static-commentary-lock.md
-// (session 2026-06-08): during redraw_running / your_redraw_flip the
-// top intro region — previously an empty layout spacer (BUG-1 FIX) —
-// now renders the static line "<targetScore.toFixed(1)> to beat." so
-// the number-to-beat stays parked from deal → hold → draw. The hero
-// region's "Drawing…" (from deriveHeadline) is unchanged. Format must
-// match the stage-2 line's targetScore.toFixed(1) — both lines render
-// the same number string so they can't drift on glass.
+// Pre-RD6.1-c the top intro region rendered a body-text target line
+// ("<targetScore.toFixed(1)> to beat.") during redraw_running /
+// your_redraw_flip, plus a stage-2 "Draw to beat <X>." after a card
+// was held. RD6.1-c retires BOTH body-text mentions — Mike's box
+// name line now hosts the single "Target: X" via TargetCornerScore.
+// The intro region falls through to the empty-headline branch during
+// the redraw window; INTRO_3LINE_BUDGET_CSS still reserves the same
+// vertical footprint so no Y-shift.
 
-describe("H2HRecipientPlay — state 3a/3b — top intro renders the redraw-target line", () => {
+describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", () => {
   async function holdAndDraw() {
     let resolveRedraw: (val: { roster: GeneratedCard[] }) => void = () => { };
     const heldRedraw = new Promise<{ roster: GeneratedCard[] }>((r) => { resolveRedraw = r; });
@@ -590,15 +590,14 @@ describe("H2HRecipientPlay — state 3a/3b — top intro renders the redraw-targ
     return { container, resolveRedraw };
   }
 
-  it("top intro renders '<target.toFixed(1)> to beat.' during redraw_running", async () => {
+  it("redraw window renders NO body-text target line (RD6.1-c — name-line 'Target:' replaces it)", async () => {
     const { container, resolveRedraw } = await holdAndDraw();
-    // makeCtx default targetScore is 175 → 175.0 to beat.
-    const target = container.querySelector('[data-h2h-play-intro="redraw-target"]');
-    expect(target).not.toBeNull();
-    expect(target?.textContent).toBe("175.0 to beat.");
-    // The empty spacer is fully gone — assert against its old data-attr.
-    expect(container.querySelector('[data-h2h-play-intro="redraw-empty-spacer"]')).toBeNull();
-    // Cleanup.
+    // The pre-RD6.1-c body-text "<X> to beat." line is gone.
+    expect(container.querySelector('[data-h2h-play-intro="redraw-target"]')).toBeNull();
+    // The intro typography wrapper still mounts (reserves vertical
+    // footprint) — assert it's structurally present but text-free for
+    // this window so the strip Y doesn't shift.
+    expect(container.textContent ?? "").not.toMatch(/to beat/);
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 
@@ -619,24 +618,14 @@ describe("H2HRecipientPlay — state 3a/3b — top intro renders the redraw-targ
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 
-  it("redraw-target number format matches stage-2's targetScore.toFixed(1) (anti-drift guard)", async () => {
-    // The stage-2 line and the redraw-target line both render
-    // targetScore.toFixed(1). If either side drifts (e.g. one becomes
-    // toFixed(2), or one starts using Math.round, or one drops the
-    // decimal), the two on-glass numbers stop matching and the
-    // continuous-anchor intent breaks. Drive into stage-2 first,
-    // capture its number substring, drive into redraw_running, and
-    // assert the same number substring lives in the redraw-target.
-    //
-    // Real timers throughout: stage-2 renders through PartsLine's
-    // typewriter rush; under fake timers it never paints. Pattern
-    // mirrors §9 (introSig-pinned stability test) for the same reason.
+  it("stage-2 intro renders the RD6.1-c target-free CTA copy (no 'Draw to beat <X>')", async () => {
+    // RD6.1-c: Stage 2 used to read "Draw to beat <targetScore>." —
+    // now Mike's box name line hosts "Target: X" instead and Stage 2
+    // is a target-free CTA frame ("Draw the rest when you're ready.").
+    // Real timers throughout so PartsLine's typewriter rush paints
+    // (same reason the prior anti-drift test ran on real timers).
     vi.useRealTimers();
-    let resolveRedraw: (val: { roster: GeneratedCard[] }) => void = () => { };
-    const heldRedraw = new Promise<{ roster: GeneratedCard[] }>((r) => { resolveRedraw = r; });
-    const props = baseProps({
-      redrawRoster: vi.fn(() => heldRedraw),
-    } as any);
+    const props = baseProps();
     const { container } = render(
       <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
     );
@@ -651,31 +640,19 @@ describe("H2HRecipientPlay — state 3a/3b — top intro renders the redraw-targ
     // Confirm hold of slot 2 (tap-tap). Stage 2 mounts.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    // Wait for the typewriter rush to paint the full stage-2 line.
+    // Wait for the typewriter rush to paint Stage 2.
     await waitFor(
       () => {
         const el = container.querySelector('[data-h2h-play-intro="stage2"]');
-        // Match "Draw to beat <number>." with decimal-bearing number.
-        expect(el?.textContent ?? "").toMatch(/Draw to beat [\d.]+\.$/);
+        expect(el?.textContent ?? "").toMatch(/Draw the rest/);
       },
       { timeout: 2000 },
     );
+    // Negative assertion: no "to beat" in Stage 2 — the target now
+    // lives in Mike's name-line corner only.
     const stage2Text = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
-    const stage2Match = stage2Text.match(/Draw to beat ([\d.]+)\.$/);
-    expect(stage2Match).not.toBeNull();
-    const stage2Number = stage2Match![1];
-    // 175 → "175.0" (single decimal, matching landing #3 format).
-    expect(stage2Number).toBe("175.0");
-
-    // Advance into redraw_running.
-    fireEvent.click(screen.getByText("Draw"));
-    await waitFor(() => {
-      const root = document.querySelector("[data-h2h-recipient-play]");
-      expect(root?.getAttribute("data-playing-state")).toBe("redraw_running");
-    });
-    const target = container.querySelector('[data-h2h-play-intro="redraw-target"]');
-    expect(target?.textContent).toBe(`${stage2Number} to beat.`);
-    resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
+    expect(stage2Text).not.toMatch(/to beat/);
+    expect(stage2Text).not.toMatch(/\d+\.\d+/); // no decimal number — the target is gone
   });
 });
 
@@ -727,20 +704,51 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
     void props;
   });
 
-  it("opponent strip stays COLLAPSED throughout your_redraw_flip (Layout A — no opponent flip)", async () => {
+  it("opponent strip is VISIBLE and fading up throughout your_redraw_flip (RD6.1-e — fades in with the bottom cascade, no per-card stagger)", async () => {
+    // RD6.1-e (2026-06-12) inverts the prior assertion: pre-RD6.1-e
+    // Mike's top strip stayed COLLAPSED throughout your_redraw_flip
+    // and only uncollapsed at ab_transition (the Layout A → B beat).
+    // The user reported the empty-top-box reading as lopsided during
+    // the bottom cascade — RD6.1-e moves the strip's uncollapse onto
+    // your_redraw_flip ENTRY so Mike's row fills WHILE YOUR row
+    // cascades, no per-card stagger.
+    //
+    // Mechanism (wrapper-level fade, no flip):
+    //   - height 0 → MINI_CELL_HEIGHT_PX over AB_TRANSITION_DURATION_MS
+    //     (300ms) — structural growth at your_redraw_flip entry.
+    //   - opacity 0 → 1 over TOP_STRIP_FADE_UP_MS (= the cascade
+    //     window) — Mike's row fades in for the duration the bottom
+    //     cells flip column-by-column.
+    //   - transform translateY(-6px) → translateY(0) over the same
+    //     window — small confident settle.
+    // No per-card animation, no rotateY, no back face — design-lock
+    // §1/§3 (opponent flip killed) STILL stands; this is wrapper-only.
     const props = await advanceToYourFlip(5);
     // Wait into your_redraw_flip mid-pass.
     await waitFor(
       () => expect(screen.queryByText("Final-0")).not.toBeNull(),
       { timeout: 2000 },
     );
-    // The top-strip wrapper is the gate; it must remain collapsed.
     const stripWrapper = document.querySelector(
       "[data-h2h-play-top-strip]",
     ) as HTMLElement | null;
-    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBe("true");
-    expect(stripWrapper?.style.height).toBe("0px");
-    expect(stripWrapper?.style.opacity).toBe("0");
+    expect(stripWrapper).not.toBeNull();
+    // No longer collapsed during your_redraw_flip.
+    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBeNull();
+    expect(stripWrapper?.getAttribute("aria-hidden")).toBeNull();
+    // Structural target values — JSDOM doesn't run the CSS transition,
+    // so the inline style reads the to-values immediately; the visible
+    // pacing comes from the transition declaration below.
+    expect(stripWrapper?.style.height).toBe(`${HAND_STRIP_HEIGHT_PX}px`);
+    expect(stripWrapper?.style.opacity).toBe("1");
+    expect(stripWrapper?.style.transform).toBe("translateY(0)");
+    // Transition declaration paces opacity + transform over the
+    // cascade window with ease-out (confident settle); structural
+    // height stays at AB_TRANSITION_DURATION_MS (300ms).
+    const transition = stripWrapper?.style.transition ?? "";
+    expect(transition).toMatch(/height .+ms ease/);
+    expect(transition).toMatch(/opacity .+ms ease-out/);
+    expect(transition).toMatch(/transform .+ms ease-out/);
     void props;
   });
 
@@ -1851,19 +1859,28 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     return { container, resolveRedraw };
   }
 
-  it("armed rail mounts during redraw_running — JOHN green-leading at target, YOU 0.0 trailing (RD3-C fixed bar)", async () => {
+  it("armed totals mount during redraw_running — JOHN green-leading at target, YOU 0.0 trailing (RD3-C fixed bar)", async () => {
     // RD3-C (2026-06-11): under the fixed-JOHN contract, the armed
     // rail's JOHN cell mirrors the arc's first revealing frame —
     // displayTotal = targetScore, state = "leading", sizeProgress = 1.
     // YOU still climbs from 0 → unchanged armed values on the user
     // cell. The "leading" treatment is required (not optional) so
     // armed→arc has no glow snap; see the no-snap gate below.
+    //
+    // RD6.1 (2026-06-11): the armed totals moved from the inline
+    // right-column ArmedRail (data-h2h-armed-rail) into the box
+    // CORNERS via H2HBoardShell.ZoneHeader's score slot. Same
+    // ScoreCell, same RD3-C values, new DOM home — selectors now
+    // search the top zone label's corner-score wrapper for opponent
+    // and the bottom zone label's wrapper for user.
     const { container, resolveRedraw } = await holdAndDrawHeld();
-    const armedRail = container.querySelector('[data-h2h-armed-rail="true"]');
-    expect(armedRail).not.toBeNull();
-    // Two ScoreCells — opponent (JOHN) on top, user (YOU) on bottom.
-    const opponent = armedRail!.querySelector('[data-h2h-team-score-position="opponent"]');
-    const user = armedRail!.querySelector('[data-h2h-team-score-position="user"]');
+    const opponentCorner = container.querySelector('[data-h2h-board-corner-score="top"]');
+    const userCorner = container.querySelector('[data-h2h-board-corner-score="bottom"]');
+    expect(opponentCorner).not.toBeNull();
+    expect(userCorner).not.toBeNull();
+    // Two ScoreCells — opponent (JOHN) in top corner, user (YOU) in bottom corner.
+    const opponent = opponentCorner!.querySelector('[data-h2h-team-score-position="opponent"]');
+    const user = userCorner!.querySelector('[data-h2h-team-score-position="user"]');
     expect(opponent).not.toBeNull();
     expect(user).not.toBeNull();
     // JOHN displays the target (makeCtx default = 175 → "175.0").
@@ -1883,12 +1900,21 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 
-  it("armed rail persists continuously across redraw_running → your_redraw_flip → ab_transition → handoff_resolving (HARDENING 2)", async () => {
+  it("armed totals persist continuously across redraw_running → your_redraw_flip → ab_transition → handoff_resolving (HARDENING 2)", async () => {
     // HARDENING 2: one mount across all four pre-arc states, exactly
-    // one handoff at arc. The rail must NOT appear→vanish→reappear at
-    // any transition. We assert the [data-h2h-armed-rail] presence at
-    // each state. Fake timers throughout; pattern mirrors the existing
-    // ab_transition reach test above.
+    // one handoff at arc. The corner totals must NOT
+    // appear→vanish→reappear at any transition. We assert the
+    // [data-h2h-board-corner-score="top"] presence at each state
+    // (top zone hosts JOHN; checking just the top is enough — both
+    // corners are gated on the same showArmedRail predicate). Fake
+    // timers throughout; pattern mirrors the existing ab_transition
+    // reach test above.
+    //
+    // RD6.1: pre-RD6.1 this asserted [data-h2h-armed-rail]; under
+    // RD6.1 the armed total is the corner-score wrapper in the box
+    // header. Reference equality across state transitions still
+    // proves "no appear→vanish→reappear" — React reuses the same
+    // DOM node when the predicate stays true across re-renders.
     vi.useFakeTimers();
     const props = baseProps();
     const { container } = render(
@@ -1911,11 +1937,11 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     // Sample 1: your_redraw_flip (right after Draw + redraw resolution
     // — the held mock resolves synchronously, redraw_running is
     // observable only mid-microtask, so we sample at your_redraw_flip
-    // which is where the rail must definitely be mounted given the
-    // approved continuous-mount window starts at redraw_running).
+    // which is where the corner score must definitely be mounted given
+    // the approved continuous-mount window starts at redraw_running).
     expect(root.getAttribute("data-playing-state")).toBe("your_redraw_flip");
-    const railAtFlip = container.querySelector('[data-h2h-armed-rail="true"]');
-    expect(railAtFlip).not.toBeNull();
+    const cornerAtFlip = container.querySelector('[data-h2h-board-corner-score="top"]');
+    expect(cornerAtFlip).not.toBeNull();
 
     // Sample 2: ab_transition (after the 6-column flip cascade).
     await act(async () => {
@@ -1924,23 +1950,23 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
       );
     });
     expect(root.getAttribute("data-playing-state")).toBe("ab_transition");
-    const railAtAb = container.querySelector('[data-h2h-armed-rail="true"]');
-    expect(railAtAb).not.toBeNull();
+    const cornerAtAb = container.querySelector('[data-h2h-board-corner-score="top"]');
+    expect(cornerAtAb).not.toBeNull();
 
     // Sample 3: handoff_resolving (after AB_TRANSITION_DURATION_MS).
     await act(async () => {
       vi.advanceTimersByTime(350);
     });
     expect(root.getAttribute("data-playing-state")).toBe("handoff_resolving");
-    const railAtHandoff = container.querySelector('[data-h2h-armed-rail="true"]');
-    expect(railAtHandoff).not.toBeNull();
+    const cornerAtHandoff = container.querySelector('[data-h2h-board-corner-score="top"]');
+    expect(cornerAtHandoff).not.toBeNull();
 
     // Continuous-mount proof: same DOM node throughout (React did not
-    // unmount/remount the rail across any of the three state
+    // unmount/remount the corner across any of the three state
     // transitions). Reference equality is the cleanest "no
     // appear→vanish→reappear" guard.
-    expect(railAtAb).toBe(railAtFlip);
-    expect(railAtHandoff).toBe(railAtFlip);
+    expect(cornerAtAb).toBe(cornerAtFlip);
+    expect(cornerAtHandoff).toBe(cornerAtFlip);
 
     // Don't drive to arc here — that mounts H2HRecipientReveal which
     // pulls in useChallengeAttempt's POST. The four-state continuous
@@ -1972,10 +1998,13 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     // (both trace back to the sender's totalFp at submission), so the
     // armed rail's `targetScore` and the arc's `sender.totalFp` render
     // identical data-h2h-team-score-display values.
+    // RD6.1: the armed ScoreCells now ride in the box corners. Query
+    // them via [data-h2h-board-corner-score] wrappers rather than the
+    // retired [data-h2h-armed-rail] inline overlay.
     const { ScoreCell } = await import("../H2HScoreRail");
     const { container: armedContainer, resolveRedraw } = await holdAndDrawHeld();
-    const armedOpp = armedContainer.querySelector('[data-h2h-armed-rail="true"] [data-h2h-team-score-position="opponent"]')!;
-    const armedUser = armedContainer.querySelector('[data-h2h-armed-rail="true"] [data-h2h-team-score-position="user"]')!;
+    const armedOpp = armedContainer.querySelector('[data-h2h-board-corner-score="top"] [data-h2h-team-score-position="opponent"]')!;
+    const armedUser = armedContainer.querySelector('[data-h2h-board-corner-score="bottom"] [data-h2h-team-score-position="user"]')!;
 
     // makeCtx default targetScore is 175. Mirror it in the arcHarness
     // so the H1 parity (challengeCtx.targetScore == sender.totalFp)
@@ -2010,7 +2039,9 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
       "data-h2h-score-pop-magnitude",
       "data-h2h-score-pop-duration-ms",
       "data-h2h-score-pop-kind",
-      "data-h2h-score-suppressed",
+      // RD6.1: data-h2h-score-suppressed retired with the glide
+      // infrastructure (the `suppressed` prop is gone). Other
+      // load-bearing attrs stay.
     ] as const;
     for (const a of attrs) {
       expect(

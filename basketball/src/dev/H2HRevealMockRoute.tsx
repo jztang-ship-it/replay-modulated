@@ -36,7 +36,6 @@ import {
   OVERLAY_CROSSFADE_MS,
   type ResultsOverlayState,
 } from "@shared/components/H2HResultsOverlay";
-import { H2HScoreGlide } from "@shared/components/H2HScoreGlide";
 import { AthleteCard } from "../components/AthleteCard";
 import { SENDER_HAND, RECIPIENT_HAND } from "./h2hMockFixture";
 import type { PlayerCard } from "../adapters/types";
@@ -332,37 +331,16 @@ export function H2HRevealMockRoute() {
   // ?flipped= URL param on the FIRST mount via the `key` prop below.
   const [overlayMountKey, setOverlayMountKey] = useState(0);
 
-  // Step-4 glide / C4 — mirror H2HRecipientReveal's wiring exactly so
-  // the dev mock drives the same handoff sequence the production
-  // wrapper does. glideHandoff suppresses the reveal source glyphs at
-  // t=0; dockedScoreSettled populates the docked targets at landing.
-  // Both default to both-false and reset when the glide goes inactive.
-  const [mockGlideHandoff, setMockGlideHandoff] = useState<{ opponent: boolean; user: boolean }>({
-    opponent: false,
-    user: false,
-  });
-  const [mockDockedScoreSettled, setMockDockedScoreSettled] = useState<{ opponent: boolean; user: boolean }>({
-    opponent: false,
-    user: false,
-  });
-  const mockGlideActive = reveal.phase === "done";
-  useEffect(() => {
-    if (!mockGlideActive) {
-      setMockGlideHandoff({ opponent: false, user: false });
-      setMockDockedScoreSettled({ opponent: false, user: false });
-    }
-  }, [mockGlideActive]);
+  // RD6.1: the step-4 glide is retired; the mock no longer needs the
+  // glideHandoff / dockedScoreSettled mirror state. Reveal totals
+  // START in the box corners on both surfaces — no rail→box motion to
+  // simulate.
 
   // ── Replay handlers ────────────────────────────────────────────────────
   const handleReplay = useCallback(() => {
     setForceOverlay(false);
     setDismissed(false);
     setOverlayMountKey(k => k + 1);
-    // Reset glide gates explicitly. Replay drops the phase out of
-    // "done" so the active-driven reset above also fires, but
-    // belt-and-suspenders here keeps the next handoff clean.
-    setMockGlideHandoff({ opponent: false, user: false });
-    setMockDockedScoreSettled({ opponent: false, user: false });
     reveal.play();
   }, [reveal]);
 
@@ -382,7 +360,6 @@ export function H2HRevealMockRoute() {
         recipient={RECIPIENT_HAND}
         renderCard={renderBattlefieldCard}
         reveal={reveal}
-        glideHandoff={mockGlideHandoff}
       />
       {overlayMounted && (
         <H2HResultsOverlay
@@ -401,47 +378,12 @@ export function H2HRevealMockRoute() {
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}
           onDismiss={onDismiss}
-          dockedScoreSettled={mockDockedScoreSettled}
-          glideHandoff={mockGlideHandoff}
         />
       )}
-      {/* Step-4 glide / C4 — mirror the production wrapper's
-          H2HRecipientReveal mount + wiring exactly: glideHandoff +
-          dockedScoreSettled state, with onGlideStart / onGlideSettle
-          callbacks flipping each. The harness verifies the C4 motion
-          + settle + unmount through this dev route at the same
-          ?overlay=1 surface it uses for the other no-jump assertions. */}
-      {(() => {
-        const ref = Math.max(synthetic.sender.totalFp, synthetic.recipient.totalFp, 0.0001);
-        const tied =
-          Math.abs(synthetic.sender.totalFp - synthetic.recipient.totalFp) < 0.05 &&
-          synthetic.sender.totalFp > 0 && synthetic.recipient.totalFp > 0;
-        const senderState: "leading" | "trailing" | "tied" = tied
-          ? "tied"
-          : synthetic.sender.totalFp > synthetic.recipient.totalFp ? "leading" : "trailing";
-        const recipientState: "leading" | "trailing" | "tied" = tied
-          ? "tied"
-          : synthetic.recipient.totalFp > synthetic.sender.totalFp ? "leading" : "trailing";
-        return (
-          <H2HScoreGlide
-            active={reveal.phase === "done"}
-            sender={{
-              total: synthetic.sender.totalFp,
-              state: senderState,
-              sizeProgress: synthetic.sender.totalFp / ref,
-            }}
-            recipient={{
-              total: synthetic.recipient.totalFp,
-              state: recipientState,
-              sizeProgress: synthetic.recipient.totalFp / ref,
-            }}
-            onGlideStart={() => setMockGlideHandoff({ opponent: true, user: true })}
-            onGlideSettle={(team) =>
-              setMockDockedScoreSettled((prev) => ({ ...prev, [team]: true }))
-            }
-          />
-        );
-      })()}
+      {/* RD6.1: the step-4 H2HScoreGlide mount + its supporting
+          handoff state are retired. The dev mock no longer needs to
+          simulate the rail→box motion (totals START in the box
+          corners on both reveal-side and overlay-side). */}
       <DevControls
         phase={reveal.phase}
         matchupIndex={reveal.matchupIndex}

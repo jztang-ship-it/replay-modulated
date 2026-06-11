@@ -61,6 +61,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import { HAND_STRIP_HEIGHT_PX } from "./H2HRevealScreen";
+import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore } from "./H2HBoardShell";
 import {
   trashTalkBucket,
   type TrashTalkBucket,
@@ -71,8 +72,6 @@ import {
   RIGHT_RAIL_WIDTH_PX,
   LEFT_RAIL_WIDTH_PX,
   WINNING_COLOR,
-  TRAILING_COLOR,
-  DELTA_NEUTRAL,
 } from "./H2HScoreRail";
 
 // ── Variant types ────────────────────────────────────────────────────────
@@ -129,32 +128,6 @@ export interface H2HResultsOverlayProps {
    *  regular prop and lift the state-derived logic into the recipient
    *  wrapper, avoiding the override pattern compounding. */
   primaryCtaOverride?: { label: string; handler?: () => void };
-  /** Step-4 glide / C1: per-side flag telling the docked-score targets
-   *  in the ZoneHeaders to render their glyph. When undefined, both
-   *  sides stay EMPTY (the post-name-fix default — this commit is a
-   *  no-op on the live screen). C4 will flip these to true at the
-   *  glide's terminal frame so the populated glyph lands seamlessly
-   *  on the same box the empty slot reserved. */
-  dockedScoreSettled?: { opponent: boolean; user: boolean };
-  /** Step-4 glide / C5 overlay-rail-suppress: parent's glide-handoff
-   *  flag, re-threaded into the overlay so the rail-side ScoreCells
-   *  can hide their inner glyph at the moment the glide LIFTS OFF
-   *  (not at the moment it settles). Without this, the overlay's own
-   *  right-rail ScoreCells double-paint the same number alongside
-   *  the gliding clone for the entire 280 ms motion AND alongside
-   *  the docked glyph post-settle.
-   *
-   *  The overlay derives `railSuppressed = glideHandoff[t] ||
-   *  dockedScoreSettled[t]` per team so the rail glyph stays
-   *  invisible from t=0 through end-of-results. The OR is load-
-   *  bearing: glideHandoff alone goes false at the next reveal cycle
-   *  (e.g. Replay), and dockedScoreSettled alone wouldn't fire until
-   *  t=280 leaving 280 ms of doubling.
-   *
-   *  Default undefined → both flags false → rail glyph rendered as
-   *  pre-fix. The change is a true no-op for any caller that doesn't
-   *  wire this prop. */
-  glideHandoff?: { opponent: boolean; user: boolean };
 }
 
 /** Cross-fade duration. */
@@ -194,14 +167,11 @@ const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed
 // those values a populated 5-char score (e.g. "182.4") measures
 // 64.33px wide in headless Chromium at viewport 390 — the previous
 // 60 floor let populated content expand the bounding box from
-// 60×24 (empty) to 64.33×24, shifting the right-anchored slot's left
-// edge by ~4.3px between empty and populated. 68 covers the measured
-// 64.33 with ~3.7px headroom for sub-pixel renderer variance across
-// iOS/Android, while staying well under the name's available band
-// (the name span's `maxWidth: calc(100% - 2 * (PX + 8))` re-derives
-// from this constant — at 332-wide headers, name max stays 180,
-// comfortably wider than every realistic display name).
-const DOCKED_SCORE_TARGET_MIN_WIDTH_PX = 68;
+// RD6.1-c (2026-06-11): the local CORNER_SCORE_MIN_WIDTH_PX = 68
+// is retired in favor of CORNER_SCORE_MIN_WIDTH_PX (imported from
+// H2HBoardShell) so both surfaces' name-band reserves are kept in
+// sync from a single source. The constant bumped to 110 to host the
+// "Target:" label that wraps Mike's corner score.
 
 // Hand-strip cell sizing — sourced from the shared HAND_STRIP_HEIGHT_PX
 // in H2HRevealScreen. RD2 unified-80 lock (2026-06-08): one mini-slot
@@ -243,10 +213,16 @@ const ZONE_HEADER_HEIGHT_PX = 24;
 // pushes the CTA to the bottom of the inner column for thumb reach;
 // the marginBottom just adds visible breathing room above the CTA.
 //
-// Sized for the worst-case reserved-bottom block (paddingTop 8 +
-// countdown pill ~28px + gap 10 + CTA button ~46px ≈ 92px) plus a
-// small breathing margin (~8px).
-const RESERVED_BOTTOM_CLEARANCE_PX = 100;
+// RD6.1-g (2026-06-11): trimmed 100 → 30. The original 100 was sized
+// for a layout where the LOSS_OPEN countdown was a SEPARATE pill above
+// the CTA button (paddingTop 8 + countdown ~28 + gap 10 + CTA ~46 ≈
+// 92). #7 merged the countdown INSIDE the CTA button (absolute span,
+// right-aligned), so the reserved-bottom content is now just a single
+// CTA button — actual content height ~42–50px. 30px gives visual
+// breathing room between bottom strip and CTA without the obsolete
+// 100px reserve. Reducing this is safe for the no-snap: marginBottom
+// sits BELOW the bottom strip, so it doesn't shift the strip's Y.
+const RESERVED_BOTTOM_CLEARANCE_PX = 30;
 const ZONE_GAP_PX = 4;
 const URGENT_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -324,35 +300,26 @@ function ZonePanel({ children, dataAttr, style }: { children: React.ReactNode; d
 function ZoneHeader({
   hand,
   position,
-  dockedScoreColor,
-  settled,
+  score,
 }: {
   hand: H2HHand;
   position?: "top" | "bottom";
-  /** Three-state color for the docked-score target placeholder.
-   *  Mirrors the existing right-rail ScoreCell logic (winner green / loser
-   *  neutral / tie). Step 4 lands the glide that fills the placeholder;
-   *  the color rendered here is what the glide will land into. */
-  dockedScoreColor: string;
-  /** Step-4 glide / C1: when true the docked-score target renders its
-   *  glyph (hand.totalFp.toFixed(1)); when false the slot stays empty
-   *  exactly as today. C1 is the styling lock — the populate path is
-   *  dormant until C4 flips the flag. Default propagated from the
-   *  overlay's `dockedScoreSettled` prop, which is undefined today and
-   *  therefore defaults both sides to false (no-op). */
-  settled: boolean;
+  /** RD6.1 (2026-06-11): re-parented ScoreCell rendered absolute-right.
+   *  The score for both teams now LIVES in the box headers — pre-RD6.1
+   *  the right-rail ScoreCells were the live home and this band held
+   *  a placeholder span that the step-4 glide animated values into.
+   *  RD6.1 deletes the glide; the ScoreCell is the same component the
+   *  reveal renders in the same DOM position, so the reveal→results
+   *  no-snap upgrades to component+geometric identity. */
+  score?: React.ReactNode;
 }) {
-  // Outer + name recipe MUST match H2HBoardShell.ZoneHeader on the
-  // reveal side verbatim — padding "0 6px", height ZONE_HEADER_HEIGHT_PX,
-  // flex with justifyContent:center, font 18/900, color rgba(0.95),
+  // Outer + name recipe matches H2HBoardShell.ZoneHeader on the reveal
+  // side verbatim — padding "0 6px", height ZONE_HEADER_HEIGHT_PX, flex
+  // with justifyContent:center, font 18/900, color rgba(0.95),
   // letterSpacing 1, uppercase. That parity is what the no-jump-name
-  // cross-surface assertion locks. Step 3's earlier name-left layout
-  // shifted the X-centroid ~34px and produced a visible name-jump on
-  // the reveal→results crossfade; this layout restores parity.
-  //
-  // The docked-score target is position:absolute so it does NOT consume
-  // flex space. The name span stays naturally centered by the flex
-  // parent regardless of the score's width.
+  // cross-surface assertion locks; same parity now extends to the
+  // score's position (absolute-right via the shared CORNER_SCORE_MIN_
+  // WIDTH_PX template).
   return (
     <div
       data-h2h-overlay-zone-label={position}
@@ -368,20 +335,17 @@ function ZoneHeader({
     >
       <span
         style={{
-          // Long-name guard: cap the name's max-width so it
-          // ellipsis-truncates BEFORE reaching the absolute score slot
-          // on the right. The score reserves DOCKED_SCORE_TARGET_MIN_WIDTH_PX
-          // on its side; we reserve the same on the left phantom side
-          // (× 2 in the calc) so the AVAILABLE-FOR-NAME band stays
-          // centered on the header. Short names (the realistic case,
-          // including the fixture's MIKE/YOU) render fully inside this
-          // band, fully centered. Long names truncate with ellipsis,
-          // their box still centered within the available band — name
-          // and score never overlap.
-          maxWidth: `calc(100% - 2 * (${DOCKED_SCORE_TARGET_MIN_WIDTH_PX}px + 8px))`,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          // Long-name guard: same reservation as the reveal-side
+          // H2HBoardShell.ZoneHeader uses (CORNER_SCORE_MIN_WIDTH_PX +
+          // 8px) × 2 — keeps the available-for-name band centered on
+          // the header. Short names render fully inside; long names
+          // ellipsis-truncate before colliding with the score.
+          maxWidth: score
+            ? `calc(100% - 2 * (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
+            : undefined,
+          overflow: score ? "hidden" : undefined,
+          textOverflow: score ? "ellipsis" : undefined,
+          whiteSpace: score ? "nowrap" : undefined,
           // Reveal-matching recipe (verbatim from H2HBoardShell):
           fontSize: 18,
           fontWeight: 900,
@@ -392,60 +356,25 @@ function ZoneHeader({
       >
         {hand.displayName}
       </span>
-      {/* Docked-score target. Absolutely positioned so it paints over
-          the row's right edge without consuming flex space — the name
-          stays centered independent of it.
-          C1 styling lock (step-4 glide prep): font and color values
-          mirror H2HScoreRail.ScoreCell's inner glyph AT REST so a
-          gliding clone lands on a pixel-identical box. The runtime
-          scale transform that ScoreCell applies on top of these values
-          is NOT copied here — the docked terminal is the rest box only.
-          Tabular numerals + explicit fontSize/fontWeight/lineHeight
-          mean the glyph box is concrete and reproducible; nothing
-          relies on inherited / browser-default values.
-          Empty vs populated is controlled by the `settled` prop —
-          when false (today's default), the slot reserves its min-width
-          and otherwise renders nothing. When true, the glyph renders
-          inside the same span. The span box itself (position:absolute
-          + top:0/bottom:0 + min-width:60) is rect-identical in both
-          cases — the C1 test proves this so step-4 can place a glide
-          clone here without measuring at runtime.
-          data-attrs preserved so step 4's motion handler can read the
-          target value without re-deriving from props. */}
-      <span
-        data-h2h-overlay-docked-score={position}
-        data-h2h-overlay-docked-score-value={hand.totalFp.toFixed(1)}
-        data-h2h-overlay-docked-score-settled={settled ? "true" : "false"}
-        // C3: per-team discriminator the glide layer queries to locate
-        // the end endpoint deterministically. Mirrors the
-        // "opponent" / "user" vocabulary used by glideHandoff and the
-        // ScoreCell teamPosition attr, so a single naming convention
-        // covers both endpoints of the glide. Derived from the
-        // top/bottom position prop without renaming the existing
-        // docked-score attr (the harness queries the existing one by
-        // attribute presence).
-        data-h2h-overlay-docked-score-team={position === "top" ? "opponent" : "user"}
-        style={{
-          position: "absolute",
-          right: 6,                            // aligns with header padding
-          top: 0,
-          bottom: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          minWidth: DOCKED_SCORE_TARGET_MIN_WIDTH_PX,
-          color: dockedScoreColor,
-          // Matches H2HScoreRail.ScoreCell inner glyph at rest:
-          fontSize: 22,
-          fontWeight: 950,
-          lineHeight: 1.05,
-          letterSpacing: -0.5,
-          fontVariantNumeric: "tabular-nums",
-          pointerEvents: "none",
-        }}
-      >
-        {settled ? hand.totalFp.toFixed(1) : null}
-      </span>
+      {score && (
+        <div
+          data-h2h-overlay-corner-score={position}
+          data-h2h-overlay-corner-score-team={position === "top" ? "opponent" : "user"}
+          style={{
+            position: "absolute",
+            right: 6,
+            top: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            minWidth: CORNER_SCORE_MIN_WIDTH_PX,
+            pointerEvents: "none",
+          }}
+        >
+          {score}
+        </div>
+      )}
     </div>
   );
 }
@@ -739,22 +668,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     senderRevealOrder,
     recipientRevealOrder,
     primaryCtaOverride,
-    dockedScoreSettled,
-    glideHandoff,
   } = props;
-
-  // C5 overlay-rail-suppress: rail-side ScoreCell visibility per team.
-  // The reveal-side ScoreCells already get their `suppressed` from
-  // glideHandoff via H2HRevealScreen (C2). The overlay's OWN rail
-  // ScoreCells need the same hide-when-glide signal — at glide START
-  // (glideHandoff flips true) so the rail glyph hides the instant the
-  // clone lifts off. dockedScoreSettled is OR'd in so the rail stays
-  // hidden post-settle through end-of-results, even if a future
-  // refactor decouples the two glide flags.
-  const railSuppressed = {
-    opponent: !!(glideHandoff?.opponent || dockedScoreSettled?.opponent),
-    user: !!(glideHandoff?.user || dockedScoreSettled?.user),
-  };
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
   // selection — both slots can be filled simultaneously for 1v1 face-
@@ -849,18 +763,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       ? "leading"
       : "trailing";
 
-  // Step 3: docked-score target color per side. Same three-state model
-  // the right-rail ScoreCell uses (winner green / loser neutral / tie
-  // off-white). The targets render empty in step 3 — only the color
-  // ships, ready for the step-4 glide to land a value into.
-  const opponentDockedColor =
-    senderState === "leading" ? WINNING_COLOR
-    : senderState === "tied" ? DELTA_NEUTRAL
-    : TRAILING_COLOR;
-  const userDockedColor =
-    recipientState === "leading" ? WINNING_COLOR
-    : recipientState === "tied" ? DELTA_NEUTRAL
-    : TRAILING_COLOR;
+  // RD6.1: docked-score color helpers retired — the corner ScoreCell
+  // computes its own color from `state` (via H2HScoreRail's three-
+  // state model). The pre-RD6.1 placeholder span needed a pre-computed
+  // color so the empty slot's color was correct before C4's glide
+  // animation arrived; with the ScoreCell rendering from mount, the
+  // helper is dead.
 
   // Step 3: substantive "WHY" second line, folded into the commentary
   // block in the freed center column. Picks personality vs tactical
@@ -1006,15 +914,41 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           gap: 0,
         }}
       >
-        {/* ── TOP STRIP — opponent's lineup ──────────────────────────── */}
+        {/* ── TOP STRIP — opponent's lineup ────────────────────────────
+            RD6.1-b: ZoneHeader moves BELOW the strip so the
+            name+Mike-total band sits at the box's INNER edge
+            (bottom-right). Mirrors the reveal-side reorder in
+            H2HBoardShell — corner-score wrapper stays component+
+            position identical across reveal-done and overlay-mount
+            frames. */}
         <ZonePanel dataAttr="opponent" style={{ marginBottom: 18 }}>
-          <ZoneHeader hand={sender} position="top" dockedScoreColor={opponentDockedColor} settled={dockedScoreSettled?.opponent ?? false} />
           <ResultsStrip
             cards={sender.cards}
             renderCard={renderCard}
             selectedCardId={topSelectedCardId}
             onCardTap={handleTopCardTap}
             revealOrder={senderRevealOrder}
+          />
+          <ZoneHeader
+            hand={sender}
+            position="top"
+            score={
+              // RD6.1-c: Mike's corner reads "Target: X" on the
+              // results surface too. Same ScoreCell as the reveal
+              // (data attrs untouched); only the surrounding label
+              // changes.
+              <TargetCornerScore
+                scoreCell={
+                  <ScoreCell
+                    total={sender.totalFp}
+                    state={senderState}
+                    sizeProgress={senderSizeProgress}
+                    surface="overlay"
+                    teamPosition="opponent"
+                  />
+                }
+              />
+            }
           />
         </ZonePanel>
 
@@ -1118,15 +1052,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             </div>
           </div>
 
-          {/* Row 1 right rail: sender (opponent) score. The cell stays
-              mounted (its outer flex-center box holds the grid slot at
-              row 1 col 3 — unmount would let the user HeroCell auto-
-              flow into it and break the locked-hero invariant). The
-              INNER GLYPH hides via C2's `suppressed` once the glide
-              kicks off (railSuppressed.opponent), so the docked-score
-              becomes the only visible copy of the number from t=0
-              through end-of-results. */}
-          <ScoreCell total={sender.totalFp} state={senderState} sizeProgress={senderSizeProgress} surface="overlay" teamPosition="opponent" suppressed={railSuppressed.opponent} />
+          {/* RD6.1 (2026-06-11): row 1 right-rail opponent ScoreCell
+              deleted — the opponent total now renders in the top
+              ZoneHeader's score slot above. An aria-hidden placeholder
+              parks the row 1 col 3 grid cell so CSS auto-flow doesn't
+              pull the row-2 user hero out of the center column. */}
+          <div aria-hidden="true" style={{ gridRow: 1, gridColumn: 3 }} />
 
           {/* Row-2 left-rail spacer. With the opponent HeroCell removed,
               CSS grid auto-flow would otherwise place the next in-flow
@@ -1134,16 +1065,18 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               row 2 col 1 (left rail) — pulling the locked user hero out
               of the center column. This explicit empty cell parks row
               2 col 1 so auto-flow puts the user hero into row 2 col 2
-              (center) as required by the no-jump invariant. The user
-              HeroCell stays untouched per the step-3 lock. */}
+              (center). */}
           <div aria-hidden="true" style={{ gridRow: 2, gridColumn: 1 }} />
 
           {/* Row 2: user hero cell (LOCKED — byte-identical X/Y vs prior
-              step) + user rail ScoreCell. Same suppress contract as
-              the opponent rail above — the cell stays mounted, the
-              inner glyph hides at glide lift-off. */}
+              step). RD6.1 deletes the row-2 right-rail user ScoreCell
+              for the same reason as the opponent above — the user total
+              now lives in the bottom ZoneHeader's score slot. */}
           <HeroCell card={bottomSelectedCard} renderCard={renderCard} flipped={bottomHeroFlipped} onTap={handleBottomHeroTap} showEmptyBorder />
-          <ScoreCell total={recipient.totalFp} state={recipientState} sizeProgress={recipientSizeProgress} surface="overlay" teamPosition="user" suppressed={railSuppressed.user} />
+          {/* RD6.1: row-2 right-rail user ScoreCell deleted (see comment
+              above); empty cell parks the grid slot so the layout
+              stays the same. */}
+          <div aria-hidden="true" style={{ gridRow: 2, gridColumn: 3 }} />
         </div>
 
         {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────
@@ -1151,8 +1084,25 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             below the bottom hero. Piece 2a (2026-05-28, doc lock
             a5d7e43): explicit marginBottom: 0 — no gap to the reserved
             space below. The strip flushes directly against reserved,
-            which then provides paddingTop: 8 (was 16) for the CTA. */}
+            which then provides paddingTop: 8 (was 16) for the CTA.
+            RD6.1-b: ZoneHeader moves ABOVE the strip so the
+            name+YOU-total band sits at the box's INNER (top) edge —
+            top-right of the bottom box, mirroring the reveal-side
+            reorder in H2HBoardShell. */}
         <ZonePanel dataAttr="user" style={{ marginBottom: RESERVED_BOTTOM_CLEARANCE_PX }}>
+          <ZoneHeader
+            hand={recipient}
+            position="bottom"
+            score={
+              <ScoreCell
+                total={recipient.totalFp}
+                state={recipientState}
+                sizeProgress={recipientSizeProgress}
+                surface="overlay"
+                teamPosition="user"
+              />
+            }
+          />
           <ResultsStrip
             cards={recipient.cards}
             renderCard={renderCard}
@@ -1160,7 +1110,6 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             onCardTap={handleBottomCardTap}
             revealOrder={recipientRevealOrder}
           />
-          <ZoneHeader hand={recipient} position="bottom" dockedScoreColor={userDockedColor} settled={dockedScoreSettled?.user ?? false} />
         </ZonePanel>
 
         {/* ── RESERVED BOTTOM SPACE (holds CTA + countdown) ────────────
@@ -1203,7 +1152,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             flexDirection: "column",
             alignItems: "stretch",
             justifyContent: "flex-start",
-            paddingTop: 8,
+            // RD6.1-g (2026-06-11): paddingTop 8 → 0. With
+            // RESERVED_BOTTOM_CLEARANCE_PX providing the visual gap
+            // above the CTA, the reserved-bottom area itself no longer
+            // needs its own top padding.
+            paddingTop: 0,
             // Match the overlay outer's background so the sticky CTA
             // strip has an opaque underlay when content scrolls behind
             // it (otherwise the bottom strip would bleed through the
@@ -1229,7 +1182,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               onClick={primaryCta.handler}
               style={{
                 position: "relative",
-                padding: "15px",
+                // RD6.1-g (2026-06-11): padding 15 → 10. Tightens the
+                // CTA button to ~36–40px tall (was ~46–50px). The
+                // 16px text + 900 weight stays plenty tappable; the
+                // 10px padding keeps thumb-comfortable hit area.
+                padding: "10px",
                 borderRadius: 12,
                 background: "#FFB14A",
                 border: "none",
