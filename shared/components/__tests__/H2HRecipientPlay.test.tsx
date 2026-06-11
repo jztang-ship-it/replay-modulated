@@ -1851,7 +1851,13 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     return { container, resolveRedraw };
   }
 
-  it("armed rail mounts during redraw_running with both ScoreCells at neutral 0.0", async () => {
+  it("armed rail mounts during redraw_running — JOHN green-leading at target, YOU 0.0 trailing (RD3-C fixed bar)", async () => {
+    // RD3-C (2026-06-11): under the fixed-JOHN contract, the armed
+    // rail's JOHN cell mirrors the arc's first revealing frame —
+    // displayTotal = targetScore, state = "leading", sizeProgress = 1.
+    // YOU still climbs from 0 → unchanged armed values on the user
+    // cell. The "leading" treatment is required (not optional) so
+    // armed→arc has no glow snap; see the no-snap gate below.
     const { container, resolveRedraw } = await holdAndDrawHeld();
     const armedRail = container.querySelector('[data-h2h-armed-rail="true"]');
     expect(armedRail).not.toBeNull();
@@ -1860,19 +1866,19 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     const user = armedRail!.querySelector('[data-h2h-team-score-position="user"]');
     expect(opponent).not.toBeNull();
     expect(user).not.toBeNull();
-    // Both display "0.0" — armed cells are neutral, JOHN target is
-    // communicated by the intro line above, not the rail.
-    expect(opponent!.getAttribute("data-h2h-team-score-display")).toBe("0.0");
+    // JOHN displays the target (makeCtx default = 175 → "175.0").
+    // YOU displays "0.0" — recipient hasn't climbed yet.
+    expect(opponent!.getAttribute("data-h2h-team-score-display")).toBe("175.0");
     expect(user!.getAttribute("data-h2h-team-score-display")).toBe("0.0");
-    // Both "trailing" — no leader-glow on either (the "leading" green
-    // would misread as "John already won" before any card is revealed).
-    expect(opponent!.getAttribute("data-h2h-score-state")).toBe("trailing");
+    // JOHN "leading" green-glow ON from idle. YOU "trailing" grey.
+    expect(opponent!.getAttribute("data-h2h-score-state")).toBe("leading");
     expect(user!.getAttribute("data-h2h-score-state")).toBe("trailing");
-    // sizeProgress=0 → rest-scale 1.000 (1 + 0*SIZE_PROGRESS_MAX + 0
-    // trailing bonus). Confirms no Z1 size growth on the armed rail.
-    expect(opponent!.getAttribute("data-h2h-score-size-progress")).toBe("0.000");
+    // JOHN sizeProgress=1 → rest-scale 1.200 (1 + 1*SIZE_PROGRESS_MAX
+    // 0.12 + LEADER_BONUS 0.08 = 1.20, well under MAX_SCALE 1.30).
+    // YOU sizeProgress=0 → rest-scale 1.000.
+    expect(opponent!.getAttribute("data-h2h-score-size-progress")).toBe("1.000");
     expect(user!.getAttribute("data-h2h-score-size-progress")).toBe("0.000");
-    expect(opponent!.getAttribute("data-h2h-score-rest-scale")).toBe("1.000");
+    expect(opponent!.getAttribute("data-h2h-score-rest-scale")).toBe("1.200");
     expect(user!.getAttribute("data-h2h-score-rest-scale")).toBe("1.000");
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
@@ -1946,42 +1952,47 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
 
   it("redraw→arc no-snap: armed ScoreCell DOM matches arc revealing-first-frame ScoreCell DOM (HARDENING 1, named gate)", async () => {
     // The named test gate: armed-last-frame ScoreCell state ===
-    // arc-idle-first-frame ScoreCell state. With Option B both states
-    // are 0.0 / trailing / sizeProgress=0 — byte-identical.
+    // arc-revealing-first-frame ScoreCell state.
+    //
+    // RD3-C (2026-06-11) update: under the fixed-JOHN contract, the
+    // arc's first revealing frame has senderRunningTotal=sender.totalFp
+    // (seeded at idle, holds through done). So the armed rail's JOHN
+    // cell mirrors `displayTotal=targetScore, state="leading",
+    // sizeProgress=1` to stay no-snap. YOU's cell is still 0.0/
+    // trailing (recipient climbs from 0).
     //
     // Important wiring detail (surfaced during H1 investigation): the
     // hook's true "phase=idle" frame renders <div /> placeholders for
     // the ScoreCell slots (senderBattle is null at idle). The first
     // frame at which the arc paints VISIBLE ScoreCells is the first
-    // phase=revealing tick, where senderRunningTotal=0 and
-    // recipientRunningTotal=0 by hook init. That's the frame the
-    // armed rail must match.
-    //
-    // We assert this by reading the armed rail's data attrs from a
-    // real H2HRecipientPlay render at redraw_running, and reading the
-    // arc's via a directly-rendered ScoreCell with the exact props
-    // H2HRevealScreen passes at revealing-first-frame: total=
-    // sender.totalFp (any), displayTotal=0, state="trailing",
-    // sizeProgress=0, surface="reveal", teamPosition="opponent"|
-    // "user". The ScoreCell component is shared between the two
-    // surfaces (no-snap is structural, not coincidence).
+    // phase=revealing tick. Under RD3-C senderRunningTotal=sender.totalFp
+    // and recipientRunningTotal=0 at that tick (per the play() reset
+    // change in useH2HReveal.ts). The H1 parity recon confirmed
+    // sender.totalFp == challengeCtx.targetScore at the same precision
+    // (both trace back to the sender's totalFp at submission), so the
+    // armed rail's `targetScore` and the arc's `sender.totalFp` render
+    // identical data-h2h-team-score-display values.
     const { ScoreCell } = await import("../H2HScoreRail");
     const { container: armedContainer, resolveRedraw } = await holdAndDrawHeld();
     const armedOpp = armedContainer.querySelector('[data-h2h-armed-rail="true"] [data-h2h-team-score-position="opponent"]')!;
     const armedUser = armedContainer.querySelector('[data-h2h-armed-rail="true"] [data-h2h-team-score-position="user"]')!;
 
+    // makeCtx default targetScore is 175. Mirror it in the arcHarness
+    // so the H1 parity (challengeCtx.targetScore == sender.totalFp)
+    // is encoded in the test inputs.
+    const TARGET = 175;
     const arcHarness = render(
       <div data-arc-harness="true">
-        {/* Mirror the props H2HRevealScreen passes at revealing-first-
-            frame for both cells. The `total` prop differs from armed
-            (armed passes targetScore, arc passes sender.totalFp /
-            recipient.totalFp) — both fall through to displayTotal=0
-            on the visible glyph since ScoreCell renders displayTotal
-            when defined. The data-h2h-team-score-display attribute
-            reflects displayTotal, NOT total — same number on both
-            surfaces. */}
-        <ScoreCell total={200} displayTotal={0} state="trailing" sizeProgress={0} surface="reveal" teamPosition="opponent" />
-        <ScoreCell total={200} displayTotal={0} state="trailing" sizeProgress={0} surface="reveal" teamPosition="user" />
+        {/* RD3-C mirror: arc revealing-first-frame props for JOHN
+            (opponent) and YOU (user). JOHN: displayTotal=sender.totalFp
+            (=TARGET under H1 parity), state="leading" (computed by
+            H2HRevealScreen:1468-1477 since sender.totalFp > 0 =
+            recipient running), sizeProgress=1 (sender.totalFp /
+            max(sender.totalFp, 0) = 1). YOU: displayTotal=0,
+            state="trailing", sizeProgress=0. The data-attrs reflect
+            these props directly; ScoreCell internals are unchanged. */}
+        <ScoreCell total={TARGET} displayTotal={TARGET} state="leading" sizeProgress={1} surface="reveal" teamPosition="opponent" />
+        <ScoreCell total={TARGET} displayTotal={0} state="trailing" sizeProgress={0} surface="reveal" teamPosition="user" />
       </div>,
     );
     const arcOpp = arcHarness.container.querySelector('[data-arc-harness] [data-h2h-team-score-position="opponent"]')!;

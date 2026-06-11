@@ -1911,10 +1911,19 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             const finalRecipientCard = reveal.recipientRevealOrder[reveal.matchupCount - 1];
             const finalSenderCard = reveal.senderRevealOrder[reveal.matchupCount - 1];
             if (!finalRecipientCard || !finalSenderCard) return null;
+            // RD3-C (2026-06-11): JOHN is fixed under this contract;
+            // only the recipient's final card swings the gap. Passing
+            // finalSenderActualFp: 0 makes the helper's finalSetSwing
+            // reduce to finalRecipientActualFp — the true projection
+            // when sender never moves. The helper body stays pure /
+            // sport-agnostic; the C-mode interpretation lives at the
+            // call site. Mirrors the matching adapter in
+            // useH2HReveal.ts's runMatchup anchor-hold extension —
+            // both call sites must agree.
             const anchor = isFinalSetDecisive({
               senderRunningTotal: reveal.senderRunningTotal,
               recipientRunningTotal: reveal.recipientRunningTotal,
-              finalSenderActualFp: finalSenderCard.actualFp,
+              finalSenderActualFp: 0,
               finalRecipientActualFp: finalRecipientCard.actualFp,
             });
             if (!anchor.decisive) return null;

@@ -232,8 +232,13 @@ describe("useH2HReveal — initial state", () => {
 
   // Phase 5a amend3 (2026-05-27): production wrapper passes
   // initialPhase: "idle" to fix the HOLD-to-arc spoiler flash. The
-  // hook must initialize in pre-play state (zero totals, no entrance
-  // staged) and transition cleanly to "entering" when play() fires.
+  // hook must initialize in pre-play state (no entrance staged) and
+  // transition cleanly to "entering" when play() fires.
+  //
+  // RD3-C (2026-06-11): senderRunningTotal seeds at sender.totalFp
+  // from idle through done (JOHN's fixed bar contract). Recipient
+  // running total still starts at 0 — YOU climbs from 0 toward the
+  // fixed mountain.
   it("initialPhase='idle' starts in pre-play state; play() then transitions to 'entering'", () => {
     const sender = makeHand([
       makeCard({ cardId: "s-0", wasHeld: false, salary: 50, actualFp: 10 }),
@@ -246,23 +251,26 @@ describe("useH2HReveal — initial state", () => {
     const { result } = renderHook(() =>
       useH2HReveal({ sender, recipient, initialPhase: "idle" })
     );
-    // Initial: pre-play. No totals, no entrance progress, matchup index
-    // unset. visibleFpMap still empty (same as "done" default — see the
-    // CardFront RESULTS-with-undefined path note).
+    // Initial: pre-play. JOHN already at his final (fixed). Recipient
+    // at 0. No entrance progress, matchup index unset. visibleFpMap
+    // still empty (same as "done" default — see the CardFront
+    // RESULTS-with-undefined path note).
     expect(result.current.phase).toBe("idle");
     expect(result.current.matchupIndex).toBe(-1);
-    expect(result.current.senderRunningTotal).toBe(0);
+    expect(result.current.senderRunningTotal).toBe(sender.totalFp);
     expect(result.current.recipientRunningTotal).toBe(0);
     expect(result.current.entranceStages).toEqual(["pre", "pre"]);
     expect(result.current.entranceSettledCount).toBe(0);
     expect(result.current.visibleFpMap.size).toBe(0);
-    // play() from idle resets like it does from done — no carry-over.
+    // play() from idle resets like it does from done — JOHN's value
+    // stays seeded at sender.totalFp (the reset writes the constant
+    // back); recipient still goes to 0.
     act(() => {
       result.current.play();
     });
     expect(result.current.phase).toBe("entering");
     expect(result.current.matchupIndex).toBe(-1);
-    expect(result.current.senderRunningTotal).toBe(0);
+    expect(result.current.senderRunningTotal).toBe(sender.totalFp);
     expect(result.current.recipientRunningTotal).toBe(0);
     expect(result.current.entranceStages.every(s => s === "pre")).toBe(true);
   });
@@ -313,7 +321,9 @@ describe("useH2HReveal — play()", () => {
     });
     // After play(): cards reset to "pre" (entranceSettledCount=0),
     // battlefield is empty (activeMatchup nulls during entering),
-    // visibleFpMap clear, totals at 0.
+    // visibleFpMap clear, recipient at 0. RD3-C: sender holds at
+    // sender.totalFp through the reset — JOHN's fixed-bar value
+    // never goes through 0.
     expect(result.current.phase).toBe("entering");
     expect(result.current.matchupIndex).toBe(-1);
     expect(result.current.entranceStages.every(s => s === "pre")).toBe(true);
@@ -321,7 +331,7 @@ describe("useH2HReveal — play()", () => {
     expect(result.current.activeMatchup.sender).toBeNull();
     expect(result.current.activeMatchup.recipient).toBeNull();
     expect(result.current.visibleFpMap.size).toBe(0);
-    expect(result.current.senderRunningTotal).toBe(0);
+    expect(result.current.senderRunningTotal).toBe(sender.totalFp);
     expect(result.current.recipientRunningTotal).toBe(0);
   });
 
@@ -669,5 +679,162 @@ describe("isFinalSetDecisive — Phase 3 anchor-frame gating", () => {
       finalRecipientActualFp: 5,
     });
     expect(justOutside.framing).toBe("overtake");
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// RD3-C — isFinalSetDecisive under fixed JOHN (finalSenderActualFp=0)
+// ─────────────────────────────────────────────────────────────────
+//
+// Under § RD3-C, JOHN's score holds at sender.totalFp from idle
+// through done — his final card flips face-up but does NOT add to his
+// running total. Both call sites in production (the AnchorFrame mount
+// at H2HRevealScreen.tsx:1914 and the anchor-hold extension inside
+// runMatchup at useH2HReveal.ts:~872) pass `finalSenderActualFp: 0`
+// so the predicate's `finalSetSwing` reduces to
+// `finalRecipientActualFp` — the true gap projection when only the
+// recipient swings.
+//
+// These cases mirror the default-mode block above's scenarios but with
+// JOHN's final card swing removed. Several outcomes flip:
+//   - (3) leading but vulnerable: JOHN can no longer outscore the
+//     recipient's lead with a big card → no longer decisive.
+//   - (1) trailing but catchable: now decided purely on recipient's
+//     own final card vs the entering deficit.
+//   - (5) exact-tie possible: recipient must self-supply the swing.
+
+describe("isFinalSetDecisive — RD3-C C-mode (fixed JOHN, finalSenderActualFp=0)", () => {
+  it("(C1) trailing, recipient's final exceeds gap — SHOW (recipient overtakes)", () => {
+    // Recipient down by 10 entering final; recipient's final scores 15
+    // → recipient finishes +5. JOHN's card actualFp ignored under C.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 110,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 0, // RD3-C: JOHN fixed
+      finalRecipientActualFp: 15,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("overtake");
+    expect(result.needPoints).toBeCloseTo(10, 1);
+  });
+
+  it("(C2) trailing beyond reach — SUPPRESS (recipient's final can't close gap)", () => {
+    // Recipient down by 50; even a great final card only adds 15.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 150,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 15,
+    });
+    expect(result.decisive).toBe(false);
+    expect(result.framing).toBe("overtake");
+    expect(result.needPoints).toBeCloseTo(50, 1);
+  });
+
+  it("(C3) leading insurmountably — SUPPRESS, even with a big JOHN-card-actualFp the swing is gone", () => {
+    // Recipient up by 5; default-mode formula said JOHN could overtake
+    // with a +25 card (vs recipient's +5 = -20 swing). Under C, JOHN
+    // can't move — recipient HOLDS the +5 lead. Was decisive in
+    // default mode (case 3 in the block above); SUPPRESSED in C-mode.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 105,
+      finalSenderActualFp: 0, // RD3-C: JOHN fixed even though card's actualFp is 25
+      finalRecipientActualFp: 5,
+    });
+    expect(result.decisive).toBe(false);
+    expect(result.framing).toBe("hold");
+    expect(result.needPoints).toBeCloseTo(5, 1);
+  });
+
+  it("(C4) leading + final card adds — SUPPRESS (recipient extends lead)", () => {
+    // Recipient up by 40; their final scores 10 more.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 140,
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 10,
+    });
+    expect(result.decisive).toBe(false);
+    expect(result.framing).toBe("hold");
+    expect(result.needPoints).toBeCloseTo(40, 1);
+  });
+
+  it("(C5) trailing by an exact recoverable margin — SHOW (recipient ties)", () => {
+    // Recipient down by 12; their final scores exactly 12 → ties.
+    // Tie crossing IS a sign flip (negative → zero).
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 112,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 12,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("overtake");
+    expect(result.needPoints).toBeCloseTo(12, 1);
+  });
+
+  it("(C6) entering tied — SHOW (recipient's final breaks the tie one way)", () => {
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 20,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("tie");
+    expect(result.needPoints).toBe(0);
+  });
+
+  it("(C7) entering tied + recipient's final = 0 — STILL SHOW (entering-tied is always decisive)", () => {
+    // Recipient has a dud final card under C — game still ends tied,
+    // but the suspense walking INTO the final from a dead-heat is
+    // maximal so we always show.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 80,
+      recipientRunningTotal: 80,
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 0,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("tie");
+  });
+
+  it("(C8) recon worked example — recipient +5, JOHN's actualFp would be 25 in default mode but is ignored under C", () => {
+    // The exact case the RD3-C recon called out: recipient leading,
+    // JOHN's final card would be a haymaker that flips the result in
+    // default mode. Under C, that haymaker doesn't add to JOHN's
+    // running total — the gap holds. SUPPRESS.
+    const cMode = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 105,
+      finalSenderActualFp: 0, // RD3-C
+      finalRecipientActualFp: 5,
+    });
+    expect(cMode.decisive).toBe(false);
+    // Sanity: default mode with the same scenario DOES decide
+    // (this is the "(3) leading but vulnerable" case above).
+    const defaultMode = isFinalSetDecisive({
+      senderRunningTotal: 100,
+      recipientRunningTotal: 105,
+      finalSenderActualFp: 25,
+      finalRecipientActualFp: 5,
+    });
+    expect(defaultMode.decisive).toBe(true);
+    // The pair documents that the C-mode adapter is the load-bearing
+    // change — same predicate, different input.
+  });
+
+  it("(C9) trailing → exact overtake by recipient's final — SHOW (sign flips negative→positive)", () => {
+    // Recipient down by 8; their final scores 12.
+    const result = isFinalSetDecisive({
+      senderRunningTotal: 108,
+      recipientRunningTotal: 100,
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 12,
+    });
+    expect(result.decisive).toBe(true);
+    expect(result.framing).toBe("overtake");
+    expect(result.needPoints).toBeCloseTo(8, 1);
   });
 });
