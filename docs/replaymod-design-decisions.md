@@ -1372,7 +1372,9 @@ battlefield's row geometry — ScoreCells land at identical Y positions across t
 
 **Fences (all upheld).**
 - RD3.1 battlefield-backing panel (`data-h2h-reveal-score-panel`,
-  `H2HRevealScreen.tsx:1733–1752`) — UNTOUCHED.
+  `H2HRevealScreen.tsx:1733–1752`) — UNTOUCHED at RD3 ship time.
+  **SUBSUMED by § RD6 (2026-06-12): the gray panel is deleted entirely;
+  the score it backed lives in the box-corner ZoneHeader slot.**
 - RD2 lock (`HAND_STRIP_HEIGHT_PX = 80` at `H2HRevealScreen.tsx:238`) — UNTOUCHED.
 - Single-player `DRAWING_DWELL_MS` (`shared/hooks/useEmotionalReveal.ts:84`) — UNTOUCHED.
 - FTUE coach bubble (`isFTUE && gameState === "DRAWING"`) — UNTOUCHED.
@@ -1486,3 +1488,113 @@ tense than the RD3 0-0 doormat.
 - reveal→results no-snap holds (new gate in H2HResultsOverlay.test.tsx).
 - Single-player reveal + FTUE untouched. RD3.1 panel + RD2 80px lock untouched.
 - Full suite 1185/1185 + tri-sport build clean.
+
+## § RD6 — Layout collapse: totals into box corners, glide deleted (shipped 2026-06-12)
+
+**Status.** Spec-of-record. RD3.1 (battlefield-backing panel downsize) is SUBSUMED — the
+gray panel is gone entirely; the score it backed now lives in the box-corner ZoneHeader
+slot, not the right rail.
+
+**Problem.** The H2H surfaces (reveal arc + recipient play + results overlay) carried a
+separate right rail (`RIGHT_RAIL_WIDTH_PX = 80`) housing team-total ScoreCells, plus a
+gray backing panel (`data-h2h-reveal-score-panel`), plus an `H2HScoreGlide` animation
+that hand-offed the totals from rail → docked position on results mount. Three problems
+piled up: (1) the rail consumed horizontal real estate that the box-corner area already
+had idle; (2) the glide added a sub-second motion artifact at reveal→results that the
+new "no-snap" gate exposed as redundant once both surfaces shared geometry; (3) the
+"Target: X" copy was duplicated across surfaces with slight wording drift.
+
+**The collapse.** Totals re-parented to the box corners via a new `ZoneHeader.score` slot
+on `H2HBoardShell`. The right-rail ScoreCells, gray backing panel, and the entire
+`H2HScoreGlide` component (mount + plumbing + dev mock route reference) DELETED. The
+`suppressed` prop on `ScoreCell` retired (no surface needs to "hide" the cell now that
+they live in stable corner slots). The user-hero/opponent-hero center grid is unchanged —
+the no-snap geometry across reveal→results comes from corner-score parity, not the rail.
+
+**Inner-edge ZoneHeader (RD6.1-b).** ZoneHeader rendered at the INNER box edges to put
+the name+total band closest to the action: top box has the strip ABOVE the header (header
+sits at the box's bottom inner edge), bottom box has the header ABOVE the strip (header
+at the box's top inner edge). Applied to both the shell (reveal) and the overlay. Zero
+vertical growth.
+
+**Unified Target copy (RD6.1-c, RD6.1-c FIX-2).** A shared `TargetCornerScore({ scoreCell
+})` helper renders "Target:" + the score in Mike's (top) box corner across reveal, play,
+AND results — single source of copy truth. `CORNER_SCORE_MIN_WIDTH_PX` bumped 68 → 110 to
+fit the label + score on tight viewports. Body-text target lines retired (Stage 2 "Draw
+to beat X." → "Draw the rest when you're ready."; redraw-target line deleted entirely).
+The target shows on `hold_select` / `loading` / `deal_in` / redraw states (the initial
+RD6.1-c gated it through `showArmedRail`, which was over-restrictive — FIX-2 drops that
+gate so Target: X is visible from pre-pick through the redraw window).
+
+**Mike all-together fade-up (RD6.1-e).** Post-decision, Mike's top lineup fades up as a
+SINGLE unit during the bottom cascade — no per-card stagger, no flip, no back face. New
+`topStripVisible` gate; two separate transitions on the strip wrapper: `height 300ms`
+expansion and `opacity + transform 2400ms ease-out` (chosen so the fade spans roughly the
+bottom cascade's `6 × (250+150) = 2400ms` window). The opponent flip is permanently
+killed per design-lock §1/§3.
+
+**Mike's box height matches YOU's (RD6.1-f FIX 1).** RD6.1-c retired the redraw-target
+body-text line but the stage-text wrapper still mounted at `INTRO_3LINE_BUDGET_CSS`
+(~70px) during `your_redraw_flip`, leaving Mike's box ~74px taller than YOU's. A new
+`stageTextHasContent` gate (covers `deal_in | hold_select | redraw_running`, NOT
+`your_redraw_flip`) collapses the wrapper: `height` animates to 0 AND `marginBottom`
+animates to `-ZONE_GAP_PX` to CANCEL the parent flex gap so the collapsed wrapper
+contributes ZERO vertical space (gap + −gap = 0). Synchronized with RD6.1-e's 300ms top
+strip expansion.
+
+**Results overlay overflow trim (RD6.1-g).** The results-only verdict block + CTA + flavor
+copy combined with the unchanged box-corner anchored elements made the overlay tall enough
+to overflow common-phone viewports, engaging the `overflow-y: auto` scrollbar on the inner
+column. Trimmed 88px from the column via priority 2 alone (verdict text middle is locked
+inside hero row 1 which is locked to match the arc's user-hero Y; section margins above the
+bottom strip are locked by the reveal→results no-snap):
+- `RESERVED_BOTTOM_CLEARANCE_PX: 100 → 30` (saved 70px) — the 100 was sized for a stale
+  layout where the LOSS_OPEN countdown was a SEPARATE pill above the CTA. #7 merged the
+  countdown INSIDE the CTA button (absolute span); the reserved-bottom content is now just
+  a single ~50px button, so 100px of reserve was obsolete.
+- Reserved-bottom `paddingTop: 8 → 0` (saved 8px).
+- Primary CTA button `padding: "15px" → "10px"` (saved 10px) — stays thumb-comfortable
+  with 16px bold text.
+
+Post-trim column content: ~716px (down from ~804px). Fits common-phone class (iPhone 14,
+Pixel 6/7/8, Galaxy S22/S23) with address bar showing. The fringe-phone scrollbar (inner
+column's `overflow-y: auto`) remains as fallback for iPhone SE / iPhone 13 mini and other
+sub-700px usable viewports — deliberate, NOT a bug. Hero cards (`HERO_CARD_MAX_WIDTH`,
+`HERO_ROW_HEIGHT_CSS`, `HERO_ROW_GAP_PX`) UNTOUCHED — the trim closed the overflow without
+invoking step 4 (hero shrink), so reveal and results hero geometry is byte-identical.
+
+**Contracts held.**
+- Reveal→results no-snap (RD3-C invariant): ScoreCell DOM parity at the cross-surface
+  handoff via `data-h2h-board-corner-score=top|bottom` + inner
+  `data-h2h-team-score-position` — both surfaces share the corner wrapper.
+  Test in `H2HResultsOverlay.test.tsx` extended with structural assertions that no
+  ScoreCells exist OUTSIDE the box corners.
+- Redraw→arc no-snap (RD3 HARDENING 1 + 2): preserved — RD6 changes do not touch the
+  armed→arc handoff or the continuous mount across pre-arc states.
+- Hero card geometry: identical on both surfaces (no step 4 invoked).
+
+**Files.**
+- `shared/components/H2HBoardShell.tsx` — added `ZoneHeader.score` slot, `topScore` /
+  `bottomScore` shell props, exported `TargetCornerScore` helper, exported `ZONE_GAP_PX`,
+  bumped `CORNER_SCORE_MIN_WIDTH_PX` 68 → 110, reordered ZoneHeader to inner edges.
+- `shared/components/H2HRecipientPlay.tsx` — armed rail retired; `buildArmedTopScore` /
+  `buildArmedBottomScore` helpers, `TargetCornerScore` wrap on top, `topStripVisible`
+  gate + height/opacity transitions, `stageTextHasContent` gate + negative marginBottom.
+- `shared/components/H2HRevealScreen.tsx` — gray panel + row-1/row-2 ScoreCells deleted;
+  `TargetCornerScore` wrap on top.
+- `shared/components/H2HRecipientReveal.tsx` — H2HScoreGlide import + mount + state
+  deleted.
+- `shared/components/H2HResultsOverlay.tsx` — right-rail ScoreCells deleted, docked-score
+  re-parented to corner, `TargetCornerScore` wrap on top, RD6.1-g trims.
+- `shared/components/H2HScoreRail.tsx` — `suppressed` prop + `data-h2h-score-suppressed`
+  attr removed.
+- `shared/components/H2HScoreGlide.tsx` — DELETED.
+- `basketball/src/dev/H2HRevealMockRoute.tsx` — H2HScoreGlide import + state mirror +
+  mount removed.
+- `shared/components/__tests__/H2HRecipientPlay.test.tsx` — selectors re-pointed to
+  box-corner attrs; redraw-target tests target-free; RD6.1-e test inverted to assert
+  visible-and-fading.
+- `shared/components/__tests__/H2HResultsOverlay.test.tsx` — reveal→results no-snap gate
+  strengthened with structural assertions.
+
+**Gate.** vitest 1185/1185 + tri-sport build (basketball + baseball + football) all green.

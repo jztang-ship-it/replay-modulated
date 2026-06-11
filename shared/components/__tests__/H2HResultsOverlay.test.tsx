@@ -961,21 +961,51 @@ describe("RD3-C — reveal→results no-snap (ScoreCell DOM parity at the cross-
       </div>
     );
 
-    // Cross-surface attribute query: reveal uses data-h2h-team-score-*
-    // (the "reveal" surface namespace); overlay uses data-h2h-overlay-
-    // score-* (the "overlay" namespace). Both ScoreCells set the same
-    // STATE/SIZE/POP/SUPPRESSED attrs (the rail-namespaced ones, which
-    // are surface-agnostic). The DISPLAY attr is surface-namespaced;
-    // we compare the DISPLAY values numerically.
-    const revealOpp = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-team-score-position="opponent"]')!;
-    const revealUser = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-team-score-position="user"]')!;
-    const overlayOpp = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-score-position="opponent"]')!;
-    const overlayUser = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-score-position="user"]')!;
+    // RD6.1 (2026-06-11): both surfaces now render their team totals
+    // in the box CORNERS via a shared corner-score wrapper. The reveal
+    // wraps each ScoreCell in [data-h2h-board-corner-score] (the
+    // H2HBoardShell.ZoneHeader template); the overlay wraps each in
+    // [data-h2h-overlay-corner-score] (the overlay's own ZoneHeader,
+    // visually identical positioning). The first assertion is the
+    // GEOMETRIC strengthening the spec requires: both ScoreCells live
+    // INSIDE their respective corner wrappers, and the wrappers
+    // discriminate the same TOP/BOTTOM position. The data attrs match
+    // (value equality) AND the structural placement matches (no
+    // reveal-side rail; no overlay-side rail).
+    const revealOppCorner = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-board-corner-score="top"]')!;
+    const revealUserCorner = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-board-corner-score="bottom"]')!;
+    const overlayOppCorner = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-corner-score="top"]')!;
+    const overlayUserCorner = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-corner-score="bottom"]')!;
 
-    expect(revealOpp).not.toBeNull();
-    expect(revealUser).not.toBeNull();
-    expect(overlayOpp).not.toBeNull();
-    expect(overlayUser).not.toBeNull();
+    expect(revealOppCorner, "reveal-side opponent box-corner wrapper").not.toBeNull();
+    expect(revealUserCorner, "reveal-side user box-corner wrapper").not.toBeNull();
+    expect(overlayOppCorner, "overlay-side opponent box-corner wrapper").not.toBeNull();
+    expect(overlayUserCorner, "overlay-side user box-corner wrapper").not.toBeNull();
+
+    // Both ScoreCells live INSIDE their corner wrappers (proves the
+    // reveal-side rail was deleted, not just renamed).
+    const revealOpp = revealOppCorner.querySelector('[data-h2h-team-score-position="opponent"]')!;
+    const revealUser = revealUserCorner.querySelector('[data-h2h-team-score-position="user"]')!;
+    const overlayOpp = overlayOppCorner.querySelector('[data-h2h-overlay-score-position="opponent"]')!;
+    const overlayUser = overlayUserCorner.querySelector('[data-h2h-overlay-score-position="user"]')!;
+
+    expect(revealOpp, "reveal-side opponent ScoreCell inside corner wrapper").not.toBeNull();
+    expect(revealUser, "reveal-side user ScoreCell inside corner wrapper").not.toBeNull();
+    expect(overlayOpp, "overlay-side opponent ScoreCell inside corner wrapper").not.toBeNull();
+    expect(overlayUser, "overlay-side user ScoreCell inside corner wrapper").not.toBeNull();
+
+    // Negative geometric assertion: NO ScoreCell exists OUTSIDE a
+    // corner wrapper on either surface. The pre-RD6.1 right-rail
+    // ScoreCells are gone — if a future regression re-introduces
+    // them this gate trips.
+    const revealOutsideCorners = Array.from(
+      revealHarness.container.querySelectorAll('[data-test-harness="reveal-done"] [data-h2h-team-score-position]'),
+    ).filter((el) => !el.closest('[data-h2h-board-corner-score]'));
+    expect(revealOutsideCorners.length, "no reveal-side ScoreCells outside box corners").toBe(0);
+    const overlayOutsideCorners = Array.from(
+      overlayHarness.container.querySelectorAll('[data-test-harness="overlay-mount"] [data-h2h-overlay-score-position]'),
+    ).filter((el) => !el.closest('[data-h2h-overlay-corner-score]'));
+    expect(overlayOutsideCorners.length, "no overlay-side ScoreCells outside box corners").toBe(0);
 
     // Surface-agnostic attrs that MUST match across the crossfade.
     const sharedAttrs = [

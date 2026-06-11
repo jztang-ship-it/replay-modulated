@@ -53,9 +53,6 @@ export const DELTA_NEUTRAL = "#E5E7EB";   // off-white — tie state
 
 // Glow alphas derived from the base colors. Kept separate from the
 // solid colors so the glow can be tuned without re-tinting the number.
-// Exported for H2HScoreGlide (step-4 C3) so clone glyphs can match the
-// source ScoreCell's leader-glow filter + inner-glyph text-shadow
-// exactly — sharing the alphas so a future tune lands once.
 export const WINNING_GLOW = "rgba(34, 197, 94, 0.55)";  // matches WINNING_COLOR @ 0.55 alpha
 export const TIE_GLOW = "rgba(229, 231, 235, 0.45)";    // matches DELTA_NEUTRAL @ 0.45 alpha
 
@@ -73,9 +70,6 @@ export const TIE_GLOW = "rgba(229, 231, 235, 0.45)";    // matches DELTA_NEUTRAL
 // Hard clamp at MAX_SCALE so a blowout doesn't make the number
 // unreadable or clip the right-rail column.
 
-// Exported for H2HScoreGlide (step-4 C3) — the clone glyph's rest
-// scale follows the SAME formula the source ScoreCell uses; any drift
-// between the two values would visibly misalign the clone.
 export const SIZE_PROGRESS_MAX = 0.12;
 export const LEADER_BONUS = 0.08;
 export const TIE_BONUS = 0.04;
@@ -212,30 +206,18 @@ interface ScoreCellProps {
     kind: "scaled" | "lead-change";
     key: number;
   };
-  /** Step-4 glide / C2 — glide-handoff suppression.
-   *
-   *  When true, the INNER GLYPH only gets `visibility: hidden` — the
-   *  outer flex-center cell keeps its full layout footprint (size,
-   *  filter glow, animation, all data-attrs). The reveal cluster's
-   *  geometry (other ScoreCell, delta float, momentum tag, the
-   *  step-2 score panel behind) is unaffected; only the glyph itself
-   *  becomes invisible so the C4 glide clone can carry the only
-   *  visible copy of the number across to the docked target without
-   *  doubling-up with the rest score.
-   *
-   *  Defaults to false. C2 only ships the dormant mechanism; no
-   *  caller flips it true until C4. With suppressed=false (or
-   *  omitted), this ScoreCell renders byte-identically to the
-   *  pre-C2 component — the no-jump assertions and the reveal-side
-   *  relay-tension feel both stay intact. */
-  suppressed?: boolean;
-  /** Step-4 glide / C3 — team-position discriminator emitted as a
-   *  data attribute so the glide layer can target each side's source
-   *  ScoreCell deterministically without depending on DOM index.
+  /** Team-position discriminator emitted as a data attribute.
    *  Reveal-surface cells emit `data-h2h-team-score-position`;
    *  overlay-surface cells emit `data-h2h-overlay-score-position`.
    *  Optional for forward compat — existing callers that don't pass
-   *  it omit the attribute and behave exactly as before. */
+   *  it omit the attribute and behave exactly as before.
+   *
+   *  Pre-RD6.1 this was the step-4 glide's "find the source/target"
+   *  hook. RD6.1 deletes the glide entirely (totals now START in box
+   *  corners on both surfaces, so the rail→box motion is obsolete),
+   *  but the attribute stays — tests + RelayDebugOverlay still query
+   *  it, and it remains the cleanest way to discriminate which side
+   *  of the box a ScoreCell belongs to. */
   teamPosition?: "opponent" | "user";
 }
 
@@ -246,7 +228,6 @@ export function ScoreCell({
   sizeProgress,
   surface,
   pop,
-  suppressed,
   teamPosition,
 }: ScoreCellProps) {
   useEffect(ensureScoreRailKeyframesInjected, []);
@@ -354,7 +335,6 @@ export function ScoreCell({
       data-h2h-score-pop-magnitude={pop ? pop.magnitude.toFixed(3) : "none"}
       data-h2h-score-pop-duration-ms={pop ? String(pop.durationMs) : "none"}
       data-h2h-score-size-progress={sizeProgress.toFixed(3)}
-      data-h2h-score-suppressed={suppressed ? "true" : "false"}
       style={{
         display: "flex",
         justifyContent: "center",
@@ -378,15 +358,6 @@ export function ScoreCell({
           transformOrigin: "center center",
           textShadow: innerTextShadow,
           transition: `transform ${LEADER_TREATMENT_TRANSITION_MS}ms ease, color ${LEADER_TREATMENT_TRANSITION_MS}ms ease, text-shadow ${LEADER_TREATMENT_TRANSITION_MS}ms ease`,
-          // C2 — glide-handoff suppression on the INNER GLYPH only.
-          // visibility:hidden, NEVER display:none (display:none would
-          // collapse the cell and reflow the reveal cluster, breaking
-          // strip Y, user hero Y, and the score-panel rect behind).
-          // The outer flex-center box above keeps its layout footprint;
-          // only the glyph becomes invisible. When suppressed=false /
-          // omitted (the C2 default), this resolves to "visible" — the
-          // pre-C2 default — and the no-op invariant holds.
-          visibility: suppressed ? "hidden" : "visible",
         }}
       >
         {shownStr}

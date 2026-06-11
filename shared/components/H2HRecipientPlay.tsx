@@ -107,21 +107,18 @@ import {
   HAND_STRIP_HEIGHT_PX,
   TIER_ACCENT,
   usePrefersReducedMotion,
-  BATTLEFIELD_ROW_GAP_PX,
   type CardRenderer,
   type H2HCard,
 } from "./H2HRevealScreen";
-import {
-  ScoreCell,
-  RIGHT_RAIL_WIDTH_PX,
-  DELTA_NEUTRAL,
-} from "./H2HScoreRail";
+import { ScoreCell } from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
 import {
   H2HBoardShell,
   HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
+  TargetCornerScore,
+  ZONE_GAP_PX,
 } from "./H2HBoardShell";
 import { PartsLine } from "./TierGauge";
 import { type Line } from "@shared/commentary/chadChallenge";
@@ -152,8 +149,30 @@ export const PRE_REVEAL_HOLD_MS = 1000;
  *  face-up at the top while the hero region expands to its full
  *  Layout B floor (the flex layout pushes the bottom strip down
  *  naturally — that IS the "slide DOWN" of step 3). One beat; no
- *  per-cell flip. Tunable on device pass. */
+ *  per-cell flip. Tunable on device pass.
+ *
+ *  RD6.1-e (2026-06-12): the OPPONENT-STRIP portion of this beat
+ *  (height + opacity uncollapse) is moved EARLIER — onto the
+ *  your_redraw_flip entry — so the top strip materializes WHILE
+ *  the bottom cascade runs rather than after it. The hero
+ *  expansion + bottom-strip slide-down still fire at ab_transition.
+ *  This constant remains the structural-shift duration (height
+ *  growth on the wrapper); the opacity + translateY fade-up uses
+ *  TOP_STRIP_FADE_UP_MS below. */
 export const AB_TRANSITION_DURATION_MS = 300;
+
+/** RD6.1-e (2026-06-12) opponent-strip fade-up window. After Draw,
+ *  Mike's top strip fades opacity 0→1 with a small translateY rise,
+ *  ALL TOGETHER (no per-card stagger — there's no mystery; the
+ *  recipient already saw his lineup on the challenge landing per
+ *  design-lock §1/§3). Synced to the bottom cascade so both rows
+ *  finish populating together. Derived from the cascade duration
+ *  (`ROSTER_SIZE × (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS)`
+ *  = 6 × 400ms = 2400ms) so any tune of those constants keeps the
+ *  two motions synced. */
+export const TOP_STRIP_FADE_UP_MS =
+  6 /* = ROSTER_SIZE; ROSTER_SIZE is declared after this block */ *
+  (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
 
 /** Cross-fade window for the playing-strip inner content when state
  *  advances to "arc" (Fix C2). Matches H2HRecipientReveal's own
@@ -418,7 +437,13 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   if (stage2Ref.current.sig !== introSig) {
     stage2Ref.current = {
       sig: introSig,
-      line: [`Draw to beat ${challengeCtx.targetScore.toFixed(1)}.`],
+      // RD6.1-c (2026-06-11): the body-text target mention is retired
+      // — Mike's box name line now renders "Target: X" via
+      // TargetCornerScore. Stage 2 drops the redundant number and
+      // keeps a CTA framing only. Keeps the Stage 2 intro band
+      // reserved (preserves the vertical layout) without echoing the
+      // target value twice on screen.
+      line: ["Draw the rest when you're ready."],
     };
   }
   const stage2Line = stage2Ref.current.line;
@@ -736,6 +761,21 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     state.kind === "ab_transition" ||
     state.kind === "handoff_resolving" ||
     state.kind === "arc";
+  // RD6.1-e (2026-06-12): the top strip becomes visible at
+  // your_redraw_flip ENTRY (not deferred to ab_transition). It still
+  // sits collapsed during loading / deal_in / hold_select /
+  // redraw_running (no cascade yet — Mike's box belongs empty during
+  // intro/pick beats). At your_redraw_flip the wrapper expands
+  // structurally (height 0→80 over AB_TRANSITION_DURATION_MS) and
+  // Mike's row fades opacity 0→1 + translateY rise over
+  // TOP_STRIP_FADE_UP_MS (= the full bottom-cascade window). The
+  // hero region's Layout-A→B expansion stays at ab_transition (per
+  // inLayoutA above) — that's the bigger structural shift.
+  const topStripVisible =
+    state.kind === "your_redraw_flip" ||
+    state.kind === "ab_transition" ||
+    state.kind === "handoff_resolving" ||
+    state.kind === "arc";
   // Settle-pause: hero hosts two empty hero slots (both during the
   // A→B transition beat — so the empty boxes are visible THROUGHOUT
   // the slide — and during the settle-pause hold itself).
@@ -1012,27 +1052,59 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     state.kind === "hold_select" ||
     state.kind === "redraw_running" ||
     state.kind === "your_redraw_flip";
+  // RD6.1-f FIX 1 (2026-06-12): the stage-text WRAPPER stays mounted
+  // through your_redraw_flip (showStageTextRegion above) to keep
+  // layout structural across the redraw window, but the CONTENT
+  // collapses (height → 0 + negative marginBottom to cancel the
+  // parent's flex gap) the moment we enter your_redraw_flip — which
+  // is the same moment RD6.1-e expands the top strip from 0→80.
+  // Net: Mike's box drops from 198px (pre-fix, with the empty
+  // 70px stage-text reservation) to 124px (matches YOU's box) over
+  // a smooth 300ms transition synchronized with the top strip
+  // expansion. The empty 70px gap the user reported is gone; no
+  // instant jolt. The wrapper unmounts at ab_transition (when
+  // showStageTextRegion goes false); by then its height + margin
+  // are already 0, so unmount is a visual no-op.
+  const stageTextHasContent =
+    state.kind === "deal_in" ||
+    state.kind === "hold_select" ||
+    state.kind === "redraw_running";
   const topStripSlot = (
     <>
       <div
         data-h2h-play-top-strip="true"
-        data-h2h-play-top-strip-collapsed={inLayoutA ? "true" : undefined}
-        aria-hidden={inLayoutA ? "true" : undefined}
+        data-h2h-play-top-strip-collapsed={!topStripVisible ? "true" : undefined}
+        aria-hidden={!topStripVisible ? "true" : undefined}
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           gap: STRIP_GAP_PX,
-          height: inLayoutA ? 0 : MINI_CELL_HEIGHT_PX,
+          height: topStripVisible ? MINI_CELL_HEIGHT_PX : 0,
           overflow: "hidden",
-          opacity: inLayoutA ? 0 : 1,
-          pointerEvents: inLayoutA ? "none" : "auto",
-          // Strip restore runs in lockstep with the hero expansion
-          // (HERO_MIN_HEIGHT_TRANSITION_MS = 250ms) and the
-          // AB_TRANSITION_DURATION_MS beat (300ms). All three motions
-          // animate together for the one coordinated A→B beat
-          // (design-lock §3 step 3).
-          transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, opacity ${AB_TRANSITION_DURATION_MS}ms ease`,
+          opacity: topStripVisible ? 1 : 0,
+          // RD6.1-e: small upward rise that settles to 0 along with
+          // the opacity fade. translateY on the wrapper is paint-only
+          // (no layout impact on siblings) — Mike's row visually
+          // descends ~6px into its final position over the cascade
+          // window, reading as a confident settle.
+          transform: topStripVisible ? "translateY(0)" : "translateY(-6px)",
+          pointerEvents: topStripVisible ? "auto" : "none",
+          // RD6.1-e (2026-06-12): split transitions —
+          //   height       runs over AB_TRANSITION_DURATION_MS (300ms):
+          //     structural growth of the wrapper at your_redraw_flip
+          //     entry; the bottom strip + reserved-bottom slot absorb
+          //     the +80px in 300ms.
+          //   opacity      runs over TOP_STRIP_FADE_UP_MS (= cascade
+          //     window, 2400ms): Mike's row fades in WHILE the bottom
+          //     cascade flips, both finishing together.
+          //   transform    same 2400ms window as opacity for the
+          //     settle feel.
+          // Pre-RD6.1-e this fired the whole motion at ab_transition
+          // (a single coordinated A→B beat). RD6.1-e moves the strip
+          // visibility onto your_redraw_flip so Mike's box isn't
+          // empty during the bottom cascade.
+          transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, opacity ${TOP_STRIP_FADE_UP_MS}ms ease-out, transform ${TOP_STRIP_FADE_UP_MS}ms ease-out`,
         }}
       >
         {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
@@ -1063,6 +1135,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       {showStageTextRegion && (
         <div
           data-h2h-play-stage-text="true"
+          data-h2h-play-stage-text-collapsed={!stageTextHasContent ? "true" : undefined}
           style={{
             display: "flex",
             justifyContent: "center",
@@ -1075,33 +1148,36 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             // overflow:hidden caps any surprise long-line, but vetted
             // banks fit within 3 lines. content-box so the line-clamp
             // budget is the FULL height (padding doesn't eat into it).
-            height: INTRO_3LINE_BUDGET_CSS,
+            //
+            // RD6.1-f FIX 1 (2026-06-12): height collapses to 0 the
+            // moment we enter your_redraw_flip (stageTextHasContent
+            // goes false). The negative marginBottom (= -ZONE_GAP_PX)
+            // cancels the ZonePanel's flex `gap` so the collapsed
+            // wrapper takes ZERO vertical space (gap + (-gap) = 0) —
+            // without this, the collapsed wrapper would still
+            // contribute a 4px gap and Mike's box would be 4px taller
+            // than YOU's. Both transitions run over
+            // AB_TRANSITION_DURATION_MS (300ms) so the collapse is
+            // synchronized with RD6.1-e's top-strip expansion — net
+            // top zone change is ~+10px over 300ms.
+            height: stageTextHasContent ? INTRO_3LINE_BUDGET_CSS : 0,
+            marginBottom: stageTextHasContent ? 0 : -ZONE_GAP_PX,
+            transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, margin-bottom ${AB_TRANSITION_DURATION_MS}ms ease`,
             boxSizing: "content-box",
             overflow: "hidden",
           }}
         >
-          {state.kind === "redraw_running" || state.kind === "your_redraw_flip" ? (
-            // BUG-1 FIX (refreshed 2026-06-08): the redraw beat now
-            // renders a real single line ("<target> to beat.") through
-            // the introTypography wrapper instead of an empty layout
-            // spacer. The wrapper owns WebkitLineClamp:3 + the height
-            // budget — rendering through it is what preserves the
-            // container's INTRO_3LINE_BUDGET_CSS reserved height and
-            // keeps the strip from Y-shifting between hold_select and
-            // redraw_running. The hero region still owns the "Drawing…"
-            // copy (deriveHeadline, unchanged); this top line is the
-            // persistent number-to-beat anchor spanning deal → hold →
-            // draw. Format matches stage-2 (.toFixed(1)) so they can't
-            // drift on glass.
-            <div
-              data-h2h-play-intro="redraw-target"
-              style={{ width: "100%" }}
-            >
-              <div data-h2h-play-headline="true" style={introTypography}>
-                {`${challengeCtx.targetScore.toFixed(1)} to beat.`}
-              </div>
-            </div>
-          ) : state.kind === "deal_in" ? (
+          {/* RD6.1-c (2026-06-11): the redraw-target body-text line
+              ("<X> to beat." rendered through the intro typography
+              wrapper) is retired. Mike's box name line now renders
+              "Target: X" via TargetCornerScore — the single,
+              consistent home for the target across every screen.
+              The intro region falls through to the empty-headline
+              branch during redraw_running / your_redraw_flip, so
+              INTRO_3LINE_BUDGET_CSS still reserves the same vertical
+              footprint (no strip Y-shift between hold_select and the
+              redraw window). */}
+          {state.kind === "deal_in" ? (
             // PASS 1 PLACEHOLDER — deal-intro beat. Pass 2 will replace
             // this branch with a templated bank (selectRecipientDealIntro)
             // that interpolates {opponent} and {score} via the existing
@@ -1250,11 +1326,11 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       data-h2h-play-hero-zone="true"
       style={{
         flex: "1 1 auto",
-        // RD3: position:relative anchors the armed-rail right-column
-        // overlay (absolute) to the hero region bounds. No change to
-        // existing flow content — center text/preview/settle-hero still
-        // resolves through the normal flex centering below.
-        position: "relative",
+        // RD6.1 (2026-06-11): the RD3 inline ArmedRail overlay is
+        // retired — armed totals now render in the box corners via
+        // H2HBoardShell.topScore / bottomScore (see the shell render
+        // below). The hero region returns to a plain flex centerer
+        // (no position:relative anchor needed).
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1262,7 +1338,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         padding: "0 20px",
       }}
     >
-      {showArmedRail && <ArmedRail targetScore={challengeCtx.targetScore} />}
       {inSettlePauseRender ? (
         // Layout B settle-pause: two stacked empty hero slots
         // (opponent top, yours bottom). Dashed-border boxes, sized one
@@ -1468,6 +1543,40 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         bottomStrip={bottomStripSlot}
         hero={heroSlot}
         belowBoard={belowBoardSlot}
+        // RD6.1 (2026-06-11): the armed YOU/JOHN ScoreCells (RD3-C
+        // contract: JOHN target/leading/size=1, YOU 0/trailing/size=0)
+        // ride in the box corners via the shell's score slots. They
+        // mount continuously across the redraw window so the redraw→
+        // arc handoff is no-snap byte-identical to the arc's first
+        // revealing frame (which renders the same ScoreCell props at
+        // the same DOM position via H2HRevealScreen). See the named
+        // gate at H2HRecipientPlay.test.tsx.
+        // RD6.1-c FIX-2 (2026-06-11): Mike's "Target: X" corner total
+        // renders across ALL pre-arc states (loading / deal_in /
+        // hold_select / redraw_running / your_redraw_flip /
+        // ab_transition / handoff_resolving) so the target is
+        // uniformly visible from page load through the start of the
+        // arc. Pre FIX-2 this was gated on showArmedRail, which left
+        // loading / deal_in / hold_select with Mike's name centered
+        // and NO Target — the user-reported bug.
+        //
+        // YOU's bottom corner stays gated on showArmedRail: rendering
+        // "0.0" in the bottom box during pick / hold_select would
+        // imply YOU is already in the race when in fact the user is
+        // still selecting holds. Once the redraw window starts
+        // (Draw tap), the armed YOU=0/trailing/0 corner mounts and
+        // bridges seamlessly into the arc's first revealing frame
+        // (HARDENING 2 — continuous mount).
+        //
+        // During arc state, the playing shell's inner subtree fades
+        // to opacity 0 (innerOpacity below); H2HRecipientReveal's
+        // own topScore wrapping on the H2HRevealScreen surface
+        // becomes the visible Target: X. The duplicate render on the
+        // hidden playing-shell chrome is a no-op visually and a no-op
+        // for tests (the no-snap gates query inside the active
+        // surface).
+        topScore={buildArmedTopScore(challengeCtx.targetScore)}
+        bottomScore={showArmedRail ? buildArmedBottomScore(challengeCtx.targetScore) : undefined}
         rootDataAttrs={{
           "data-h2h-recipient-play": "true",
           "data-playing-state": state.kind,
@@ -1528,105 +1637,53 @@ type BottomSlot =
   | { mode: "face_down" }
   | { mode: "face_up"; card: GeneratedCard; held: boolean };
 
-// ── RD3 armed rail ──────────────────────────────────────────────────
-// Slim YOU/JOHN/delta rail overlaid on the right column of the playing
-// hero region. Mounted continuously across redraw_running →
-// your_redraw_flip → ab_transition → handoff_resolving (HARDENING 2 —
-// one mount, one handoff). Replaces the prior dead "Drawing…" beat
-// (HARDENING 1 — armed last frame matches the arc rail's first
-// revealing frame: both ScoreCells show "0.0" / trailing / sizeProgress
-// 0 / scale 1.0, both glyphs grey via TRAILING_COLOR, delta "0.0" /
-// DELTA_NEUTRAL with "MATCHUP" eyebrow — see the no-snap test in
-// __tests__/H2HRecipientPlay.test.tsx).
+// ── RD3 armed totals (RD6.1 form: box-corner ScoreCells) ────────────
+// Slim YOU/JOHN running-score race. Pre-RD6.1 these lived in an inline
+// right-column overlay (ArmedRail) inside the hero zone. RD6.1
+// relocates both ScoreCells to the box CORNERS via
+// H2HBoardShell.topScore / bottomScore — same component, same RD3-C
+// values, new DOM home. Mounted continuously across redraw_running →
+// your_redraw_flip → ab_transition → handoff_resolving (HARDENING 2:
+// one mount, one handoff at arc).
 //
-// Geometry mirrors H2HRevealScreen's battlefield right rail: same
-// RIGHT_RAIL_WIDTH_PX column, same BATTLEFIELD_ROW_GAP_PX between rows,
-// MidRail-style delta float at top:50%. ScoreCell internals untouched
-// — composition only.
+// Values (RD3-C contract, unchanged):
+//   JOHN: displayTotal=target, state="leading", sizeProgress=1 — mirrors
+//         the arc's first revealing frame under the fixed-bar contract
+//         so redraw→arc has no glow snap.
+//   YOU:  displayTotal=0,      state="trailing", sizeProgress=0 — the
+//         recipient still climbs from 0 once the arc takes over.
 //
-// JOHN's target is communicated by the existing "{X.X} to beat." intro
-// line (H2HRecipientPlay.tsx introTypography render path) — the rail
-// shows live progress from zero, like a scoreboard before tip-off.
-function ArmedRail({ targetScore }: { targetScore: number }) {
+// JOHN's target is rendered as "Target: X" on his name line (RD6.1-c
+// uniform treatment across loading / pick / draw / reveal / results).
+// The body-text "Draw to beat X." / "<X> to beat." sentences that
+// previously surfaced the target are retired — the corner-score is
+// the single, consistent home.
+function buildArmedTopScore(targetScore: number) {
   return (
-    <div
-      data-h2h-armed-rail="true"
-      aria-hidden="true"
-      style={{
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        right: 0,
-        width: RIGHT_RAIL_WIDTH_PX,
-        display: "grid",
-        gridTemplateRows: "1fr 1fr",
-        rowGap: BATTLEFIELD_ROW_GAP_PX,
-        pointerEvents: "none",
-      }}
-    >
-      {/* RD3-C (2026-06-11): JOHN's armed cell mirrors the arc's
-          first revealing frame under the fixed-bar contract — JOHN
-          holds at sender.totalFp / leading-glow ON from idle through
-          done. displayTotal = targetScore, state = "leading",
-          sizeProgress = 1 keeps redraw→arc seamless (no glow snap
-          when H2HRecipientReveal takes over). YOU's armed cell
-          stays at 0 / trailing — recipient still climbs from 0. */}
-      <ScoreCell
-        total={targetScore}
-        displayTotal={targetScore}
-        state="leading"
-        sizeProgress={1}
-        surface="reveal"
-        teamPosition="opponent"
-      />
-      <ScoreCell
-        total={targetScore}
-        displayTotal={0}
-        state="trailing"
-        sizeProgress={0}
-        surface="reveal"
-        teamPosition="user"
-      />
-      <div
-        data-h2h-armed-rail-delta="true"
-        style={{
-          position: "absolute",
-          top: "50%",
-          right: 0,
-          width: RIGHT_RAIL_WIDTH_PX,
-          transform: "translateY(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            color: DELTA_NEUTRAL,
-            fontVariantNumeric: "tabular-nums",
-            textAlign: "center",
-            lineHeight: 1.1,
-          }}
-        >
-          <div>0.0</div>
-          <div
-            style={{
-              fontSize: 7,
-              fontWeight: 700,
-              color: "rgba(255,255,255,0.4)",
-              letterSpacing: 1,
-              textTransform: "uppercase",
-            }}
-          >
-            matchup
-          </div>
-        </div>
-      </div>
-    </div>
+    <TargetCornerScore
+      scoreCell={
+        <ScoreCell
+          total={targetScore}
+          displayTotal={targetScore}
+          state="leading"
+          sizeProgress={1}
+          surface="reveal"
+          teamPosition="opponent"
+        />
+      }
+    />
+  );
+}
+function buildArmedBottomScore(targetScore: number) {
+  return (
+    <ScoreCell
+      total={targetScore}
+      displayTotal={0}
+      state="trailing"
+      sizeProgress={0}
+      surface="reveal"
+      teamPosition="user"
+    />
   );
 }
 

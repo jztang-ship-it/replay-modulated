@@ -47,7 +47,6 @@ import {
   OVERLAY_CROSSFADE_MS,
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
-import { H2HScoreGlide } from "./H2HScoreGlide";
 import { isRealName } from "@shared/utils/isRealName";
 
 /** Crossfade-in duration from the HOLD-phase grid into the H2H arc.
@@ -196,68 +195,17 @@ function H2HRecipientRevealInner(props: InnerProps) {
   const showOverlay = reveal.phase === "done";
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
 
-  // Step-4 glide / C2 — glide-handoff suppression state. Per-team
-  // flag that, when true, hides the reveal ScoreCell's INNER GLYPH
-  // (visibility:hidden — outer cell box, panel, delta float, momentum
-  // tag all stay byte-identical). C4 wires the trigger: when the
-  // glide layer fires onGlideStart at t=0 (clones measured + mounted
-  // at the source position with identical treatment), the parent
-  // flips BOTH flags true in the same React batch as the clones
-  // mount, so the source glyphs hide and the clones appear in a
-  // single paint — no double-render at lift-off.
-  const [glideHandoff, setGlideHandoff] = useState<{ opponent: boolean; user: boolean }>({
-    opponent: false,
-    user: false,
-  });
-  // Step-4 glide / C4 — docked-score settled state. Per-team flag
-  // that, when true, populates the C1 docked-score slot with its
-  // glyph. The glide layer fires onGlideSettle(team) at the end of
-  // each team's translate transition; the parent's handler flips
-  // that team's flag true. React 18 auto-batches this setState with
-  // the glide layer's own internal unmount-this-clone setState so
-  // the docked-glyph paint and the clone unmount land in the same
-  // frame — no double-render at landing.
-  const [dockedScoreSettled, setDockedScoreSettled] = useState<{ opponent: boolean; user: boolean }>({
-    opponent: false,
-    user: false,
-  });
-  // When active flips false (e.g. user dismisses overlay and the
-  // wrapper re-mounts on a future play), reset both gates so the
-  // next reveal→results handoff starts from a clean slate. Active
-  // here mirrors the glide's `active` prop: reveal.phase === "done".
-  const glideActive = reveal.phase === "done";
-  useEffect(() => {
-    if (!glideActive) {
-      setGlideHandoff({ opponent: false, user: false });
-      setDockedScoreSettled({ opponent: false, user: false });
-    }
-  }, [glideActive]);
-
-  // Step-4 glide / C3 — derived team state for the H2HScoreGlide
-  // clones at phase === "done". Same formula H2HResultsOverlay uses
-  // for its own ScoreCells (reference total = max of the two finals,
-  // tied if within ±0.05). The H2HRevealScreen also resolves to
-  // identical values at phase=done (its display-total tick has landed
-  // at the final), so clones and source share state/sizeProgress and
-  // therefore restScale + color + glow filter — they paint
-  // pixel-identically.
-  const overlayReferenceTotal = Math.max(myScore, senderResolved.totalFp, 0.0001);
-  const senderSizeProgress = senderResolved.totalFp / overlayReferenceTotal;
-  const recipientSizeProgress = myScore / overlayReferenceTotal;
-  const overlayTied =
-    Math.abs(senderResolved.totalFp - myScore) < 0.05 &&
-    senderResolved.totalFp > 0 &&
-    myScore > 0;
-  const senderGlideState: "leading" | "trailing" | "tied" = overlayTied
-    ? "tied"
-    : senderResolved.totalFp > myScore
-      ? "leading"
-      : "trailing";
-  const recipientGlideState: "leading" | "trailing" | "tied" = overlayTied
-    ? "tied"
-    : myScore > senderResolved.totalFp
-      ? "leading"
-      : "trailing";
+  // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.
+  // Pre-RD6.1 the reveal-side right-rail ScoreCells were hidden via a
+  // `suppressed` flag (glideHandoff) the moment the glide animation
+  // lifted off, then a clone glyph translated to the overlay's
+  // docked-score box and a `dockedScoreSettled` flag flipped to
+  // populate the box. Under RD6.1 the totals START in the box corners
+  // on both surfaces — no glide is needed. State, the H2HScoreGlide
+  // layer, and the per-team-handoff flags are all gone. The
+  // reveal→results no-snap is now component+geometric identity:
+  // ZoneHeader hosts the same ScoreCell at the same position on both
+  // surfaces.
 
   return (
     <div
@@ -276,7 +224,6 @@ function H2HRecipientRevealInner(props: InnerProps) {
         recipient={recipient}
         renderCard={renderBattlefieldCard}
         reveal={reveal}
-        glideHandoff={glideHandoff}
       />
       {overlayCrossfade.mounted && (
         <H2HResultsOverlay
@@ -292,37 +239,8 @@ function H2HRecipientRevealInner(props: InnerProps) {
           onDismiss={onDismiss}
           senderRevealOrder={reveal?.senderRevealOrder}
           recipientRevealOrder={reveal?.recipientRevealOrder}
-          dockedScoreSettled={dockedScoreSettled}
-          glideHandoff={glideHandoff}
         />
       )}
-      {/* Step-4 glide / C3 — transition-layer scaffolding. Sibling of
-          the overlay inside the recipient-reveal wrapper so it is
-          OUTSIDE the overlay's opacity subtree (clone glyphs stay
-          opacity 1 through the 350 ms overlay crossfade) but INSIDE
-          the wrapper's stacking context so its z-index 9050 sits
-          BETWEEN the reveal contents (no inner z-index → paints in
-          flow) and the overlay (z 9100). C3 mounts the layer,
-          measures both endpoints, renders static clones at the start
-          position; no motion until C4. With glideHandoff still
-          { false, false }, the underlying reveal ScoreCells stay
-          visible and the C3 verification can compare clone rect vs
-          source rect directly. */}
-      <H2HScoreGlide
-        active={glideActive}
-        sender={{
-          total: senderResolved.totalFp,
-          state: senderGlideState,
-          sizeProgress: senderSizeProgress,
-        }}
-        recipient={{
-          total: myScore,
-          state: recipientGlideState,
-          sizeProgress: recipientSizeProgress,
-        }}
-        onGlideStart={() => setGlideHandoff({ opponent: true, user: true })}
-        onGlideSettle={(team) => setDockedScoreSettled((prev) => ({ ...prev, [team]: true }))}
-      />
     </div>
   );
 }
