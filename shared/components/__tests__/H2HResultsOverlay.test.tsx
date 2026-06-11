@@ -885,3 +885,127 @@ describe("H2HResultsOverlay — RD2.1 scale-tracks-cell lock", () => {
     expect(innerStyle).toMatch(/scale\(calc\(100cqw\s*\/\s*150px\)\)/);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────
+// RD3-C — reveal→results no-snap (named gate)
+// ─────────────────────────────────────────────────────────────────
+//
+// Lock: H2HScoreRail.tsx:151-156 (Phase-1 cross-surface handoff
+// invariant). The LAST reveal frame's ScoreCell and the FIRST results
+// frame's ScoreCell render byte-identically — same component, same
+// values converging at phase===done.
+//
+// Under § RD3-C this gate is invited (per the spec block) even though
+// the invariant is structurally guaranteed by ScoreCell sharing:
+// documenting it in code mirrors the RD3 discipline (redraw→arc
+// no-snap). The reveal's done frame derives senderDisplayTotal from
+// reveal.senderRunningTotal, which under RD3-C equals sender.totalFp
+// throughout (seeded at idle, holds through done — see
+// useH2HReveal.ts:616 and the runMatchup skip at :784/:800). The
+// overlay reads sender.totalFp directly (no hook state). Both
+// surfaces compute state/sizeProgress from the same final-vs-final
+// comparison. Same component, same inputs → same DOM.
+describe("RD3-C — reveal→results no-snap (ScoreCell DOM parity at the cross-surface handoff)", () => {
+  it("reveal-done-frame ScoreCell data-attrs === overlay-mount-frame ScoreCell data-attrs (both surfaces)", async () => {
+    // Build a hand pair where recipient WINS (overlay state="WIN").
+    // Picks final totals = 178.4 vs 182.4 (mirrors the suite's other
+    // tests) so the gate exercises the leading/trailing branch — the
+    // most state-sensitive case where any drift in sizeProgress or
+    // state computation between surfaces would manifest.
+    const senderTotal = 178.4;
+    const recipientTotal = 182.4;
+    const sender = makeHand("Mike", senderTotal);
+    const recipient = makeHand("You", recipientTotal);
+
+    // Reveal done-frame: synthesize the reveal mock the same way the
+    // existing H2HRevealScreen tests do (e.g. :346, :384). Under
+    // RD3-C, senderRunningTotal at phase=done equals sender.totalFp —
+    // the spec's "JOHN holds through done" guarantee.
+    const { H2HRevealScreen } = await import("../H2HRevealScreen");
+    const doneReveal = {
+      phase: "done" as const,
+      matchupIndex: recipient.cards.length - 1,
+      matchupCount: recipient.cards.length,
+      visibleFpMap: new Map(),
+      senderRunningTotal: senderTotal,     // RD3-C: == sender.totalFp throughout
+      recipientRunningTotal: recipientTotal,
+      activeMatchup: { sender: sender.cards[sender.cards.length - 1], recipient: recipient.cards[recipient.cards.length - 1] },
+      senderRevealOrder: sender.cards,
+      recipientRevealOrder: recipient.cards,
+      entranceStages: new Array(6).fill("settled") as import("../useH2HReveal").EntranceStage[],
+      entranceSettledCount: 6,
+      pulseActive: false,
+      play: () => {},
+      skipToEnd: () => {},
+    };
+
+    const revealHarness = render(
+      <div data-test-harness="reveal-done">
+        <H2HRevealScreen
+          sender={sender}
+          recipient={recipient}
+          renderCard={stubRender()}
+          reveal={doneReveal as any}
+        />
+      </div>
+    );
+
+    const overlayHarness = render(
+      <div data-test-harness="overlay-mount">
+        <H2HResultsOverlay
+          sender={sender}
+          recipient={recipient}
+          renderCard={stubRender()}
+          state="WIN"
+        />
+      </div>
+    );
+
+    // Cross-surface attribute query: reveal uses data-h2h-team-score-*
+    // (the "reveal" surface namespace); overlay uses data-h2h-overlay-
+    // score-* (the "overlay" namespace). Both ScoreCells set the same
+    // STATE/SIZE/POP/SUPPRESSED attrs (the rail-namespaced ones, which
+    // are surface-agnostic). The DISPLAY attr is surface-namespaced;
+    // we compare the DISPLAY values numerically.
+    const revealOpp = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-team-score-position="opponent"]')!;
+    const revealUser = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-team-score-position="user"]')!;
+    const overlayOpp = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-score-position="opponent"]')!;
+    const overlayUser = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-score-position="user"]')!;
+
+    expect(revealOpp).not.toBeNull();
+    expect(revealUser).not.toBeNull();
+    expect(overlayOpp).not.toBeNull();
+    expect(overlayUser).not.toBeNull();
+
+    // Surface-agnostic attrs that MUST match across the crossfade.
+    const sharedAttrs = [
+      "data-h2h-score-state",
+      "data-h2h-score-size-progress",
+      "data-h2h-score-rest-scale",
+      "data-h2h-score-pop-kind",
+    ] as const;
+    for (const a of sharedAttrs) {
+      expect(
+        revealOpp.getAttribute(a),
+        `JOHN: reveal-done ${a} should equal overlay-mount ${a}`,
+      ).toBe(overlayOpp.getAttribute(a));
+      expect(
+        revealUser.getAttribute(a),
+        `YOU: reveal-done ${a} should equal overlay-mount ${a}`,
+      ).toBe(overlayUser.getAttribute(a));
+    }
+
+    // Display values: surface-namespaced attr but identical numeric
+    // content. Both go through .toFixed(1) on the same input
+    // (sender.totalFp / recipient.totalFp).
+    expect(revealOpp.getAttribute("data-h2h-team-score-display")).toBe(
+      overlayOpp.getAttribute("data-h2h-overlay-score-value"),
+    );
+    expect(revealUser.getAttribute("data-h2h-team-score-display")).toBe(
+      overlayUser.getAttribute("data-h2h-overlay-score-value"),
+    );
+
+    revealHarness.unmount();
+    overlayHarness.unmount();
+  });
+});

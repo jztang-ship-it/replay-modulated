@@ -613,7 +613,14 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   const [phase, setPhase] = useState<RevealPhase>(initialPhase);
   const [matchupIndex, setMatchupIndex] = useState(startIdle ? -1 : matchups.length - 1);
   const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(() => new Map());
-  const [senderRunningTotal, setSenderRunningTotal] = useState(startIdle ? 0 : sender.totalFp);
+  // RD3-C (2026-06-11): JOHN holds at sender.totalFp from idle through
+  // done — does NOT roll up from 0. The fixed-bar contract for the
+  // recipient reveal: YOU climbs per tap toward JOHN's finished score.
+  // Seeding here makes the value identical in idle (where the rail is
+  // first visible) and at done (where reveal→results hands off). The
+  // recipient init below still uses startIdle?0 — YOU's climb is
+  // unchanged.
+  const [senderRunningTotal, setSenderRunningTotal] = useState(sender.totalFp);
   const [recipientRunningTotal, setRecipientRunningTotal] = useState(startIdle ? 0 : recipient.totalFp);
   // Phase 2.6 — deltaRunning. Initial state mirrors the running-totals
   // pattern: 0 when starting idle (no set has resolved yet); the final
@@ -774,7 +781,11 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
       // exposed via RELAY_EASING_POWER so the totals + delta share
       // the SAME deceleration character.
       const eased = 1 - Math.pow(1 - elapsed, RELAY_EASING_POWER);
-      setSenderRunningTotal(senderPrevTotal + senderTarget * eased);
+      // RD3-C: JOHN's running total is fixed at sender.totalFp from
+      // idle through done; skip the sender setter here so his rail
+      // number does not tick. JOHN's CARD still flips face-up — the
+      // visibleFp pipeline below still advances so the card-face
+      // count-up + stamp effect run unchanged.
       setRecipientRunningTotal(recipientPrevTotal + recipientTarget * eased);
       // Advance per-card visibleFp so PlayerCardShell's stamp effect can
       // observe rollup completion. Mirrors useEmotionalReveal.ts:490 — the
@@ -788,9 +799,11 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
         rafRef.current = requestAnimationFrame(tick);
       } else {
         // Lock final totals exactly (in case rAF didn't land at t=1).
-        const newSenderTotal = senderPrevTotal + senderTarget;
         const newRecipientTotal = recipientPrevTotal + recipientTarget;
-        setSenderRunningTotal(newSenderTotal);
+        // RD3-C: sender total NOT locked — it has held at
+        // sender.totalFp throughout. Per-card visibleFp on JOHN's
+        // side is still locked at his card's actualFp below so the
+        // card-face number lands exactly.
         setRecipientRunningTotal(newRecipientTotal);
         // Lock per-card visibleFp at actualFp — mirrors useEmotionalReveal.ts:495.
         setVisibleFpMap(prev => new Map(prev).set(m.sender.cardId, senderTarget));
@@ -827,8 +840,11 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
           }
 
           // Phase 5 hook — commentary engine wires here.
+          // RD3-C: senderTotal is the constant sender.totalFp (JOHN
+          // holds throughout the arc); the running-total value at this
+          // resolution point is still the fixed target.
           onMatchupResolvedRef.current?.(index, m, {
-            senderTotal: newSenderTotal,
+            senderTotal: sender.totalFp,
             recipientTotal: newRecipientTotal,
           });
 
@@ -856,10 +872,20 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
           let anchorHoldMs = 0;
           if (isPenultimateMatchup) {
             const finalMatchup = matchups[matchups.length - 1];
+            // RD3-C: JOHN is fixed under this contract, so only the
+            // recipient's final card swings the gap. Pass
+            // finalSenderActualFp: 0 so the helper's finalSetSwing
+            // reduces to finalRecipientActualFp. senderRunningTotal
+            // is the fixed sender.totalFp (entering gap is computed
+            // against the same visible value the user sees). Mirrors
+            // the AnchorFrame mount call at
+            // H2HRevealScreen.tsx:1914 — both call sites must agree
+            // on the C-mode interpretation or the paused-window
+            // extension would fire out of sync with the frame mount.
             const anchor = isFinalSetDecisive({
-              senderRunningTotal: newSenderTotal,
+              senderRunningTotal: sender.totalFp,
               recipientRunningTotal: newRecipientTotal,
-              finalSenderActualFp: finalMatchup.sender.actualFp,
+              finalSenderActualFp: 0,
               finalRecipientActualFp: finalMatchup.recipient.actualFp,
             });
             if (anchor.decisive) {
@@ -926,17 +952,21 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     };
       rafRef.current = requestAnimationFrame(tick);
     });
-  }, [matchups, scheduleTimeout]);
+  }, [matchups, scheduleTimeout, sender.totalFp]);
 
   const play = useCallback(() => {
     cancelAll();
     runIdRef.current++;
     const myRunId = runIdRef.current;
     // Clean slate — visibleFpMap empty so CardFront's reset path runs
-    // when the matchup switches in. Totals at zero.
+    // when the matchup switches in. Recipient total at zero (YOU
+    // climbs from 0). Sender total resets to sender.totalFp — under
+    // RD3-C, JOHN holds at his finished score from idle through done;
+    // play() restarts the recipient's climb without disturbing
+    // JOHN's fixed bar.
     setMatchupIndex(-1);
     setVisibleFpMap(new Map());
-    setSenderRunningTotal(0);
+    setSenderRunningTotal(sender.totalFp);
     setRecipientRunningTotal(0);
     setDeltaRunning(0);
     setPulseActive(false);
@@ -1039,7 +1069,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
       if (myRunId !== runIdRef.current) return;
       runMatchup(0, myRunId);
     });
-  }, [cancelAll, scheduleTimeout, matchups.length, runMatchup, reducedMotion, skipEntrance]);
+  }, [cancelAll, scheduleTimeout, matchups.length, runMatchup, reducedMotion, skipEntrance, sender.totalFp]);
 
   const skipToEnd = useCallback(() => {
     cancelAll();

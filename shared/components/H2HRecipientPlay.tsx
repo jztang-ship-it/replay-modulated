@@ -1564,11 +1564,18 @@ function ArmedRail({ targetScore }: { targetScore: number }) {
         pointerEvents: "none",
       }}
     >
+      {/* RD3-C (2026-06-11): JOHN's armed cell mirrors the arc's
+          first revealing frame under the fixed-bar contract — JOHN
+          holds at sender.totalFp / leading-glow ON from idle through
+          done. displayTotal = targetScore, state = "leading",
+          sizeProgress = 1 keeps redraw→arc seamless (no glow snap
+          when H2HRecipientReveal takes over). YOU's armed cell
+          stays at 0 / trailing — recipient still climbs from 0. */}
       <ScoreCell
         total={targetScore}
-        displayTotal={0}
-        state="trailing"
-        sizeProgress={0}
+        displayTotal={targetScore}
+        state="leading"
+        sizeProgress={1}
         surface="reveal"
         teamPosition="opponent"
       />

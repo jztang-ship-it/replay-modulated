@@ -1396,59 +1396,93 @@ bottom-strip cell twice to hold, then tap Draw to drive into the redraw window. 
 armed rail appears at the right edge of the hero region; persists through the column
 flip, settle-pause, and into the arc handoff.
 
-## § RD3-C (PARKED) — JOHN as a true fixed bar through reveal
+## § RD3-C — Fixed JOHN bar through reveal (shipped 2026-06-11)
 
-**Status:** PARKED. Captured during RD3 build (investigation was loaded — seeding, play()
-reset, leader-glow/pop, and the reveal→results no-snap were all freshly mapped). Sequenced
-AFTER RD3, recommended BEFORE RD3.1 (scores on both objective axes; RD3.1 is cosmetic). Not
-yet authorized to build.
+**Status:** SHIPPED. Supersedes § RD3-C (PARKED). Commit `d53c951` on `feat/rd3-c-fixed-bar`.
 
-**Origin.** RD3 shipped Option B: the armed pre-reveal rail shows YOU 0.0 / JOHN 0.0 / delta
-0.0, neutral, because the arc rail seeds senderRunningTotal=0 at idle and animates John's number
-UP from 0 during the recipient's reveal. C fixes the deeper oddity B left intact.
+### INTENT
+JOHN's ScoreCell shows his final total (sender.totalFp) from idle through done — it does
+NOT roll up from 0. YOU climbs per tap and chases a fixed mountain. This is the "doormat"
+cure: the flat 0-0 armed beat from RD3 gains a visible target ("258.3 to beat") and the
+reveal's drama relocates entirely to YOUR climb and the leader-glow flip as you cross JOHN.
+No new mechanics. Scores on the emotional-competitive axis.
 
-**The problem C solves.** John already played; his score (e.g. 258.3) is a finished fact.
-Today John's number rolls up from 0 alongside YOURS during YOUR reveal — incoherent (he isn't
-playing, you are) and weaker competitively (two numbers both growing from 0). The intended model
-— stated in the original RD3 framing as "John's fixed bar" — is a fixed target you climb toward:
-JOHN sits at his final score from the first frame; YOU climb; the gap visibly closes because YOU
-move and the target holds. Standard "score to beat" mental model (high score / leaderboard);
-strictly more tense. Hits BOTH objective axes (understandable + emotionally competitive); no new
-mechanic — the target value already exists (challengeCtx.targetScore == sender.totalFp,
-parity-confirmed in RD3).
+### CORE EDIT — JOHN stops moving (useH2HReveal.ts)
+- `:616` init — seed senderRunningTotal at sender.totalFp (not 0), regardless of startIdle.
+- `:784` rollup tick (was :777 pre-edit) — skip the sender setter. Recipient rolls; JOHN holds.
+- `:803` rollup lock (was :793 pre-edit) — skip the sender setter. JOHN already at target.
+- `:965` play() reset (was :939 pre-edit) — reset sender to sender.totalFp; recipient still → 0.
+- `:617` recipient init / `:1050` skipToEnd — UNCHANGED.
 
-**Behavior change.**
-- JOHN's ScoreCell reads his final total (target) from idle through done — does NOT roll up from 0.
-- YOU still climb per reveal tap (unchanged from current).
-- Delta = YOU − JOHN, live (unchanged), but now closes toward a fixed bar instead of chasing a
-  moving one.
-- The armed pre-reveal beat (RD3's B rail) then naturally shows JOHN at target neutrally and YOU
-  at 0 — and armed→arc stays no-snap because BOTH frames now show JOHN at target. (C makes the
-  "JOHN=target in armed beat" option safe, which B could not.)
+### CONTRACT 1 — LEADER-GLOW (H2HRevealScreen.tsx:1468-1477) — NO CHANGE
+The trigger is a pure value comparison (senderDisplayTotal > recipientDisplayTotal), not a
+climb/delta. With the seed above, JOHN computes "leading" from the first idle frame; the
+comparison fires each tick; when recipientRunningTotal crosses sender.totalFp, JOHN→trailing
+and YOU→leading live. The idle tied-guard (both sides >0) is not met at idle (recipient=0),
+so JOHN leads via the bare `>`. The crossing tied-window (|diff|<0.05) is a correct one-tick
+transient. The hook seed is the ONLY edit; the glow-trigger logic is untouched.
 
-**Why it's not in RD3 (the risk surface C must own).**
-- Changes arc reveal behavior — outside RD3's "does NOT build the animation" fence.
-- Sender-side **leader-glow** and **Phase-2 pop** both key off senderRunningTotal climbing
-  (useH2HReveal.ts; H2HRevealScreen ScoreCell). Fixing John at target removes that climb — the
-  glow/pop trigger logic must be re-specified (when does JOHN's cell show leading-glow if it
-  never climbs? presumably: leading whenever target > YOUR running total, flipping live as YOU
-  cross it — this becomes the dramatic beat).
-- The **reveal→results no-snap** invariant (H2HScoreRail.tsx:151-156) couples to sender display
-  state at phase===done. C must preserve it: last reveal frame === first results frame, with
-  John now fixed. New test gate required.
-- The hook seed (useH2HReveal.ts:616 senderRunningTotal init) and the play() reset (~:939) are
-  the edit points; the idle-0 assertions in __tests__/useH2HReveal.test.tsx:254/:265 will need
-  updating — confirm those tests encode intent, not just current behavior, before changing.
+### CONTRACT 2 — PHASE-2 POP (H2HRevealScreen.tsx:1524-1596) — DEFAULTS SHIPPED
+(a) Scaled pop — keyed off the card's shakeType, NOT running-total deltas. JOHN's pop FIRES
+    per matchup, sized by his per-card emotion; co-occurs with JOHN's card flipping face-up,
+    so it punctuates "JOHN's leg landed," not a number tick. **Default: keep.** Kill is a
+    one-line gate of `senderScaled→null` at `:1560` — reserved for glass if it reads as a twitch.
+(b) Lead-change override — starting leader is JOHN, so the only reachable flip is
+    sender→recipient: YOU gets the 1.20×300ms boost + "TAKES THE LEAD" tag when you cross.
+    JOHN's regain-branch is unreachable (correct — he cannot move). First-flip null-guard
+    suppresses a spurious set-1 flip. No change.
 
-**Open question for build-time:** does JOHN's bar still *grow in size* (sizeProgress / Z1 model)
-as YOU approach, or stay fixed-size? "Fixed bar" implies fixed value; the size/scale treatment
-(does the leader cell visually swell) is a separate glass call at C build time.
+### CONTRACT 3 — PHASE-3 ANCHOR FRAME (H2HRevealScreen.tsx:1905-1928) — FIXED VIA CALL-SITE ADAPTER
+`isFinalSetDecisive` (useH2HReveal.ts:215-247) computes `finalSetSwing` assuming BOTH sides
+swing on the final card. Under C only recipient swings, so the predicate would mis-predict.
+**Fix:** at the call site (`:1914`) pass `finalSenderActualFp: 0`, making
+`finalGap = enteringGap + finalRecipientActualFp` — the true gap under a fixed JOHN. An
+inline comment at `:1914` documents WHY it is 0. The matching adapter is also applied to the
+internal anchor-hold-extension call site at `useH2HReveal.ts:~872` so both sites agree on the
+C-mode interpretation. The helper body stays pure / sport-agnostic. A new C-mode test gate
+covers the 9 `isFinalSetDecisive` cases in
+`__tests__/useH2HReveal.test.tsx` (`describe "isFinalSetDecisive — RD3-C C-mode"`); the
+default-mode 9-case block stays intact and passing.
 
-**Acceptance (when built):**
+### NO-SNAP A — REDRAW→ARC (H2HRecipientPlay.tsx:1567-1574) — COUPLED EDIT
+Arc's first revealing frame puts JOHN at `displayTotal=sender.totalFp / leading / size=1`.
+RD3's armed JOHN (`displayTotal=0 / trailing / size=0`) would snap at the handoff. Armed JOHN
+now matches arc: `displayTotal=targetScore, state="leading", sizeProgress=1`. YOU's armed cell
+UNCHANGED (`0 / trailing / 0`). "Neutrally" in the parked text resolved to "no flashy
+animation," NOT grey-trailing — grey-trailing reintroduced a snap and is therefore disallowed
+by the invariant. The RD3 redraw→arc no-snap gate's `arcHarness` expected values on the JOHN
+side update accordingly.
+
+### NO-SNAP B — REVEAL→RESULTS — structurally intact, gate added
+Results overlay reads `sender.totalFp` directly (no `displayTotal`, no hook state); reveal's
+done-frame `senderRunningTotal = sender.totalFp`. Same value, same state computation, both
+surfaces share `ScoreCell`. New gate
+(`H2HResultsOverlay.test.tsx` → `describe "RD3-C — reveal→results no-snap"`) asserts
+reveal-done-frame ScoreCell data-attrs == overlay-mount-frame attrs under C, mirroring the
+RD3 redraw→arc no-snap discipline.
+
+### BAR SIZE — DEFAULT α (shipped)
+`sizeProgress` uses `referenceTotal = max(sender.totalFp, recipient.totalFp)`.
+- **α (DEFAULT, shipped, zero code):** JOHN's size = 1.0 while recipient < him; shrinks only
+  once recipient exceeds him → clean scissors at the cross (YOU grow, JOHN yields). Honors
+  "fixed bar" — the NUMBER never ticks; size is a separate relative-standing channel.
+- **β (additive override, NOT shipped):** lock JOHN's `sizeProgress` to MAX regardless.
+  "Immovable threat," but both cells near-max at the crossing — crowded. Reserved for glass.
+
+### NET EMOTIONAL SHAPE
+"Can YOU reach 258.3?" The threat is visible from the Draw tap and never ticks up to meet you
+— a fixed high-water mark. Standard high-score / leaderboard mental model. Strictly more
+tense than the RD3 0-0 doormat.
+
+### GLASS DEFAULTS SHIPPED (John adjudicates on the live build)
+1. Armed JOHN green-leading from entry — shipped (forced by no-snap).
+2. Phase-2 scaled pop on JOHN — kept (default).
+3. Bar size — α (default).
+
+### ACCEPTANCE (verified at ship)
 - JOHN's glyph shows target from first armed frame through results, never rolling from 0.
 - YOU climbs per tap; delta closes toward the fixed bar; leader-glow flips live as YOU cross JOHN.
-- redraw→arc no-snap holds (now JOHN=target on both sides of the cut).
-- reveal→results no-snap holds (re-tested with John fixed).
-- Single-player reveal + FTUE untouched.
-
-**Spec of record:** on C build, this § moves from PARKED to active and appends final behavior.
+- redraw→arc no-snap holds (JOHN=target on both sides of the cut — RD3 gate updated).
+- reveal→results no-snap holds (new gate in H2HResultsOverlay.test.tsx).
+- Single-player reveal + FTUE untouched. RD3.1 panel + RD2 80px lock untouched.
+- Full suite 1185/1185 + tri-sport build clean.

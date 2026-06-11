@@ -818,8 +818,22 @@ describe("H2HRevealScreen — Phase 3 anchor-moment frame", () => {
     expect(stat).toContain("10.0");
   });
 
-  it("MOUNTS in 'hold' framing when leading but vulnerable", () => {
-    // Recipient leading by 5; final swing -20 → recipient loses lead.
+  it("SUPPRESSED in 'hold' framing under RD3-C — JOHN's big-card swing can no longer flip the lead", () => {
+    // Recipient leading by 5; JOHN's final card actualFp=25 would have
+    // flipped the lead in the default-mode formula (swing -20, finalGap
+    // -15 → DECISIVE). Under RD3-C the screen's call site
+    // (H2HRevealScreen.tsx:1914) passes finalSenderActualFp: 0 — JOHN
+    // is fixed, so his 25 doesn't contribute. Recipient's own final
+    // (+5) keeps their lead → NOT decisive → anchor SUPPRESSED.
+    //
+    // This is the documented C-mode behavior change: "hold" anchor
+    // framing's most common dramatic case (sender's big card threatens
+    // a lead) is no longer reachable under fixed-JOHN. Matches the C8
+    // case in the C-mode isFinalSetDecisive describe in
+    // __tests__/useH2HReveal.test.tsx (which proves the same scenario
+    // at the helper level — default decisive, C-mode suppressed). The
+    // default-mode block in that file still tests the original
+    // formula's behavior; only the SCREEN-level call site is C-mode.
     const { sender, recipient, reveal } = buildPenultimatePaused({
       senderRunningTotal: 100,
       recipientRunningTotal: 105,
@@ -829,10 +843,7 @@ describe("H2HRevealScreen — Phase 3 anchor-moment frame", () => {
     const { container } = render(
       <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
     );
-    const anchor = container.querySelector("[data-h2h-anchor-frame]");
-    expect(anchor).not.toBeNull();
-    expect(anchor?.getAttribute("data-h2h-anchor-framing")).toBe("hold");
-    expect(container.querySelector("[data-h2h-anchor-stat-line]")?.textContent).toContain("Hold");
+    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
   });
 
   it("MOUNTS in 'tie' framing when entering tied", () => {
