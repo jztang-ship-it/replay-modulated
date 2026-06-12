@@ -51,6 +51,14 @@ export const WINNING_COLOR = "#22C55E";   // green — leading total + positive 
 export const TRAILING_COLOR = "#9CA3AF";  // grey — losing total + negative delta
 export const DELTA_NEUTRAL = "#E5E7EB";   // off-white — tie state
 
+// RD6.2-A (2026-06-12): explicit red for the mid-rail "Lost X.X FP" copy.
+// TRAILING_COLOR (grey) is the right treatment for the LOSING TOTAL on
+// the corner ScoreCell (de-emphasis), but the per-set delta wants a
+// stronger negative signal — the connection-moment focal point should
+// pop, not recede. Matches the "#EF4444" the results overlay already
+// uses for loss outcomes (selectOutcomeColor in H2HResultsOverlay.tsx).
+export const LOSING_COLOR = "#EF4444";    // red — negative per-set delta highlight
+
 // Glow alphas derived from the base colors. Kept separate from the
 // solid colors so the glow can be tuned without re-tinting the number.
 export const WINNING_GLOW = "rgba(34, 197, 94, 0.55)";  // matches WINNING_COLOR @ 0.55 alpha
@@ -84,6 +92,25 @@ export const MAX_SCALE = 1.30;
 // CONSTANT_REST_SCALE × pop.magnitude, so the pop still composes
 // cleanly off a single source of truth.
 export const CONSTANT_REST_SCALE = 1.0;
+
+// RD6.2-A (2026-06-12): inner-corner team-total FP font size, exported
+// so the mid-rail per-set delta can wire its own font-size to the SAME
+// value (single source of truth — the delta scales as a peer of the
+// box totals, no drift if one moves). Baseline ratio 1:1 (scale-peer)
+// per the RD6.2 spec; tunable up (~1.1–1.2×) on glass if the delta
+// needs to dominate more.
+export const SCORE_CELL_FONT_SIZE_PX = 20;
+
+// RD6.2-B (2026-06-12): synchronized dual-blink primitive — both corner
+// totals (Mike top, YOU bottom) dip in opacity together on each set
+// resolution, keyed to the same `blink.key` (= popState.deltaLandedKey
+// in H2HRevealScreen) so they fire on one render commit / one frame.
+// BLINK_FLOOR is LOCKED at 0.35; deeper would read as a dropout, shallow
+// would read as a flicker. BLINK_DURATION_MS is tunable on glass.
+// Opacity-only — composes with the existing scale-pop (which runs on
+// the INNER glyph's transform). No layout interaction.
+export const BLINK_FLOOR = 0.35;
+export const BLINK_DURATION_MS = 180;
 
 // Transition speed for state-driven visual changes (glow + scale). Slow
 // enough that a lead change feels intentional, fast enough that the
@@ -231,6 +258,30 @@ interface ScoreCellProps {
    *  it, and it remains the cleanest way to discriminate which side
    *  of the box a ScoreCell belongs to. */
   teamPosition?: "opponent" | "user";
+  /** RD6.2-B (2026-06-12): synchronized dual-blink primitive. When set,
+   *  the outer wrapper runs an opacity 1.0 → BLINK_FLOOR → 1.0 WAAPI
+   *  animation each time `blink.key` changes. Caller drives BOTH
+   *  corner totals off the SAME key (= popState.deltaLandedKey) so
+   *  they fire on one render commit → one animation frame. The blink
+   *  composes with (but does not collide with) the existing scale-
+   *  pop, which lives on the inner glyph's transform. With `fill:
+   *  "none"` the outer reverts to its CSS-default opacity (1.0) when
+   *  the animation completes — the resting-opacity-1.0 invariant
+   *  guards the reveal→results no-snap.
+   *
+   *  Omitting `blink` entirely (e.g. on the overlay surface, or on
+   *  reveal under prefers-reduced-motion) is a clean no-op — the
+   *  useEffect short-circuits, no WAAPI ever runs, and the outer's
+   *  opacity stays at 1.0. */
+  blink?: {
+    /** Change to retrigger. Use the same source the pop uses
+     *  (popState.deltaLandedKey) so blink + pop + delta land on one
+     *  frame per set resolution. */
+    key?: number;
+    /** Override the default BLINK_DURATION_MS (180). Caller's value
+     *  wins; pass undefined to use the export default. */
+    durationMs?: number;
+  };
 }
 
 export function ScoreCell({
@@ -241,8 +292,15 @@ export function ScoreCell({
   surface,
   pop,
   teamPosition,
+  blink,
 }: ScoreCellProps) {
   useEffect(ensureScoreRailKeyframesInjected, []);
+
+  // RD6.2-B (2026-06-12): outer wrapper ref for the blink primitive.
+  // WAAPI animation runs on `opacity` here; the existing pop continues
+  // to run on `transform` on the inner glyph. Different elements,
+  // different properties → no collision.
+  const outerRef = useRef<HTMLDivElement>(null);
 
   // Ref to the inner glyph so the Phase 2 pop can fire via WAAPI on the
   // EXACT scale-bearing element. Composing programmatically (instead of
@@ -311,6 +369,42 @@ export function ScoreCell({
     };
   }, [pop?.key, pop?.magnitude, pop?.durationMs]);
 
+  // RD6.2-B (2026-06-12): synchronized dual-blink — WAAPI opacity
+  // animation on the OUTER wrapper. Fires each time blink.key changes
+  // (caller uses popState.deltaLandedKey, the same key the pop uses,
+  // so blink + pop + delta all land on one render commit / one frame
+  // when both corner totals' blink keys flip simultaneously).
+  //
+  // `fill: "none"` is load-bearing for the no-snap invariant: the outer
+  // reverts to its CSS-default opacity (1.0) when the animation ends —
+  // no persistent inline opacity, no drift between reveal and results.
+  //
+  // The outer's CSS `animation: h2h-score-tie-pulse` (active when
+  // state === "tied") is opacity-targeting too. WAAPI animations
+  // override CSS keyframe animations on the same property per spec —
+  // the blink takes priority during its 180ms run, then the tie-pulse
+  // resumes when the blink ends (fill:none releases the WAAPI grip).
+  useEffect(() => {
+    if (!blink || blink.key === undefined) return;
+    const node = outerRef.current;
+    if (!node || typeof node.animate !== "function") return;
+    const duration = blink.durationMs ?? BLINK_DURATION_MS;
+    const animation = node.animate(
+      [
+        { opacity: 1.0 },
+        { opacity: BLINK_FLOOR, offset: 0.5 },
+        { opacity: 1.0 },
+      ],
+      { duration, easing: "ease-out", fill: "none" },
+    );
+    return () => {
+      // Cancel any in-flight blink if the key flips again before the
+      // animation completes — keeps the CSS-default opacity 1.0
+      // authoritative for the next frame.
+      animation.cancel();
+    };
+  }, [blink?.key, blink?.durationMs]);
+
   // Color + Z2 glow per state. Trailer is the absence-of-treatment case.
   const numberColor =
     state === "leading"
@@ -335,6 +429,7 @@ export function ScoreCell({
 
   return (
     <div
+      ref={outerRef}
       {...surfaceAttrs}
       data-h2h-score-state={state}
       data-h2h-score-pop-kind={pop?.kind ?? "none"}
@@ -348,6 +443,9 @@ export function ScoreCell({
       data-h2h-score-pop-magnitude={pop ? pop.magnitude.toFixed(3) : "none"}
       data-h2h-score-pop-duration-ms={pop ? String(pop.durationMs) : "none"}
       data-h2h-score-size-progress={sizeProgress.toFixed(3)}
+      // RD6.2-B: harness-readable blink key. "none" when no blink prop
+      // is wired (overlay surface, or reveal under reduced motion).
+      data-h2h-score-blink-key={blink?.key !== undefined ? String(blink.key) : "none"}
       style={{
         display: "flex",
         justifyContent: "center",
@@ -359,6 +457,13 @@ export function ScoreCell({
     >
       <div
         ref={innerRef}
+        // RD6.2-C-rev3 rev3 (2026-06-13): tags the TIGHT number glyph so
+        // the reveal-side delta-anchor measures each total at its rendered
+        // digit center, not the ScoreCell box center (which is inflated by
+        // the ZoneHeader band / "Target:" label chrome). Mirror of the
+        // delta's own [data-h2h-mid-rail-flash] glyph anchor. Read-only;
+        // present on both surfaces but only the reveal measurement reads it.
+        data-h2h-team-score-glyph="true"
         style={{
           // RD6.2-prep-A: was 22, dropped to 20 so the corner FP reads
           // as a peer of the 18px name label on the same row instead
@@ -366,7 +471,10 @@ export function ScoreCell({
           // the rendered glyph is fixed-size across both surfaces and
           // both teams. Leader-glow color + drop-shadow still
           // differentiate the leader; per-set pop still fires.
-          fontSize: 20,
+          // RD6.2-A (2026-06-12): the literal 20 is now exported as
+          // SCORE_CELL_FONT_SIZE_PX so the mid-rail per-set delta can
+          // share the same source of truth without drift.
+          fontSize: SCORE_CELL_FONT_SIZE_PX,
           fontWeight: 950,
           color: numberColor,
           fontVariantNumeric: "tabular-nums",

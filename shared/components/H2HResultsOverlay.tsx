@@ -590,6 +590,21 @@ function HeroCell({
           border: !card && showEmptyBorder ? "1.5px dashed rgba(255,255,255,0.22)" : undefined,
           borderRadius: !card && showEmptyBorder ? 18 : undefined,
           boxSizing: "border-box",
+          // RD6.2 FIX 2b (2026-06-13): the EMPTY dashed slot + its hint
+          // (absolutely positioned inside this box) move to the board's
+          // true horizontal center — same goal as the verdict block's
+          // FIX 2, NOT the middle grid column (~10px right). The verdict
+          // used a full-column span; the hero cell can't span because the
+          // OCCUPIED hero card's X is LOCKED byte-identical to the arc
+          // (no-snap geometry parity). So the centering is EMPTY-only via
+          // a DERIVED shift = (RIGHT_RAIL − LEFT_RAIL)/2, exactly the
+          // center-column-vs-board-center offset implied by the asymmetric
+          // [100px 1fr 80px] rails. Occupied path (card present) → no
+          // transform → LOCKED X/Y untouched.
+          transform:
+            !card && showEmptyBorder
+              ? `translateX(calc((${RIGHT_RAIL_WIDTH_PX}px - ${LEFT_RAIL_WIDTH_PX}px) / 2))`
+              : undefined,
         }}
       >
         {/* #7 flip-discoverability caption. Floats just ABOVE the hero box
@@ -615,7 +630,7 @@ function HeroCell({
               whiteSpace: "nowrap",
             }}
           >
-            {card ? "Tap again — game logs are on the back" : "Tap a card to see the game logs we pulled"}
+            {card ? "Tap again — game logs are on the back" : "Tap a card to see the game logs"}
           </div>
         )}
         {card && renderCard(card, { flipped })}
@@ -1044,7 +1059,17 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             data-h2h-overlay-commentary="true"
             style={{
               gridRow: 1,
-              gridColumn: "1 / span 2",
+              // RD6.2-C-rev3 ROOT-CAUSE FIX (2026-06-12): "1 / span 2"
+              // → "1 / -1". Pre-fix the verdict commentary block
+              // spanned only the left-rail + center columns, so its
+              // centered children (headline, fpHero, why-line) sat
+              // ~40px LEFT of the board's true horizontal center
+              // (offset = RIGHT_RAIL_WIDTH_PX / 2 = 40). Spanning all
+              // three columns places the block's center on the
+              // board's true center; the row-1 col-3 placeholder
+              // below is still rendered to park its grid cell but no
+              // longer constrains the verdict's width.
+              gridColumn: "1 / -1",
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",

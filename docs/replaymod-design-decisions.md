@@ -1746,3 +1746,83 @@ change or hero parity breaks silently.
 
 **Gate.** vitest 1185/1185 + tri-sport build (basketball + baseball +
 football) all green at merge.
+
+## § RD6.2 — H2H connection moment (shipped 2026-06-13)
+
+The per-set "connection moment": as each matchup resolves, the delta
+reacts, both totals blink in sync, and a right-column rail narrates
+reaction-then-stakes. Full per-decision spec lives in
+`docs/rd6.2-connection-spec.md`; this is the canonical fold.
+
+### Delta beef-up (`MidRailContent` in H2HRevealScreen.tsx)
+- Per-set: `Gained X.X FP` (green `WINNING_COLOR`) / `Lost X.X FP` (red
+  `LOSING_COLOR` `#EF4444`) / `Even` (neutral `DELTA_NEUTRAL`), rendered
+  at the team-total FP size (`SCORE_CELL_FONT_SIZE_PX`, single source of
+  truth in H2HScoreRail).
+- FINAL verdict inherits the per-set treatment but with terminal copy:
+  `Won X.X FP` / `Lost X.X FP` / `Even`, held ~1.5s. The per-set "flash"
+  is suppressed on FINAL (reuses `flashKey: "final"` → no remount).
+
+### Right-column narrative rail (`RightColumnRail`)
+- Reaction-then-stakes, sequenced: every set shows the per-set DELTA;
+  ONCE before the final card the slot crossfades to the GAP layer
+  `LAST CARD / Need: +X.X` (overtake→Need green, hold→Hold amber,
+  tie→TIED). Fires on EVERY game incl. blowouts (consistent closing
+  beat; absence previously leaked that the arc was decided). The need
+  value is the literal final-set framing even when unreachable.
+- The legacy Phase-3 AnchorFrame center overlay (covered the
+  battlefield) is RETIRED — its "next opponent + need" data moved into
+  this rail's gap layer. `isFinalSetDecisive` stays exported (sealed/
+  blowout detector) but no longer gates any UI. Test guard added:
+  "does NOT render the legacy AnchorFrame center overlay."
+
+### Synchronized dual-blink (`ScoreCell.blink` in H2HScoreRail.tsx)
+- Both corner totals opacity-blink (1.0 → `BLINK_FLOOR` 0.35 → 1.0) in
+  sync on each set resolution, keyed to `popState.deltaLandedKey` so
+  blink+blink+delta land on one render commit / one frame. Blink on the
+  FINAL set is intentional (kept).
+- **DON'T-BREAK:** keyed to `deltaLandedKey`; **OPACITY ONLY** (scale
+  would collide with the existing per-set scale-pop on the inner glyph);
+  must REST at opacity 1.0 (`fill: "none"`) — that resting-1.0 invariant
+  is the reveal→results no-snap guard for the shared ScoreCell.
+
+### Delta vertical anchor — MEASURED, glyph-to-glyph, relative apply
+(`useLayoutEffect` in H2HRevealScreen.tsx)
+- The delta GLYPH (`[data-h2h-mid-rail-flash]`) is centered on the
+  midpoint of the two team-total GLYPHS' rendered centers. Totals are
+  measured at their tight number element (`data-h2h-team-score-glyph`,
+  on the ScoreCell inner div), NOT the ScoreCell box (inflated by the
+  ZoneHeader band / "Target:" label chrome).
+- Apply is RELATIVE and coordinate-independent:
+  `newTop = currentAppliedTop + (midpoint − glyphCenterNow)`, run in a
+  bounded rAF settle loop (≤6 frames, stop <0.5px). `offsetParent` is
+  used only to bootstrap the first placement.
+- **DON'T-BREAK:** never reintroduce a magic px translateY literal
+  (six failed nudge rounds: +6 → +51 → …); never convert viewport→top
+  via `offsetParent` — a transformed-but-static iOS ancestor becomes the
+  CSS containing block while `offsetParent` ignores it, skewing the
+  applied top (that was the multi-round "delta reads high on phone"
+  bug). The relative apply sidesteps it entirely.
+
+### KNOWN EDGES (documented, accepted — NOT bugs)
+- **Desktop/wide layout:** delta centering can read slightly off on
+  desktop (no transformed ancestor there to exercise the relative path's
+  benefit, and desktop is not the product target). Phone is the product.
+  Revisit only if a desktop layout ever ships.
+- **Need-line horizontal overflow:** need values >~50 (e.g. `Need: +60.6`)
+  exceed the 80px right-rail slot and overflow LEFTWARD into empty rail
+  space — renders clean, no clip guard. Add a guard only if a future
+  layout actually clips it.
+
+### Touched (shared — affects all three sports)
+- `H2HRevealScreen.tsx` — delta beef-up, right-column rail, AnchorFrame
+  retirement, measured glyph-anchored delta centering.
+- `H2HScoreRail.tsx` — dual-blink primitive, `data-h2h-team-score-glyph`,
+  constant rest-scale, `SCORE_CELL_FONT_SIZE_PX` source of truth.
+- `H2HResultsOverlay.tsx` — "Tap a card to see the game logs" hint copy
+  + board-center for the empty hint/dashed slot; delta beef-up parity.
+- `H2HRecipientReveal.tsx`, `useH2HReveal.ts` — `deltaRunning` rollup +
+  `deltaLandedKey` wiring.
+
+**Gate.** vitest (incl. both no-snap gates) + tri-sport build
+(basketball + baseball + football) all green at merge.
