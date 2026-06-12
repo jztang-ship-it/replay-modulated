@@ -514,7 +514,13 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
       {/* CTA — RD5.1 frame-aware on the recipient (fresh) path; the
           owner path (`alreadyAttempted === true`) is OUT OF SCOPE and
           keeps the existing "Play Again" copy verbatim (directive
-          §"CTA — frame-aware, recipient path only"). */}
+          §"CTA — frame-aware, recipient path only").
+          RD6.2-prep-A (2026-06-12): marginTop adds breathing room
+          between the target line and the CTA. Pre-RD6.2-prep-A the
+          two pressed against each other — visually the CTA was the
+          terminal beat of the target line rather than an isolated
+          decision affordance. The target line still owns its own
+          marginBottom (12) so the pair reads as "target … BUTTON". */}
       <button
         data-testid="accept-cta"
         onClick={onAccept}
@@ -529,6 +535,7 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
           fontWeight: 900,
           letterSpacing: 0.5,
           cursor: "pointer",
+          marginTop: 12,
           marginBottom: 10,
           textTransform: "uppercase",
         }}

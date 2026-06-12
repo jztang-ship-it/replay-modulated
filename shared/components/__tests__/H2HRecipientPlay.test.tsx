@@ -1890,12 +1890,17 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     // JOHN "leading" green-glow ON from idle. YOU "trailing" grey.
     expect(opponent!.getAttribute("data-h2h-score-state")).toBe("leading");
     expect(user!.getAttribute("data-h2h-score-state")).toBe("trailing");
-    // JOHN sizeProgress=1 → rest-scale 1.200 (1 + 1*SIZE_PROGRESS_MAX
-    // 0.12 + LEADER_BONUS 0.08 = 1.20, well under MAX_SCALE 1.30).
-    // YOU sizeProgress=0 → rest-scale 1.000.
+    // RD6.2-prep-A (2026-06-12): the grow-with-score Z1 model was
+    // retired — both rest-scales are now CONSTANT_REST_SCALE (1.000)
+    // regardless of sizeProgress or leader/tie state. The
+    // sizeProgress prop still flows through to the data attr (it
+    // remains useful for telemetry and for callers reasoning about
+    // running totals), but it no longer scales the glyph. Leader
+    // differentiation is carried entirely by the green color +
+    // drop-shadow glow.
     expect(opponent!.getAttribute("data-h2h-score-size-progress")).toBe("1.000");
     expect(user!.getAttribute("data-h2h-score-size-progress")).toBe("0.000");
-    expect(opponent!.getAttribute("data-h2h-score-rest-scale")).toBe("1.200");
+    expect(opponent!.getAttribute("data-h2h-score-rest-scale")).toBe("1.000");
     expect(user!.getAttribute("data-h2h-score-rest-scale")).toBe("1.000");
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });

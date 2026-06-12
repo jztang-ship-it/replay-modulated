@@ -163,6 +163,23 @@ npx ts-node shared/tools/runSimulator.ts basketball 10000
 npx ts-node shared/tools/runSimulator.ts worldcup 10000
 ```
 
+## Glassing locally (operator / John side)
+
+The dev server renders the directory it was LAUNCHED FROM. The port it grabs is
+NOT proof of what's rendering — the CWD behind it is. A server started in
+`main/basketball` serves main even if it binds 5173. This is how you glass the
+wrong branch.
+
+When glassing a worktree branch, launch from the worktree — never from main:
+
+    pkill -f vite                                    # kill orphans + any wrong-CWD server
+    cd .claude/worktrees/<branch-worktree>/basketball
+    git branch --show-current                        # MUST match the branch you mean to glass
+    npm run dev                                       # read the EXACT bound port it prints
+
+Glass URLs: http://localhost:<port> (desktop canary), http://<LAN-IP>:<port> (phone).
+Before trusting the glass, confirm a branch-unique visual tell is present.
+
 ## Things that bite
 
 - **Sport `node_modules` are independent.** Installing at the root does not install for `basketball/` or `baseball/`. The Vercel build script does each install separately; locally you have to do the same. React versions have drifted (basketball on 19, baseball on 18) — verify before assuming.

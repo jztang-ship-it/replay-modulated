@@ -1598,3 +1598,151 @@ invoking step 4 (hero shrink), so reveal and results hero geometry is byte-ident
   strengthened with structural assertions.
 
 **Gate.** vitest 1185/1185 + tri-sport build (basketball + baseball + football) all green.
+
+## § RD6-polish — corner-FP/header/results-fit/hero-gap pass (shipped 2026-06-12)
+
+**Status.** Spec-of-record, sits on top of § RD6. One stacked branch
+(`feat/rd6-polish-a`) carried five iterative changes that John glassed
+on hardware between each. Tri-sport green at merge.
+
+**What shipped (A → E).**
+
+- **A — corner-FP constant size + left-aligned names.** The grow-with-score
+  Z1 ramp on the box-corner ScoreCell was retired; the ScoreCell now renders
+  at a fixed scale (`CONSTANT_REST_SCALE = 1.0`) and `fontSize: 20` on both
+  surfaces. Leader-glow (green color + drop-shadow), tie-pulse, and the
+  per-set scale POP (WAAPI transient) all preserved — the size grew was the
+  only thing killed. ZoneHeader name labels flip from centered to LEFT-aligned
+  with the score absolute-anchored to the right; long names ellipsis-truncate
+  before the right reservation. Files: `H2HScoreRail.tsx`, `H2HBoardShell.tsx`,
+  `H2HResultsOverlay.tsx`, `__tests__/H2HRecipientPlay.test.tsx` (rest-scale
+  literal `"1.200"` → `"1.000"`), plus the challenge-landing CTA breathing
+  room in `ChallengeTakeCardLanding.tsx`.
+
+- **A2 — header content inset to mini-card-strip width.** The header band
+  (name + corner FP) used to span the full ZonePanel content box, which at
+  viewports above ~390 was wider than the centered mini-card strip below
+  (the strip's cards have a natural 350.376px span). Header outer edges
+  re-anchored to the card-strip span via `maxWidth:
+  HAND_STRIP_CARD_CONTENT_WIDTH_PX` + `marginLeft/Right: auto` + `padding: 0`
+  on the ZoneHeader, plus the corner-score wrapper's `right: 6 → 0`. New
+  constant exported from `H2HRevealScreen.tsx`, consumed by both
+  `H2HBoardShell.ZoneHeader` and `H2HResultsOverlay.ZoneHeader`.
+
+- **C — results-fit hero shrink.** RD6.1-g claimed mainstream phones fit
+  but John's actual iPhone still scrolled with the address bar visible.
+  Step-1 contract-free trims (outer pad 20 → 8 on both surfaces; top-zone
+  margin 18 → 10; hero margin 4 → 0; RESERVED_BOTTOM_CLEARANCE_PX 30 → 20)
+  closed half the gap. The hero card geometry shrunk
+  `min(145px, 32vw) → min(125px, 28vw)` in lockstep across FIVE sites
+  (see PADDING MAP below). Hero card width drops ~14%, hero row height
+  drops proportionally via the 478/329 aspect ratio.
+
+- **D — symmetric hero gaps.** Top hero gap (panel pad-bot 8 + margin 10
+  after C = 18) was visibly larger than bottom (margin 0 + panel pad-top
+  8 = 8). The 10px asymmetry sat entirely on `TOP_ZONE_MARGIN_BOTTOM_PX`;
+  dropped 10 → 0 to make both gaps an 8/8 symmetric pair from the
+  ZonePanel paddings alone. Net results page reclaimed an additional 10px
+  of headroom — strictly an improvement, no regression. Shared rule: the
+  shell constant and the H2HResultsOverlay literal mirror both touched.
+
+- **E — both gaps opened to 20/20, bottom panel relocated down.** D's 8/8
+  read as "touching" on real hardware. Both hero gaps opened to 20px each
+  (panel pad 8 + margin 12) by setting `TOP_ZONE_MARGIN_BOTTOM_PX` and
+  `HERO_MARGIN_BOTTOM_PX` to 12 each. Paid for by trimming away-from-hero
+  chrome: outer safe-area pad 8 → 4 (both surfaces), top panel `paddingTop`
+  8 → 4 (per-instance override), bottom panel `paddingBottom` 8 → 4
+  (per-instance override). Net +12px on the results stack, eats 8 of the
+  12 auto-margin slack at 430-viewport, preserves min CTA clearance ≥ 24.
+  The bottom-panel-of-the-stack ZonePanel relocates down naturally into
+  what was auto-margin space — TOP panel stays anchored.
+
+Also folded in: the **operator glass procedure** appended to `CLAUDE.md`
+under `## Glassing locally (operator / John side)` — a small lesson learned
+when a session glassed the wrong worktree because Vite from a different
+`cwd` was holding port 5173. Port is not proof of branch; cwd is.
+
+**FRAGILITY — record before someone breaks it.** Hero-size parity across
+reveal↔results is guarded ONLY by:
+1. The reveal→results no-snap gate (`H2HResultsOverlay.test.tsx:908`)
+   — which checks ScoreCell DOM data-attrs, NOT hero card dimensions.
+2. Five literally-identical `"min(125px, 28vw)"` strings across the
+   codebase (see PADDING MAP).
+
+There is **NO dedicated hero-parity test**. Editing any one of the five
+strings without the others will silently desync hero card size across the
+reveal→results crossfade, producing a visible snap that NEITHER the
+no-snap gate nor the build will catch. If you touch hero geometry, treat
+the five sites as a single atomic edit.
+
+**KNOWN CEILINGS — accepted soft spots.**
+- **430px viewport (iPhone 14/15 Pro Max).** Results content totals
+  exactly 700px at 0px headroom. Shipping accepted as a known soft spot.
+  If a real device reports a real scroll (e.g. iOS 26+ tab-bar mode where
+  usable height dips below 700), reactive fix path is the bottom-side
+  reclaim levers — drop `RESERVED_BOTTOM_CLEARANCE_PX` (currently 20) or
+  outer pad (currently 4) by a couple px. Don't grow the hero gap budget
+  to "fix" 430; the 20/20 hero rhythm is the contract.
+- **480px viewport (inner-column maxWidth cap).** Results is ~13px over
+  the 700 target. NOT a mainstream phone — tablet portrait / foldable
+  unfolded / desktop emulator territory. Documented as a non-goal.
+
+**PADDING MAP — which knobs do what, so the next person doesn't guess.**
+
+Hero-gap CONTRIBUTORS (these are the gap; do NOT touch without intent):
+- `ZonePanel.padding-bottom` (top panel, hero-side edge): default 8px.
+  Contributes to TOP hero gap.
+- `ZonePanel.padding-top` (bottom panel, hero-side edge): default 8px.
+  Contributes to BOTTOM hero gap.
+- `TOP_ZONE_MARGIN_BOTTOM_PX = 12` in `H2HBoardShell.tsx`.
+  Mirrored as `marginBottom: 12` LITERAL in `H2HResultsOverlay.tsx`
+  on the opponent ZonePanel. Any change MUST touch both.
+- `HERO_MARGIN_BOTTOM_PX = 12` in `H2HBoardShell.tsx`.
+  Mirrored as `marginBottom: 12` LITERAL in `H2HResultsOverlay.tsx`
+  on the hero region div. Any change MUST touch both.
+- Effective hero gap = panel-pad (8) + margin (12) = **20px on both sides**.
+
+Strip-side / chrome paddings (NOT hero-gap; safe to tune within reason):
+- Top panel `paddingTop: 4` (per-instance override) — between viewport top
+  and the opponent strip's first card.
+- Bottom panel `paddingBottom: 4` (per-instance override) — between user
+  strip's last card and the bottom panel edge.
+- Outer shell `paddingTop` / `paddingBottom`: `env(safe-area-inset-*) + 4`
+  on BOTH `H2HBoardShell` and `H2HResultsOverlay`.
+
+CTA-clearance contributors:
+- `RESERVED_BOTTOM_CLEARANCE_PX = 20` in `H2HResultsOverlay.tsx`
+  (overlay-only; the floor for gap-above-CTA when slack runs out).
+- Reserved-bottom wrapper auto-margin (variable; eats remaining slack).
+
+Hero CARD-WIDTH (THE FIVE LOCKSTEP STRINGS — see FRAGILITY):
+1. `HERO_MIN_HEIGHT_CSS` in `H2HBoardShell.tsx`
+2. `HERO_MIN_HEIGHT_HOLD_SELECT_CSS` in `H2HBoardShell.tsx`
+3. `BATTLEFIELD_CARD_MAX_WIDTH` in `H2HRevealScreen.tsx`
+4. `HERO_CARD_MAX_WIDTH` in `H2HResultsOverlay.tsx`
+5. `previewCardWidthCss` in `H2HRecipientPlay.tsx`
+
+All five hold `"min(125px, 28vw)"` post-RD6-polish. Edit as a single atomic
+change or hero parity breaks silently.
+
+**Files.**
+- `shared/components/H2HScoreRail.tsx` — `CONSTANT_REST_SCALE = 1.0`,
+  fontSize 22 → 20, `state` prop doc updated.
+- `shared/components/H2HBoardShell.tsx` — `HAND_STRIP_CARD_CONTENT_WIDTH_PX`
+  imported, ZoneHeader inset to card-strip span, `TOP_ZONE_MARGIN_BOTTOM_PX`
+  / `HERO_MARGIN_BOTTOM_PX` to 12, hero size shrink, outer pad 8 → 4,
+  per-instance panel padding overrides.
+- `shared/components/H2HResultsOverlay.tsx` — same ZoneHeader inset,
+  `HERO_CARD_MAX_WIDTH` shrunk, `RESERVED_BOTTOM_CLEARANCE_PX: 30 → 20`,
+  outer pad 8 → 4, hardcoded margin literals matched to constants,
+  per-instance panel padding overrides.
+- `shared/components/H2HRevealScreen.tsx` — `HAND_STRIP_CARD_CONTENT_WIDTH_PX`
+  exported, `BATTLEFIELD_CARD_MAX_WIDTH` shrunk.
+- `shared/components/H2HRecipientPlay.tsx` — `previewCardWidthCss` shrunk.
+- `shared/components/ChallengeTakeCardLanding.tsx` — CTA `marginTop: 12`.
+- `shared/components/__tests__/H2HRecipientPlay.test.tsx` — rest-scale
+  literal `"1.200"` → `"1.000"`.
+- `CLAUDE.md` — `## Glassing locally (operator / John side)`.
+
+**Gate.** vitest 1185/1185 + tri-sport build (basketball + baseball +
+football) all green at merge.
