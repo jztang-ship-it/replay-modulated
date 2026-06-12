@@ -60,7 +60,7 @@
  * the locked decisions this component encodes.
  */
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { UseH2HRevealReturn } from "./useH2HReveal";
 import type { ShakeType } from "@shared/components/types";
 import {
@@ -69,6 +69,10 @@ import {
   ENERGY_PULSE_MS,
   BATTLEFIELD_TRAVEL_DURATION_MS,
   planRevealBeats,
+  // RD6.2-C revision (2026-06-12): restored — the gap layer in
+  // RightColumnRail uses this helper to gate "once-pre-final-decisive"
+  // (same gate the retired AnchorFrame used). Pre-revision: removed
+  // when the gap was mis-generalized to fire on every set.
   isFinalSetDecisive,
   type EntranceStage,
 } from "./useH2HReveal";
@@ -79,8 +83,20 @@ import {
   RIGHT_RAIL_WIDTH_PX,
   LEFT_RAIL_WIDTH_PX,
   WINNING_COLOR,
-  TRAILING_COLOR,
   DELTA_NEUTRAL,
+  // RD6.2-A: LOSING_COLOR (red) for negative delta highlight on both
+  // per-set and FINAL states; SCORE_CELL_FONT_SIZE_PX wires the delta
+  // size to the team-total FP size (single source of truth — see
+  // H2HScoreRail.tsx). TRAILING_COLOR retired from this file —
+  // post-A-revision FINAL inherits per-set treatment with LOSING_COLOR
+  // (red), not the muted TRAILING grey.
+  LOSING_COLOR,
+  SCORE_CELL_FONT_SIZE_PX,
+  // RD6.2-B: BLINK_DURATION_MS exported by H2HScoreRail. Caller passes
+  // it through the `blink` prop on both corner ScoreCells (Mike top +
+  // YOU bottom) keyed off popState.deltaLandedKey so both fire on the
+  // same render commit. BLINK_FLOOR is consumed only inside ScoreCell.
+  BLINK_DURATION_MS,
 } from "./H2HScoreRail";
 // Phase 2.5 dev-only instrumentation. The import is referenced ONLY
 // from inside a `{import.meta.env.DEV && ...}` JSX gate below; Vite
@@ -1018,9 +1034,29 @@ function MidRailContent({
       ? deltaRunning
       : recipientCard.actualFp - senderCard.actualFp;
   const matchupDelta = Math.round(rawDelta * 10) / 10;
-  const matchupSign = matchupDelta > 0 ? "+" : matchupDelta < 0 ? "" : "";
+  // RD6.2-A (2026-06-12): delta beef-up — new copy, new color, new
+  // size wired to SCORE_CELL_FONT_SIZE_PX. Source calc unchanged.
+  // RD6.2-A revision (2026-06-12, post-first-glass): FINAL state
+  // INHERITS the per-set treatment (size + color logic) but with
+  // distinct terminal copy: "Won X.X FP" / "Lost X.X FP" / "Even"
+  // (per-set says "Gained" / "Lost" / "Even" — same verb shape, but
+  // "Won" marks the whole-game vs per-card-swing distinction). The
+  // "final" eyebrow sublabel is retired; the new copy already signals
+  // terminal. h2h-mid-rail-flash still suppressed on FINAL — gating
+  // unchanged (steady-state, not a set transition).
+  const isFinal = finalGapOverride !== undefined;
+  const copy =
+    matchupDelta > 0
+      ? `${isFinal ? "Won" : "Gained"} ${matchupDelta.toFixed(1)} FP`
+      : matchupDelta < 0
+        ? `Lost ${Math.abs(matchupDelta).toFixed(1)} FP`
+        : "Even";
   const deltaColor =
-    matchupDelta > 0 ? WINNING_COLOR : matchupDelta < 0 ? TRAILING_COLOR : DELTA_NEUTRAL;
+    matchupDelta > 0
+      ? WINNING_COLOR
+      : matchupDelta < 0
+        ? LOSING_COLOR
+        : DELTA_NEUTRAL;
   return (
     <div
       data-h2h-mid-rail="true"
@@ -1038,140 +1074,283 @@ function MidRailContent({
           hold) suppresses the flash by reusing flashKey as 'final' — no
           remount → no animation. */}
       <div
-        key={finalGapOverride !== undefined ? "final" : `set-${flashKey ?? 0}`}
-        data-h2h-mid-rail-flash={finalGapOverride !== undefined ? "final" : "set"}
+        key={isFinal ? "final" : `set-${flashKey ?? 0}`}
+        data-h2h-mid-rail-flash={isFinal ? "final" : "set"}
         style={{
-          fontSize: 11,
-          fontWeight: 800,
+          // RD6.2-A: both per-set AND final share the team-total FP
+          // size (SCORE_CELL_FONT_SIZE_PX = 20) — single source of
+          // truth. Same fontWeight, color logic, copy shape across
+          // both states; only the verb token (Won vs Gained) differs.
+          fontSize: SCORE_CELL_FONT_SIZE_PX,
+          fontWeight: 900,
           color: deltaColor,
           fontVariantNumeric: "tabular-nums",
           textAlign: "center",
           lineHeight: 1.1,
+          letterSpacing: -0.3,
           animation:
-            finalGapOverride === undefined && flashKey !== undefined
+            !isFinal && flashKey !== undefined
               ? `h2h-mid-rail-flash 280ms ease-out 1`
               : "none",
           transformOrigin: "center center",
         }}
       >
-        <div>{matchupSign}{matchupDelta.toFixed(1)}</div>
-        <div style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: 1, textTransform: "uppercase" }}>
-          {finalGapOverride !== undefined ? "final" : "matchup"}
-        </div>
+        {copy}
       </div>
     </div>
   );
 }
 
-// ── Phase 3 — anchor-moment frame ────────────────────────────────────────
+// ── RD6.2-C — right-column narrative rail ────────────────────────────────
 //
-// Renders during the paused window between set N-2 and set N-1=last
-// IFF `isFinalSetDecisive` returns decisive: true (game still alive).
-// Mounted as an absolutely-positioned child of the battlefield grid
-// (already position:relative). Covers the CENTER COLUMN only — the
-// left rail (empty on reveal) and right rail (score cells + delta
-// float) stay visible underneath so the user can cross-reference the
-// "Need:" value against the gap they've been watching.
+// Hosts the per-set delta AND the once-pre-final-decisive gap in a
+// single fixed-height slot. Crossfade via opacity only — both layers
+// are absolute-positioned inside the slot so swaps don't move the
+// column.
 //
-// pointer-events: none — purely visual. Fade in/out via CSS keyframes
-// (`h2h-anchor-frame-enter` / `h2h-anchor-frame-exit`) so the frame
-// arrives and departs smoothly. Auto-unmounts when the parent's gate
-// goes false (phase advances to "revealing" for the final matchup, or
-// helper returns sealed). Leaves no residual DOM at done/end-hold.
+// State machine, keyed off (reveal.phase, reveal.matchupIndex):
+//   - Every NON-final non-pre-final-decisive set: delta only. Gap layer
+//     stays at opacity 0 / unmounted.
+//   - Penultimate paused window WITH isFinalSetDecisive().decisive:
+//     delta dwells PRE_FINAL_DELTA_DWELL_MS, then crossfades to gap
+//     (RAIL_CROSSFADE_MS). Gap holds until phase advances to the final
+//     set's "revealing".
+//   - Penultimate paused, sealed/blowout (decisive === false): no gap —
+//     same as a regular non-final pause.
+//   - phase === "end-hold" or "done": delta renders the FINAL verdict
+//     (MidRailContent's finalGapOverride path).
 //
-// Copy:
-//   eyebrow:     "REMAINING"
-//   name:        recipient's final-set card display name (large)
-//   stat line:   trailing → "Need: +X.X"
-//                leading  → "Hold: X.X"
-//                tied     → "TIED"
+// Gap source: same as the retired AnchorFrame — finalRecipientCard.name
+// and isFinalSetDecisive().{framing, needPoints}. NOT a per-set
+// "next-opponent" abstraction.
+//
+// RD6.2-C revision (2026-06-12): the first C pass over-generalized this
+// to a per-set gap with senderRevealOrder[matchupIndex + 1] sourcing,
+// which surfaced the FINAL recipient card's name + final-set need on
+// every intermediate pause (stale / wrong) and added ~3.9s of paused-
+// window tax to every 6-set arc. Reverted to the original
+// AnchorFrame gate — once-pre-final-decisive only.
 
-interface AnchorFrameProps {
-  playerName: string;
-  framing: "overtake" | "hold" | "tie";
-  needPoints: number;
+// RD6.2-C-rev2 (2026-06-12): 400 → 900. The 400ms first-pass clipped
+// the per-set delta — the user could barely read "Gained X.X FP" before
+// the slot crossfaded to the gap layer. Pre-final IS the climax; the
+// delta deserves a full read. The widened pre-final paused window
+// (ANCHOR_HOLD_MS = 2000) accommodates 900 + 250 (crossfade) + ~850
+// (gap readable hold).
+const PRE_FINAL_DELTA_DWELL_MS = 900;
+const RAIL_CROSSFADE_MS = 250;
+// RD6.2-C-rev3 closeout CORRECTED (2026-06-12): back to 80. The 110px
+// bump in the mis-build pass was sized to fit a 3-line "Giannis
+// Antetokounmpo" wrap. The corrected design drops the player name
+// from the gap entirely (gap now reads just "LAST CARD / Need +X.X",
+// two lines ≈ 32px), so the slot doesn't need to grow.
+const RAIL_SLOT_HEIGHT_PX = 80;
+
+interface RightColumnRailProps {
+  reveal:
+    | {
+        phase: "idle" | "revealing" | "paused" | "end-hold" | "done";
+        matchupIndex: number;
+        matchupCount: number;
+        senderRunningTotal: number;
+        recipientRunningTotal: number;
+        senderRevealOrder: H2HCard[];
+        recipientRevealOrder: H2HCard[];
+        deltaRunning?: number;
+      }
+    | undefined;
+  sender: H2HHand;
+  recipient: H2HHand;
+  senderBattle: H2HCard | null;
+  recipientBattle: H2HCard | null;
+  flashKey?: number;
 }
 
-function AnchorFrame({ playerName, framing, needPoints }: AnchorFrameProps) {
-  const statLine =
-    framing === "tie"
+function RightColumnRail({
+  reveal,
+  sender,
+  recipient,
+  senderBattle,
+  recipientBattle,
+  flashKey,
+}: RightColumnRailProps) {
+  const [showGap, setShowGap] = useState(false);
+  const phase = reveal?.phase ?? "idle";
+  const matchupIndex = reveal?.matchupIndex ?? 0;
+  const matchupCount = reveal?.matchupCount ?? 0;
+  const isPaused = phase === "paused";
+
+  // Pre-final gate — penultimate paused window with a valid final
+  // recipient card. RD6.2-C-rev2 (2026-06-12): the
+  // `isFinalSetDecisive().decisive` condition is DROPPED — the gap now
+  // shows on every penultimate paused window regardless of whether the
+  // game is mathematically alive. Rationale: consistent closing beat,
+  // and absence-of-gap previously leaked that the arc was already
+  // decided. The helper is still called to drive copy (framing →
+  // Need / Hold / TIED) and color, but its `decisive` flag is no
+  // longer a UI gate. With finalSenderActualFp=0 (RD3-C: JOHN fixed)
+  // the helper returns sensible framing+needPoints on every game.
+  const finalRecipientCard =
+    reveal && reveal.recipientRevealOrder.length === reveal.matchupCount
+      ? reveal.recipientRevealOrder[reveal.matchupCount - 1]
+      : null;
+  const isPreFinalPause =
+    isPaused && matchupCount >= 2 && matchupIndex === matchupCount - 2;
+  const anchor =
+    isPreFinalPause && finalRecipientCard && reveal
+      ? isFinalSetDecisive({
+          senderRunningTotal: reveal.senderRunningTotal,
+          recipientRunningTotal: reveal.recipientRunningTotal,
+          finalSenderActualFp: 0,
+          finalRecipientActualFp: finalRecipientCard.actualFp,
+        })
+      : null;
+  const gapShouldFire = !!(isPreFinalPause && finalRecipientCard);
+
+  // State machine — entering a pre-final-decisive paused window starts
+  // a short dwell on the per-set delta, then crossfades to the gap.
+  // Any other state (including penultimate paused without decisive,
+  // and every non-penultimate paused) keeps the slot on delta — no
+  // gap. matchupIndex dependency resets the timer on each set boundary.
+  useEffect(() => {
+    if (gapShouldFire) {
+      setShowGap(false);
+      const t = setTimeout(() => setShowGap(true), PRE_FINAL_DELTA_DWELL_MS);
+      return () => clearTimeout(t);
+    }
+    setShowGap(false);
+    return undefined;
+  }, [gapShouldFire, matchupIndex]);
+
+  // Gap-layer copy/color via the helper's `framing`, matching the
+  // retired AnchorFrame's behavior verbatim:
+  //   overtake → "Need: +X.X" (green — recipient must climb)
+  //   hold     → "Hold: X.X"  (amber — recipient must defend)
+  //   tie      → "TIED"       (neutral)
+  const gapFraming = anchor?.framing ?? "overtake";
+  const gapNeedPoints = anchor?.needPoints ?? 0;
+  const gapStatLine =
+    gapFraming === "tie"
       ? "TIED"
-      : framing === "overtake"
-        ? `Need: +${needPoints.toFixed(1)}`
-        : `Hold: ${needPoints.toFixed(1)}`;
-  const statColor =
-    framing === "overtake"
+      : gapFraming === "overtake"
+        ? `Need: +${gapNeedPoints.toFixed(1)}`
+        : `Hold: ${gapNeedPoints.toFixed(1)}`;
+  const gapStatColor =
+    gapFraming === "overtake"
       ? WINNING_COLOR
-      : framing === "hold"
-        ? "#FFB14A" // amber — "defend" feel
+      : gapFraming === "hold"
+        ? "#FFB14A" // amber — defend
         : DELTA_NEUTRAL;
+
   return (
     <div
-      data-h2h-anchor-frame="true"
-      data-h2h-anchor-framing={framing}
-      data-h2h-anchor-need={needPoints.toFixed(2)}
+      data-h2h-rail-slot="true"
+      data-h2h-rail-state={showGap ? "gap" : "delta"}
       style={{
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: LEFT_RAIL_WIDTH_PX,
-        right: RIGHT_RAIL_WIDTH_PX,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 8,
-        background: "rgba(6, 10, 18, 0.72)",
-        backdropFilter: "blur(2px)",
-        WebkitBackdropFilter: "blur(2px)",
-        pointerEvents: "none",
-        animation: "h2h-anchor-frame-enter 240ms ease-out 1",
-        textAlign: "center",
-        padding: "0 12px",
+        position: "relative",
+        width: "100%",
+        height: RAIL_SLOT_HEIGHT_PX,
       }}
     >
+      {/* Delta layer — always mounted; opacity 0 only when the gap is
+          visible during the pre-final-decisive window. */}
       <div
         style={{
-          fontSize: 9,
-          fontWeight: 800,
-          letterSpacing: 2,
-          color: "rgba(255,255,255,0.55)",
-          textTransform: "uppercase",
-          lineHeight: 1,
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: showGap ? 0 : 1,
+          transition: `opacity ${RAIL_CROSSFADE_MS}ms ease`,
+          pointerEvents: "none",
         }}
       >
-        Remaining
+        <MidRailContent
+          senderCard={senderBattle}
+          recipientCard={recipientBattle}
+          flashKey={flashKey}
+          deltaRunning={reveal?.deltaRunning}
+          finalGapOverride={
+            reveal && (phase === "done" || phase === "end-hold")
+              ? recipient.totalFp - sender.totalFp
+              : undefined
+          }
+        />
       </div>
-      <div
-        data-h2h-anchor-name="true"
-        style={{
-          fontSize: 22,
-          fontWeight: 950,
-          color: "#EAF0FF",
-          letterSpacing: -0.3,
-          lineHeight: 1.05,
-          wordBreak: "break-word",
-        }}
-      >
-        {playerName}
-      </div>
-      <div
-        data-h2h-anchor-stat-line="true"
-        style={{
-          fontSize: 13,
-          fontWeight: 800,
-          color: statColor,
-          fontVariantNumeric: "tabular-nums",
-          letterSpacing: 0.5,
-          lineHeight: 1,
-          textTransform: "uppercase",
-        }}
-      >
-        {statLine}
-      </div>
+      {/* Gap layer — mounted only during the pre-final-decisive window,
+          so the DOM is clean on every other paused/revealing frame.
+          Retains the data attrs the retired AnchorFrame emitted
+          (data-h2h-anchor-framing / data-h2h-anchor-need) — same
+          semantic role, just relocated. */}
+      {gapShouldFire && finalRecipientCard && (
+        <div
+          data-h2h-rail-gap="true"
+          data-h2h-anchor-framing={gapFraming}
+          data-h2h-anchor-need={gapNeedPoints.toFixed(2)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: showGap ? 1 : 0,
+            transition: `opacity ${RAIL_CROSSFADE_MS}ms ease`,
+            pointerEvents: "none",
+            padding: "0 4px",
+            textAlign: "center",
+          }}
+        >
+          {/* RD6.2-C-rev3 closeout CORRECTED (2026-06-12): the eyebrow
+              copy is "LAST CARD" (was "NEXT"). The gap layer no longer
+              renders finalRecipientCard.name — John's decision: keep
+              the moment focal on the stake ("the last card needs +X"),
+              not the player. Dropping the name eliminates the long-
+              name overflow problem at the root. */}
+          <div
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              letterSpacing: 1.5,
+              color: "rgba(255,255,255,0.55)",
+              textTransform: "uppercase",
+              lineHeight: 1,
+            }}
+          >
+            Last card
+          </div>
+          <div
+            data-h2h-rail-gap-need-line="true"
+            style={{
+              // RD6.2-C-rev3 (2026-06-12): need fontSize 12 → matches
+              // SCORE_CELL_FONT_SIZE_PX, consistent with the name
+              // and the per-set delta.
+              fontSize: SCORE_CELL_FONT_SIZE_PX,
+              fontWeight: 800,
+              color: gapStatColor,
+              fontVariantNumeric: "tabular-nums",
+              letterSpacing: 0.5,
+              lineHeight: 1,
+              textTransform: "uppercase",
+              marginTop: 4,
+            }}
+          >
+            {gapStatLine}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+// ── Phase 3 — anchor-moment frame (RETIRED in RD6.2-C) ───────────────────
+// The AnchorFrame center overlay that covered the battlefield during
+// the pre-final paused window is retired. Its "next opponent + need"
+// data moved into the right-column rail's gap layer (see
+// RightColumnRail above), sequenced AFTER the per-set delta. The
+// `isFinalSetDecisive` helper in useH2HReveal stays exported (sealed/
+// blowout detector); it just no longer gates a UI element.
 
 // ── Card-cell helpers for the battlefield grid ───────────────────────────
 // Each helper renders into one grid cell (center column of the 3-col
@@ -1534,6 +1713,143 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
     deltaLandedKey?: number;
   }>({});
 
+  // RD6.2-C-rev3 ROOT-CAUSE FIX rev2 (2026-06-13): MEASURED delta anchor
+  // that targets the GLYPH, not the wrapper box.
+  //
+  // rev1 centered the float WRAPPER (height ≈ RAIL_SLOT_HEIGHT_PX = 80,
+  // sized for the gap layer) on the totals-midpoint via floatRect.height/2.
+  // But the box is taller than the 1-line delta glyph that flex-centers
+  // inside it; centering the BOX equals centering the GLYPH only if the
+  // glyph's rendered center coincides with the box center — which depends
+  // on line-box metrics + the flex chain + device font rendering. The
+  // thing the user sees is the GLYPH ("Lost 12.3 FP"), so anchor the
+  // glyph directly.
+  //
+  // Method (rigid translation): measure the glyph's rendered center, then
+  // shift the wrapper by Δ = midpoint − glyphCenter. Because the glyph is
+  // rigidly offset from the wrapper, moving the wrapper by Δ moves the
+  // glyph by Δ → glyph center lands on the midpoint regardless of any
+  // internal box/text offset. Device/font/structure independent.
+  const railFloatRef = useRef<HTMLDivElement | null>(null);
+  const [railFloatTopPx, setRailFloatTopPx] = useState<number | null>(null);
+  // appliedTopRef mirrors the COMMITTED railFloatTopPx so measure() can
+  // read the float's current applied `top` synchronously (the effect deps
+  // intentionally exclude railFloatTopPx, so a state-closure read would be
+  // stale). The coordinate-independent apply below nudges THIS value.
+  const appliedTopRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (typeof document === "undefined") return;
+    let rafId = 0;
+    // RD6.2-C-rev3 rev4 (2026-06-13): COORDINATE-INDEPENDENT apply.
+    // The phone crop showed the delta biased toward the top total even
+    // though the glyph rects + midpoint were correct: the old apply
+    // converted viewport→CSS-top through floatEl.offsetParent, but a CSS
+    // `top` resolves against the CONTAINING BLOCK (nearest positioned OR
+    // transformed ancestor), which a transformed-but-static ancestor on
+    // iOS hijacks while offsetParent ignores it → wrong coord origin →
+    // bias. Desktop has no such ancestor so it looked perfect.
+    //
+    // measure() returns the residual |midpoint − glyphCenter| it observed
+    // (or null if it bailed). The relative apply needs NO offsetParent:
+    // a 1px change in `top` moves the glyph 1px in the viewport (pure
+    // translate + scroll preserve 1:1), so newTop = currentAppliedTop +
+    // (midpoint − glyphCenterNow). offsetParent is used ONCE to bootstrap
+    // the very first placement, then every correction is relative.
+    const measure = (): number | null => {
+      const floatEl = railFloatRef.current;
+      if (!floatEl) return null;
+      const opponentCell = document.querySelector<HTMLElement>(
+        '[data-h2h-team-score-position="opponent"]',
+      );
+      const userCell = document.querySelector<HTMLElement>(
+        '[data-h2h-team-score-position="user"]',
+      );
+      if (!opponentCell || !userCell) return null;
+
+      // Measure each total at its TIGHT number glyph
+      // ([data-h2h-team-score-glyph]) — the rendered digit the user sees,
+      // not the ScoreCell box (inflated by ZoneHeader band / "Target:"
+      // chrome). Fall back to the cell box only if the glyph is absent.
+      const glyphRectOf = (cell: HTMLElement): DOMRect => {
+        const glyph = cell.querySelector<HTMLElement>(
+          '[data-h2h-team-score-glyph]',
+        );
+        return (glyph ?? cell).getBoundingClientRect();
+      };
+      const opponentRect = glyphRectOf(opponentCell);
+      const userRect = glyphRectOf(userCell);
+      const floatRect = floatEl.getBoundingClientRect();
+      const opponentCenterY = opponentRect.top + opponentRect.height / 2;
+      const userCenterY = userRect.top + userRect.height / 2;
+      const midpointViewportY = (opponentCenterY + userCenterY) / 2;
+
+      // Anchor the GLYPH the user sees (the delta text), not the wrapper.
+      const glyphEl = floatEl.querySelector<HTMLElement>(
+        '[data-h2h-mid-rail-flash]',
+      );
+      const glyphRect = glyphEl ? glyphEl.getBoundingClientRect() : floatRect;
+      const anchorCenterY = glyphRect.top + glyphRect.height / 2;
+
+      const residual = midpointViewportY - anchorCenterY;
+
+      // Coordinate-independent apply (relative nudge from the current
+      // applied top). Bootstrap the FIRST placement via offsetParent.
+      let newTop: number;
+      const offsetParent = floatEl.offsetParent as HTMLElement | null;
+      if (appliedTopRef.current !== null) {
+        newTop = appliedTopRef.current + residual;
+      } else {
+        if (!offsetParent) return null;
+        const parentRect = offsetParent.getBoundingClientRect();
+        newTop = floatRect.top + residual - parentRect.top;
+      }
+
+      setRailFloatTopPx((prev) => {
+        let v: number;
+        if (prev === null) v = newTop;
+        else if (Math.abs(prev - newTop) < 0.5) v = prev;
+        else v = newTop;
+        appliedTopRef.current = v;
+        return v;
+      });
+      return Math.abs(residual);
+    };
+
+    // Bounded rAF settle loop: re-measure after each apply (the static
+    // mock never changes phase, so the relative correction must
+    // self-trigger) and stop once the residual is < 0.5px or after 6
+    // frames. Converges in 1–2 frames when already close.
+    const runSettle = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      let frames = 0;
+      const step = () => {
+        const r = measure();
+        frames += 1;
+        if (r !== null && r > 0.5 && frames < 6) {
+          rafId = requestAnimationFrame(step);
+        }
+      };
+      step();
+    };
+
+    runSettle();
+    window.addEventListener("resize", runSettle);
+    // document.fonts.ready — text baselines shift on font swap; re-settle.
+    const fontsReady = (document as Document & { fonts?: FontFaceSet }).fonts?.ready;
+    if (fontsReady && typeof fontsReady.then === "function") {
+      fontsReady.then(runSettle).catch(() => undefined);
+    }
+    return () => {
+      window.removeEventListener("resize", runSettle);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+    // Deps: re-settle when the glyph first appears and on each set
+    // boundary (phase/matchupIndex). The relative apply + 0.5px guard
+    // keep it convergent; appliedTopRef persists the applied top across
+    // re-runs so corrections stay relative.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reveal?.phase, reveal?.matchupIndex]);
+
   useEffect(() => {
     if (!reveal) return;
     const settled = reveal.phase === "paused" || reveal.phase === "end-hold";
@@ -1801,6 +2117,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             || reveal.phase === "end-hold"
             || reveal.phase === "done") && (
             <div
+              ref={railFloatRef}
               data-h2h-mid-rail-float="true"
               // Phase 2.5 dev-overlay-readability data-attr. Lets
               // RelayDebugOverlay read the animating delta value via
@@ -1814,23 +2131,37 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
               }
               style={{
                 position: "absolute",
-                top: "50%",
+                // RD6.2-C-rev3 ROOT-CAUSE FIX (2026-06-12): no more
+                // translateY magic literal. Initial render uses
+                // top:50% + translateY(-50%) so the float isn't
+                // off-screen during the very first commit; the
+                // useLayoutEffect above runs synchronously before
+                // paint, measures the two corner ScoreCells, and
+                // commits `railFloatTopPx` — switching to an absolute
+                // top in px that puts the float's center on the
+                // measured midpoint of Mike's and YOU's totals. The
+                // user only ever sees the measured position.
+                ...(railFloatTopPx !== null
+                  ? { top: `${railFloatTopPx}px` }
+                  : { top: "50%", transform: "translateY(-50%)" }),
                 right: 0,
                 width: RIGHT_RAIL_WIDTH_PX,
-                transform: "translateY(-50%)",
                 pointerEvents: "none",
               }}
             >
-              <MidRailContent
-                senderCard={senderBattle}
-                recipientCard={recipientBattle}
+              {/* RD6.2-C: the float now hosts a state-machine rail
+                  (RightColumnRail) instead of just MidRailContent.
+                  RightColumnRail keeps the MidRailContent delta as one
+                  layer and adds a "Next: <Player> / Need +X.X" gap
+                  layer; per-set paused phases dwell ~1500ms on delta
+                  then crossfade to gap. */}
+              <RightColumnRail
+                reveal={reveal}
+                sender={sender}
+                recipient={recipient}
+                senderBattle={senderBattle}
+                recipientBattle={recipientBattle}
                 flashKey={popState.deltaLandedKey}
-                deltaRunning={reveal?.deltaRunning}
-                finalGapOverride={
-                  reveal && (reveal.phase === "done" || reveal.phase === "end-hold")
-                    ? recipient.totalFp - sender.totalFp
-                    : undefined
-                }
               />
             </div>
           )}
@@ -1871,55 +2202,14 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             </div>
           )}
 
-          {/* Relay-tension Phase 3 — anchor-moment frame. Mounts ONLY
-              when ALL of these hold:
-                1. `reveal` hook is wired (no anchor on the static mock).
-                2. phase === "paused" (between sets, not mid-rollup).
-                3. matchupIndex === matchupCount - 2 (the set that just
-                   resolved was the SECOND-to-last; the next is the
-                   final).
-                4. `isFinalSetDecisive` returns decisive: true (game
-                   still mathematically alive — sealed/blowout
-                   suppresses).
-              All conditions are derived from the hook's return; no new
-              state was added to feed this. The paused-window
-              extension to ~ANCHOR_HOLD_MS is applied SYMMETRICALLY in
-              the hook's afterDeltaLands so the frame has time to read
-              before the final set fires. Unmount = phase advances to
-              "revealing" for the final matchup (gate goes false). */}
-          {reveal && (() => {
-            const isPreFinalPause =
-              reveal.phase === "paused" &&
-              reveal.matchupCount >= 2 &&
-              reveal.matchupIndex === reveal.matchupCount - 2;
-            if (!isPreFinalPause) return null;
-            const finalRecipientCard = reveal.recipientRevealOrder[reveal.matchupCount - 1];
-            const finalSenderCard = reveal.senderRevealOrder[reveal.matchupCount - 1];
-            if (!finalRecipientCard || !finalSenderCard) return null;
-            // RD3-C (2026-06-11): JOHN is fixed under this contract;
-            // only the recipient's final card swings the gap. Passing
-            // finalSenderActualFp: 0 makes the helper's finalSetSwing
-            // reduce to finalRecipientActualFp — the true projection
-            // when sender never moves. The helper body stays pure /
-            // sport-agnostic; the C-mode interpretation lives at the
-            // call site. Mirrors the matching adapter in
-            // useH2HReveal.ts's runMatchup anchor-hold extension —
-            // both call sites must agree.
-            const anchor = isFinalSetDecisive({
-              senderRunningTotal: reveal.senderRunningTotal,
-              recipientRunningTotal: reveal.recipientRunningTotal,
-              finalSenderActualFp: 0,
-              finalRecipientActualFp: finalRecipientCard.actualFp,
-            });
-            if (!anchor.decisive) return null;
-            return (
-              <AnchorFrame
-                playerName={finalRecipientCard.name}
-                framing={anchor.framing}
-                needPoints={anchor.needPoints}
-              />
-            );
-          })()}
+          {/* RD6.2-C (2026-06-12): the Phase 3 anchor-moment center
+              overlay (AnchorFrame mount) is RETIRED. The "next opponent
+              + need" data it conveyed lives in the right-column rail's
+              gap layer now (see RightColumnRail above), sequenced
+              AFTER the per-set delta. The center column stays clean.
+              isFinalSetDecisive is still exported from useH2HReveal —
+              the sealed/blowout detector remains available if a future
+              feature wants it — but no longer gates a UI element. */}
         </div>
   );
 
@@ -1962,6 +2252,19 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
                 surface="reveal"
                 pop={popState.senderPop}
                 teamPosition="opponent"
+                // RD6.2-B (2026-06-12): synchronized dual-blink. Both
+                // corner totals consume the SAME key
+                // (popState.deltaLandedKey), so the React commit that
+                // flips deltaLandedKey ALSO mounts both ScoreCells with
+                // the new blink.key — both useEffects fire on the same
+                // commit → both WAAPI animations start on the same
+                // frame. Suppressed under reduced motion (the prop is
+                // omitted, the useEffect short-circuits).
+                blink={
+                  reducedMotion
+                    ? undefined
+                    : { key: popState.deltaLandedKey, durationMs: BLINK_DURATION_MS }
+                }
               />
             }
           />
@@ -1975,6 +2278,13 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             surface="reveal"
             pop={popState.recipientPop}
             teamPosition="user"
+            // RD6.2-B: see senderScoreCell above — same key drives
+            // both corner totals' blinks in sync.
+            blink={
+              reducedMotion
+                ? undefined
+                : { key: popState.deltaLandedKey, durationMs: BLINK_DURATION_MS }
+            }
           />
         }
       />

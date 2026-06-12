@@ -218,13 +218,21 @@ describe("H2HRevealScreen — static layout", () => {
   // Phase 4 fix 2 amend2 (2026-05-27): the final-margin pill (TIE /
   // EVEN / +N) was removed. The total margin is conveyed by the two
   // FP scores themselves; the per-matchup delta still renders.
+  // RD6.2-A (2026-06-12): per-set copy beefed up — "matchup" sublabel
+  // retired on the per-set state in favor of "Gained X.X FP" / "Lost
+  // X.X FP" / "Even" full-word copy.
+  // RD6.2-A revision (2026-06-12): FINAL state INHERITS the per-set
+  // treatment with "Won X.X FP" copy in place of "Gained" — same verb
+  // shape (past tense), different lexicon for the whole-game vs
+  // per-card-swing distinction. The "final" sublabel is retired. Any
+  // of {won, gained, lost, even} proves the delta element rendered.
   it("renders the per-matchup delta in the right rail (the +N matchup readout)", () => {
     const sender = makeHand({ totalFp: 178.4, displayName: "Mike" });
     const recipient = makeHand({ totalFp: 182.4, displayName: "You" });
     const { container } = render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
     const midRail = container.querySelector('[data-h2h-mid-rail="true"]');
     expect(midRail).toBeTruthy();
-    expect(midRail?.textContent?.toLowerCase()).toMatch(/matchup/);
+    expect(midRail?.textContent?.toLowerCase()).toMatch(/won|gained|lost|even/);
   });
 
   it("does NOT render the legacy final-margin pill text (TIE / EVEN / YOU / OPP)", () => {
@@ -726,197 +734,28 @@ describe("H2HRevealScreen — static layout", () => {
   });
 });
 
-describe("H2HRevealScreen — Phase 3 anchor-moment frame", () => {
-  // The anchor frame is gated by THREE conditions that must all hold:
-  //   1. phase === "paused"
-  //   2. matchupIndex === matchupCount - 2 (the second-to-last set
-  //      just resolved; the next set is the final).
-  //   3. isFinalSetDecisive returns decisive: true on the running
-  //      totals + final pair's actualFp.
-  //
-  // These tests construct a reveal mock at exactly that boundary with
-  // controlled running totals + final-pair actualFp so the helper's
-  // decisiveness can be deliberately alive or sealed.
-
-  /** Build a 6-set reveal mock at the penultimate paused boundary.
-   *  Caller controls the entering running totals + final pair's
-   *  actualFp; intermediate sets' actualFp values don't matter for the
-   *  frame's gate (only the FINAL pair feeds the decisiveness math). */
-  function buildPenultimatePaused(args: {
-    senderRunningTotal: number;
-    recipientRunningTotal: number;
-    finalSenderActualFp: number;
-    finalRecipientActualFp: number;
-    finalRecipientName?: string;
-  }) {
-    const senderCards = Array.from({ length: 6 }, (_, i) =>
-      makeCard({
-        slotIndex: i,
-        cardId: `s-${i}`,
-        name: `Sender Player ${i}`,
-        actualFp: i === 5 ? args.finalSenderActualFp : 10,
-      })
-    );
-    const recipientCards = Array.from({ length: 6 }, (_, i) =>
-      makeCard({
-        slotIndex: i,
-        cardId: `r-${i}`,
-        name: i === 5 ? (args.finalRecipientName ?? "Bruce Brown") : `Recipient Player ${i}`,
-        actualFp: i === 5 ? args.finalRecipientActualFp : 10,
-      })
-    );
-    const sender = makeHand({ cards: senderCards });
-    const recipient = makeHand({ cards: recipientCards });
-    // The reveal-order is what the hook publishes (post buildRevealOrder).
-    // For these tests it's fine to use the raw cards (all unheld, same
-    // salary → ordering doesn't matter; what matters is that index 5
-    // is the FINAL pair).
-    const reveal = {
-      phase: "paused" as const,
-      matchupIndex: 4, // matchupCount - 2 = 4 (the set N-2 just resolved)
-      matchupCount: 6,
-      visibleFpMap: new Map(),
-      senderRunningTotal: args.senderRunningTotal,
-      recipientRunningTotal: args.recipientRunningTotal,
-      deltaRunning: 0,
-      activeMatchup: { sender: senderCards[4], recipient: recipientCards[4] },
-      senderRevealOrder: senderCards,
-      recipientRevealOrder: recipientCards,
-      entranceStages: new Array(6).fill("settled" as const),
-      entranceSettledCount: 6,
-      pulseActive: false,
-      senderShakeInfo: null,
-      recipientShakeInfo: null,
-      senderGlowState: null,
-      recipientGlowState: null,
-      revealedCardIds: new Set<string>(),
-      play: () => {},
-      skipToEnd: () => {},
-    };
-    return { sender, recipient, reveal };
-  }
-
-  it("MOUNTS when game is still alive (trailing but catchable) — pre-fix-fail expected", () => {
-    // Recipient trailing by 10; final swing +15 → recipient overtakes.
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 100,
-      recipientRunningTotal: 90,
-      finalSenderActualFp: 5,
-      finalRecipientActualFp: 20,
-      finalRecipientName: "Bruce Brown",
-    });
+// RD6.2-C (2026-06-12): the Phase 3 anchor-moment center overlay
+// (data-h2h-anchor-frame) is RETIRED. Its "next opponent + need" data
+// moved into the right-column rail's gap layer (see RightColumnRail
+// in H2HRevealScreen.tsx). The block below previously asserted MOUNT/
+// SUPPRESS behavior on the AnchorFrame element; with the element gone,
+// the entire block is replaced by a single negative-existence guard.
+// isFinalSetDecisive helper tests (the math) still live in
+// __tests__/useH2HReveal.test.tsx and are unchanged — only the UI
+// gating is gone.
+describe("H2HRevealScreen — Phase 3 anchor-moment frame (RETIRED)", () => {
+  it("does NOT render the legacy AnchorFrame center overlay (RD6.2-C retirement)", () => {
+    // Build any reveal state; the AnchorFrame element should not exist
+    // on ANY phase / matchupIndex / decisive-state input now that the
+    // mount call site is deleted.
+    const sender = makeHand({ totalFp: 178.4, displayName: "Mike" });
+    const recipient = makeHand({ totalFp: 182.4, displayName: "You" });
     const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
-    );
-    const anchor = container.querySelector("[data-h2h-anchor-frame]");
-    expect(anchor).not.toBeNull();
-    expect(anchor?.getAttribute("data-h2h-anchor-framing")).toBe("overtake");
-    const name = container.querySelector("[data-h2h-anchor-name]")?.textContent;
-    expect(name).toContain("Bruce Brown");
-    const stat = container.querySelector("[data-h2h-anchor-stat-line]")?.textContent;
-    expect(stat).toContain("Need");
-    expect(stat).toContain("10.0");
-  });
-
-  it("SUPPRESSED in 'hold' framing under RD3-C — JOHN's big-card swing can no longer flip the lead", () => {
-    // Recipient leading by 5; JOHN's final card actualFp=25 would have
-    // flipped the lead in the default-mode formula (swing -20, finalGap
-    // -15 → DECISIVE). Under RD3-C the screen's call site
-    // (H2HRevealScreen.tsx:1914) passes finalSenderActualFp: 0 — JOHN
-    // is fixed, so his 25 doesn't contribute. Recipient's own final
-    // (+5) keeps their lead → NOT decisive → anchor SUPPRESSED.
-    //
-    // This is the documented C-mode behavior change: "hold" anchor
-    // framing's most common dramatic case (sender's big card threatens
-    // a lead) is no longer reachable under fixed-JOHN. Matches the C8
-    // case in the C-mode isFinalSetDecisive describe in
-    // __tests__/useH2HReveal.test.tsx (which proves the same scenario
-    // at the helper level — default decisive, C-mode suppressed). The
-    // default-mode block in that file still tests the original
-    // formula's behavior; only the SCREEN-level call site is C-mode.
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 100,
-      recipientRunningTotal: 105,
-      finalSenderActualFp: 25,
-      finalRecipientActualFp: 5,
-    });
-    const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
+      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />
     );
     expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
-  });
-
-  it("MOUNTS in 'tie' framing when entering tied", () => {
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 100,
-      recipientRunningTotal: 100,
-      finalSenderActualFp: 15,
-      finalRecipientActualFp: 20,
-    });
-    const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
-    );
-    const anchor = container.querySelector("[data-h2h-anchor-frame]");
-    expect(anchor).not.toBeNull();
-    expect(anchor?.getAttribute("data-h2h-anchor-framing")).toBe("tie");
-    expect(container.querySelector("[data-h2h-anchor-stat-line]")?.textContent).toContain("TIED");
-  });
-
-  it("SUPPRESSED on a sealed/blowout game — trailing beyond reach", () => {
-    // Recipient down by 50; final swing only +10 → still loses.
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 150,
-      recipientRunningTotal: 100,
-      finalSenderActualFp: 5,
-      finalRecipientActualFp: 15,
-    });
-    const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
-    );
-    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
-  });
-
-  it("SUPPRESSED on a sealed/blowout game — leading insurmountably", () => {
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 100,
-      recipientRunningTotal: 150,
-      finalSenderActualFp: 30,
-      finalRecipientActualFp: 5,
-    });
-    const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={reveal as any} />
-    );
-    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
-  });
-
-  it("SUPPRESSED on non-penultimate paused (gate's matchupIndex check)", () => {
-    // Even on an alive game state, mounting at matchupIndex=2 (NOT
-    // matchupCount-2=4) should not show the anchor.
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 100,
-      recipientRunningTotal: 90,
-      finalSenderActualFp: 5,
-      finalRecipientActualFp: 20,
-    });
-    const altered = { ...reveal, matchupIndex: 2 };
-    const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={altered as any} />
-    );
-    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
-  });
-
-  it("SUPPRESSED outside paused phase (gate's phase check)", () => {
-    // Same alive state but phase still "revealing" → frame doesn't mount.
-    const { sender, recipient, reveal } = buildPenultimatePaused({
-      senderRunningTotal: 100,
-      recipientRunningTotal: 90,
-      finalSenderActualFp: 5,
-      finalRecipientActualFp: 20,
-    });
-    const altered = { ...reveal, phase: "revealing" as const };
-    const { container } = render(
-      <H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} reveal={altered as any} />
-    );
-    expect(container.querySelector("[data-h2h-anchor-frame]")).toBeNull();
+    expect(container.querySelector("[data-h2h-anchor-name]")).toBeNull();
+    expect(container.querySelector("[data-h2h-anchor-stat-line]")).toBeNull();
   });
 });
+

@@ -54,6 +54,13 @@ import { isRealName } from "@shared/utils/isRealName";
  *  OVERLAY_CROSSFADE_MS (350ms; arc → results overlay). */
 export const HOLD_TO_ARC_CROSSFADE_MS = 250;
 
+/** RD6.2-C (2026-06-12): hold the reveal's FINAL state (the "Won X.X
+ *  FP" / "Lost X.X FP" verdict in the right-column rail) for this
+ *  duration before triggering the results-overlay crossfade. Matches
+ *  PER_SET_DWELL_MS so the verdict reads as "one more set hold" before
+ *  results takes over. Tunable on glass. */
+export const FINAL_HOLD_MS = 1500;
+
 export interface H2HRecipientRevealProps {
   challengeCtx: ChallengeCtx;
   /** Recipient's total FP, computed by the caller from `myRoster`. */
@@ -192,7 +199,24 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // Overlay appears at arc end-hold → done. Independent crossfade
   // (350ms) layered above the arc end-state — same pattern as the dev
   // mock route at H2HRevealMockRoute.tsx:276-278.
-  const showOverlay = reveal.phase === "done";
+  // RD6.2-C (2026-06-12): hold the FINAL verdict for FINAL_HOLD_MS
+  // (1500ms — matches PER_SET_DWELL_MS so the final reads as "one
+  // more set hold") before triggering the overlay crossfade. Pre-C
+  // the overlay crossfaded immediately at phase=done, which gave the
+  // RD6.2-A FINAL state ("Won/Lost X.X FP") barely 100ms of legibility
+  // before the overlay covered it. The hold lets the verdict land
+  // before results takes over.
+  const [doneHoldElapsed, setDoneHoldElapsed] = useState(false);
+  useEffect(() => {
+    if (reveal.phase === "done") {
+      setDoneHoldElapsed(false);
+      const id = window.setTimeout(() => setDoneHoldElapsed(true), FINAL_HOLD_MS);
+      return () => clearTimeout(id);
+    }
+    setDoneHoldElapsed(false);
+    return undefined;
+  }, [reveal.phase]);
+  const showOverlay = reveal.phase === "done" && doneHoldElapsed;
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
 
   // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.

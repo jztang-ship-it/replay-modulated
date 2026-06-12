@@ -306,7 +306,11 @@ export const RELAY_EASING_POWER = 3;
  *  no global pacing change; only the deciding-set transition is
  *  affected. Suppressed (no extension) on sealed games and on every
  *  non-deciding boundary. */
-export const ANCHOR_HOLD_MS = 1500;
+// RD6.2-C-rev2 (2026-06-12): bumped 1500 → 2000 to fit the widened
+// pre-final paused window (delta 900ms dwell + 250ms crossfade + 850ms
+// gap-readable hold). The pre-final paused boundary is the arc's
+// climax and is allowed to run long.
+export const ANCHOR_HOLD_MS = 2000;
 
 // ── Entrance per-card stage timings ────────────────────────────────────────
 // Each entrance card walks through PRE → LAY → BEAT → TRAVEL → SETTLED.
@@ -869,29 +873,26 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
           // paused window keeps its pre-Phase-3 duration.
           const isPenultimateMatchup =
             matchups.length >= 2 && index === matchups.length - 2;
-          let anchorHoldMs = 0;
-          if (isPenultimateMatchup) {
-            const finalMatchup = matchups[matchups.length - 1];
-            // RD3-C: JOHN is fixed under this contract, so only the
-            // recipient's final card swings the gap. Pass
-            // finalSenderActualFp: 0 so the helper's finalSetSwing
-            // reduces to finalRecipientActualFp. senderRunningTotal
-            // is the fixed sender.totalFp (entering gap is computed
-            // against the same visible value the user sees). Mirrors
-            // the AnchorFrame mount call at
-            // H2HRevealScreen.tsx:1914 — both call sites must agree
-            // on the C-mode interpretation or the paused-window
-            // extension would fire out of sync with the frame mount.
-            const anchor = isFinalSetDecisive({
-              senderRunningTotal: sender.totalFp,
-              recipientRunningTotal: newRecipientTotal,
-              finalSenderActualFp: 0,
-              finalRecipientActualFp: finalMatchup.recipient.actualFp,
-            });
-            if (anchor.decisive) {
-              anchorHoldMs = ANCHOR_HOLD_MS;
-            }
-          }
+          // RD6.2-C-rev2 (2026-06-12): anchorHoldMs fires on EVERY
+          // penultimate paused window, decisive-or-not. Pre-rev2 the
+          // hold gated on isFinalSetDecisive().decisive — sealed/
+          // blowout arcs went straight to MATCHUP_RESOLVE_PAUSE_MS
+          // (850ms) on the penultimate boundary. The RightColumnRail's
+          // gap layer now shows on every game (consistent closing
+          // beat; doesn't leak whether the game was decided), so the
+          // paused window has to accommodate it on every arc too.
+          // The helper call is retained for explicitness / future
+          // re-gating; its result is no longer used here.
+          const anchorHoldMs = isPenultimateMatchup ? ANCHOR_HOLD_MS : 0;
+          // RD6.2-C revision (2026-06-12, post-first-glass): the broader
+          // per-set ANCHOR_HOLD_MS floor added in the first C pass is
+          // RETIRED. The 1500ms hold now fires only on the penultimate
+          // decisive paused window (via the pre-existing anchorHoldMs
+          // branch above) — exactly the original behavior. Per-set
+          // intermediate pauses return to MATCHUP_RESOLVE_PAUSE_MS
+          // (850ms default). The per-arc reveal duration thus drops
+          // back ~3.25s for a 6-set arc compared to the first-C
+          // version. See § C-revision in docs/rd6.2-connection-spec.md.
           const intermediateAdvanceDelay = Math.max(
             MATCHUP_RESOLVE_PAUSE_MS,
             pendingPostRollupMs,
