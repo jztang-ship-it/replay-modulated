@@ -227,6 +227,24 @@ const TIER_ACCENT: Record<string, string> = {
 // removing an import — value-agnostic coupling tests gate the lock.
 export const HAND_STRIP_HEIGHT_PX = 80;
 const HAND_STRIP_GAP_PX = 4;
+
+// RD6.2-prep-A2 (2026-06-12): natural horizontal span of the strip's
+// card content — the width occupied by 6 cells (each = strip_height
+// × 329/478 at natural aspect-ratio) plus 5 inter-cell gaps. The
+// strip wrapper itself is width:100% with justifyContent:center, so
+// at viewports wider than this constant the cards center with flex
+// padding on both sides and the strip's container box (= ZonePanel
+// content box) is WIDER than the actual card span. The box-header
+// row above the strip uses this constant as a maxWidth so the
+// header's outer edges align to the FIRST and LAST card edges,
+// not to the ZonePanel content box (which would bulge past the
+// cards on the wider viewports). At narrow viewports the cells
+// flex-shrink to fit the panel width and the header also clamps to
+// 100% of the panel content — the two track each other naturally.
+// Exported so H2HBoardShell + H2HResultsOverlay's ZoneHeaders can
+// import a single source of truth.
+export const HAND_STRIP_CARD_CONTENT_WIDTH_PX =
+  6 * ((HAND_STRIP_HEIGHT_PX * 329) / 478) + 5 * HAND_STRIP_GAP_PX;
 // ZONE_HEADER_HEIGHT_PX and ZONE_GAP_PX now live in H2HBoardShell (the
 // chrome owns them — H2HRevealScreen only uses HandStrip-cell geometry
 // below this point).
@@ -277,7 +295,12 @@ const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 // the card column wrapper. The `BATTLEFIELD_CARD_MAX_WIDTH_PX` name is
 // retained from the prior numeric constant for grep continuity, but
 // the value now drives the CSS directly.
-const BATTLEFIELD_CARD_MAX_WIDTH = "min(145px, 32vw)";
+// RD6.2-prep-C (2026-06-12): shrunk min(145px, 32vw) → min(125px, 28vw)
+// for real-phone vertical fit. MUST stay in lockstep with
+// H2HResultsOverlay.HERO_CARD_MAX_WIDTH (and the shell's HERO_MIN_HEIGHT_*
+// constants that derive from this value) or the reveal→results crossfade
+// snaps. The aspect-ratio derived row height drops proportionally.
+const BATTLEFIELD_CARD_MAX_WIDTH = "min(125px, 28vw)";
 
 // Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
 // reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail

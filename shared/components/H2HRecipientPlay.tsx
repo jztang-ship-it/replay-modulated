@@ -1286,10 +1286,14 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // replaces it.
 
   // Preview card size — matches one hero card's natural footprint per
-  // the shell's HERO_MIN_HEIGHT_CSS calc: width = min(145px, 32vw);
+  // the shell's HERO_MIN_HEIGHT_CSS calc: width = min(125px, 28vw);
   // height = width * (478/329). Same shape and aspect as the reveal-
   // time hero cards.
-  const previewCardWidthCss = "min(145px, 32vw)";
+  // RD6.2-prep-C (2026-06-12): tracked the shared hero shrink (was
+  // min(145px, 32vw)); must stay equal to BATTLEFIELD_CARD_MAX_WIDTH /
+  // HERO_CARD_MAX_WIDTH so the hold-select preview pop matches the
+  // hero footprint.
+  const previewCardWidthCss = "min(125px, 28vw)";
   const previewCardHeightCss = `calc(${previewCardWidthCss} * ${(478 / 329).toFixed(6)})`;
   const previewedSlotIndex =
     state.kind === "hold_select" ? state.previewedSlotIndex : null;

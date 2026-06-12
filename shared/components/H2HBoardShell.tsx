@@ -27,6 +27,7 @@
 // deriving new ones" applies here at component-shell scale.
 
 import type React from "react";
+import { HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
 
 // ── Geometry constants (moved from H2HRevealScreen) ─────────────────
 
@@ -37,19 +38,46 @@ export const ZONE_HEADER_HEIGHT_PX = 24;
 export const ZONE_GAP_PX = 4;
 
 /** Margin rhythm: top zone → hero → bottom zone. Phase 4 amend3
- *  (2026-05-27) + Piece 2a (2026-05-28) values. */
-export const TOP_ZONE_MARGIN_BOTTOM_PX = 18;
-export const HERO_MARGIN_BOTTOM_PX = 4;
+ *  (2026-05-27) + Piece 2a (2026-05-28) values.
+ *  RD6.2-prep-C (2026-06-12): TOP_ZONE_MARGIN_BOTTOM_PX 18 → 10 and
+ *  HERO_MARGIN_BOTTOM_PX 4 → 0 as part of the real-phone fit pass.
+ *  RD6.2-prep-D (2026-06-12): TOP_ZONE_MARGIN_BOTTOM_PX 10 → 0 —
+ *  symmetric 8/8 from the ZonePanel paddings only.
+ *  RD6.2-prep-E (2026-06-12): both margins 0 → 12 to OPEN the hero
+ *  gaps to a non-touching 20/20 (= panel pad 8 + margin 12). The
+ *  symmetric 8/8 from D read as "touching" on real hardware. To
+ *  pay for +24px stack growth without scrolling results at the
+ *  binding 430-viewport (Pro Max), the strip-side panel paddings
+ *  (top panel pad-top, bottom panel pad-bot — NOT the hero-side)
+ *  drop 8 → 4 via per-call style overrides, and the outer safe-area
+ *  pad drops 8 → 4. Net +12px on the results stack; eats 8 of the
+ *  12 auto-margin slack at 430, leaving 4 → gap above CTA = RESERVED
+ *  (20) + 4 = 24, matching the user's example CTA-clearance floor.
+ *  The bottom-zone marginBottom stays 0 — the overlay-only
+ *  RESERVED_BOTTOM_CLEARANCE_PX (now 20) still carries the
+ *  bottom-strip→CTA breathing room. */
+export const TOP_ZONE_MARGIN_BOTTOM_PX = 12;
+export const HERO_MARGIN_BOTTOM_PX = 12;
 export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
 
 /** Hero region's locked minHeight — derived from the battlefield grid's
  *  natural size (two hero cards + row gap). Computed from
- *  BATTLEFIELD_CARD_MAX_WIDTH = "min(145px, 32vw)" and aspect ratio
- *  478/329, plus BATTLEFIELD_ROW_GAP_PX = 14. Locked here so the
- *  playing-mode hero (guidance copy) doesn't collapse and the
- *  reveal-mode hero (battlefield grid) renders at the same minHeight.
- *  This is the load-bearing detail for S3→S4 no-shift (EDIT B2). */
-export const HERO_MIN_HEIGHT_CSS = `calc(min(145px, 32vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
+ *  BATTLEFIELD_CARD_MAX_WIDTH and aspect ratio 478/329, plus
+ *  BATTLEFIELD_ROW_GAP_PX = 14. Locked here so the playing-mode hero
+ *  (guidance copy) doesn't collapse and the reveal-mode hero
+ *  (battlefield grid) renders at the same minHeight.
+ *  This is the load-bearing detail for S3→S4 no-shift (EDIT B2).
+ *
+ *  RD6.2-prep-C (2026-06-12): card max-width shrunk from
+ *  min(145px, 32vw) to min(125px, 28vw). Real-phone validation
+ *  (RD6.1-g claimed mainstream phones fit but John's actual iPhone
+ *  still scrolled). Step-1 contract-free trims (~46px) closed half
+ *  the gap; the hero geometry shrink closes the rest by ~46–58px
+ *  depending on viewport. MUST land on BOTH reveal and results
+ *  surfaces identically — H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH
+ *  and H2HResultsOverlay.HERO_CARD_MAX_WIDTH change in lockstep.
+ *  Asymmetry here = visible snap at the reveal→results crossfade. */
+export const HERO_MIN_HEIGHT_CSS = `calc(min(125px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
 /** Hero region's reduced minHeight during the hold_select preview window
  *  (docs/holdselect-vertical-budget-design-lock.md §2(3)). One hero-card
@@ -60,7 +88,7 @@ export const HERO_MIN_HEIGHT_CSS = `calc(min(145px, 32vw) * ${((478 / 329) * 2).
  *  hold_select — sized so the restoration finishes inside one
  *  COLUMN_FLIP_DURATION_MS window (~250ms), absorbed into column_flip's
  *  natural choreography so the recipient strip doesn't visibly lurch. */
-export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(145px, 32vw) * ${(478 / 329).toFixed(6)} + 24px)`;
+export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(125px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
 
 /** Duration of the hero-region minHeight restore transition. Synced with
  *  COLUMN_FLIP_DURATION_MS (250ms) per the design lock so the expansion
@@ -197,18 +225,48 @@ export function ZoneHeader({
       data-h2h-board-zone-label={position}
       style={{
         position: "relative",
-        padding: "0 6px",
+        // RD6.2-prep-A2 (2026-06-12): header padding zeroed and the
+        // band capped at the strip's intrinsic card-content span,
+        // centered with auto margins. Pre-A2 the header band spanned
+        // the full ZonePanel content box and bulged ~37px past the
+        // card edges on each side at the 480px-capped inner column.
+        // Now the header's outer edges align EXACTLY to the first
+        // card's left edge and the last card's right edge regardless
+        // of viewport width — at narrow viewports the cards
+        // flex-shrink to fit and the header clamps to 100% via the
+        // implicit min(maxWidth, available); at wide viewports the
+        // cards center with flex padding and the header centers to
+        // the same span.
+        padding: 0,
+        width: "100%",
+        maxWidth: HAND_STRIP_CARD_CONTENT_WIDTH_PX,
+        marginLeft: "auto",
+        marginRight: "auto",
         height: ZONE_HEADER_HEIGHT_PX,
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",
+        // RD6.2-prep-A (2026-06-12): name LEFT-aligned, corner score
+        // RIGHT-aligned (absolute). Anchoring opposite edges means the
+        // name and the total can never crowd each other regardless of
+        // name length — long names grow toward the middle and
+        // ellipsis-truncate before the right-side score envelope.
+        // Designing for the long-name case, not just "MIKE".
+        justifyContent: "flex-start",
         flexShrink: 0,
       }}
     >
       <span
         style={{
+          // RD6.2-prep-A: unidirectional reserve — only the right edge
+          // hosts the score, so the name extends from the left and
+          // truncates before colliding. Was symmetric (2x reserve) so
+          // a centered name had matching margins on both sides.
+          // A2: 100% now equals the strip card-content span (capped
+          // by the outer maxWidth) instead of the ZonePanel content
+          // box, so the reserve math is unchanged but the result is
+          // aligned to the LAST-card-right edge.
           maxWidth: score
-            ? `calc(100% - 2 * (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
+            ? `calc(100% - (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
             : undefined,
           overflow: score ? "hidden" : undefined,
           textOverflow: score ? "ellipsis" : undefined,
@@ -227,7 +285,12 @@ export function ZoneHeader({
           data-h2h-board-corner-score={position}
           style={{
             position: "absolute",
-            right: 6,
+            // RD6.2-prep-A2 (2026-06-12): was 6 — flush against the
+            // outer-right edge now, which after the A2 inset equals
+            // the last card's right edge. The 6px breathing room was
+            // an artifact of the pre-A2 padding:"0 6px" container
+            // box.
+            right: 0,
             top: 0,
             bottom: 0,
             display: "flex",
@@ -366,8 +429,16 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
         fontFamily: "'Inter', system-ui, sans-serif",
         userSelect: "none",
         overflow: "hidden",
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+        // RD6.2-prep-C (2026-06-12): added breathing room above/below
+        // safe-area trimmed 20 → 8 to recover vertical fit on real
+        // phones. env(safe-area-inset-*) still covers the notch +
+        // home-indicator clearance.
+        // RD6.2-prep-E (2026-06-12): trimmed 8 → 4 to free vertical
+        // budget for the hero-gap expansion (+12 top + +12 bottom).
+        // env() does the heavy lifting on safe-area clearance; +4
+        // keeps the strip / CTA off the absolute edge.
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 4px)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)",
         boxSizing: "border-box",
       }}
     >
@@ -419,7 +490,15 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
             top box, visually adjacent to the center delta and YOU's
             corner-total — the cluster 6.2's dual-blink targets. Zero
             vertical growth (reorder, not a second band). */}
-        <ZonePanel zone="top" style={{ marginBottom: resolvedTopZoneMargin }}>
+        {/* RD6.2-prep-E (2026-06-12): per-instance paddingTop override
+            8 → 4. The strip-side (top edge here) of the top panel
+            isn't a hero-gap contributor — trimming it shaves panel
+            internal vertical without affecting the symmetric hero
+            framing. The hero-side (paddingBottom of this panel)
+            stays at the ZonePanel default 8, where it teams up with
+            the new TOP_ZONE_MARGIN_BOTTOM_PX (12) to give 20px top
+            hero gap. */}
+        <ZonePanel zone="top" style={{ marginBottom: resolvedTopZoneMargin, paddingTop: 4 }}>
           {topStrip}
           <ZoneHeader label={topLabel} position="top" score={topScore} />
         </ZonePanel>
@@ -453,7 +532,14 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
             (top) edge — YOU's corner-total lands at the top-right of
             the bottom box, completing the Mike/delta/YOU vertical
             cluster near the hero region. */}
-        <ZonePanel zone="bottom" style={{ marginBottom: BOTTOM_ZONE_MARGIN_BOTTOM_PX }}>
+        {/* RD6.2-prep-E (2026-06-12): per-instance paddingBottom
+            override 8 → 4. Mirror of the top panel's strip-side
+            trim — the strip-side (bottom edge here) of the bottom
+            panel isn't a hero-gap contributor. The hero-side
+            (paddingTop of this panel) stays at the ZonePanel default
+            8, partnering with HERO_MARGIN_BOTTOM_PX (12) for the 20px
+            bottom hero gap. */}
+        <ZonePanel zone="bottom" style={{ marginBottom: BOTTOM_ZONE_MARGIN_BOTTOM_PX, paddingBottom: 4 }}>
           <ZoneHeader label={bottomLabel} position="bottom" score={bottomScore} />
           {bottomStrip}
         </ZonePanel>

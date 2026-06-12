@@ -60,7 +60,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
-import { HAND_STRIP_HEIGHT_PX } from "./H2HRevealScreen";
+import { HAND_STRIP_HEIGHT_PX, HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
 import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore } from "./H2HBoardShell";
 import {
   trashTalkBucket,
@@ -144,7 +144,13 @@ export const OVERLAY_CROSSFADE_MS = 350;
 // BATTLEFIELD_ROW_GAP_PX by separate intent.
 
 const HERO_ROW_GAP_PX = 14;
-const HERO_CARD_MAX_WIDTH = "min(145px, 32vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
+// RD6.2-prep-C (2026-06-12): shrunk min(145px, 32vw) → min(125px, 28vw)
+// for real-phone vertical fit. MUST match arc's BATTLEFIELD_CARD_MAX_WIDTH
+// exactly or the reveal→results crossfade snaps. Companion edits:
+// H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH, H2HBoardShell.HERO_MIN_HEIGHT_CSS,
+// H2HBoardShell.HERO_MIN_HEIGHT_HOLD_SELECT_CSS, and the hold-select
+// preview-card override in H2HRecipientPlay all carry the same value.
+const HERO_CARD_MAX_WIDTH = "min(125px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
 
 // Step 3: explicit per-row hero height for the hero grid. Pinning each
 // row to this prevents row-1 from collapsing when the opponent HeroCell
@@ -222,7 +228,12 @@ const ZONE_HEADER_HEIGHT_PX = 24;
 // breathing room between bottom strip and CTA without the obsolete
 // 100px reserve. Reducing this is safe for the no-snap: marginBottom
 // sits BELOW the bottom strip, so it doesn't shift the strip's Y.
-const RESERVED_BOTTOM_CLEARANCE_PX = 30;
+// RD6.2-prep-C (2026-06-12): 30 → 20. RD6.1-g's 30 was the
+// post-countdown-merge breathing room above the CTA; further trimmed
+// to 20 for real-phone fit. Still preserves a visible gap between
+// bottom strip and CTA (the CTA's own 10px padding + the outer
+// safe-area padding keep it from kissing the strip).
+const RESERVED_BOTTOM_CLEARANCE_PX = 20;
 const ZONE_GAP_PX = 4;
 const URGENT_THRESHOLD_MS = 5 * 60 * 1000;
 
@@ -325,23 +336,40 @@ function ZoneHeader({
       data-h2h-overlay-zone-label={position}
       style={{
         position: "relative",                  // anchor for the absolute score
-        padding: "0 6px",
+        // RD6.2-prep-A2 (2026-06-12): header capped to the strip's
+        // intrinsic card-content span and centered with auto margins
+        // — mirrors H2HBoardShell.ZoneHeader so the reveal→results
+        // no-snap geometric parity holds. Pre-A2 the band bulged
+        // past the card edges on viewports above ~390 because the
+        // ZonePanel content box is wider than the centered card
+        // span. Padding zeroed so outer-left = first-card-left.
+        padding: 0,
+        width: "100%",
+        maxWidth: HAND_STRIP_CARD_CONTENT_WIDTH_PX,
+        marginLeft: "auto",
+        marginRight: "auto",
         height: ZONE_HEADER_HEIGHT_PX,         // unchanged — strip Y depends on this
         display: "flex",
         alignItems: "center",
-        justifyContent: "center",              // matches reveal — name centered
+        // RD6.2-prep-A (2026-06-12): name LEFT-aligned to match the
+        // reveal-side H2HBoardShell.ZoneHeader. Both surfaces anchor
+        // name to the left and score to the right edge so the
+        // reveal→results no-snap geometric parity holds and long
+        // names don't fight a centered total for the middle.
+        justifyContent: "flex-start",
         flexShrink: 0,
       }}
     >
       <span
         style={{
-          // Long-name guard: same reservation as the reveal-side
-          // H2HBoardShell.ZoneHeader uses (CORNER_SCORE_MIN_WIDTH_PX +
-          // 8px) × 2 — keeps the available-for-name band centered on
-          // the header. Short names render fully inside; long names
-          // ellipsis-truncate before colliding with the score.
+          // RD6.2-prep-A: unidirectional reserve (right side only) so
+          // a left-aligned name uses the full available width before
+          // truncating, mirroring H2HBoardShell.ZoneHeader. A2: 100%
+          // is now the strip card-content span (capped by outer
+          // maxWidth), so the reserve math is the same but the
+          // result aligns to the last-card-right edge.
           maxWidth: score
-            ? `calc(100% - 2 * (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
+            ? `calc(100% - (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
             : undefined,
           overflow: score ? "hidden" : undefined,
           textOverflow: score ? "ellipsis" : undefined,
@@ -362,7 +390,9 @@ function ZoneHeader({
           data-h2h-overlay-corner-score-team={position === "top" ? "opponent" : "user"}
           style={{
             position: "absolute",
-            right: 6,
+            // RD6.2-prep-A2 (2026-06-12): flush to outer-right, which
+            // after A2's inset equals the last card's right edge.
+            right: 0,
             top: 0,
             bottom: 0,
             display: "flex",
@@ -818,8 +848,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
         // match the arc. Top strip sits close to the viewport top;
         // the empty space below the bottom strip absorbs viewport
         // slack instead of being top-and-bottom margin.
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+        // RD6.2-prep-C (2026-06-12): added safe-area pad trimmed 20 → 8
+        // to match H2HBoardShell's parallel cut.
+        // RD6.2-prep-E (2026-06-12): trimmed 8 → 4 — mirrors the shell
+        // for no-snap parity. The +4 visual margin remains above env(),
+        // which handles the notch/home-indicator clearance natively.
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 4px)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)",
         boxSizing: "border-box",
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? "auto" : "none",
@@ -921,7 +956,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             H2HBoardShell — corner-score wrapper stays component+
             position identical across reveal-done and overlay-mount
             frames. */}
-        <ZonePanel dataAttr="opponent" style={{ marginBottom: 18 }}>
+        {/* RD6.2-prep-C/D: see commit history.
+            RD6.2-prep-E (2026-06-12): 0 → 12 mirrors the shared
+            TOP_ZONE_MARGIN_BOTTOM_PX (now 12) in H2HBoardShell. The
+            paddingTop: 4 override mirrors the shell's strip-side
+            panel-pad trim. Net: top hero gap = panel pad-bot (8) +
+            margin (12) = 20px on BOTH surfaces. */}
+        <ZonePanel dataAttr="opponent" style={{ marginBottom: 12, paddingTop: 4 }}>
           <ResultsStrip
             cards={sender.cards}
             renderCard={renderCard}
@@ -977,7 +1018,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
             // gap reduced 18 → 4. Bottom strip moves up by 14px,
             // creating reserved-space room for the CTA.
-            marginBottom: 4,
+            // RD6.2-prep-C (2026-06-12): 4 → 0 mirrors HERO_MARGIN_BOTTOM_PX
+            // shared cut.
+            // RD6.2-prep-E (2026-06-12): 0 → 12 mirrors HERO_MARGIN_BOTTOM_PX
+            // (now 12) — gives the bottom hero a real-phone-visible
+            // breathing gap to the bottom strip. With the bottom panel's
+            // paddingTop staying at 8, total bottom hero gap = 20.
+            marginBottom: 12,
           }}
         >
           {/* Row 1: commentary block — spans LEFT RAIL + CENTER (278px at
@@ -1089,7 +1136,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             name+YOU-total band sits at the box's INNER (top) edge —
             top-right of the bottom box, mirroring the reveal-side
             reorder in H2HBoardShell. */}
-        <ZonePanel dataAttr="user" style={{ marginBottom: RESERVED_BOTTOM_CLEARANCE_PX }}>
+        {/* RD6.2-prep-E (2026-06-12): paddingBottom: 4 override
+            mirrors H2HBoardShell's bottom panel strip-side trim. The
+            hero-side (paddingTop) stays default 8, partnering with
+            HERO_MARGIN_BOTTOM_PX (now 12) for the 20px bottom hero
+            gap. */}
+        <ZonePanel dataAttr="user" style={{ marginBottom: RESERVED_BOTTOM_CLEARANCE_PX, paddingBottom: 4 }}>
           <ZoneHeader
             hand={recipient}
             position="bottom"

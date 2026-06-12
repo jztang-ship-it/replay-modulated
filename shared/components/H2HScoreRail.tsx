@@ -58,22 +58,32 @@ export const TIE_GLOW = "rgba(229, 231, 235, 0.45)";    // matches DELTA_NEUTRAL
 
 // ─── Z1 size model ────────────────────────────────────────────────────────
 //
-// Both totals GROW as scores climb, never shrink below baseline. The
-// leader grows bigger via an additional bonus. The tie state gives both
-// sides a smaller bonus (so they pop together when neck-and-neck).
+// RD6.2-prep-A (2026-06-12): the resting-size-scales-with-score behavior
+// is RETIRED. Both totals render at a CONSTANT fixed scale (1.0) so the
+// corner FP sits as a peer of the name label rather than a hero number
+// that squeezes the name band. The constants below stay exported (callers
+// still compute `sizeProgress` for the data attribute and downstream
+// telemetry), but only the Phase 2 per-set scale POP and the leader-glow
+// color/drop-shadow consume them now. The pop animation still composes
+// off the resting scale via restScaleRef, which is now pinned to 1.0.
 //
-// scale = 1
-//       + sizeProgress * SIZE_PROGRESS_MAX        // monotonic climb
-//       + (state === "leading" ? LEADER_BONUS : 0)
-//       + (state === "tied"    ? TIE_BONUS    : 0)
-//
-// Hard clamp at MAX_SCALE so a blowout doesn't make the number
-// unreadable or clip the right-rail column.
+// What stays alive: leader-GLOW (green fill + drop-shadow when state ===
+// "leading"), tie-pulse animation, per-set scale POP (WAAPI transient
+// keyed by pop.key). What dies: the monotonic climb and the LEADER /
+// TIE size bonuses — those were redundant with the glow color +
+// drop-shadow as a leader signal.
 
 export const SIZE_PROGRESS_MAX = 0.12;
 export const LEADER_BONUS = 0.08;
 export const TIE_BONUS = 0.04;
 export const MAX_SCALE = 1.30;
+
+// RD6.2-prep-A: the constant resting scale all ScoreCells render at.
+// Decoupled from the legacy growth constants so a future tuning change
+// to the resting size lives in one place. The pop animation peaks at
+// CONSTANT_REST_SCALE × pop.magnitude, so the pop still composes
+// cleanly off a single source of truth.
+export const CONSTANT_REST_SCALE = 1.0;
 
 // Transition speed for state-driven visual changes (glow + scale). Slow
 // enough that a lead change feels intentional, fast enough that the
@@ -161,11 +171,13 @@ interface ScoreCellProps {
    *  for the phase-2 static end-state path, which renders `total`.
    *  Drives BOTH the visible glyph and the reveal-surface data-attr. */
   displayTotal?: number;
-  /** Three-state lead treatment.
-   *   - "leading":   green color + drop-shadow glow + LEADER_BONUS size.
-   *   - "trailing":  grey color + no glow + no bonus.
-   *   - "tied":      off-white color + pulsing tie glow + TIE_BONUS size
-   *                  on BOTH sides (caller passes "tied" to both cells).
+  /** Three-state lead treatment. RD6.2-prep-A (2026-06-12): the size
+   *  contribution of leading/tied is RETIRED — glow + color carry the
+   *  full leader signal now, the glyph size is constant.
+   *   - "leading":   green color + drop-shadow glow.
+   *   - "trailing":  grey color + no glow.
+   *   - "tied":      off-white color + pulsing tie glow on BOTH sides
+   *                  (caller passes "tied" to both cells).
    *  Tracks the CURRENT running totals on the reveal surface (the user
    *  sees the treatment swap as the totals overtake each other mid-arc)
    *  and the final totals on the overlay surface. Replaces the prior
@@ -260,13 +272,14 @@ export function ScoreCell({
           ...(teamPosition ? { "data-h2h-overlay-score-position": teamPosition } : {}),
         };
 
-  // Z1: size scale from sizeProgress + state bonus. Clamped at MAX_SCALE.
-  // Monotonic during the climb because sizeProgress is monotonic.
-  const stateBonus =
-    state === "leading" ? LEADER_BONUS : state === "tied" ? TIE_BONUS : 0;
-  const rawScale =
-    1 + Math.max(0, Math.min(1, sizeProgress)) * SIZE_PROGRESS_MAX + stateBonus;
-  const scale = Math.min(MAX_SCALE, rawScale);
+  // RD6.2-prep-A (2026-06-12): the resting Z1 scale is a CONSTANT —
+  // both totals render at the same size regardless of running score or
+  // leader/tie state. sizeProgress / state still flow through to data
+  // attrs and to the leader-glow color/drop-shadow + tie-pulse paths
+  // below; only the resting-scale CONTRIBUTION is gone. The pop
+  // animation continues to compose off restScaleRef (peak = rest ×
+  // magnitude), so the per-set scale POP survives unchanged.
+  const scale = CONSTANT_REST_SCALE;
   restScaleRef.current = scale;
 
   // Phase 2 pop — WAAPI animation on the inner glyph, retriggered when
@@ -347,7 +360,13 @@ export function ScoreCell({
       <div
         ref={innerRef}
         style={{
-          fontSize: 22,
+          // RD6.2-prep-A: was 22, dropped to 20 so the corner FP reads
+          // as a peer of the 18px name label on the same row instead
+          // of a hero number. Paired with CONSTANT_REST_SCALE = 1.0,
+          // the rendered glyph is fixed-size across both surfaces and
+          // both teams. Leader-glow color + drop-shadow still
+          // differentiate the leader; per-set pop still fires.
+          fontSize: 20,
           fontWeight: 950,
           color: numberColor,
           fontVariantNumeric: "tabular-nums",
