@@ -103,6 +103,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
+import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import {
   HAND_STRIP_HEIGHT_PX,
   TIER_ACCENT,
@@ -1541,6 +1542,13 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     <>
       <H2HBoardShell
         surfaceKind="playing"
+        // RD7.1 (2026-06-13): in-flow global challenge header on the play
+        // states (Hold / Challenge intro / Draw). During arc the play
+        // shell's inner subtree fades to opacity 0, so the visible header
+        // there comes from the composited reveal/results surfaces (which
+        // mount their own identical GlobalChallengeHeader). No transform —
+        // DON'T-BREAK #1.
+        globalHeader={<GlobalChallengeHeader />}
         topLabel={topLabel}
         bottomLabel={bottomLabel}
         topStrip={topStripSlot}

@@ -193,6 +193,14 @@ export interface H2HRevealScreenProps {
    *  `reveal.phase === "done"`, this renders the same end-state as
    *  the phase-2 static path. */
   reveal?: UseH2HRevealReturn;
+  /** RD7.1 (2026-06-13): optional in-flow global challenge header,
+   *  forwarded to the reveal surface's H2HBoardShell. Passed ONLY by
+   *  H2HRecipientReveal (the recipient challenge flow); the sender
+   *  reveal and the dev mock route omit it so the header renders only on
+   *  the recipient's Reveal screen. Plain flow node — no transform
+   *  (DON'T-BREAK #1 — the RD6.2 delta anchor re-measures the shifted
+   *  totals). */
+  globalHeader?: React.ReactNode;
 }
 
 // ── Tier colors ──────────────────────────────────────────────────────────
@@ -1595,7 +1603,7 @@ function BattlefieldSlot({ card, renderCard, visibleFp, revealed, shakeType, glo
 // ── H2HRevealScreen ──────────────────────────────────────────────────────
 
 export function H2HRevealScreen(props: H2HRevealScreenProps) {
-  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal } = props;
+  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal, globalHeader } = props;
   const reducedMotion = usePrefersReducedMotion();
 
   // Resolve battlefield + display state from either the reveal hook
@@ -2231,6 +2239,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           the dev mock route exercises. */}
       <H2HBoardShell
         surfaceKind="reveal"
+        globalHeader={globalHeader}
         topLabel={sender.displayName}
         bottomLabel={recipient.displayName}
         topStrip={topStripSlot}

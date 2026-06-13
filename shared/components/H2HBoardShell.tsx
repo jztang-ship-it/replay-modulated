@@ -397,6 +397,15 @@ export interface H2HBoardShellProps {
   /** RD6.1: same as topScore, but for the bottom zone (recipient /
    *  user). */
   bottomScore?: React.ReactNode;
+  /** RD7.1 (2026-06-13): optional in-flow global challenge header,
+   *  rendered as the FIRST child of the inner column (above the top
+   *  zone) so it pushes the board DOWN via normal flow. Only the
+   *  recipient challenge flow passes it (H2HRecipientPlay for the play
+   *  states, H2HRecipientReveal→H2HRevealScreen for the reveal). Omitted
+   *  by the sender reveal / mock surfaces so it never leaks there. Must
+   *  be a plain flow node (no transform) — see GlobalChallengeHeader and
+   *  docs/rd7.1-header-spec.md DON'T-BREAK #1. */
+  globalHeader?: React.ReactNode;
 }
 
 // ── Shell ───────────────────────────────────────────────────────────
@@ -406,7 +415,7 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
     topLabel, bottomLabel, topStrip, bottomStrip, hero, belowBoard, surfaceKind,
     rootDataAttrs, innerOpacity, innerTransitionMs, innerDataAttr, compositeOverlay,
     heroMinHeight, topZoneMarginBottom, heroMarginBottom, innerScrollable, belowBoardSticky,
-    topScore, bottomScore,
+    topScore, bottomScore, globalHeader,
   } = props;
   const resolvedHeroMinHeight = heroMinHeight ?? HERO_MIN_HEIGHT_CSS;
   const resolvedTopZoneMargin = topZoneMarginBottom ?? TOP_ZONE_MARGIN_BOTTOM_PX;
@@ -483,6 +492,12 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
           } : {}),
         }}
       >
+        {/* RD7.1 (2026-06-13): in-flow global challenge header. First
+            child of the inner column → pushes the board DOWN via normal
+            flow (no transform — DON'T-BREAK #1). Only rendered when a
+            consumer passes it (recipient challenge flow); omitted by
+            sender/mock surfaces. */}
+        {globalHeader}
         {/* Top framed container (opponent zone). RD6.1-b (2026-06-11):
             ZoneHeader moves BELOW the strip so the name+corner-score
             band sits at the box's INNER edge (closer to the hero).

@@ -49,3 +49,14 @@ Logo-source note (RD7.1 restyle, 2026-06-13): there is NO shared logo component 
 5. Faint gold divider reads as a show-package line, not app chrome.
 6. Premium-but-quiet: on Hold the instruction card still reads as the action; on Results the verdict/connection moment still owns the eye — the header does not compete.
 7. LOAD-BEARING (unchanged): Results fit on Pro Max (430px) with the ~mid-60s header height. If Results scrolls, the lever is parked RESERVED 24→20 or a hero-gap trim — do not chase elsewhere.
+
+## Final locked values (LOCKED 2026-06-13 — shipped iteration)
+Verified in real browser at 390px and 430px (Pro Max).
+- Logo: `REPLAY` (`#EAF0FF`, 24px / 950 / -0.5) + `IFS` (brand orange `#FFB14A`, **24px** — sized EQUAL to REPLAY / 900 / +2). Baseline-aligned lockup, left anchor.
+- Tagline: two rows, UNIFORM all-caps, color-only emphasis — `THE STARS PLAYED` / `YOUR TURN`, every word 13.5px / 700 / 0.14em letter-spacing; `STARS` & `TURN` brand orange, the rest soft grey `rgba(234,240,255,0.55)`. No periods.
+- Shared left rail: header `paddingLeft 13px` (= ZonePanel border 1 + paddingLeft 12) → header text aligns to the card/strip left edge (x=29 at 390 & 430).
+- Divider: faint gold hairline, ~1px, peak opacity 0.18, left-bright fade.
+- Header height: 61px, IDENTICAL on Reveal and Results (reveal→results no-snap preserved).
+- DON'T-BREAKs verified: delta still centers on phone (−0.01px); recipient-flow-only (absent on landing); mounts/props/framework untouched (restyle internal to GlobalChallengeHeader.tsx).
+
+Canonical-doc fold (docs/replaymod-design-decisions.md) deferred to the merge step, per the RD6.2 merge-day pattern.
