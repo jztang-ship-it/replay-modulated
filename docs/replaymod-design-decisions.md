@@ -1826,3 +1826,65 @@ reaction-then-stakes. Full per-decision spec lives in
 
 **Gate.** vitest (incl. both no-snap gates) + tri-sport build
 (basketball + baseball + football) all green at merge.
+
+## § RD7.1 — Global Challenge Header (shipped 2026-06-13)
+
+A brand band that frames the challenge on entry. Full spec:
+`docs/rd7.1-header-spec.md`; this is the canonical fold.
+
+### What it is
+An in-flow REPLAY IFS brand lockup at the top of the 5 RECIPIENT challenge
+screens — Hold, Challenge intro, Draw, Reveal, Results. Single horizontal
+row, left-aligned, premium-but-quiet (must not out-shout the Hold
+instruction card or the Results connection moment).
+- Logo: `REPLAY` white `#EAF0FF` + `IFS` brand orange `#FFB14A`, both 24px,
+  baseline-aligned (canonical inline treatment from `AppHeader.tsx:90-91`;
+  there is no shared `<Logo>` component — `#FFB14A` is the established
+  inline brand-orange token, reused, no new hex).
+- Tagline (two rows, UNIFORM all-caps, color-ONLY emphasis): `THE STARS
+  PLAYED` / `YOUR TURN`, every word 13.5px / 700 / 0.14em; `STARS` & `TURN`
+  orange, the rest soft grey. No periods. (The words are the canon line;
+  only presentation differs — do not "correct" to sentence form.)
+- Faint gold hairline divider beneath (~1px, peak opacity 0.18).
+- Shared left rail: header `paddingLeft 13px` (= ZonePanel border 1 +
+  paddingLeft 12) so its text aligns to the card/strip left edge.
+- Header height 61px.
+
+### Mounting — recipient flow only (3 surfaces), opt-in prop
+The 5 screens span THREE surfaces, all under `H2HRecipientPlay` (landing,
+`ChallengeLandingScreen`, is a sibling that shares none of them):
+- `H2HRecipientPlay` → its `H2HBoardShell` (Hold / intro / Draw)
+- `H2HRecipientReveal` → `H2HRevealScreen` → its own `H2HBoardShell` (Reveal)
+- `H2HRecipientReveal` → `H2HResultsOverlay` (own fixed container 9100; NOT
+  an H2HBoardShell consumer) (Results)
+One shared `GlobalChallengeHeader` component, threaded via an opt-in
+`globalHeader?: ReactNode` prop on `H2HBoardShell` / `H2HRevealScreen` /
+`H2HResultsOverlay`, set ONLY by `H2HRecipientPlay` + `H2HRecipientReveal`.
+Sender reveal and dev mock routes omit the prop → no leak.
+
+### DON'T-BREAK (binding)
+1. Shift via NORMAL FLOW — never a transform on any ancestor of the delta
+   glyph / score cells (a transformed iOS containing block reintroduces the
+   RD6.2 delta-centering bug). The header is a plain in-flow element.
+   Verified: delta still centers −0.01px on phone with the header present.
+2. Framework frozen — header is the only added element + the optional prop;
+   mini-slots / reveal / battle / results structure unchanged.
+3. No landing leak — recipient-flow-only mounting; `ChallengeLandingScreen`
+   never renders it.
+4. No-snap invariant — the header height is IDENTICAL on Reveal and Results
+   (61px == 61px), so the equal downward shift preserves the reveal→results
+   no-snap.
+
+### KNOWN EDGE (documented, accepted)
+Load-bearing: the 61px header is the most likely lever to push Results past
+the Pro Max fold. If it scrolls, the parked lever is RESERVED 24→20 or a
+hero-gap trim — do not chase elsewhere.
+
+### Touched (shared)
+- NEW `GlobalChallengeHeader.tsx`.
+- `H2HBoardShell.tsx`, `H2HRevealScreen.tsx`, `H2HResultsOverlay.tsx` —
+  `globalHeader` prop + render as first child of the inner column.
+- `H2HRecipientPlay.tsx`, `H2HRecipientReveal.tsx` — pass the header.
+
+**Gate.** vitest (incl. both no-snap gates) + tri-sport build
+(basketball + baseball + football) all green at merge.

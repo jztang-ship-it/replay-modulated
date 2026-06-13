@@ -48,6 +48,7 @@ import {
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
 import { isRealName } from "@shared/utils/isRealName";
+import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 
 /** Crossfade-in duration from the HOLD-phase grid into the H2H arc.
  *  ~250ms per the design-doc recipient async MVP spec. Distinct from
@@ -248,6 +249,10 @@ function H2HRecipientRevealInner(props: InnerProps) {
         recipient={recipient}
         renderCard={renderBattlefieldCard}
         reveal={reveal}
+        // RD7.1 (2026-06-13): recipient-flow Reveal screen header. Same
+        // component the results overlay below mounts → identical height →
+        // reveal→results no-snap preserved.
+        globalHeader={<GlobalChallengeHeader />}
       />
       {overlayCrossfade.mounted && (
         <H2HResultsOverlay
@@ -257,6 +262,10 @@ function H2HRecipientRevealInner(props: InnerProps) {
           state={attempt.state satisfies ResultsOverlayState}
           windowClosesAtMs={attempt.windowClosesAtMs}
           visible={overlayCrossfade.visible}
+          // RD7.1 (2026-06-13): recipient-flow Results screen header.
+          // Identical GlobalChallengeHeader → same height as the reveal
+          // shell's header → reveal→results no-snap preserved.
+          globalHeader={<GlobalChallengeHeader />}
           onSendItBack={onSendItBack}
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}

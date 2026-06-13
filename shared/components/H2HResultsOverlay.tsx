@@ -100,6 +100,13 @@ export interface H2HResultsOverlayProps {
   onTryAgain?: () => void;
   onPlayOwnHand?: () => void;
   onDismiss?: () => void;
+  /** RD7.1 (2026-06-13): optional in-flow global challenge header,
+   *  rendered as the FIRST child of the overlay's inner column so it
+   *  shifts the results board DOWN by the SAME height the reveal shell
+   *  shifts (identical GlobalChallengeHeader) — preserving the
+   *  reveal→results no-snap. Passed only by H2HRecipientReveal (the
+   *  recipient flow); omitted by sender/mock so it never leaks. */
+  globalHeader?: React.ReactNode;
   /** Crossfade visibility. When false, the overlay fades to opacity 0
    *  and disables pointer events; when true, fades in. Phase 4 ships
    *  a 350ms crossfade as a placeholder for the phase 6 climax. */
@@ -713,6 +720,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     senderRevealOrder,
     recipientRevealOrder,
     primaryCtaOverride,
+    globalHeader,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -964,6 +972,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           gap: 0,
         }}
       >
+        {/* RD7.1 (2026-06-13): in-flow global challenge header. First
+            child of the overlay's inner column → shifts the results
+            board DOWN by the same height the reveal shell does (identical
+            component), preserving reveal→results no-snap. No transform
+            (DON'T-BREAK #1). Only the recipient flow passes it. */}
+        {globalHeader}
         {/* ── TOP STRIP — opponent's lineup ────────────────────────────
             RD6.1-b: ZoneHeader moves BELOW the strip so the
             name+Mike-total band sits at the box's INNER edge
