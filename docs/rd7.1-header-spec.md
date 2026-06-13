@@ -18,16 +18,18 @@ Challenge landing page. Header must not render on landing.
 ## Layout (locked) — brand lockup, premium-but-quiet
 Single horizontal row, LEFT-ALIGNED, identical on all 5 screens. Premium-but-quiet: reads as a sports-challenge brand band, NOT as the loudest element on the page. It must NOT out-shout the instruction card on Hold or the verdict/connection-moment on Results. (We explicitly are NOT making the brand the loudest text on the page — that was considered and rejected because the same global component rides Reveal/Results, where the RD6.2 connection moment must own the eye.)
 
-- LEFT: the REPLAY IFS logo (reuse the existing game logo — REPLAY white, IFS brand orange), sized as the prominent anchor of the lockup.
-- RIGHT of the logo, same row, vertically centered against it: a TWO-LINE tagline. The two text rows SET the header height; the logo is centered against them.
-  - Line 1: The STARS played
-  - Line 2: Your TURN
+- LEFT: the REPLAY IFS logo (reuse the existing game logo — REPLAY white, IFS brand orange), sized as the prominent anchor of the lockup. UNCHANGED by this amendment.
+- RIGHT of the logo, same row, vertically centered against it: a TWO-LINE tagline, UNIFORM ALL-CAPS, color-only emphasis.
+  - Line 1: THE STARS PLAYED   — "THE"/"PLAYED" soft grey, "STARS" brand orange.
+  - Line 2: YOUR TURN          — "YOUR" soft grey, "TURN" brand orange.
   - NO periods.
-  - "STARS" and "TURN" are ALL-CAPS and rendered in the brand orange (same orange as IFS), slightly heavier weight. The surrounding words ("The", "played", "Your") are normal case, soft white/grey, lighter weight — they recede so the orange words are the hook.
-- Below the whole header: a faint GOLD/ORANGE hairline divider (~1px, low opacity, broadcast-package feel — NOT a hard UI rule line).
+  - ALL words same case (caps), same weight (~700), same size (~13.5px). The ONLY variable that changes word-to-word is COLOR (soft grey vs the existing brand-orange token). Do NOT vary weight or size word-to-word — uneven weight/size was the source of the "messy" ragged-line look this amendment fixes.
+  - Letter-spacing ~0.14em on the tagline (premium/broadcast feel).
+- Shared left rail: the header's LEFT padding aligns to the instruction card's left edge below it. Header text must NOT start tighter to the screen edge than the card.
+- Below the whole header: a faint GOLD/ORANGE hairline divider (~1px, ~18% opacity — fainter than the prior pass; broadcast-package feel, NOT a hard UI rule line).
 - IN-FLOW vertical shift only; framework unchanged; no redesign.
 
-NOTE — copy treatment vs canon: the words are the locked line ("the stars played, your turn"); only the PRESENTATION differs (two lines, no periods, mixed case, orange STARS/TURN). This is intentional styling, not a copy change. Do NOT "correct" the casing/punctuation back to the canon sentence form.
+NOTE — copy treatment vs canon: the words are the locked line ("the stars played, your turn"); only the PRESENTATION differs (two lines, all-caps, no periods, color-only orange hooks on STARS/TURN). This is intentional styling, not a copy change. Do NOT "correct" the casing/punctuation back to the canon sentence form.
 
 ## DON'T-BREAK
 1. Shift via NORMAL FLOW, never a transform. The downward shift must come from the header taking layout space. Do NOT use transform: translateY(...) on any ancestor of the delta glyph or score cells. A transformed ancestor becomes the iOS containing block and reintroduces the RD6.2 delta-centering bug (the six-round saga). The RD6.2 anchor applies `top` relatively and re-measures — a new transformed ancestor skews it.
