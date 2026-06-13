@@ -76,3 +76,32 @@ These are PRIORITIES, not fixed slots. Do not template a fixed clause count.
 ## Percentile — PRECOMPUTE (the one engineering artifact)
 Build-time per-player pool stats {basePlayerId → {mean,p10,p50,p90,min,max}}, ~100KB, VERSIONED.
 NON-NEGOTIABLE: precompute MUST use the SAME candidate filter as pickBiasedLog (min-minutes/eligibility) so percentile is measured against the population the draw actually sampled. A percentile vs a different population is a quiet lie — the exact drift a trust engine cannot tolerate. Pin the filter once, version the file, results reads one number. Off-pool/off-season card (absent from stats) → no percentile → cannot anchor Class A → degrade to Class C.
+
+## Tuning round 1 (2026-06-14, from the seed-7 80-hand nod batch)
+These rules SUPERSEDE the earlier selection/bad-beat/variance/generation prose where they conflict.
+
+### ROOT: CONTRIBUTION selects, PERCENTILE qualifies
+- WHO the explanation is about = the card with the largest CONTRIBUTION TO THE MARGIN, in the outcome direction — NOT the highest pool-percentile.
+  - WIN: the contributor is the top raw-FP scorer (the card that moved the scoreboard). A $16 / 29.9fp card can NOT be "what carried it" when a held star scored 62 — the star wins on contribution.
+  - LOSS: the contributor (culprit) is the biggest SHORTFALL vs the player's own median (poolMedian − actualFp), i.e. the expensive/held card that busted.
+- PERCENTILE does NOT select. It QUALIFIES the already-selected contributor's framing:
+  - selected contributor in the extreme outcome tail (win→high pctile = caught fire; loss→low pctile = no-show) → AGENCY (a decision/pull that mattered).
+  - selected contributor at an ORDINARY pctile (a held star scoring his median) → NOT a decision that mattered → fall to VARIANCE.
+- A contributor must clear a real bar: its swing (win) / shortfall (loss) ≥ MARGIN_SHARE × |margin| AND dominate the runner-up — else variance.
+
+### BAD-BEAT — THREE HARD GATES (all must hold; was 33/80 false-firing)
+Loss only, variance only. Fire iff:
+  1. MARGIN GATE: |margin| ≤ ~13 FP (close band; tune). NEVER on blowouts (a −85 / −105 bad-beat is catastrophic).
+  2. YOU-PLAYED-WELL GATE: every held/expensive card (wasHeld OR salary ≥ EXPENSIVE) is ≥ ~35th pctile. No "you played it right" when your own held star went 0th.
+  3. MIKE-HERO CONTRIBUTION GATE: Mike's named outlier must clear the CONTRIBUTION bar — a genuine high raw FP game (≥ ~45 FP) whose swing ≥ MARGIN_SHARE × |margin|. NOT a high-percentile scrub. "Mike caught a monster Lindy Waters / Micah Potter pull" is the percentile bug on Mike's side — killed.
+Target: ~4–6 bad-beats, all close + well-played + truly out-dueled.
+
+### VARIANCE VOICE — split by margin
+- CLOSE (|margin| small) diffuse → COINFLIP voice ("razor-thin — the logs fell your way" / "lost by 2.7, no single call swung it").
+- BLOWOUT (|margin| ≥ ~25) → BEATDOWN voice, honest, NOT coinflip. Loss: "Mike's slate ran hot top to bottom — nothing to second-guess." Win: "you ran them off the floor." A −85 loss must NEVER read "no single decision swung it."
+
+### GENERATION — implement Recognition → Cause → Flavor (was one fixed frame per leaf)
+- RECOGNITION leads with what the user remembers — usually the decisive card's ACTUAL FP ("Jokić dropped 62."), not a generic "a big night."
+- CAUSE follows only when one honestly exists (the decision that mattered).
+- FLAVOR: lookupCulture(decisive player) as the optional CLOSING wrapper, cause-first, dropped under budget. A tagged star (Jokić/Giannis-tier) MUST produce a cultural tail (round-1 minimum: nickname-based). Resolved in the harness (sport-specific lookupCulture) and passed to the engine.
+- Vary the surface form (≥3 phrasings per leaf, chosen by a stable hash) so 7 A1 hands don't read as 7 copies. Order mandatory; phrasing not.
