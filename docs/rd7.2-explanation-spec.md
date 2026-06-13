@@ -105,3 +105,37 @@ Target: ~4–6 bad-beats, all close + well-played + truly out-dueled.
 - CAUSE follows only when one honestly exists (the decision that mattered).
 - FLAVOR: lookupCulture(decisive player) as the optional CLOSING wrapper, cause-first, dropped under budget. A tagged star (Jokić/Giannis-tier) MUST produce a cultural tail (round-1 minimum: nickname-based). Resolved in the harness (sport-specific lookupCulture) and passed to the engine.
 - Vary the surface form (≥3 phrasings per leaf, chosen by a stable hash) so 7 A1 hands don't read as 7 copies. Order mandatory; phrasing not.
+
+## Tuning round 2 (2026-06-14) — polarity, causal selection, star-protagonist, variety
+SUPERSEDES conflicting earlier prose.
+
+### A. FRAMING agrees with OUTCOME (hard, no exceptions)
+- A WIN line NEVER carries loss framing ("that's the loss" / "sank it" / "cost you" / "gamble that sank it").
+- A LOSS line NEVER carries win framing ("won it" / "swap that won it").
+- A TIE gets NO credit/blame — variance only.
+- No floating/ambiguous closer ("That's the hand") that could read either polarity. Win templates clearly celebrate; loss templates clearly lament. Enforced by a guard test (win-word / loss-word blacklists per register).
+
+### B. SELECTION by causality, not standout
+- The anchored card must have MOVED the result, not merely posted an extreme number.
+- LOSS naming fires ONLY on a CLOSE loss (|margin| ≤ CLOSE_LOSS_MAX ≈ 15). A larger loss is DIFFUSE → variance/beatdown, UNNAMED (even fixing one card wouldn't bridge it). Kills "-46 you stuck with Trae, that's the loss".
+- A HIGH-FP card on a loss is normally evidence the cause was diffuse → variance ("the rest couldn't keep up"); do NOT name it as the cause.
+- EXCEPTION — "wasn't enough" (A5): name a STRONG card on a loss only when BOTH (close loss) AND (it was most of your scoring — dominant share). "X went for {fp}, but it wasn't enough."
+- WIN mirror (Walker fix, in): an ordinary-pull standout that didn't move the margin → variance.
+
+### C. STAR-PROTAGONIST (named anchor = star-preferred)
+- Cultural flavor stays star-only (lookupCulture RED/ORANGE gate — unchanged).
+- A non-star is NAMED only when it IS the decision: the redraw/fade that beat/replaced a star (A3 gamble-paid / value hero). That hero is often a non-star — naming it is the point.
+- A non-star is NEVER named as blame (a cheap hold/redraw that busted). Cheap-bust losses → variance/beatdown, unnamed. (Symmetry: non-stars named only as heroes.)
+- A held NON-star that caught fire is NOT a "decision" → variance (only held STARS anchor A1).
+- Implement via RENDERABILITY FILTERING: a nickname-bearing variant is ELIGIBLE only when the anchor is a star with a nickname; non-star-hero lines draw from the no-nickname variant set. (No post-hoc epithet wrapping.)
+
+### D. Variance voice variety
+- 3–4 surface variants each for beatdown-loss and blowout-win, selected via the engine's deterministic stableHash (resolutionEngine.ts). NOT pickWithAntiRepeat (random+stateful → breaks engine purity/tests). Honesty preserved (acknowledge the lopsided margin); phrasing varies only.
+- FUTURE (not now): cross-hand session anti-repetition belongs at the OVERLAY layer — pass recent-lines into render() so the pure engine stays pure. Documented home for felt variety.
+
+### E. Cheap drift alignment
+- NAME FORM: engine renders lastName (matches the app's templateResolver.ts:13 form; avoids redundant double-name). lastName is not exported there, so the engine replicates its exact logic (strip II/III/IV/V/Jr/Sr suffixes).
+- MARGIN BANDS — documented, intentionally per-surface (not merged):
+  - Resolution Engine: TIE_EPS 1.5 / TINY_MARGIN 4 / CLOSE_LOSS_MAX 15 / BLOWOUT 25. Drives a humble multi-band narrative (coin-flip → close → diffuse → beatdown).
+  - trashTalkBucket (chadChallenge.ts:300): ±1 photo / ±15 big. Drives binary trash-talk on a different surface. They differ ON PURPOSE; do not silently re-tune one to the other.
+- Controversy: engine stays clear of controversy entirely. The existing choke path's raw controversy[] read (chadChallenge.ts:2183) is pre-existing, separate surface — NOT touched.
