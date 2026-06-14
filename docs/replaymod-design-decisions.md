@@ -1888,3 +1888,33 @@ hero-gap trim — do not chase elsewhere.
 
 **Gate.** vitest (incl. both no-snap gates) + tri-sport build
 (basketball + baseball + football) all green at merge.
+
+## § RD7.3 — Retire false prediction-ownership copy (2026-06-14)
+
+The challenge TOP banks credited the player for PREDICTING a pure-RNG gamelog
+pull ("that's not luck, that's the read", "you called it", "you saw it coming",
+"you were the one who knew tonight was the night", "pure read"). That is the
+exact false ownership the RD7.2 Resolution Engine exists to refuse, running on
+the same challenge screens.
+
+RULE (locked): copy may credit a player's DECISION (the hold/fade) or recognize
+an OUTCOME they kept — "you held him and he erupted", "you stacked him", "great
+gamble", "you caught it", "you were holding the ticket". Copy may NEVER credit
+the player with FORESIGHT of an RNG outcome — read / knew / called-it / saw-it-
+coming / "not luck, that's the read". The fix preserves the brag's energy; it
+just makes the brag HONEST (ownership of the outcome you kept, not of a
+prediction you didn't make).
+
+SCOPE: shared/commentary/chadChallenge.ts TOP banks (TOP_BIG_SCORE,
+TOP_RARE_PULL_RECORD / _CAREER / _SEASON_RANK_*) + the choke "you read it"
+lines, and one solo line (selectCommentary.ts "read the projections") + the tie
+"read the slate identically" line. ALREADY-honest lines (FTUE, tactical,
+initiation "You picked the right cards. The basketball didn't read the memo.")
+are LEFT verbatim. The raw controversy[] path (chadChallenge.ts ~2183) is NOT
+touched (radioactive, out of scope).
+
+ADJACENT, FLAGGED, NOT CHANGED this pass (John's call — different surface, a
+"not luck" dominance/intimidation claim rather than a pull-prediction):
+selectCommentary.ts "Cruise control, not luck"; chadChallenge.ts "+{fpDelta}
+over his average. That's not luck, that's somebody's nightmare."; the re-run
+nudge "See if you read it better."
