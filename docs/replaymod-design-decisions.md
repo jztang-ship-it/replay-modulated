@@ -2699,6 +2699,20 @@ point is clean to add later; this build keeps the engine frozen for #3.)*
 - Feature-flag gate (`VITE_FEATURE_LLM_FLAVOR`) so it can ship dark and flip in
   Vercel — recommended; confirm with John at build time.
 
+### Flag operation — BUILD-TIME (rollback path, 2026-06-16)
+`VITE_FEATURE_LLM_FLAVOR` is a **`VITE_` (build-time) flag** — Vite inlines it
+into the SPA bundle at build, so it is NOT an instant dashboard toggle:
+- **Turning ON:** set `VITE_FEATURE_LLM_FLAVOR=true` on the target environment,
+  THEN redeploy (rebuild) so it inlines. Env-var-set alone does nothing to the
+  already-built bundle. (This bit us at ship: the dashboard flip didn't inline
+  until a redeploy.)
+- **Turning OFF (rollback):** unset (or set `false`) THEN redeploy — ~30–60s, a
+  rebuild, NOT instant. The endpoint (`/api/headline {kind:flavor}`) stays live
+  regardless; the flag only gates whether the CLIENT calls it.
+- **Verify ON for real:** the rebuilt bundle must contain the flavor fetch
+  (`kind:"flavor"` / `fetchAuthoredFlavor`); when the flag is false the branch is
+  dead-code-eliminated and absent. Env-var-set is NOT proof — the bundle is.
+
 ### Touched (planned)
 `api/flavor.ts` (new), `shared/utils/fetchAuthoredFlavor.ts` (new, mirrors
 fetchAuthoredHeadline), a Flavor prompt/validator module, the precompute hook in
