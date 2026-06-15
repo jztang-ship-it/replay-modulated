@@ -311,7 +311,7 @@ const CHAD_ANALOGIES: Record<Intensity, string[]> = {
   starter_dominant: [
     "Cruise control, not luck. Different zip code entirely.",
     "Professional result, professionally obtained. No drama, no complaints, no overtime.",
-    "This is what happens when you read the projections and decide to believe them.",
+    "This is what happens when you trust the projections and they deliver.",
     "The hand equivalent of signing a contract in triplicate and everyone showing up on time.",
     "Boring excellence. The most underrated flavor in the game.",
     "Like watching a TV remote work on the first press. Rare. Deserved.",

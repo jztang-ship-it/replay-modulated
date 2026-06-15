@@ -707,7 +707,7 @@ const TOP_CHOKE_HELD_ONE: Line[] = [
   [{ stamp: "choke" }, ". You held {starName} as your big play and the play never showed up."],
   ["A {winTierLow} hand off a held card on {starName}. ", { stamp: "choke" }, ". Premium build, premium fold."],
   ["{starName} on the held card, lineup couldn't lift it — ", { stamp: "choke" }, " — that's the stamp earning itself."],
-  ["You read it. You held {starName}. The reads didn't translate. ", { stamp: "choke" }, ". Pure fold."],
+  ["You held {starName} with conviction. It didn't translate. ", { stamp: "choke" }, ". Pure fold."],
 ];
 
 const TOP_CHOKE_HELD_TWO_PLUS: Line[] = [
@@ -720,7 +720,7 @@ const TOP_CHOKE_HELD_TWO_PLUS: Line[] = [
   ["Premium picks on {starName1} and {starName2}, premium fold — ", { stamp: "choke" }, " — that's what the stamp is for."],
   ["A {winTierLow} hand off held cards on {starName1} and {starName2}. ", { stamp: "choke" }, ". Loaded hand, no spine."],
   ["{starName1} and {starName2} on the held cards, lineup couldn't lift it — ", { stamp: "choke" }, " — call it stack-and-fold."],
-  ["You read it. You held it. {starName1} and {starName2} held; the rest folded. ", { stamp: "choke" }, ". Pure stack-and-choke."],
+  ["You held {starName1} and {starName2}; the rest folded. ", { stamp: "choke" }, ". Pure stack-and-choke."],
 ];
 
 const TOP_CHOKE_NO_HOLDS: Line[] = [
@@ -733,7 +733,7 @@ const TOP_CHOKE_NO_HOLDS: Line[] = [
   [{ stamp: "choke" }, ". You drew {starName} as your big play and the play stayed in the locker."],
   ["A {winTierLow} hand off a lineup that looked like a winner on paper. ", { stamp: "choke" }, ". Loaded build, hollow result."],
   ["Stars on paper, role players on the floor — the whole lineup folded around you — ", { stamp: "choke" }, " — own the fold."],
-  ["You read the slate. You picked the right names. The right names didn't translate. ", { stamp: "choke" }, ". Premium fold."],
+  ["You picked the right names. The right names didn't translate. ", { stamp: "choke" }, ". Premium fold."],
 ];
 
 const TOP_MISS: Line[] = [
@@ -750,38 +750,38 @@ const TOP_MISS: Line[] = [
 ];
 
 const TOP_BIG_SCORE: Line[] = [
-  ["{starName} cooked, and you were sitting at the table with a knife and fork — ", { stamp: "win_tier", tier: "{winTier}" }, " — read of the night."],
-  ["{starName} dropped an absolute number on these guys and you saw it coming — ", { stamp: "win_tier", tier: "{winTier}" }, " — that's the call."],
-  ["{starName} took the whole game by the collar and you were riding shotgun — ", { stamp: "win_tier", tier: "{winTier}" }, " — you called this one."],
+  ["{starName} cooked, and you were sitting at the table with a knife and fork — ", { stamp: "win_tier", tier: "{winTier}" }, " — you held the right man."],
+  ["{starName} dropped an absolute number on these guys and you held him — ", { stamp: "win_tier", tier: "{winTier}" }, " — that's the call."],
+  ["{starName} took the whole game by the collar and you were riding shotgun — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you held on for it."],
   ["You stacked the right names and the right names brought the whole circus. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
-  ["{starName} torched the entire opposing lineup tonight — ", { stamp: "win_tier", tier: "{winTier}" }, " — you saw this coming a mile out."],
+  ["{starName} torched the entire opposing lineup tonight — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you were holding him for it."],
   [{ stamp: "win_tier", tier: "{winTier}" }, ". {starName} went absolutely nuclear and you were holding the detonator."],
-  ["Top to bottom, the lineup ran it back like they owed you money — ", { stamp: "win_tier", tier: "{winTier}" }, " — pure read."],
+  ["Top to bottom, the lineup ran it back like they owed you money — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you held the whole board."],
   ["{starName} put up the kind of stat line you screenshot. You were on it. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
-  ["{starName} ate, and the whole roster ate after him — ", { stamp: "win_tier", tier: "{winTier}" }, " — buffet-line read."],
+  ["{starName} ate, and the whole roster ate after him — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you held the whole table."],
   ["You looked at the slate, you picked the heater, the heater turned the building into a sauna. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
 ];
 
 const TOP_RARE_PULL_RECORD: Line[] = [
-  ["{starName} carved his name into the record book tonight — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you didn't pick the game, you picked history."],
+  ["{starName} carved his name into the record book tonight — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you didn't pick the game, but you were holding the man who made it."],
   ["{starName} just put up a game the league will be talking about for decades — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were holding the ticket."],
-  ["You just watched {starName} do something the rest of the league has never done — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's not luck, that's the read."],
-  ["{starName} hung a number on the league tonight that nobody alive has matched. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["You just watched {starName} do something the rest of the league has never done — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were holding him when it happened."],
+  ["{starName} hung a number on the league tonight that nobody alive has matched. You held him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} dropped one of the games they'll cut highlight reels around — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you were in the right seat for it."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just made the record book and you handed him the pen."],
-  ["{starName} put together an all-time individual performance and you were the one stacking him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure read."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just made the record book and you were holding him for it."],
+  ["{starName} put together an all-time individual performance and you were the one stacking him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure conviction."],
   ["You picked the right night to back the right player. The record book agreed. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["{starName} did something on the floor tonight that lives in the history of the league — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — read of the year."],
+  ["{starName} did something on the floor tonight that lives in the history of the league — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you held him through it."],
   ["{starName} just produced a stat line that goes in a museum somewhere. You owned it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
 ];
 
 const TOP_RARE_PULL_CAREER: Line[] = [
-  ["{starName} just played the best game of his entire career and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's a read."],
-  ["{starName} set a new personal high tonight and you were the one cashing on it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — read of the season."],
-  ["{starName} just outdid every version of himself that came before — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you saw it coming."],
-  ["Years in the league and tonight was the one he'll tell his grandkids about. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["{starName} ran into his own ceiling tonight and put a hole in it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure read."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just rewrote his own best and you were the one who knew tonight was the night."],
+  ["{starName} just played the best game of his entire career and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the hold."],
+  ["{starName} set a new personal high tonight and you were the one cashing on it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you held him for it."],
+  ["{starName} just outdid every version of himself that came before — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were holding him for it."],
+  ["Years in the league and tonight was the one he'll tell his grandkids about. You held him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} ran into his own ceiling tonight and put a hole in it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure conviction."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just rewrote his own best and you were the one holding him when it happened."],
   ["{starName} has been chasing this number his whole career. Tonight it caught him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were riding shotgun."],
   ["You picked {starName} on the night he topped his own number. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} showed up as the best version of himself you've ever seen on tape — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were already there."],
@@ -813,10 +813,10 @@ const TOP_RARE_PULL_CAREER: Line[] = [
 
 const TOP_RARE_PULL_SEASON_RANK_1: Line[] = [
   ["{starName} had the best {statLabel} game in the league all season. You pulled him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["Nobody in the league had a better {statLabel} game this year. {starName}. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["{starName} put up the season's #1 {statLabel} performance tonight — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the read."],
+  ["Nobody in the league had a better {statLabel} game this year. {starName}. You held him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["{starName} put up the season's #1 {statLabel} performance tonight — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you held him."],
   [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just delivered the best {statLabel} game in the league all year and you stacked him."],
-  ["The league's top {statLabel} game of the season belongs to {starName} tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Pure read."],
+  ["The league's top {statLabel} game of the season belongs to {starName} tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You held him."],
   ["You picked {starName} on the night he set the season's best {statLabel} line. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} owns the season's top {statLabel} game. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You were on it."],
   ["No {statLabel} game in the league has touched what {starName} put up tonight. You had it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
@@ -824,24 +824,24 @@ const TOP_RARE_PULL_SEASON_RANK_1: Line[] = [
 
 const TOP_RARE_PULL_SEASON_RANK_2_3: Line[] = [
   ["{starName} put up one of the 3 best {statLabel} games in the league all season. You pulled him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["{starName} had a top-3 {statLabel} game of the season tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You called it."],
+  ["{starName} had a top-3 {statLabel} game of the season tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You held him."],
   ["Top three {statLabel} games of the season — {starName} is on the list tonight. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} delivered a top-3 {statLabel} line for the season. You stacked him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just had one of the 3 best {statLabel} nights in the league this year and you were already there."],
-  ["{starName} put together one of the season's three best {statLabel} games. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Read of the month."],
+  ["{starName} put together one of the season's three best {statLabel} games. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You held him through it."],
   ["You picked the right night for the right player — top-3 {statLabel} game of the season. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["{starName}'s {statLabel} line tonight is one of the 3 biggest the league has seen this year. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". Pure read."],
+  ["{starName}'s {statLabel} line tonight is one of the 3 biggest the league has seen this year. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". You held him."],
 ];
 
 const TOP_RARE_PULL_SEASON_RANK_4_PLUS: Line[] = [
   ["{starName} put together one of the best {statLabel} performances of the season tonight. You picked him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["{starName} just had one of the highest {statLabel} nights of the entire season and you were stacked behind him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's a read."],
-  ["{starName} just dropped one of the biggest {statLabel} games anyone's put up this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you called it."],
+  ["{starName} just had one of the highest {statLabel} nights of the entire season and you were stacked behind him — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the hold."],
+  ["{starName} just dropped one of the biggest {statLabel} games anyone's put up this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you held him."],
   ["{starName} produced one of the best {statLabel} games the league has seen all year. You were on it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
-  ["You picked the right night to back the right player and the {statLabel} backed it up — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure read."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just had one of the bigger {statLabel} games anyone has put up this season and you saw it coming."],
-  ["{starName} delivered a {statLabel} performance almost nobody in the league has matched this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — read of the month."],
-  ["{starName} put up {statLabel} numbers that rank with the best of the season. You called it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
+  ["You picked the right night to back the right player and the {statLabel} backed it up — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you held him for it."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {starName} just had one of the bigger {statLabel} games anyone has put up this season and you were holding him for it."],
+  ["{starName} delivered a {statLabel} performance almost nobody in the league has matched this year — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you held him through it."],
+  ["{starName} put up {statLabel} numbers that rank with the best of the season. You held him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} just had one of the best {statLabel} nights the league has seen this year and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the call."],
   ["You picked {starName} on the night he put up one of the biggest {statLabel} games of the season. Stamp it. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
 ];
@@ -1258,7 +1258,7 @@ export function topSlotFramingBank(key: TopSlotBankKey): Line[] {
 const RES_YOU_WON_BIG_TACTICAL: string[] = [
   "Ran them off the floor by {delta}. Different builds, same slate — yours hit harder.",
   "Cooked them by {delta}. The same names, a sharper hand.",
-  "{delta} FP gap doesn't come from luck. You read the room better.",
+  "{delta} FP gap — you made the sharper calls.",
   "Crushed by {delta}. That's the kind of margin people screenshot.",
   "Slate said it was possible. You said yes by {delta}.",
   "You found {delta} extra FP in cards they had access to. That's the whole game.",
@@ -1316,7 +1316,7 @@ const RES_PHOTO_FINISH_TIE_TACTICAL: string[] = [
 ];
 
 const RES_PHOTO_FINISH_TIE_PERSONALITY: string[] = [
-  "{name} and you read the slate identically. Run it again on different cards.",
+  "{name} and you made the same calls. Run it again on different cards.",
   "{name} is mad about a tie. So are you.",
   "Bragging rights are off the table. Send {name} the slate again and break the tie.",
   "Inside the margin against {name}. The next one decides it.",
