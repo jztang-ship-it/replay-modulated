@@ -58,7 +58,7 @@
  * structural decisions this component encodes.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import { HAND_STRIP_HEIGHT_PX, HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
 import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore } from "./H2HBoardShell";
@@ -135,6 +135,13 @@ export interface H2HResultsOverlayProps {
    *  regular prop and lift the state-derived logic into the recipient
    *  wrapper, avoiding the override pattern compounding. */
   primaryCtaOverride?: { label: string; handler?: () => void };
+  /** RD7.2 (2026-06-14): the Resolution Engine's causally-honest "why" line,
+   *  computed by the recipient flow (H2HRecipientReveal) and passed in. When
+   *  present it REPLACES the legacy selectChallengeResolution flavor line as
+   *  the primary why-line (no duplicate/contradiction, no extra height — it
+   *  renders in the same resolution slot). Consumers that don't pass it
+   *  (sender reveal / dev mock) fall back to the legacy line. */
+  explanation?: string;
 }
 
 /** Cross-fade duration. */
@@ -168,6 +175,22 @@ const HERO_CARD_MAX_WIDTH = "min(125px, 28vw)"; // matches arc's BATTLEFIELD_CAR
 // derived height). Step-1 no-jump assertion stays green because the
 // user hero in row 2 retains the exact X/Y it had before.
 const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed(6)})`;
+
+// RD7.5 Move 4 (2026-06-14): verdict-row (grid row 1) MIN height. Pre-
+// RD7.5 the floor was HERO_ROW_HEIGHT_CSS (~158px @390) — a holdover
+// from when row 1 held the opponent hero card; RD7.4 kept it as the
+// minmax floor. But RD7.5 Move 2 collapsed the verdict to ONE compact
+// line, so a full hero-card-height floor just bakes in ~130px of dead
+// space that pushes the hero/strip/CTA down and forces the results
+// screen to scroll on the phone (header rides off-screen). This smaller
+// floor gives the single verdict line a deliberate breathing band (and
+// holds a worst-case 2–3-line engine explanation without the row
+// growing) while reclaiming the rest — pulling everything below UP so
+// the screen fits with the URL bar showing. Row 2 (the user hero card)
+// still uses the full HERO_ROW_HEIGHT_CSS; the no-jump hero X/Y is
+// preserved because the hero remains in row 2. Tuned against the
+// real-browser fit check at 390 & 430.
+const VERDICT_ROW_MIN_PX = 72;
 
 // Docked-score target minimum width inside each ZoneHeader.
 // Reserves right-aligned space for the score that will glide in at
@@ -614,14 +637,14 @@ function HeroCell({
               : undefined,
         }}
       >
-        {/* #7 flip-discoverability caption. Floats just ABOVE the hero box
-            (bottom: 100%), out of normal flow → zero effect on the locked
-            geometry. pointerEvents:none so taps fall through to the card.
-            Empty → invite the first tap; front → invite the flip; back →
-            hidden (the card's own "TAP TO FLIP BACK" hint takes over). */}
-        {(!card || !flipped) && (
+        {/* #7 flip-discoverability caption (OCCUPIED-front only). Floats
+            just ABOVE the hero box (bottom: 100%), out of normal flow →
+            zero effect on the locked geometry. pointerEvents:none so taps
+            fall through to the card. Back state → hidden (the card's own
+            "TAP TO FLIP BACK" hint takes over). */}
+        {card && !flipped && (
           <div
-            data-h2h-overlay-hero-hint={card ? "front" : "empty"}
+            data-h2h-overlay-hero-hint="front"
             style={{
               position: "absolute",
               bottom: "calc(100% + 6px)",
@@ -637,12 +660,379 @@ function HeroCell({
               whiteSpace: "nowrap",
             }}
           >
-            {card ? "Tap again — game logs are on the back" : "Tap a card to see the game logs"}
+            Tap again — game logs are on the back
+          </div>
+        )}
+        {/* RD7.5 Move 3 (2026-06-14): the EMPTY-state log-inspection prompt
+            now lives INSIDE the dashed card-outline box (centered), making
+            the box self-explanatory, instead of floating above it as its
+            own line. The box IS the log-inspection surface, so the prompt
+            belongs in it; folding it in reclaims the line it used to eat
+            above the hero (feeds the Move-4 fit). Absolute inset-0 inside
+            the (relative) box → no effect on the locked hero/strip
+            geometry; pointerEvents:none so the tap falls through to the
+            strip below. Shares the box's existing empty-only translateX
+            centering — no NEW transform introduced. */}
+        {!card && showEmptyBorder && (
+          <div
+            data-h2h-overlay-hero-hint="empty"
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              padding: "0 16px",
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: 0.3,
+              lineHeight: 1.3,
+              color: "rgba(255,255,255,0.42)",
+              pointerEvents: "none",
+            }}
+          >
+            tap a card to see game logs
           </div>
         )}
         {card && renderCard(card, { flipped })}
       </div>
     </div>
+  );
+}
+
+// ── RD7.7 resolution celebration (full-screen, transient) ──────────────────
+// The ONE place the app abandons restraint. On win/loss resolution a TRUE
+// full-screen overlay (position:fixed, its own top stacking layer, pointer-
+// events:none) paints OVER the entire results screen, animates ITSELF, and
+// clears after ~RD77_CELEBRATION_MS — revealing the untouched clean results
+// screen. It NEVER wraps / scales / transforms the results content underneath
+// (a transformed ancestor of the delta glyph / score cells would reintroduce
+// the RD6.2 centering bug + the RD7.1 fit bug); being OUT OF FLOW is exactly
+// how it goes BIG yet stays fit-safe — the zero-scroll resting screen is never
+// touched. Win and loss are OPPOSITE in KIND:
+//   WIN  = RELEASE  — expand / bright / loud: a full-screen flash, an expanding
+//                     ignite ring, sparks radiating outward; the score SLAMS up
+//                     + ignites. Fast attack, brief linger, then clears.
+//   LOSS = COLLAPSE — contract / cold / heavy: a desaturate + darken sweep over
+//                     the whole screen, a downward settle; energy IMPLODES.
+//                     Slow, still, then clears. NOT a dimmer win.
+//   TIE  = nothing.
+// The score still counts up (anticipation) and, on win, SLAMS via the ScoreCell
+// pop (transient WAAPI on the cell ITSELF — allowed); on loss it sags cold.
+// HONESTY: loud is fine, skill-bragging is not — there are NO words in the
+// celebration; the engine's honest line stays the only text. prefers-reduced-
+// motion → no celebration (settle straight to the clean resolved screen).
+const RD76_COUNT_UP_MS = 1200;
+const RD76_EXPLANATION_STAGGER_MS = 200;
+const RD77_CELEBRATION_MS = 1400;
+// RD7.8 the held breath: the result stays illegible for this long (both score
+// cells reel + the margin hero rolls with its sign hidden) before the lock
+// fires the celebration. The reel display refreshes every REEL_TICK_MS so it
+// reads as churning digits, not a blur.
+const RD78_SUSPENSE_MS = 1000;
+const RD78_REEL_TICK_MS = 55;
+
+const _rd76PrefersReducedMotion = (): boolean =>
+  typeof window !== "undefined" &&
+  !!window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+
+let _rd77KeyframesInjected = false;
+function ensureRd77Keyframes() {
+  if (_rd77KeyframesInjected || typeof document === "undefined") return;
+  _rd77KeyframesInjected = true;
+  const style = document.createElement("style");
+  style.setAttribute("data-rd77-celebration-keyframes", "true");
+  style.textContent = `
+    @keyframes rd77-win-flash {
+      0%   { opacity: 0; }
+      9%   { opacity: 0.95; }
+      28%  { opacity: 0.40; }
+      100% { opacity: 0; }
+    }
+    @keyframes rd77-win-rays {
+      0%   { transform: translate(-50%,-50%) scale(0.15); opacity: 0; }
+      14%  { opacity: 0.9; }
+      100% { transform: translate(-50%,-50%) scale(3.6); opacity: 0; }
+    }
+    @keyframes rd77-loss-sweep {
+      0%   { opacity: 0; }
+      30%  { opacity: 1; }
+      68%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes rd77-loss-drop {
+      0%   { transform: translateY(-12%); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes rd78-margin-in {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.9); }
+      100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+    @keyframes rd78-margin-win {
+      0%   { transform: translate(-50%,-50%) scale(1); }
+      32%  { transform: translate(-50%,-50%) scale(1.5); }
+      100% { transform: translate(-50%,-50%) scale(1.18); opacity: 0; }
+    }
+    @keyframes rd78-margin-loss {
+      0%   { transform: translate(-50%,-50%) translateY(0) scale(1); opacity: 1; }
+      30%  { transform: translate(-50%,-50%) translateY(7px) scale(0.96); opacity: 1; }
+      100% { transform: translate(-50%,-50%) translateY(14px) scale(0.9); opacity: 0; }
+    }`;
+  document.head.appendChild(style);
+}
+
+/** Full-screen, transient resolution celebration. A fixed top-layer overlay
+ *  (pointer-events:none) that self-clears after RD77_CELEBRATION_MS, then
+ *  renders null — leaving the clean results screen untouched. Renders nothing
+ *  for tie / inactive. NEVER wraps or transforms the results content. */
+function ResolutionCelebration({ outcome, fireKey }: { outcome: "win" | "loss" | "tie"; fireKey: number }) {
+  useEffect(ensureRd77Keyframes, []);
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    if (fireKey <= 0 || outcome === "tie") {
+      setActive(false);
+      return;
+    }
+    setActive(true);
+    const t = window.setTimeout(() => setActive(false), RD77_CELEBRATION_MS);
+    return () => window.clearTimeout(t);
+  }, [fireKey, outcome]);
+
+  // Win sparks radiate from screen centre to the edges (vmin units → scales to
+  // any phone). Re-randomized each fire via the fireKey dep.
+  const sparks = useMemo(() => {
+    if (outcome !== "win") return [];
+    return Array.from({ length: 22 }, (_, i) => {
+      const ang = (Math.PI * 2 * i) / 22 + (Math.random() - 0.5) * 0.35;
+      const dist = 38 + Math.random() * 44;
+      return {
+        id: i,
+        dx: +(Math.cos(ang) * dist).toFixed(1),
+        dy: +(Math.sin(ang) * dist).toFixed(1),
+        scale: +(0.5 + Math.random() * 0.9).toFixed(2),
+        c: ["#FFD700", "#FFE066", WINNING_COLOR, "#FFFFFF"][Math.floor(Math.random() * 4)],
+        delay: Math.floor(Math.random() * 60),
+      };
+    });
+  }, [outcome, fireKey]);
+
+  if (!active || outcome === "tie") return null;
+
+  const layer: React.CSSProperties = { position: "fixed", inset: 0, pointerEvents: "none" };
+
+  if (outcome === "win") {
+    return (
+      <div data-h2h-resolution-celebration="win" aria-hidden="true" style={{ ...layer, zIndex: 2147483000, overflow: "hidden" }}>
+        {/* RELEASE — full-screen bright flash */}
+        <div
+          style={{
+            ...layer,
+            background: `radial-gradient(circle at 50% 52%, rgba(255,255,255,0.95) 0%, ${WINNING_COLOR} 26%, rgba(34,197,94,0) 64%)`,
+            mixBlendMode: "screen",
+            animation: "rd77-win-flash 720ms ease-out forwards",
+          }}
+        />
+        {/* expanding ignite ring */}
+        <div
+          style={{
+            position: "fixed",
+            left: "50%",
+            top: "52%",
+            width: "44vmin",
+            height: "44vmin",
+            borderRadius: "50%",
+            boxShadow: `0 0 36px 10px ${WINNING_COLOR}, inset 0 0 24px ${WINNING_COLOR}`,
+            animation: "rd77-win-rays 900ms cubic-bezier(0.16,1,0.3,1) forwards",
+          }}
+        />
+        {/* sparks radiating to the edges */}
+        {sparks.map((s) => (
+          <div
+            key={s.id}
+            style={{
+              position: "fixed",
+              left: "50%",
+              top: "52%",
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              background: s.c,
+              boxShadow: `0 0 8px ${s.c}`,
+              animation: `rd77-spark-${s.id} 1000ms cubic-bezier(0.16,1,0.3,1) ${s.delay}ms forwards`,
+            }}
+          />
+        ))}
+        <style>
+          {sparks
+            .map(
+              (s) => `@keyframes rd77-spark-${s.id} {
+              0%   { transform: translate(-50%,-50%) scale(${s.scale}); opacity: 1; }
+              75%  { opacity: 1; }
+              100% { transform: translate(calc(-50% + ${s.dx}vmin), calc(-50% + ${s.dy}vmin)) scale(0); opacity: 0; }
+            }`,
+            )
+            .join("")}
+        </style>
+      </div>
+    );
+  }
+
+  // LOSS — cold, heavy collapse: a desaturate + darken sweep + a downward settle.
+  return (
+    <div data-h2h-resolution-celebration="loss" aria-hidden="true" style={{ ...layer, zIndex: 2147483000, overflow: "hidden" }}>
+      <div
+        style={{
+          ...layer,
+          backdropFilter: "grayscale(0.9) brightness(0.5)",
+          WebkitBackdropFilter: "grayscale(0.9) brightness(0.5)",
+          background: "rgba(6,8,16,0.40)",
+          animation: "rd77-loss-sweep 1400ms ease-in-out forwards",
+        }}
+      />
+      <div
+        style={{
+          ...layer,
+          background: "linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)",
+          animation: "rd77-loss-sweep 1400ms ease-in-out forwards, rd77-loss-drop 1400ms ease-out forwards",
+        }}
+      />
+    </div>
+  );
+}
+
+/** Signed margin text for the hero — "+3.2" / "−1.8" / "0.0" (U+2212 minus). */
+function formatMargin(m: number): string {
+  if (Math.abs(m) < 0.05) return "0.0";
+  const mag = Math.abs(m).toFixed(1);
+  return m > 0 ? `+${mag}` : `−${mag}`;
+}
+
+/** RD7.8 MARGIN HERO — the suspense instrument AND the reveal's visual hero. A
+ *  fixed, centred, pointer-events:none overlay (zero layout impact). While
+ *  `phase === "resolving"` it shows the margin ROLLING with its sign hidden (the
+ *  user genuinely doesn't know yet) in a NEUTRAL colour, so it never leaks the
+ *  outcome. At the lock (`phase === "revealed"`) it shows the FINAL signed
+ *  margin and plays the reveal beat — WIN: emphatic scale-up then settle+fade;
+ *  LOSS: cold drop+fade — landing on a brain that didn't know. The margin (not
+ *  the totals) is the felt quantity, especially apt for a head-to-head. */
+function MarginHero({
+  phase,
+  value,
+  outcome,
+  revealKey,
+}: {
+  phase: "resolving" | "revealed";
+  value: number;
+  outcome: "win" | "loss" | "tie";
+  revealKey: number;
+}) {
+  useEffect(ensureRd77Keyframes, []);
+  const color =
+    phase === "resolving"
+      ? "rgba(234,240,255,0.92)"
+      : outcome === "win"
+        ? WINNING_COLOR
+        : outcome === "loss"
+          ? "#EF4444"
+          : "#FFB14A";
+  const anim =
+    phase === "resolving"
+      ? "rd78-margin-in 240ms ease-out"
+      : outcome === "win"
+        ? `rd78-margin-win ${RD77_CELEBRATION_MS}ms cubic-bezier(0.16,1,0.3,1) forwards`
+        : outcome === "loss"
+          ? `rd78-margin-loss ${RD77_CELEBRATION_MS}ms ease-in forwards`
+          : "rd78-margin-in 240ms ease-out";
+  return (
+    // `key` flips on the revealed beat so the win/loss keyframe re-fires fresh.
+    <div
+      key={phase === "revealed" ? `r${revealKey}` : "resolving"}
+      data-h2h-margin-hero={phase}
+      aria-hidden="true"
+      style={{
+        position: "fixed",
+        left: "50%",
+        top: "44%",
+        transform: "translate(-50%,-50%)",
+        pointerEvents: "none",
+        zIndex: 2147483600,
+        fontSize: 72,
+        fontWeight: 950,
+        letterSpacing: -2,
+        lineHeight: 1,
+        fontVariantNumeric: "tabular-nums",
+        color,
+        textShadow: "0 2px 18px rgba(0,0,0,0.55)",
+        animation: anim,
+      }}
+    >
+      {formatMargin(value)}
+    </div>
+  );
+}
+
+/** The user's score cell, wired for the RD7.8 reveal beat. The PARENT owns the
+ *  suspense timeline and feeds `displayTotal` (the reel during suspense, then
+ *  undefined → the final). When `revealNonce` flips (the lock), this fires the
+ *  win SLAM (ScoreCell pop) or the loss cold sag — transient WAAPI on the cell
+ *  itself, so the cross-surface no-snap is intact at rest. */
+function AnimatedUserScore({
+  total,
+  state,
+  sizeProgress,
+  displayTotal,
+  revealNonce,
+  reducedMotion,
+}: {
+  total: number;
+  state: "leading" | "trailing" | "tied";
+  sizeProgress: number;
+  displayTotal: number | undefined;
+  revealNonce: number;
+  reducedMotion: boolean;
+}) {
+  const [pop, setPop] = useState<
+    { magnitude: number; durationMs: number; kind: "scaled" | "lead-change"; key: number } | undefined
+  >(undefined);
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const firedNonce = useRef(0);
+
+  useEffect(() => {
+    if (revealNonce <= 0 || revealNonce === firedNonce.current || reducedMotion) return;
+    firedNonce.current = revealNonce;
+    if (state === "leading") {
+      // WIN — the score SLAMS, synced with the full-screen eruption.
+      setPop({ magnitude: 1.42, durationMs: 560, kind: "scaled", key: revealNonce });
+    } else if (state === "trailing") {
+      // LOSS — a heavier cold downward sag (opposite vector to the slam).
+      const node = wrapRef.current;
+      if (node && typeof node.animate === "function") {
+        node.animate(
+          [
+            { transform: "translateY(0)", opacity: 1 },
+            { transform: "translateY(5px)", opacity: 0.72, offset: 0.5 },
+            { transform: "translateY(2px)", opacity: 0.9 },
+          ],
+          { duration: 620, easing: "ease-out", fill: "none" },
+        );
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealNonce, state, reducedMotion]);
+
+  return (
+    <span ref={wrapRef} style={{ position: "relative", display: "inline-flex" }}>
+      <ScoreCell
+        total={total}
+        displayTotal={displayTotal}
+        state={state}
+        sizeProgress={sizeProgress}
+        surface="overlay"
+        teamPosition="user"
+        pop={pop}
+      />
+    </span>
   );
 }
 
@@ -721,6 +1111,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     recipientRevealOrder,
     primaryCtaOverride,
     globalHeader,
+    explanation,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -788,8 +1179,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
   // drives headline copy or color — RD1 keys both off the SIGN of delta.
   const bucket = trashTalkBucket(delta);
   const challengerName = sender.displayName || null;
-  const headline = selectHeadline({ delta, challengerName });
-  const fpHero = formatFpHero(delta);
+  // RD7.5 Move 2 (2026-06-14): the outcome headline + FP-hero are no
+  // longer rendered (the verdict collapsed to the single RD7.2 engine
+  // line, which carries the margin). selectHeadline/formatFpHero stay
+  // exported + unit-tested; we just stopped CALLING them here.
+  // headlineColor (selectOutcomeColor) survives — it tints the single
+  // engine line as the cheap win/loss color cue.
   const headlineColor = selectOutcomeColor(delta);
 
   // Right-rail score treatment tracks the FINAL totals via the shared
@@ -815,6 +1210,97 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     : recipient.totalFp > sender.totalFp
       ? "leading"
       : "trailing";
+
+  // Win/loss/tie for the RD7.7 celebration + RD7.8 reveal (maps the score
+  // three-state to the outcome KIND).
+  const outcomeKind: "win" | "loss" | "tie" =
+    overlayTied ? "tie" : recipient.totalFp > sender.totalFp ? "win" : "loss";
+  const finalMargin = recipient.totalFp - sender.totalFp;
+
+  // RD7.8 SUSPENSE → REVEAL timeline (single source — replaces the RD7.6 "count
+  // up to your own total" beat, which removed the suspense by leaving Mike's
+  // target static so the crossing was legible early). On entrance the result is
+  // NOT readable: for ~RD78_SUSPENSE_MS BOTH score cells "reel" (churn around a
+  // shared centre, held in a NEUTRAL state so no leading/trailing colour leaks
+  // the winner) and the MARGIN HERO rolls with its SIGN HIDDEN — the brain runs
+  // the comparison and genuinely doesn't know yet. At the LOCK: the reel clears
+  // (cells snap to finals + real colour), the margin locks to its final signed
+  // value (the sign locking IS the reveal), and we fire the EXISTING RD7.7
+  // celebration fork (revealNonce → the score slam/sag) + stagger the honest
+  // line in. The reel NEVER paints on the mount frame — it starts inside the
+  // RAF (after the crossfade), so the RD3-C no-snap holds and JSDOM (no RAF
+  // advance) sees the finals. Reduced-motion / non-visible → settle straight to
+  // the resolved screen, no suspense.
+  const reducedMotion = _rd76PrefersReducedMotion();
+  const [explanationRevealed, setExplanationRevealed] = useState(false);
+  const [celebration, setCelebration] = useState<{ outcome: "win" | "loss" | "tie"; key: number } | null>(null);
+  const [reel, setReel] = useState<{ user: number; opp: number; margin: number } | null>(null);
+  const [revealNonce, setRevealNonce] = useState(0);
+  const [marginPhase, setMarginPhase] = useState<"idle" | "resolving" | "revealed">("idle");
+  const celebrationKeyRef = useRef(0);
+  useEffect(() => {
+    if (!visible || reducedMotion) {
+      setExplanationRevealed(true);
+      setCelebration(null);
+      setReel(null);
+      setMarginPhase("idle");
+      return;
+    }
+    setExplanationRevealed(false);
+    setCelebration(null);
+    setReel(null);
+    setMarginPhase("resolving");
+    const center = (recipient.totalFp + sender.totalFp) / 2;
+    const baseRange = Math.max(Math.abs(finalMargin), 12) + 6;
+    const marginAmp = Math.max(Math.abs(finalMargin), 8) + 4;
+    const start = performance.now();
+    let lastTick = -1e9;
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / RD78_SUSPENSE_MS, 1);
+      if (t >= 1) {
+        // LOCK / REVEAL — the held breath releases onto the existing fork.
+        setReel(null);
+        setMarginPhase("revealed");
+        setRevealNonce((k) => k + 1);
+        celebrationKeyRef.current += 1;
+        setCelebration({ outcome: outcomeKind, key: celebrationKeyRef.current });
+        return;
+      }
+      if (now - lastTick >= RD78_REEL_TICK_MS) {
+        lastTick = now;
+        const r = baseRange * (1 - t * 0.5); // narrowing churn
+        const ma = marginAmp * (1 - t * 0.4);
+        setReel({
+          user: center + (Math.random() - 0.5) * 2 * r,
+          opp: center + (Math.random() - 0.5) * 2 * r,
+          margin: (Math.random() - 0.5) * 2 * ma, // sign flips every tick
+        });
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const tExpl = window.setTimeout(
+      () => setExplanationRevealed(true),
+      RD78_SUSPENSE_MS + RD76_EXPLANATION_STAGGER_MS,
+    );
+    const tIdle = window.setTimeout(
+      () => setMarginPhase("idle"),
+      RD78_SUSPENSE_MS + RD77_CELEBRATION_MS + 200,
+    );
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(tExpl);
+      window.clearTimeout(tIdle);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, reducedMotion, outcomeKind, recipient.totalFp, sender.totalFp]);
+
+  // During the suspense reel both cells show the reel value in a NEUTRAL state
+  // (no colour leak); at rest they show their finals + real leading/trailing.
+  const suspenseActive = reel !== null;
+  const userCellState: "leading" | "trailing" | "tied" = suspenseActive ? "tied" : recipientState;
+  const oppCellState: "leading" | "trailing" | "tied" = suspenseActive ? "tied" : senderState;
 
   // RD6.1: docked-score color helpers retired — the corner ScoreCell
   // computes its own color from `state` (via H2HScoreRail's three-
@@ -1011,7 +1497,8 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
                 scoreCell={
                   <ScoreCell
                     total={sender.totalFp}
-                    state={senderState}
+                    displayTotal={reel ? reel.opp : undefined}
+                    state={oppCellState}
                     sizeProgress={senderSizeProgress}
                     surface="overlay"
                     teamPosition="opponent"
@@ -1031,9 +1518,8 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             margin is now folded into the commentary copy via
             selectHeadline + selectChallengeResolution.
             Columns: [left rail | center | right rail (scores)] = 100/1fr/80.
-            Rows: explicit HERO_ROW_HEIGHT_CSS each, so dropping the
-            opponent hero does NOT collapse row 1 and pull the user hero
-            up. */}
+            Rows: row 1 = verdict band (small floor, grows for a long
+            line); row 2 = the user hero card (full HERO_ROW_HEIGHT). */}
         <div
           data-h2h-overlay-hero="true"
           style={{
@@ -1041,7 +1527,22 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             flex: "0 0 auto",
             display: "grid",
             gridTemplateColumns: `${LEFT_RAIL_WIDTH_PX}px 1fr ${RIGHT_RAIL_WIDTH_PX}px`,
-            gridTemplateRows: `${HERO_ROW_HEIGHT_CSS} ${HERO_ROW_HEIGHT_CSS}`,
+            // ROW 1 (verdict) sizing history:
+            //   RD7.4 (2026-06-14): was a FIXED HERO_ROW_HEIGHT track;
+            //   at phone width the verdict could exceed it and, since the
+            //   commentary block is justify-center, the overflow spilled
+            //   BOTH ways (up over TARGET, down over the hero). Fix:
+            //   minmax(floor, auto) so it grows instead of overflowing.
+            //   RD7.5 Move 4 (2026-06-14): floor dropped from
+            //   HERO_ROW_HEIGHT (~158px) to VERDICT_ROW_MIN_PX (the
+            //   verdict is now ONE compact line, Move 2) — reclaiming the
+            //   dead space that forced the results screen to scroll on the
+            //   phone. minmax keeps the anti-overflow growth: a worst-case
+            //   2–3-line engine line grows the row, never spills. ROW 2
+            //   (user hero card) stays a fixed HERO_ROW_HEIGHT track;
+            //   auto-flow still drops the HeroCell into row 2 col 2
+            //   (no-jump hero X/Y preserved).
+            gridTemplateRows: `minmax(${VERDICT_ROW_MIN_PX}px, auto) ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
@@ -1093,48 +1594,45 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               minWidth: 0,
             }}
           >
-            <div
-              data-h2h-overlay-headline="true"
-              style={{
-                fontSize: 26,
-                fontWeight: 950,
-                color: headlineColor,
-                letterSpacing: -0.4,
-                lineHeight: 1.1,
-                textTransform: "uppercase",
-                wordBreak: "break-word",
-                textAlign: "center",
-              }}
-            >
-              {headline}
-            </div>
-            <div
-              data-h2h-overlay-fphero="true"
-              style={{
-                fontSize: 32,
-                fontWeight: 950,
-                color: headlineColor,
-                letterSpacing: -0.5,
-                lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-                textAlign: "center",
-              }}
-            >
-              {fpHero}
-            </div>
+            {/* RD7.5 Move 2 (2026-06-14): the verdict is now ONE line —
+                the RD7.2 engine explanation, which already LEADS WITH THE
+                MARGIN ("Down 10.9 — …" / "Up 14.2 — …"). The pre-RD7.5
+                stack was a large RED outcome headline (data-h2h-overlay-
+                headline, "YOU LOST TO {full name}") + a big signed FP-hero
+                number (data-h2h-overlay-fphero) ABOVE this line. Both are
+                REMOVED:
+                  • the giant "YOU LOST TO {name}" headline spelled out the
+                    opponent who is ALSO shown as a hero card → double-name;
+                  • the FP-hero duplicated the margin that now lives inside
+                    this line.
+                The engine line becomes the star (not a subordinate caption).
+                selectHeadline / formatFpHero / selectOutcomeColor stay
+                exported + unit-tested; only their RENDER here is retired.
+                Win/loss color cue kept cheaply: the line is tinted with
+                headlineColor (= selectOutcomeColor(delta): loss red, win
+                green, tie amber). Removing two stacked elements REDUCES
+                height (feeds the Move-4 fit). Engine line falls back to the
+                legacy resolutionLine for non-explanation consumers. */}
             <div
               data-h2h-overlay-resolution="true"
               style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: "rgba(255,255,255,0.78)",
+                fontSize: 16,
+                fontWeight: 600,
+                color: headlineColor,
                 letterSpacing: -0.1,
-                lineHeight: 1.3,
+                lineHeight: 1.35,
                 wordBreak: "break-word",
                 textAlign: "center",
+                // RD7.6 stagger: fade + small rise in AFTER the score beat
+                // resolves (outcome first, then "why"). Opacity/transform on
+                // this leaf line only — no reflow, no height change, the
+                // verdict row keeps its min-height floor either way.
+                opacity: explanationRevealed ? 1 : 0,
+                transform: explanationRevealed ? "translateY(0)" : "translateY(6px)",
+                transition: "opacity 280ms ease, transform 280ms ease",
               }}
             >
-              {resolutionLine}
+              {explanation ?? resolutionLine}
             </div>
           </div>
 
@@ -1185,12 +1683,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             hand={recipient}
             position="bottom"
             score={
-              <ScoreCell
+              <AnimatedUserScore
                 total={recipient.totalFp}
-                state={recipientState}
+                state={userCellState}
                 sizeProgress={recipientSizeProgress}
-                surface="overlay"
-                teamPosition="user"
+                displayTotal={reel ? reel.user : undefined}
+                revealNonce={revealNonce}
+                reducedMotion={reducedMotion}
               />
             }
           />
@@ -1301,6 +1800,26 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           </div>
         </div>
       </div>
+
+      {/* RD7.8 margin hero — the suspense instrument (rolling, sign hidden) +
+          the reveal's visual hero. Fixed top layer, OUTSIDE the inner column's
+          flow (zero layout impact). */}
+      {marginPhase !== "idle" && (
+        <MarginHero
+          phase={marginPhase}
+          value={reel ? reel.margin : finalMargin}
+          outcome={outcomeKind}
+          revealKey={revealNonce}
+        />
+      )}
+
+      {/* RD7.7 full-screen resolution celebration — a fixed TOP LAYER, OUTSIDE
+          the inner column's flow (it never wraps/scales/transforms the results
+          content underneath, so the no-scroll resting screen is untouched).
+          Self-clears after the animation, revealing the clean results screen. */}
+      {celebration && (
+        <ResolutionCelebration outcome={celebration.outcome} fireKey={celebration.key} />
+      )}
     </div>
   );
 }

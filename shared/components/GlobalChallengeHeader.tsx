@@ -58,8 +58,15 @@ const BRAND_ORANGE = "#FFB14A";
 // variable is COLOR (soft grey vs brand orange). Varying weight/size
 // word-to-word was the source of the "messy" ragged-line look; do not
 // reintroduce it.
-const softWord: React.CSSProperties = { color: "rgba(234, 240, 255, 0.55)" };
-const orangeWord: React.CSSProperties = { color: BRAND_ORANGE };
+// RD7.9 (2026-06-15): the header is now a SOLID PLATINUM bar (a light surface
+// on the near-black body → hard separation, the goal every translucent pass
+// missed). Text is INVERTED for legibility on the light bar: the recessive
+// tagline words are medium grey, the emphasis hooks (STARS / TURN) are near-
+// black (color-only emphasis via value, not orange — orange is low-contrast on
+// platinum). REPLAY goes near-black; IFS keeps the brand orange as the one
+// accent (hue-distinct + bold reads on silver).
+const softWord: React.CSSProperties = { color: "#5A626F" };
+const orangeWord: React.CSSProperties = { color: "#1B2030" };
 
 // Shared tagline-row typography — uniform across ALL words.
 const taglineRow: React.CSSProperties = {
@@ -95,6 +102,17 @@ export function GlobalChallengeHeader() {
         // edge below it (see SHARED_LEFT_RAIL_PX).
         paddingLeft: SHARED_LEFT_RAIL_PX,
         marginBottom: 8,
+        // RD7.9 (2026-06-15): SOLID PLATINUM / brushed-metal bar. Every prior
+        // pass (RD7.5–7.7) tried a translucent wash and never separated from
+        // the near-black body. A solid LIGHT metallic fill is hard surface
+        // separation by construction (light bar on dark body). Vertical sheen
+        // top→bottom for the brushed-metal read. Background + text-colour ONLY:
+        // ZERO added layout height (RD7.1 constant-height intact — in fact the
+        // gold divider row below is removed, −1px, uniform across all 5
+        // screens so the no-snap stays equal), NO transform (RD6.2 / RD7.1
+        // containing-block intact). Edge-to-edge (width:100%); content inset.
+        background:
+          "linear-gradient(180deg, #D4DAE2 0%, #C7CDD6 52%, #B8BFC9 100%)",
         fontFamily: "'Inter', system-ui, sans-serif",
         userSelect: "none",
         pointerEvents: "none",
@@ -121,12 +139,20 @@ export function GlobalChallengeHeader() {
         >
           <span
             data-h2h-global-header-wordmark="true"
-            style={{ fontSize: 24, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF" }}
+            style={{ fontSize: 24, fontWeight: 950, letterSpacing: -0.5, color: "#12151E" }}
           >
             REPLAY
           </span>
           <span
-            style={{ fontSize: 24, fontWeight: 900, letterSpacing: 2, color: BRAND_ORANGE, marginLeft: 2 }}
+            style={{
+              fontSize: 24,
+              fontWeight: 900,
+              letterSpacing: 2,
+              color: BRAND_ORANGE,
+              marginLeft: 2,
+              // Crisp the orange accent on the light platinum bar.
+              textShadow: "0 1px 0 rgba(0,0,0,0.18)",
+            }}
           >
             IFS
           </span>
@@ -148,18 +174,8 @@ export function GlobalChallengeHeader() {
           </div>
         </div>
       </div>
-      {/* Faint gold hairline — broadcast-package feel, left-bright fade.
-          ~1px, low opacity; NOT a hard UI rule line. */}
-      <div
-        data-h2h-global-header-divider="true"
-        style={{
-          height: 1,
-          width: "100%",
-          // Fainter than the prior pass — ~18% peak opacity.
-          background:
-            "linear-gradient(90deg, rgba(255,177,74,0.18) 0%, rgba(255,177,74,0.06) 55%, rgba(255,177,74,0) 100%)",
-        }}
-      />
+      {/* RD7.9: gold divider REMOVED — the solid platinum bar IS the
+          separation now (John couldn't see the hairline). */}
     </div>
   );
 }

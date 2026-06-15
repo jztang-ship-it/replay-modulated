@@ -49,18 +49,22 @@ import {
 } from "./H2HResultsOverlay";
 import { isRealName } from "@shared/utils/isRealName";
 import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
+import { explainH2HResult } from "@shared/explanation/explainH2HResult";
+import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
 
 /** Crossfade-in duration from the HOLD-phase grid into the H2H arc.
  *  ~250ms per the design-doc recipient async MVP spec. Distinct from
  *  OVERLAY_CROSSFADE_MS (350ms; arc → results overlay). */
 export const HOLD_TO_ARC_CROSSFADE_MS = 250;
 
-/** RD6.2-C (2026-06-12): hold the reveal's FINAL state (the "Won X.X
- *  FP" / "Lost X.X FP" verdict in the right-column rail) for this
- *  duration before triggering the results-overlay crossfade. Matches
- *  PER_SET_DWELL_MS so the verdict reads as "one more set hold" before
- *  results takes over. Tunable on glass. */
-export const FINAL_HOLD_MS = 1500;
+/** Hold at phase "done" before the results-overlay crossfade.
+ *  RD7.9.6 (2026-06-15): 1500 → 150. The reveal no longer shows a FINAL
+ *  verdict to hold (RD7.9.3 removed finalGapOverride — the delta slot shows
+ *  only the per-set delta), so this hold was dead time before the celebration.
+ *  Cut to a brief handoff beat so the last-card delta flows straight into the
+ *  full-screen reveal. The RD3-C no-snap is unaffected (frame content at "done"
+ *  is unchanged; only the hold duration shrinks). Tunable on glass. */
+export const FINAL_HOLD_MS = 150;
 
 export interface H2HRecipientRevealProps {
   challengeCtx: ChallengeCtx;
@@ -164,6 +168,18 @@ function H2HRecipientRevealInner(props: InnerProps) {
     displayName: "YOU",
   }), [myScore, myWinTier, myRoster]);
 
+  // RD7.2 — the Resolution Engine "why" line for the results overlay.
+  // Recomputes when pool stats finish loading (subscribePoolStats), so the
+  // percentile-rich explanation replaces the no-stats fallback once the
+  // sport's per-season pool file lands. Pure-fn engine; this only gathers.
+  const [poolVer, setPoolVer] = useState(0);
+  useEffect(() => subscribePoolStats(() => setPoolVer((v) => v + 1)), []);
+  const explanation = useMemo(
+    () => explainH2HResult({ sender, recipient, sport })?.text,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sender, recipient, sport, poolVer],
+  );
+
   // initialPhase: "idle" (phase 5a amend3, 2026-05-27) — the production
   // wrapper mounts with the hook in pre-play state so the HOLD-to-arc
   // crossfade doesn't expose final totals/CTA/headline. The dev mock
@@ -262,6 +278,8 @@ function H2HRecipientRevealInner(props: InnerProps) {
           state={attempt.state satisfies ResultsOverlayState}
           windowClosesAtMs={attempt.windowClosesAtMs}
           visible={overlayCrossfade.visible}
+          // RD7.2 — Resolution Engine explanation as the primary why-line.
+          explanation={explanation}
           // RD7.1 (2026-06-13): recipient-flow Results screen header.
           // Identical GlobalChallengeHeader → same height as the reveal
           // shell's header → reveal→results no-snap preserved.

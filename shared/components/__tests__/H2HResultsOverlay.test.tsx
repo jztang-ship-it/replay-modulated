@@ -168,8 +168,8 @@ describe("H2HResultsOverlay — state machine + CTAs", () => {
   });
 });
 
-describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)", () => {
-  it("headline + resolution render inside the commentary container; left-rail wrapper is gone", () => {
+describe("H2HResultsOverlay — commentary block (RD7.5 Move 2: one-line verdict)", () => {
+  it("verdict is ONE line; the red outcome headline + FP-hero are removed", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 178.4)}
@@ -178,25 +178,42 @@ describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)",
         state="WIN"
       />
     );
-    // Step 3: the [data-h2h-overlay-rail="left"] wrapper was deleted —
-    // its headline role moved into the new commentary container in the
-    // freed row-1 center span.
+    // The left-rail wrapper was retired in the step-3 redesign; stays gone.
     expect(container.querySelector('[data-h2h-overlay-rail="left"]')).toBeNull();
     const commentary = container.querySelector('[data-h2h-overlay-commentary="true"]') as HTMLElement;
     expect(commentary).toBeTruthy();
-    const headline = commentary.querySelector('[data-h2h-overlay-headline="true"]');
-    expect(headline).toBeTruthy();
-    expect((headline?.textContent ?? "").length).toBeGreaterThan(0);
+    // RD7.5 Move 2: the big red "YOU LOST TO {name}" outcome headline and
+    // the signed FP-hero number are no longer rendered — the margin now
+    // lives inside the single engine line (kills the double-name + the
+    // verdict→cards overflow). selectHeadline/formatFpHero stay exported
+    // + unit-tested (below); only their RENDER here is retired.
+    expect(commentary.querySelector('[data-h2h-overlay-headline="true"]')).toBeNull();
+    expect(commentary.querySelector('[data-h2h-overlay-fphero="true"]')).toBeNull();
+    // The single surviving line: the explanation, falling back to the
+    // legacy resolutionLine when no explanation prop is supplied.
     const resolution = commentary.querySelector('[data-h2h-overlay-resolution="true"]');
     expect(resolution).toBeTruthy();
     expect((resolution?.textContent ?? "").length).toBeGreaterThan(0);
-    // Trash-talk block was retired in the relay-tension Phase 1 collapse
-    // and stays retired; the resolution line replaces it as the second
-    // commentary block.
+    // Trash-talk block retired earlier; stays retired.
     expect(container.querySelector('[data-h2h-overlay-trash-talk="true"]')).toBeNull();
   });
 
-  it("RD1: sub-1-FP win renders 'YOU BEAT {NAME}' (no longer 'Photo finish')", () => {
+  it("the explanation prop, when supplied, IS the single verdict line (RD7.2 wiring)", () => {
+    const line = "Down 10.9 — the hand was right; the timing wasn't.";
+    const { container } = render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 178.4)}
+        recipient={makeHand("You", 167.5)}
+        renderCard={stubRender()}
+        state="LOSS_OPEN"
+        explanation={line}
+      />
+    );
+    const resolution = container.querySelector('[data-h2h-overlay-resolution="true"]')?.textContent ?? "";
+    expect(resolution).toBe(line);
+  });
+
+  it("bucket attribute still set for downstream consumers (no longer drives a headline)", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 100.0)}
@@ -206,35 +223,11 @@ describe("H2HResultsOverlay — commentary block (step 3 middle-band redesign)",
       />
     );
     const overlay = container.querySelector('[data-h2h-results-overlay="true"]') as HTMLElement;
-    // bucket attr still set (trashTalkBucket survives for downstream
-    // consumers); it just no longer drives headline copy.
+    // trashTalkBucket survives for the data-h2h-overlay-bucket attribute.
     expect(overlay.getAttribute("data-h2h-overlay-bucket")).toBe("photo_finish");
-    const headline = container.querySelector('[data-h2h-overlay-headline="true"]')?.textContent ?? "";
-    expect(headline).toBe("YOU BEAT Mike");
-    expect(headline).not.toMatch(/Photo finish/i);
-    // RD1 — outcome carries no numeric; the delta lives only in the hero.
-    expect(headline).not.toMatch(/\d/);
-    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]')?.textContent ?? "";
-    expect(hero).toBe("+0.7 FP");
-  });
-
-  it("RD1: large win renders 'YOU BEAT {NAME}' + signed hero; no number in the headline", () => {
-    const { container } = render(
-      <H2HResultsOverlay
-        sender={makeHand("Mike", 100.0)}
-        recipient={makeHand("You", 125.0)}
-        renderCard={stubRender()}
-        state="WIN"
-      />
-    );
-    expect(
-      container.querySelector('[data-h2h-results-overlay="true"]')?.getAttribute("data-h2h-overlay-bucket")
-    ).toBe("win_big");
-    const headline = container.querySelector('[data-h2h-overlay-headline="true"]')?.textContent ?? "";
-    expect(headline).toBe("YOU BEAT Mike");
-    expect(headline).not.toMatch(/\d/);
-    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]')?.textContent ?? "";
-    expect(hero).toBe("+25.0 FP");
+    // RD7.5 Move 2: no headline / fphero DOM.
+    expect(container.querySelector('[data-h2h-overlay-headline="true"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-overlay-fphero="true"]')).toBeNull();
   });
 });
 
@@ -327,8 +320,11 @@ describe("RD1 — selectOutcomeColor (driven by outcome, not bucket)", () => {
   });
 });
 
-describe("RD1 — overlay render wires the new outcome shape", () => {
-  it("LOSS_OPEN sub-1-FP loss → 'YOU LOST TO Mike' + '−0.7 FP' + red color", () => {
+describe("RD7.5 Move 2 — the single verdict line carries the outcome color tint", () => {
+  // The outcome color (selectOutcomeColor(delta)) drove the removed
+  // headline + FP-hero; RD7.5 Move 2 moves it onto the single surviving
+  // verdict line (data-h2h-overlay-resolution) as the cheap win/loss cue.
+  it("LOSS_OPEN loss → verdict line tinted red", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 100.7)}
@@ -337,37 +333,27 @@ describe("RD1 — overlay render wires the new outcome shape", () => {
         state="LOSS_OPEN"
       />
     );
-    const headline = container.querySelector('[data-h2h-overlay-headline="true"]') as HTMLElement;
-    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]') as HTMLElement;
-    expect(headline?.textContent).toBe("YOU LOST TO Mike");
-    expect(headline?.textContent).not.toMatch(/Photo finish/i);
-    expect(hero?.textContent).toBe("−0.7 FP");
-    // Outcome color drives both headline and hero — red on loss.
-    expect(headline.style.color).toBe("rgb(239, 68, 68)");
-    expect(hero.style.color).toBe("rgb(239, 68, 68)");
+    const line = container.querySelector('[data-h2h-overlay-resolution="true"]') as HTMLElement;
+    expect(line).toBeTruthy();
+    expect(line.style.color).toBe("rgb(239, 68, 68)");
   });
 
-  it("tie → 'YOU TIED Mike' + '0.0 FP' + amber color", () => {
+  it("tie → verdict line tinted amber", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 100.0)}
         recipient={makeHand("You", 100.0)}
         renderCard={stubRender()}
-        // A 0-delta hand is unusual on LOSS_OPEN, but the headline copy +
-        // color are driven by delta, not the legacy state machine.
+        // A 0-delta hand is unusual on LOSS_OPEN, but the color is driven
+        // by delta (selectOutcomeColor), not the legacy state machine.
         state="LOSS_OPEN"
       />
     );
-    const headline = container.querySelector('[data-h2h-overlay-headline="true"]') as HTMLElement;
-    const hero = container.querySelector('[data-h2h-overlay-fphero="true"]') as HTMLElement;
-    expect(headline?.textContent).toBe("YOU TIED Mike");
-    expect(hero?.textContent).toBe("0.0 FP");
-    expect(headline.style.color).toBe("rgb(255, 177, 74)");
+    const line = container.querySelector('[data-h2h-overlay-resolution="true"]') as HTMLElement;
+    expect(line.style.color).toBe("rgb(255, 177, 74)");
   });
 
-  it("LOSS_CLOSED loss → headline is red (state no longer overrides outcome color)", () => {
-    // Pre-RD1 a LOSS_CLOSED headline rendered off-white; RD1 keys color
-    // off the SIGN of delta so a closed-window loss is still red.
+  it("LOSS_CLOSED loss → verdict line still red (state doesn't override outcome color)", () => {
     const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 125.0)}
@@ -376,9 +362,8 @@ describe("RD1 — overlay render wires the new outcome shape", () => {
         state="LOSS_CLOSED"
       />
     );
-    const headline = container.querySelector('[data-h2h-overlay-headline="true"]') as HTMLElement;
-    expect(headline?.textContent).toBe("YOU LOST TO Mike");
-    expect(headline.style.color).toBe("rgb(239, 68, 68)");
+    const line = container.querySelector('[data-h2h-overlay-resolution="true"]') as HTMLElement;
+    expect(line.style.color).toBe("rgb(239, 68, 68)");
   });
 });
 
