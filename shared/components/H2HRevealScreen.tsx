@@ -1241,7 +1241,14 @@ function RightColumnRail({
     gapFraming === "tie"
       ? "TIED"
       : gapFraming === "overtake"
-        ? `Need: +${gapNeedPoints.toFixed(1)}`
+        ? // RD7.10 FIX 1 (2026-06-15): leading "+" dropped ("Need: +X.X" →
+          // "Need: X.X"). Safe — the overtake branch only fires when
+          // enteringSign < 0, so needPoints = |enteringGap| ≥
+          // FINAL_GAP_TIE_TOLERANCE (0.05) > 0 (min rendered "0.1"); a lead
+          // routes to "Hold:", a tie to "TIED". Dropping the sign can never
+          // emit "-0.0", "0", or a negative. Locked by the overtake
+          // needPoints ≥ 0.05 case in useH2HReveal.test.tsx.
+          `Need: ${gapNeedPoints.toFixed(1)}`
         : `Hold: ${gapNeedPoints.toFixed(1)}`;
   const gapStatColor =
     gapFraming === "overtake"
@@ -1337,13 +1344,20 @@ function RightColumnRail({
             style={{
               // RD7.7 CLIP FIX (2026-06-15): was fontSize:
               // SCORE_CELL_FONT_SIZE_PX (= 20) — but the whole stat line is
-              // "Need: +X.X" (the bare per-set delta is just "+X.X"), and at
+              // "Need: X.X" (the bare per-set delta is just "X.X"), and at
               // 20px that overflows this RIGHT_RAIL_WIDTH_PX (80px) float and
-              // gets cut off. The RD6.2-C-rev3 comment INTENDED 12 (it
-              // mis-stated that SCORE_CELL_FONT_SIZE_PX was 12); 12px fits
-              // "Need: +X.X" cleanly in the 80px rail. letterSpacing dropped
-              // to 0 to buy a little more room for a worst-case 2-digit need.
-              fontSize: 12,
+              // gets cut off (worse at 3-digit needs). 12px fit cleanly.
+              // RD7.10 FIX 1 (2026-06-15): 12 → 16. The glass read NEED as too
+              // small next to the delta numerals. Parity-with-delta would be
+              // SCORE_CELL_FONT_SIZE_PX (= 20) — but that is the EXACT size
+              // RD7.7 just pulled this line down from (it clips the 80px rail).
+              // 16px closes most of the perceived gap while staying inside the
+              // RD7.7-safe envelope. **16px is the deliberate ceiling under
+              // RIGHT_RAIL_WIDTH_PX** — if a 3-digit need ("NEED: 1XX.X")
+              // clips on glass, fall to 15. Do NOT "fix the small NEED" back
+              // toward 20 without re-checking the 80px-rail clip at max digits.
+              // letterSpacing stays 0 to buy room for the worst-case need.
+              fontSize: 16,
               fontWeight: 800,
               color: gapStatColor,
               fontVariantNumeric: "tabular-nums",
