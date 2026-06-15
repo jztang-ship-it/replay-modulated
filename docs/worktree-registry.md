@@ -199,30 +199,25 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 
 ---
 
-### `feat/rd7-10-tuning` — active (held for phone glass)
+### `feat/rd7-10-tuning` — REMOVED (landed + shipped 2026-06-15)
 
-- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-10-tuning`
-- **Branch HEAD:** `c056766` (= main at session start; no commits yet — all work
-  uncommitted, held for glass per ITERATION gate)
-- **Unique commits vs main:** 0
-- **Uncommitted state:** `M shared/components/H2HRevealScreen.tsx` (FIX 1 NEED
-  size 12→16 + drop "+" + ceiling comment); `M shared/components/H2HResultsOverlay.tsx`
-  (FIX 2 → RD7.10-c: both in-hero hint leaves removed, new footer `logs-hint`
-  row above CTA, RD7.5 Move 3 retired; FIX 3 resolution weight 600→700);
-  `M shared/components/__tests__/H2HResultsOverlay.test.tsx` (#7 test rewritten
-  for footer hint); `M shared/components/__tests__/useH2HReveal.test.tsx`
-  (overtake needPoints ≥ 0.05 case); `M docs/replaymod-design-decisions.md`
-  (§ RD7.10 incl. -b/-c history); this entry. (`M package-lock.json` is install
-  drift — NOT part of RD7.10, excluded at commit.)
-- **History:** RD7.10 Fix 2 (in-hero translate) → RD7.10-b (revert to
-  center-over-card) → RD7.10-c (relocate hint to footer; current).
-- **Stash:** none
-- **What it carries:** RD7.10 — three cosmetic results/reveal tuning fixes
-  (NEED numeral size+sign, occupied-hint true-center, resolution-line weight).
-  Cross-sport (H2HResultsOverlay/H2HRevealScreen are shared).
-- **Equivalence on main:** none.
-- **Gate state:** ITERATION — full vitest + basketball build. Tri-sport
-  (`build-vercel.sh`) deferred to John-authorized MERGE (shared components).
-- **Intent:** John glasses on phone (serve FROM this worktree); commit after
-  sign-off. Do NOT delete or clean — uncommitted at risk until committed.
+- **Path:** ~~`~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-10-tuning`~~ —
+  worktree removed 2026-06-15; branch `feat/rd7-10-tuning` deleted (`git branch
+  -d`, merged-check passed).
+- **Landed as:** `ee9da28` (FIX 1 reveal NEED), `3d072df` (results overlay —
+  FIX 3 weight + RD7.10-c footer relocation), `1f3562b` (docs) → merged `--no-ff`
+  to main as `0a4cf44`.
+- **Equivalence on main:** VERIFIED — all three SHAs are ancestors of main (real
+  `--no-ff` merge, not squash); `git log main..feat/rd7-10-tuning` = 0 unique
+  commits before deletion. No work lost.
+- **Pushed:** `c056766..0a4cf44` → `origin/main` 2026-06-15. Glass-confirmed on
+  prod after deploy.
+- **What it carried:** RD7.10 — three cosmetic results/reveal tuning fixes
+  (NEED numeral size 12→16 + drop sign; resolution-line weight 600→700; RD7.10-c
+  "game logs" hint relocated to footer, RD7.5 Move 3 retired). Cross-sport;
+  full tri-sport gate (`build-vercel.sh`) green at merge.
+- **At-risk content at removal:** only `M package-lock.json` (transitive
+  dev-dep install drift, not RD7.10) — discarded with the worktree. No stash
+  attached (the global `stash@{0}` football-culture WIP belongs to
+  `feat/basketball-perseason-layout` and was left untouched).
 - **Last reviewed:** 2026-06-15
