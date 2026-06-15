@@ -1888,3 +1888,382 @@ hero-gap trim — do not chase elsewhere.
 
 **Gate.** vitest (incl. both no-snap gates) + tri-sport build
 (basketball + baseball + football) all green at merge.
+
+---
+
+## § RD7.5 — Challenge header banner + results-screen declutter (ITERATION — held for phone glass 2026-06-14)
+
+**Status:** built on the INTEGRATED RD7.2 (Resolution Engine wiring) + RD7.3
+(false-read-retire copy) + RD7.4 (verdict-fit minmax grid) work — none of
+which is on main yet (all were held-for-glass; assembled uncommitted into the
+`feat/rd7-5-results-declutter` worktree per John's 2026-06-14 base decision).
+RD7.5 is therefore NOT independently mergeable; it lands as/after the RD7.2–7.4
+stack. Commit boundaries tracked per-ticket (see worktree-registry entry).
+
+**Problem.** The results screen was overloaded and still scrolled at phone
+width (header rode off-screen, confirmed on device) — the inner column
+(`overflowY:auto`, height = the `position:fixed; inset:0` container ≈ the
+LARGE viewport) overflows the small viewport when the URL bar is showing.
+
+### Four coordinated moves (LOCKED for this iteration; visual tuning glass-pending)
+
+**Move 1 — header banner (all 5 challenge screens).** `GlobalChallengeHeader`
+gets a show-package background fill so it reads as its own zone, distinct from
+the body. One component → all 5 screens (Hold / intro / Draw / Reveal /
+Results). Treatment: a subtle top-down wash — faint brand-orange hint blending
+into a neutral elevation, fading to transparent before the existing gold
+hairline.
+- INVARIANT (RD7.1): BACKGROUND FILL ONLY. No transform, no box-model change →
+  ZERO added height. Verified: header measured 61px (unchanged); the edit adds
+  only `background:` (no padding/border/margin touched). No-snap + RD6.2
+  delta-centering intact (reveal delta residual 0px @390/430).
+
+**Move 2 — verdict consolidates to ONE line.** The big RED outcome headline
+(`data-h2h-overlay-headline`, "YOU LOST TO {full name}") AND the signed FP-hero
+number (`data-h2h-overlay-fphero`) are REMOVED. The single surviving verdict is
+the RD7.2 engine explanation line (`data-h2h-overlay-resolution`), which already
+LEADS WITH THE MARGIN ("Down 10.9 — …" / "Up 14.2 — …" / "A 28-pt beatdown …").
+- Kills the double-name (the opponent was named in a giant headline AND shown
+  as a hero card) and the source of the verdict-over-cards overflow.
+- `selectHeadline` / `formatFpHero` / `selectOutcomeColor` stay exported +
+  unit-tested; only their RENDER is retired.
+- Win/loss color cue kept cheaply: the single line is tinted with
+  `headlineColor` (= `selectOutcomeColor(delta)`: loss red `#EF4444`, win green,
+  tie amber `#FFB14A`). Engine lines read win/loss legibly without the headline
+  (directional lead + the tint); no ambiguous case found.
+- Fallback intact: `{explanation ?? resolutionLine}` — non-explanation
+  consumers (e.g. baseball, no pool-stats provider) fall back to the legacy
+  `selectChallengeResolution` flavor line. (That fallback does not lead with
+  the margin — acceptable graceful degradation; basketball is wired.)
+- GLASS-PENDING tuning: tint intensity (full outcome-color vs softened) and the
+  line's size/weight (currently 16px / 600).
+
+**Move 3 — log-inspection prompt moves INTO the dotted box.** The empty-state
+prompt (was "Tap a card to see the game logs", floating ABOVE the empty hero
+box) now renders INSIDE the dashed card-outline box (centered), shortened to
+"tap a card to see game logs" — making the box self-explanatory. Absolute
+inset-0 inside the (relative) box → no effect on the locked hero/strip
+geometry; shares the box's existing empty-only translateX centering (no NEW
+transform). The occupied-front flip hint ("Tap again — game logs are on the
+back") is unchanged.
+
+**Move 4 — reclaim space → fix the scroll.** The verdict-row (grid row 1) floor
+drops from `HERO_ROW_HEIGHT_CSS` (~158px, a holdover from when row 1 held the
+opponent hero) to `VERDICT_ROW_MIN_PX = 72` — `minmax(72px, auto)`. The
+one-line verdict (Move 2) no longer needs a hero-card-height band; the reclaimed
+~86px pulls the hero / strip / CTA UP so the screen fits with the URL bar
+showing. `minmax(…, auto)` keeps RD7.4's anti-overflow growth (a worst-case
+2–3-line engine line grows the row, never spills). ROW 2 (user hero card) stays
+a full `HERO_ROW_HEIGHT_CSS` track; no-jump hero X/Y preserved.
+- Measured min-content (the scroll threshold — below this the inner column
+  scrolls): worst-case **654px @390, 670px @430** — both comfortably under the
+  URL-bar-showing small-viewport budgets (~745 / ~815), 90–145px margin. Header
+  visible, no scroll, no verdict↔hero / verdict↔TARGET overlap at every height
+  tested (390×745, 430×815, 390×844).
+- The parked lever (RESERVED 24→20 / hero-gap trim) was NOT needed — RESERVED
+  stays 20. GLASS-PENDING tuning: `VERDICT_ROW_MIN_PX` (72) is the band height.
+
+### INVARIANTS FENCED (no transforms introduced anywhere in RD7.5)
+- RD6.2 delta centering — reveal delta residual 0px @390/430 (Move 1 is
+  background-only; nothing touches the delta-glyph / score-cell ancestry).
+- RD7.1 header — constant 61px height across all 5 screens (background-only).
+- RD7.4 — `minmax(floor, auto)` growth retained; only the floor value changed.
+
+### Touched (per-ticket commit boundaries for the eventual split)
+- RD7.5: `GlobalChallengeHeader.tsx` (banner fill); `H2HResultsOverlay.tsx`
+  (verdict → one tinted line, `VERDICT_ROW_MIN_PX`, empty-hint into the box);
+  `__tests__/H2HResultsOverlay.test.tsx` (one-line-verdict assertions);
+  this doc.
+- (carried, NOT RD7.5: RD7.2 `shared/explanation/*` + pool-stats + wiring;
+  RD7.3 `chadChallenge.ts` + `selectCommentary.ts`; RD7.4 the `minmax` line.)
+
+**Gate (this iteration).** Full vitest (1199 passed) + `npm --prefix basketball
+run build` green. Tri-sport build deferred to merge authorization (held).
+
+---
+
+## § RD7.6 — Results outcome dopamine moment (win/loss asymmetric) + header separation (ITERATION — held for phone glass 2026-06-14)
+
+**Status:** continues on the integrated `feat/rd7-5-results-declutter` tree;
+tracked as RD7.6 for commit-splitting at merge (same files as RD7.5, additive).
+
+**Problem.** Post-RD7.5 the results screen was honest + legible but emotionally
+DEAD — a single 350ms overlay crossfade, a static score. No "I won / I lost"
+beat. The recon (RD7.6-recon) found ScoreCell already carries count-up
+(`displayTotal`) + scale-`pop` primitives gated behind props the overlay never
+passed.
+
+**The beat — fire existing animation, win/loss ASYMMETRIC, ZERO height.**
+- **Anticipation (identical win & loss):** the user's score counts up 0→final
+  over `RD76_COUNT_UP_MS = 1200`, cubic ease-out (decelerating into the number).
+  Driven by an isolated `AnimatedUserScore` component (RAF → `ScoreCell
+  displayTotal`); re-render stays off the big overlay tree. Mike's target is
+  static (the known bar).
+- **Resolution fork:** WIN (`recipientState==="leading"`) → ScoreCell scale-pop
+  (`pop` magnitude 1.18 / 520ms, the existing WAAPI) + a contained `OutcomeBurst`
+  (ignite ring + 10 sparks in the win color, adapted from GameBar CoinBurst —
+  absolute, `pointerEvents:none`, zero layout height). LOSS (`"trailing"`) → NO
+  pop / NO burst / NO ignite; a small transient downward sag (WAAPI translateY,
+  `fill:"none"`) — the OPPOSITE vector, the absence of celebration IS the
+  feeling. TIE → neutral land.
+- **Stagger:** the honest explanation line (`data-h2h-overlay-resolution`) fades
+  + rises in `RD76_COUNT_UP_MS + 200ms` after entrance (opacity/transform on the
+  leaf line — no reflow), so the OUTCOME owns the eye first, then the "why".
+  Cards stay as static reference (the score's motion creates the hierarchy
+  without dimming anything).
+
+**HONESTY (fenced).** The win erupts on the NUMBER / the win only — no skill,
+tier, genius, or braggy copy. The words stay the engine's honest line. The
+burst over a variance win is fine (the win is real); no "MVP/genius" framing.
+
+**ZERO HEIGHT (verified).** min-content worst-case unchanged at 654px @390 /
+670px @430 (= RD7.5 baseline). During a live WIN burst at URL-bar-showing
+heights (390×745, 430×815) the inner column does NOT scroll (737/737, 807/807)
+and the header stays visible — the burst's absolute particles don't expand the
+scroll area.
+
+**NO-SNAP (RD3-C) preserved.** The count-up does NOT synchronously paint 0: the
+overlay MOUNT frame shows the final total (matching the reveal's landed score
+behind the crossfade); the RAF's first frame drops to ~0 and climbs, hidden
+under the low crossfade opacity. The RD3-C cross-surface parity test stays
+green. GLASS-WATCH: if the climb ghosts against the reveal's final number during
+the 350ms crossfade on a real phone, the mitigation is to delay the count-up
+start past the crossfade (noted, not applied).
+
+**Reduced motion.** `prefers-reduced-motion` → no count-up / pop / burst /
+stagger; final number + explanation shown immediately.
+
+**Header separation (parallel, all 5 screens).** RD7.5's banner wash was too
+soft (read as the same surface as the instruction card). RD7.6 strengthens it:
+a firmer warm top + a faint DARK FOOT in the fill that recesses the band edge,
+and a firmer gold divider (~34% peak, was ~18%) with a 1px dark under-shadow for
+a crisp bottom edge. Background/divider only — ZERO added height (min-content
+unchanged), no transform.
+
+### Touched (RD7.6 additions, same files as RD7.5)
+- `H2HResultsOverlay.tsx` — `AnimatedUserScore` + `OutcomeBurst` components,
+  beat constants, `useRef` import, explanation stagger, user ScoreCell now
+  count-up-wired.
+- `GlobalChallengeHeader.tsx` — stronger banner fill + firmer divider.
+
+**Gate.** Full vitest (1199 passed) + basketball build green. Tri-sport held.
+Glass-pending tuning: count-up duration (1200ms), pop magnitude, burst density/
+color, sag depth, banner contrast.
+
+---
+
+## § RD7.7 — Results resolution celebration: full-screen win eruption + loss sting (ITERATION — held for phone glass 2026-06-15)
+
+**Status:** continues on the integrated `feat/rd7-5-results-declutter` tree;
+tracked as RD7.7 for commit-split. REPLACES the RD7.6 in-place burst (tested too
+subtle) with a full-screen transient celebration.
+
+**Philosophy.** The resolution moment is the ONE place the app abandons
+restraint — everywhere else stays quiet/honest. At win/loss: GO LOUD (full-
+screen, transient), then clear to the clean honest screen. Honesty binds the
+WORDS only (no skill/genius/MVP/tier framing — there are NO words in the
+celebration; the engine line stays the only text); VOLUME / MOTION / screen
+takeover are GOALS. Model: a slot machine — maximally exciting, claims zero
+skill.
+
+**Architecture (fenced).** The celebration is a TRUE OVERLAY: `position:fixed`,
+its own top stacking layer (`zIndex` ~2.1e9), `pointer-events:none`, painted
+OVER the whole results screen. It animates ITSELF and self-clears after
+`RD77_CELEBRATION_MS` (1400ms), revealing the untouched results screen. It
+NEVER wraps/scales/transforms the results content (a transformed ancestor of
+the delta glyph / score cells would reintroduce RD6.2 + RD7.1) — being OUT OF
+FLOW is how it goes big AND stays fit-safe. Rendered as a child of the overlay
+root (sibling of the inner column), gated by `{celebration && …}`; the parent
+fires it at the count-up's end (`RD76_COUNT_UP_MS`).
+
+**WIN = RELEASE (expand / bright / loud).** Full-screen bright radial flash
+(`screen` blend) + an expanding ignite ring (44vmin → 3.6×) + 22 sparks
+radiating to the edges (vmin units, re-randomized per fire). The score SLAMS
+(ScoreCell `pop` magnitude 1.42 — a transient WAAPI on the cell itself, allowed)
+and lands in the win color. Fast attack, brief linger, clears. Bigger/brighter
+than the solo tier-slam.
+
+**LOSS = COLLAPSE (contract / cold / heavy) — opposite in KIND.** A desaturate +
+darken backdrop sweep over the whole screen (`backdrop-filter: grayscale(.9)
+brightness(.5)` + a cold dark tint) ramped in then out, plus a downward heavy
+vignette settle. The score sags cold (heavier downward WAAPI). Slow, still — the
+absence of celebration is the feeling. Structurally opposite to the win, not a
+dimmer win.
+
+**TIE = nothing.** prefers-reduced-motion → no celebration (settle straight to
+the clean resolved screen). The count-up anticipation + explanation stagger
+(RD7.6) are retained.
+
+**Verified (real browser):** celebration fires `data-h2h-resolution-celebration
+="win"|"loss"` as `position:fixed`; results inner column `transform: none`
+DURING and AFTER (never transformed); celebration `none` after ~3.2s; resting
+min-content unchanged at 654/670 (no scroll before/during/after — zero height).
+Win @430 + loss @390 both captured.
+
+**Header — now a genuinely different surface (all 5 screens).** RD7.5/7.6 only
+tweaked the same translucent wash's contrast (read as "a light orange hue", not
+separated). RD7.7 makes the header its own PLANE: a near-opaque, distinctly
+LIGHTER slate band (body ≈ #070A12; band ≈ rgb(20–28,24–33,36–48) @0.94) with a
+faint warm top sheen, a real bottom EDGE (firmer gold divider), and a DROP
+SHADOW cast onto the body (`0 8px 16px -6px rgba(0,0,0,0.66)`). Background +
+shadow only — ZERO added height (min-content unchanged), no transform.
+
+**BUG FIX — clipped "need" reminder.** `H2HRevealScreen.tsx:1337` rendered the
+penultimate-card stake line ("Need: +X.X") at `SCORE_CELL_FONT_SIZE_PX` (=20px)
+inside the `RIGHT_RAIL_WIDTH_PX` (80px) float — so it overflowed the rail and
+was cut off. The RD6.2-C-rev3 comment intended 12px (it mis-stated the
+constant's value). Fixed to `fontSize: 12` + `letterSpacing: 0` → "Need: +X.X"
+(~60px) fits the ~72px content width. (The bare per-set delta "+X.X" fit at 20px;
+the "Need: " prefix is what overflowed.)
+
+### Touched (RD7.7)
+- `H2HResultsOverlay.tsx` — `ResolutionCelebration` (full-screen overlay) +
+  keyframes replace `OutcomeBurst`; bigger win slam / heavier loss sag in
+  `AnimatedUserScore`; parent `outcomeKind` + `celebration` state fires it.
+- `GlobalChallengeHeader.tsx` — header as a separate slate plane + drop shadow.
+- `H2HRevealScreen.tsx` — need-line clip fix (20→12px).
+
+**Gate.** Full vitest (1199 passed; RD3-C no-snap + verdict green) + basketball
+build green. Tri-sport held. Glass-pending tuning: celebration intensity/
+duration, slate-band darkness, spark count.
+
+---
+
+## § RD7.8 — Suspense before the reveal (the missing dopamine mechanic) (ITERATION — held for phone glass 2026-06-15)
+
+**Status:** continues on the integrated `feat/rd7-5-results-declutter` tree;
+tracked as RD7.8.
+
+**Diagnosis / reframe.** The RD7.7 celebration wasn't too weak — the RESULT WAS
+KNOWN BEFORE IT FIRED, so it decorated a foregone conclusion. The RD7.6 decision
+"count up to your OWN total independently (Mike's target static)" removed the
+only suspense — you could watch your climb cross the static bar. Dopamine lives
+in the ~1s of UNCERTAINTY before the reveal, not in the celebration. This ticket
+adds the HELD BREATH (no new particles/flashes/intensity — the celebration is
+already good; it just needed a brain that didn't know yet).
+
+**THE ONE MECHANIC — margin-resolving suspense window.** Replace "score appears
+→ celebration" with UNCERTAINTY → REVEAL → (unchanged RD7.7) celebration:
+1. **Suspense (`RD78_SUSPENSE_MS` = 1000ms):** on entrance the result is NOT
+   legible. BOTH score cells "reel" — `displayTotal` churns around a shared
+   centre (refreshed every `RD78_REEL_TICK_MS` = 55ms so it reads as digits, not
+   a blur) — and both are held in a NEUTRAL `state="tied"` so no leading/trailing
+   colour leaks the winner. The `MarginHero` (a fixed, centred, pointer-events:
+   none overlay — zero layout) shows the MARGIN rolling with its SIGN HIDDEN
+   (verified: a win shows "−3.4 / −6.8" mid-suspense). The brain runs the
+   comparison and genuinely doesn't know.
+2. **The reveal (lock at ~1s):** the reel clears (cells snap to finals + their
+   real leading/trailing colour), the margin hero LOCKS to its final signed value
+   (the SIGN locking IS the reveal), and the EXISTING RD7.7 fork fires
+   (`revealNonce` → the score slam/sag; `celebration` → the full-screen
+   eruption/sting — UNCHANGED). The margin hero plays its reveal beat (WIN:
+   emphatic scale-up; LOSS: cold drop) then fades. Explanation line staggers in
+   after.
+3. The MARGIN is the visual hero (humans feel "+3.2 / −1.8 / +40", not "212" —
+   apt for a head-to-head comparison).
+
+**Invariants (held).** No transform/reflow of the results content — the reel is
+just `displayTotal` text on the existing cells; the margin hero + celebration are
+fixed overlays. Verified real-browser: `innerTransform=none` during suspense,
+reveal, and after; resting min-content unchanged at 654/670 (zero height, no
+scroll). RD3-C no-snap intact — the reel NEVER paints on the mount frame (it
+starts inside the RAF, after the crossfade; JSDOM sees finals → test green).
+prefers-reduced-motion / non-visible → settle straight to the resolved screen,
+no suspense. Honesty: NO added rivalry/skill copy (opponent-rivalry framing is a
+separate later ticket); the engine's honest line still renders post-reveal.
+
+**Verified (real browser, both outcomes):** during suspense cells `state=tied`
+(neutral) + churning values + `data-h2h-margin-hero="resolving"` with a hidden/
+misleading sign + `celebration=none`; at ~1.4s the cells go `leading`/`trailing`,
+the hero `revealed` locks the signed margin (+4.5 / −46.4), and `celebration=
+win`/`loss` fires; by ~3.3s hero + celebration cleared, clean resting screen.
+
+### Touched (RD7.8) — `H2HResultsOverlay.tsx` only
+`MarginHero` + `formatMargin`; `AnimatedUserScore` rewired (parent-driven
+`displayTotal` reel + `revealNonce` → slam/sag, count-up removed); parent
+SUSPENSE→REVEAL timeline (reel RAF + lock → existing celebration fork); both
+score cells fed the reel + neutral state during suspense; `RD78_*` constants +
+margin-hero keyframes. `OutcomeBurst`→`ResolutionCelebration` (RD7.7) unchanged.
+
+**Open flag (not scoped here):** the upstream REVEAL screen already shows the
+final delta (`MidRailContent finalGapOverride`), so a sharp user may have seen
+the result before the results overlay — if the held breath doesn't land on
+glass because of that, deferring the reveal-screen delta is the follow-up.
+
+**Gate.** Full vitest (1199 passed; RD3-C + verdict green) + basketball build
+green. Tri-sport held. Glass-pending tuning: suspense duration, reel cadence/
+range, margin-hero size/position.
+
+---
+
+## § RD7.9 — Reveal-screen fixes + header platinum + kill the result spoiler (ITERATION — held for phone glass 2026-06-15)
+
+**Status:** continues on the integrated `feat/rd7-5-results-declutter` tree;
+tracked as RD7.9.
+
+**Root cause this fixes.** The result was KNOWN before the results overlay
+because the REVEAL screen resolved/announced it — the last-card double sequence
+(per-set delta → then the FINAL match score in the same slot) + "TAKES THE
+LEAD". That's why RD7.6/7.7/7.8 celebrations felt flat. These fixes move the
+moment-of-truth to the full-screen animation by stopping the reveal from
+spoiling it.
+
+1. **Header — solid platinum bar (all 5 screens).** Replaced the translucent
+   band (never separated from the near-black body) with a SOLID metallic
+   platinum fill (`#D4DAE2`→`#C7CDD6`→`#B8BFC9` sheen). A light bar on a dark
+   body = hard separation by construction. Gold divider REMOVED (the bar IS the
+   separation). Text INVERTED for legibility: REPLAY `#12151E`, IFS keeps brand
+   orange (+ a faint shadow to crisp it), tagline soft words `#5A626F` / emphasis
+   STARS·TURN `#1B2030` (color-only emphasis via value). Background + text-colour
+   only; −1px height (divider removed, uniform across all 5 → no-snap equal); no
+   transform. Verified legible.
+2. **Play-screen copy + hold.** (2a) the transient "Here's the same starting
+   hand as {challenger}" deal-in line is DROPPED (`deriveHeadline` deal_in → "").
+   (2b) initial instruction → "Same hand to start — tap the cards you want to
+   hold"; previewed-fallback → "Tap once to preview, tap again to hold"; "Draw
+   the rest when you're ready" kept. (2c) the BIG center card now toggles HOLD/
+   UNHOLD on a single tap once previewed (reuses `onTap(previewedSlotIndex)`,
+   which flips the held bit) — unified with the mini-slot; the preview-then-hold
+   two-step still applies only to a not-yet-previewed mini tap.
+3. **SPOILER FIX — last-card double sequence removed.** `finalGapOverride`
+   removed from the `MidRailContent` caller (`H2HRevealScreen`). The delta slot
+   now shows ONLY the per-set delta (`deltaRunning`: "Gained/Lost/Even"), never
+   the FINAL match result ("Won X.X FP"). The final result is revealed by the
+   full-screen RD7.7 celebration. FENCE held: set-delta render, measured anchor,
+   dual-blink, RD3-C no-snap (score cells) untouched — delta centering residual
+   0px re-confirmed.
+4. **Need-line lingers.** `ANCHOR_HOLD_MS` 2000 → 2900 — the penultimate "Need:
+   +X.X" gap line is visible ~1750ms (was ~850ms) so the stakes register going
+   into the last card.
+5. **"TAKES THE LEAD" killed.** `momentumTag` always undefined; its render block
+   deleted.
+6. **Tighten last-delta → celebration.** `END_OF_ARC_HOLD_MS` 1700 → 700 (just
+   enough to register the last set delta) + `FINAL_HOLD_MS` 1500 → 150 (the
+   reveal no longer holds a verdict, so that hold was dead). Last set delta →
+   straight into the overlay (RD7.8 suspense → celebration) as one beat.
+
+**Verified (real browser):** header platinum (bg `rgb(212,218,226)…`), REPLAY
+`rgb(18,21,30)`, tagline `rgb(90,98,111)`/`rgb(27,32,48)`, divider gone, height
+60 (uniform). Reveal across the arc shows the per-set delta (Gained/Lost/Even),
+NEVER the final "Won" verdict (spoiler gone), NO "TAKES THE LEAD"; delta
+centering residual 0. Big-card hold toggles. Results min-content fits (no
+scroll; −1px from the divider helps). 1199 tests + build green.
+
+**Open flag (not scoped here):** the reveal's two TOTALS (score cells) remain
+visible (RD3-C no-snap REQUIRES the reveal-done totals to match the overlay-
+mount totals) — a user who reads the totals can still infer the result. The
+ticket scoped the spoiler to the explicit delta-slot announcement; if the totals
+still spoil on glass, obscuring/deferring them is a follow-up (would need a
+no-snap rethink).
+
+### Touched (RD7.9)
+`GlobalChallengeHeader.tsx` (platinum + inverted text, divider removed);
+`H2HRecipientPlay.tsx` (copy 2a/2b + big-card hold 2c); `H2HRevealScreen.tsx`
+(finalGapOverride removed; momentumTag render deleted + always undefined);
+`useH2HReveal.ts` (`ANCHOR_HOLD_MS` 2900, `END_OF_ARC_HOLD_MS` 700);
+`H2HRecipientReveal.tsx` (`FINAL_HOLD_MS` 150); `__tests__/useH2HReveal.test.tsx`
+(end-of-arc-hold range updated to 400–900); docs.
+
+**Gate.** Full vitest (1199 passed; RD3-C + verdict green) + basketball build
+green. Tri-sport held. Glass-pending tuning: platinum shade + IFS-on-platinum
+contrast, need-line linger, end-of-arc/final-hold timing.

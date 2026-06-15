@@ -456,9 +456,15 @@ describe("useH2HReveal — timing constants (phase 3.8 pacing)", () => {
     expect(MATCHUP_RESOLVE_PAUSE_MS).toBeGreaterThanOrEqual(700);
     expect(MATCHUP_RESOLVE_PAUSE_MS).toBeLessThanOrEqual(1000);
   });
-  it("END_OF_ARC_HOLD_MS in the documented 1500-2000ms range", () => {
-    expect(END_OF_ARC_HOLD_MS).toBeGreaterThanOrEqual(1500);
-    expect(END_OF_ARC_HOLD_MS).toBeLessThanOrEqual(2000);
+  // RD7.9.6 (2026-06-15): the end-of-arc hold was SHORTENED (was 1500–2000)
+  // — the reveal no longer announces the final result here (RD7.9.3 removed
+  // finalGapOverride), so the hold only needs to register the last per-set
+  // delta before flowing into the full-screen celebration (delta → boom). It
+  // must still be long enough to read the last set delta, short enough to not
+  // be a dead pause.
+  it("END_OF_ARC_HOLD_MS is a short last-set-delta beat (RD7.9.6: 400-900ms)", () => {
+    expect(END_OF_ARC_HOLD_MS).toBeGreaterThanOrEqual(400);
+    expect(END_OF_ARC_HOLD_MS).toBeLessThanOrEqual(900);
   });
 });
 
