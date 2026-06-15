@@ -358,3 +358,52 @@ export function explainResolution(input: ResolutionInput): { text: string; class
   const classification = classify(input);
   return { text: render(classification, input), classification };
 }
+
+// ── RD7.12 — LLM Flavor support (NEW exports; no render/classify change) ─────
+// These feed the LLM-Flavor pipeline. They do NOT touch classify()/render() —
+// the deterministic line (the fallback floor + the honesty-critical Recognition
+// + Cause) is byte-unchanged, locked by the RD7.12 frozen-output test.
+
+/** Margin bucket gating LLM Flavor. `beatdown` is hard-suppressed upstream
+ *  (zero model call); `tie` has no notable line to author. */
+export function flavorMarginBucket(margin: number): "win" | "close-loss" | "beatdown" | "tie" {
+  if (Math.abs(margin) <= TUNING.TIE_EPS) return "tie";
+  if (margin > TUNING.TIE_EPS) return "win";
+  return Math.abs(margin) >= TUNING.BLOWOUT_MARGIN ? "beatdown" : "close-loss";
+}
+
+/** Box-line values for Flavor facts + numeric grounding. null when there's no
+ *  recognized scoring key (non-basketball / sparse) → caller skips the LLM and
+ *  the deterministic line stands. Same key resolution as formatBoxLine. */
+export function extractFlavorBox(
+  statLine?: Record<string, number | string> | null,
+): { pts: number; reb?: number; ast?: number; stl?: number; blk?: number; threes?: number } | null {
+  if (!statLine || typeof statLine !== "object") return null;
+  const pts = statNum(statLine.pts ?? statLine.points ?? statLine.PTS);
+  if (pts == null) return null;
+  const box: { pts: number; reb?: number; ast?: number; stl?: number; blk?: number; threes?: number } = { pts };
+  const reb = statNum(statLine.reb ?? statLine.rebounds ?? statLine.trb ?? statLine.REB);
+  const ast = statNum(statLine.ast ?? statLine.assists ?? statLine.AST);
+  const stl = statNum(statLine.stl ?? statLine.steals);
+  const blk = statNum(statLine.blk ?? statLine.blocks);
+  const threes = statNum(statLine.threes ?? statLine.fg3 ?? statLine.tpm);
+  if (reb != null) box.reb = reb;
+  if (ast != null) box.ast = ast;
+  if (stl != null) box.stl = stl;
+  if (blk != null) box.blk = blk;
+  if (threes != null) box.threes = threes;
+  return box;
+}
+
+/** The card whose box line the Flavor describes: the decisive card (agency) or
+ *  the top scorer (variance). null when none has a usable box line. */
+export function selectFlavorCard(cls: Classification, input: ResolutionInput): YourCardFact | null {
+  if (cls.decisive) {
+    const d = input.yourCards.find((c) => c.name === cls.decisive!.name);
+    if (d && extractFlavorBox(d.statLine)) return d;
+  }
+  const withBox = input.yourCards
+    .filter((c) => extractFlavorBox(c.statLine))
+    .sort((a, b) => b.fp - a.fp);
+  return withBox[0] ?? null;
+}

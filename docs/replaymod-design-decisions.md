@@ -2567,8 +2567,8 @@ buckets:
   either — the LLM is only invoked when there's a notable box line to describe.)
 
 `BLOWOUT_MARGIN = 25` — **reused from the existing locked engine TUNING constant**
-(it already defines "beatdown" in `renderVariance`); not a new number. *(Flagged
-to John for veto; adopt unless he picks a different cut.)*
+(it already defines "beatdown" in `renderVariance`); not a new number.
+**CONFIRMED by John 2026-06-15.**
 
 On a **beatdown bucket the LLM is NOT called at all** — render the deterministic
 variance-humility line. No model attempt, no "constrained wit." This replaces the

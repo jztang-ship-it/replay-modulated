@@ -8,10 +8,15 @@
 
 import {
   explainResolution,
+  flavorMarginBucket,
+  selectFlavorCard,
+  extractFlavorBox,
+  lastName,
   type YourCardFact,
   type OpponentOutlier,
   type Classification,
 } from "./resolutionEngine";
+import type { FlavorFacts } from "./flavorValidator";
 import { percentileFromStats } from "./poolStats";
 import { getPoolStats } from "./poolStatsProvider";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
@@ -21,7 +26,7 @@ export function explainH2HResult(args: {
   sender: H2HHand;
   recipient: H2HHand;
   sport: string;
-}): { text: string; classification: Classification } | null {
+}): { text: string; classification: Classification; flavorRequest: FlavorFacts | null } | null {
   const { sender, recipient, sport } = args;
   if (!recipient?.cards?.length) return null;
 
@@ -64,9 +69,31 @@ export function explainH2HResult(args: {
     }
   }
 
-  return explainResolution({
+  const input = {
     yourCards: recipient.cards.map(toFact),
     margin,
     opponentOutlier: outlier,
-  });
+  };
+  const result = explainResolution(input);
+
+  // RD7.12 — build the firewalled LLM-Flavor request. NULL (skip the model) on
+  // beatdown / tie buckets and when no card has a recognized box line
+  // (non-basketball / sparse). The request carries ONLY stats + nickname +
+  // outcome bucket — nothing about the user's decision, so the model cannot
+  // claim agency it was never told about.
+  const bucket = flavorMarginBucket(margin);
+  let flavorRequest: FlavorFacts | null = null;
+  if (bucket === "win" || bucket === "close-loss") {
+    const card = selectFlavorCard(result.classification, input);
+    const box = card ? extractFlavorBox(card.statLine) : null;
+    if (card && box) {
+      flavorRequest = {
+        outcome: bucket,
+        player: { last: lastName(card.name), nickname: card.nickname ?? null },
+        box,
+      };
+    }
+  }
+
+  return { ...result, flavorRequest };
 }

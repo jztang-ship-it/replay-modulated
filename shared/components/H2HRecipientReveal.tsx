@@ -51,6 +51,15 @@ import { isRealName } from "@shared/utils/isRealName";
 import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
 import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
+import { fetchAuthoredFlavor } from "@shared/utils/fetchAuthoredFlavor";
+import { featureFlags } from "@shared/featureFlags";
+
+// RD7.12 — module-level cache of LLM Flavor lines keyed by request signature.
+// Survives overlay remounts; re-opening a result never re-calls (null cached
+// too, so a same-session failure/validation-reject doesn't retry — the
+// deterministic floor stands). Module scope is fine: the signature includes the
+// box line + player + outcome, so collisions only occur for identical facts.
+const flavorCache = new Map<string, string | null>();
 
 /** Crossfade-in duration from the HOLD-phase grid into the H2H arc.
  *  ~250ms per the design-doc recipient async MVP spec. Distinct from
@@ -174,11 +183,36 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // sport's per-season pool file lands. Pure-fn engine; this only gathers.
   const [poolVer, setPoolVer] = useState(0);
   useEffect(() => subscribePoolStats(() => setPoolVer((v) => v + 1)), []);
-  const explanation = useMemo(
-    () => explainH2HResult({ sender, recipient, sport })?.text,
+  const resolution = useMemo(
+    () => explainH2HResult({ sender, recipient, sport }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sender, recipient, sport, poolVer],
   );
+  const explanation = resolution?.text;          // RD7.11 deterministic floor
+  const flavorRequest = resolution?.flavorRequest ?? null;
+
+  // RD7.12 — PRECOMPUTE the LLM-authored Flavor here, at reveal mount, during
+  // the ~20s suspense arc BEFORE the result screen. NEVER blocks: the
+  // deterministic `explanation` renders immediately; if/when a validated LLM
+  // line resolves, it swaps in. Flag OFF or null request (beatdown/tie/
+  // non-basketball) → no call, deterministic line stands. Failure/timeout →
+  // deterministic line, no error, no gap.
+  const [llmFlavor, setLlmFlavor] = useState<string | null>(null);
+  useEffect(() => {
+    if (!featureFlags.llmFlavor || !flavorRequest) { setLlmFlavor(null); return; }
+    const sig = JSON.stringify(flavorRequest);
+    if (flavorCache.has(sig)) { setLlmFlavor(flavorCache.get(sig) ?? null); return; }
+    let alive = true;
+    fetchAuthoredFlavor(flavorRequest).then((line) => {
+      flavorCache.set(sig, line);
+      if (alive) setLlmFlavor(line);
+    });
+    return () => { alive = false; };
+  }, [flavorRequest]);
+
+  // The line the result screen shows: validated LLM Flavor if ready, else the
+  // RD7.11 deterministic floor. Swap-in is just a state update → re-render.
+  const displayExplanation = llmFlavor ?? explanation;
 
   // initialPhase: "idle" (phase 5a amend3, 2026-05-27) — the production
   // wrapper mounts with the hook in pre-play state so the HOLD-to-arc
@@ -279,7 +313,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
           windowClosesAtMs={attempt.windowClosesAtMs}
           visible={overlayCrossfade.visible}
           // RD7.2 — Resolution Engine explanation as the primary why-line.
-          explanation={explanation}
+          // RD7.12 — displayExplanation = validated LLM Flavor if ready, else
+          // the RD7.11 deterministic line (never-block swap-in).
+          explanation={displayExplanation}
           // RD7.1 (2026-06-13): recipient-flow Results screen header.
           // Identical GlobalChallengeHeader → same height as the reveal
           // shell's header → reveal→results no-snap preserved.
