@@ -2267,3 +2267,34 @@ no-snap rethink).
 **Gate.** Full vitest (1199 passed; RD3-C + verdict green) + basketball build
 green. Tri-sport held. Glass-pending tuning: platinum shade + IFS-on-platinum
 contrast, need-line linger, end-of-arc/final-hold timing.
+
+---
+
+## RD7.x — Results Experience + Resolution Engine (locked)
+
+### Resolution Engine (RD7.2) — architecture
+- Explains WHY a hand resolved as it did, on the results screen. TRUST ENGINE, not copywriter.
+- YOUR-SIDE-ONLY causality. Mike = scoreboard, NEVER a decision-comparand. The two hands are independent draws with no shared player/slot identity — "you held him, Mike faded him" is NOT computable, FORBIDDEN copy. Sole exception: bad-beat absolution on a LOSS (Mike's variance, never his decision), gated to close + well-played + a genuine Mike outlier.
+- Classify into 3 (card / allocation / variance); NARRATE in 2 (agency "your choice mattered" / variance "that's how the logs fell"). User thinks in stories, not classes.
+- DEFAULT POSTURE = humility: under-firing into variance is SAFE and IS the trust strategy. Agency claims must win their way OUT of variance. "No single decision swung this" is a first-class, valued output.
+- Agency requires BOTH high contribution to the margin AND a non-ordinary pull. A star scoring his own median = variance, not "he delivered." Selection ranks decision-leverage × pull-extremity, NOT raw FP.
+- Skill axis = budget allocation under the salary cap (conviction has a cost — Replay's unique layer). Cap is FELT, never named ($250 / numbers never shown); invisible to first-timers.
+- Generation priority Recognition → Cause → Flavor (order mandatory, clause-count not; recognition can stand alone; never force a cause). Cultural tags are WRAPPER, never explanation; cause ALWAYS precedes the tag. Star-tier (RED/ORANGE) only for cultural flavor + named anchor; a non-star may be named ONLY as a hero (redraw/fade that beat a star), NEVER as a goat.
+- Acceptance = NOD test (sounds human) AND ARGUE test (the user who was THERE won't rebut it). Plausible-but-wrong fails argue → under-fire to variance.
+- Percentile = build-time precompute (playerPoolStats.v1.json), filter PINNED to pickBiasedLog's candidate filter, versioned. A trust engine cannot tolerate draw/percentile drift.
+
+### RESOLVE SEMANTICS (load-bearing — confirmed in code, not assumed)
+- Every card resolves with an INDEPENDENT pull (held AND faded), via resolveCards → fresh pickBiasedLog. Two players who both hold the same player get DIFFERENT games (X≠Y). Held cards therefore DO move the H2H margin → A1/A2 (held-won/held-lost) are valid leaves. (Margins are inherently WIDE — difference of two independent 6-pull sums, no compression. The common single hand is luck-dominated.)
+- The engine reporting "variance" on most hands is NOT a bug and NOT proof the game is "mostly luck" — it measures ATTRIBUTABILITY (rarely can one decision be proven causal on one noisy hand), like an honest poker explainer. Per-hand humility is correct; skill is a CROSS-HAND signal (win rate, fade success) to be surfaced separately, later.
+
+### OWNERSHIP framework (the project's primary design currency)
+- Ownership comes from AUTHORED DECISIONS, not from explanatory copy. Cosmetic ownership can only mirror real ownership — never claim ownership the system didn't give (that's flattery / the slot-machine lie).
+- Per-hand explanations optimize for TRUTHFUL OWNERSHIP, not for proving skill. "You held him and he dropped 92" (honest, credits the decision) — never "you read that he'd drop 92" (false, credits predicting the dice).
+- People compete over OWNERSHIP, not skill-dominance (cf. brackets, sports betting among friends). A luck game is intensely competitive if every result feels OWNED. The dial is ownership clarity, not skill %.
+- Ownership has 3 legs (authorship / legibility / consequence) on 2 fronts (existential = the system creates it; cosmetic = copy recognizes it). PVE is where ownership is born; PVP is where it's transferred (parasitic on PVE).
+
+### HONESTY + EXCITEMENT (the celebration arc lessons)
+- The resolution moment is the ONE place restraint is abandoned: go loud, full-screen, transient, then clear. Honesty binds the WORDS (no skill/genius/MVP/tier bragging); VOLUME and motion are goals. Model: a slot machine — maximally exciting, claims zero skill. Loud about the outcome, silent about skill.
+- CLARITY CREATES EMOTION — intensity does not. Six iterations proved: if the user doesn't understand what's happening, no particles save it; if they do, a modest animation works. The bar for a viral social game: "Can a first-time user explain what happened after watching it once?"
+- Dopamine lives in the UNCERTAINTY before the reveal, not the celebration. A celebration that decorates a KNOWN result feels flat. The result must be hidden until the reveal moment (the spoiler — final score shown on the reveal screen before the celebration — was the root cause of the "flat" celebration across RD7.6-7.8).
+- Humility governs CAUSALITY, not DESCRIPTION. The Cause clause stays humble; the FLAVOR slot carries commentary-grade specificity drawn from the actual logs (event-richness is pure scoreboard talk — honest, never an agency claim). A humble cause does NOT license a bland line. Benchmark: the in-game commentary's voice. (Source: RD7.x prod glass, img-4 "too thin / less fun than commentary".)
