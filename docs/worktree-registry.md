@@ -191,3 +191,38 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **Gate state:** full vitest 1199 passed + basketball build green; tri-sport deferred to merge auth.
 - **Intent:** John glasses the integrated results screen on phone; commit/split after sign-off. Do NOT delete or clean — uncommitted integrated stack at risk until committed.
 - **Last reviewed:** 2026-06-14
+
+> **Drift note (2026-06-15):** the RD7.x arc (7.2–7.9) has since LANDED on `main`
+> via merge `69c929d` + canon `c056766` — the entry above (still describing a
+> held/uncommitted stack) is STALE vs git. Surfaced during the RD7.10 session;
+> not reconciled here (out of RD7.10 scope). Re-audit this entry next session.
+
+---
+
+### `feat/rd7-10-tuning` — active (held for phone glass)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-10-tuning`
+- **Branch HEAD:** `c056766` (= main at session start; no commits yet — all work
+  uncommitted, held for glass per ITERATION gate)
+- **Unique commits vs main:** 0
+- **Uncommitted state:** `M shared/components/H2HRevealScreen.tsx` (FIX 1 NEED
+  size 12→16 + drop "+" + ceiling comment); `M shared/components/H2HResultsOverlay.tsx`
+  (FIX 2 → RD7.10-c: both in-hero hint leaves removed, new footer `logs-hint`
+  row above CTA, RD7.5 Move 3 retired; FIX 3 resolution weight 600→700);
+  `M shared/components/__tests__/H2HResultsOverlay.test.tsx` (#7 test rewritten
+  for footer hint); `M shared/components/__tests__/useH2HReveal.test.tsx`
+  (overtake needPoints ≥ 0.05 case); `M docs/replaymod-design-decisions.md`
+  (§ RD7.10 incl. -b/-c history); this entry. (`M package-lock.json` is install
+  drift — NOT part of RD7.10, excluded at commit.)
+- **History:** RD7.10 Fix 2 (in-hero translate) → RD7.10-b (revert to
+  center-over-card) → RD7.10-c (relocate hint to footer; current).
+- **Stash:** none
+- **What it carries:** RD7.10 — three cosmetic results/reveal tuning fixes
+  (NEED numeral size+sign, occupied-hint true-center, resolution-line weight).
+  Cross-sport (H2HResultsOverlay/H2HRevealScreen are shared).
+- **Equivalence on main:** none.
+- **Gate state:** ITERATION — full vitest + basketball build. Tri-sport
+  (`build-vercel.sh`) deferred to John-authorized MERGE (shared components).
+- **Intent:** John glasses on phone (serve FROM this worktree); commit after
+  sign-off. Do NOT delete or clean — uncommitted at risk until committed.
+- **Last reviewed:** 2026-06-15
