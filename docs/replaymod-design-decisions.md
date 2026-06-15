@@ -2270,6 +2270,106 @@ contrast, need-line linger, end-of-arc/final-hold timing.
 
 ---
 
+## § RD7.10 — results/reveal tuning-three (ITERATION — held for phone glass 2026-06-15)
+
+Three independent COSMETIC fixes off the post-canon RD7.x arc, surfaced by the
+prod glass. NO change to the resolution engine, explanation copy, sign
+semantics, or color logic. Weight/size/alignment only. Branch
+`feat/rd7-10-tuning` off `main` @ `c056766`.
+
+### FIX 1 — reveal NEED numeral: size up + drop the sign
+- WHERE: `H2HRevealScreen.tsx` need-line (`data-h2h-rail-gap-need-line`), string
+  built from `gapStatLine` (`Need: +X.X`).
+- **Size: 12 → 16px.** NOT the delta token (`SCORE_CELL_FONT_SIZE_PX` = 20).
+  Parity-with-delta was specced off a screenshot before it was known that 20px is
+  the exact size RD7.7 pulled this line DOWN from (20px clips inside the 80px
+  `RIGHT_RAIL_WIDTH_PX` float, worse at 3-digit needs). 16px closes the perceived
+  size gap while staying inside the RD7.7-safe envelope. **16px is the deliberate
+  ceiling under `RIGHT_RAIL_WIDTH_PX`** — fall to 15 only if a 3-digit need clips
+  on glass. The `:1338` comment records 12px=RD7.7 clip-fix / 16px=RD7.10 ceiling
+  so a future "the NEED looks small" ticket doesn't re-open the clip.
+- **Drop the leading "+":** `Need: +X.X` → `Need: X.X`.
+- **Edge case (RESOLVED, safe):** `"Need:"` renders ONLY in the `overtake`
+  branch (`useH2HReveal.ts`), which requires `enteringSign < 0` ⟹
+  `needPoints = |enteringGap| ≥ FINAL_GAP_TIE_TOLERANCE (0.05) > 0` (min rendered
+  "0.1"). A lead → `"Hold:"`, a tie → `"TIED"`. Dropping the sign can never emit
+  `-0.0`, `0`, or negative. Locked by a hook unit case (`overtake ⟹ needPoints ≥
+  0.05`).
+
+### FIX 2 — "game logs" hint: RELOCATED to footer (RD7.10-c supersedes RD7.10-b)
+- **FINAL (RD7.10-c, 2026-06-15): the hint moved OUT of the hero zone to a
+  permanent footer row.** Centering an in-hero hint was a dead end — the hero
+  column is locked ~10px off true board center (card arc-parity), so any in-hero
+  position is either off-card or off-board. The fix is to MOVE it to where there
+  is no rail asymmetry.
+  - **New location:** `data-h2h-overlay-logs-hint`, first child of
+    `data-h2h-overlay-reserved` (the sticky footer band) — BELOW the YOU
+    mini-slot row, ABOVE the CTA. Full-width, normal flow, `textAlign:center` →
+    centers cleanly (offset 0px, measured).
+  - **DECISION 1 (copy):** position-neutral **"Tap any card for game logs"** —
+    it's global now, renders in every state.
+  - **DECISION 2 (dedupe):** footer hint is **always present**; the empty in-box
+    prompt ("tap a card to see game logs") is **STRIPPED** → **RD7.5 Move 3 is
+    retired**, the dashed box is now a clean placeholder. Single persistent
+    instruction, no redundancy.
+  - **Both former in-hero leaves removed:** the occupied-front caption AND the
+    empty in-box prompt are gone. Removing the absolute hero caption frees the
+    visual gap above the card (RD7.11 substance-line runway).
+- **Superseded attempts (history):** RD7.10 Fix 2 added a `translateX` to the
+  front hint leaf to pull it to board center → OVERSHOT (double-shift off the
+  card). RD7.10-b reverted that to center-over-card and accepted a ~10px
+  empty↔occupied delta. RD7.10-c abandons in-place centering entirely and
+  relocates instead.
+- **Budget — MEASURED in real browser (resting overlay, win + loss):** the
+  footer row adds ~21px of flow height; removing the absolute hero caption frees
+  none. Min-content height **592px @ 390w / 608px @ 430w**. At the tight
+  address-bar viewports → **390×664 fits with 72px headroom, 430×745 fits with
+  137px headroom** before any scroll; CTA fully visible at all tested viewports.
+  No scroll introduced.
+- **Invariant:** RD6.2 FIX 2b wrapper translate (`:634`) is UNTOUCHED and still
+  present; the new footer row is in normal flow; no transform added to any
+  protected ancestor. Net transforms: the RD7.10-b/Fix-2 front-hint translate is
+  gone with the leaf; zero added.
+
+### FIX 3 — resolution line weight
+- WHERE: `H2HResultsOverlay.tsx` `data-h2h-overlay-resolution`.
+- `fontWeight: 600 → 700`. WEIGHT ONLY. Copy, `headlineColor` tint
+  (`selectOutcomeColor` red/green/amber), and the RD7.4 `minmax` grid track all
+  untouched. The SUBSTANCE half of the img-4 feedback (commentary-grade flavor)
+  is RD7.11, a separate engine ticket — not touched here.
+
+### INVARIANTS FENCED (RD7.10 introduces no new ancestor transform)
+- No transform on the header or any results ancestor (RD6.2 centering) — FIX 2's
+  transform is on the hint leaf only.
+- No box-model change to `GlobalChallengeHeader` (RD7.1 zero-added-height).
+- No spoiler reintroduced — FIX 1 changes NEED size/sign only; the final score
+  never enters the delta slot.
+
+### Touched (RD7.10)
+`shared/components/H2HRevealScreen.tsx` (FIX 1 size+sign+comment);
+`shared/components/H2HResultsOverlay.tsx` (FIX 2 → RD7.10-c: both in-hero hint
+leaves removed, new `data-h2h-overlay-logs-hint` footer row above the CTA,
+RD7.5 Move 3 retired; FIX 3 weight 600→700);
+`shared/components/__tests__/H2HResultsOverlay.test.tsx` (#7 test rewritten for
+the footer hint); `shared/components/__tests__/useH2HReveal.test.tsx` (overtake needPoints
+≥ 0.05 case); docs; worktree registry.
+
+### Gate
+ITERATION — full vitest + basketball-only build. Held for John's phone glass
+(serve from this worktree). Commit held until glass. **MERGE = full tri-sport
+gate (`build-vercel.sh`)** — H2HResultsOverlay/reveal are cross-sport; a
+basketball-only pass does NOT clear baseball/football.
+
+**Glass checklist:** NEED reads larger (16px) + no "+" sign + no clip at
+max-digit need + still no-scroll; **(RD7.10-c)** "Tap any card for game logs"
+hint sits centered in the footer band (above CTA), hero-zone hint gone, dashed
+box is a clean placeholder, and the new row does NOT introduce scroll — CTA
+fully visible with the address bar showing (measured: 72px headroom @ 390w, 137px
+@ 430w); resolution line reads at proper weight (700), tint intact, long verdict
+still grows-not-spills (RD7.4). Run a WIN and a LOSS.
+
+---
+
 ## RD7.x — Results Experience + Resolution Engine (locked)
 
 ### Resolution Engine (RD7.2) — architecture

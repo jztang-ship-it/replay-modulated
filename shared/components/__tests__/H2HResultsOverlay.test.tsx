@@ -630,7 +630,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     expect(innerBox?.style.border).toContain("dashed");
   });
 
-  it("#7: flip-discoverability caption tracks hero state (empty → front → hidden on back)", () => {
+  it("RD7.10-c: the 'game logs' hint is a PERMANENT footer row, not a hero caption", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
     const targetId = recipient.cards[2].cardId;
@@ -642,19 +642,27 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
         state="WIN"
       />
     );
-    const hint = () => container.querySelector("[data-h2h-overlay-hero-hint]");
-    // Empty → invite the first tap.
-    expect(hint()?.getAttribute("data-h2h-overlay-hero-hint")).toBe("empty");
-    expect(hint()?.textContent).toContain("game logs");
-    // Select → front preview → invite the flip.
+    const footerHint = () => container.querySelector("[data-h2h-overlay-logs-hint]");
+    const heroHint = () => container.querySelector("[data-h2h-overlay-hero-hint]");
+
+    // RD7.10-c: the in-hero captions (front + empty in-box prompt) are RETIRED.
+    // Empty state: footer hint present + position-neutral copy; NO hero-zone
+    // caption; the dashed box is a clean placeholder (no in-box "game logs").
+    expect(heroHint()).toBeNull();
+    expect(footerHint()?.textContent).toContain("Tap any card for game logs");
+
+    // Select a card → footer hint UNCHANGED (always present, same copy); still
+    // no hero caption.
     fireEvent.click(container.querySelector(
       `[data-h2h-overlay-zone="user"] [data-card-id="${targetId}"]`
     ) as HTMLElement);
-    expect(hint()?.getAttribute("data-h2h-overlay-hero-hint")).toBe("front");
-    expect(hint()?.textContent).toContain("back");
-    // Flip to back → caption hidden (card's own hint takes over).
+    expect(heroHint()).toBeNull();
+    expect(footerHint()?.textContent).toContain("Tap any card for game logs");
+
+    // Flip to back → footer hint STILL present (it's global, not card-state
+    // dependent).
     fireEvent.click(container.querySelector("[data-h2h-overlay-hero-flipped]") as HTMLElement);
-    expect(hint()).toBeNull();
+    expect(footerHint()?.textContent).toContain("Tap any card for game logs");
   });
 
   it("initialTopFlippedCardId + initialBottomFlippedCardId both seed selection state; only bottom hero renders", () => {

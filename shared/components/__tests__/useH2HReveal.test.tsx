@@ -686,6 +686,27 @@ describe("isFinalSetDecisive — Phase 3 anchor-frame gating", () => {
     });
     expect(justOutside.framing).toBe("overtake");
   });
+
+  // RD7.10 FIX 1 (2026-06-15): the reveal need-line drops the leading "+"
+  // ("Need: +X.X" → "Need: X.X"). That is only safe because the "Need:" string
+  // renders ONLY in the overtake branch, and overtake ⟹ enteringSign < 0 ⟹
+  // needPoints = |enteringGap| ≥ FINAL_GAP_TIE_TOLERANCE (0.05) > 0. So the
+  // formatter never sees 0 or a negative — "Need: 0.0" / "Need: -0.0" cannot
+  // render. This case locks that contract at the smallest non-tie magnitude.
+  it("RD7.10: overtake framing always has needPoints ≥ 0.05 (sign-drop safety)", () => {
+    // Smallest non-tie trailing gap (just outside the 0.05 tolerance).
+    const smallest = isFinalSetDecisive({
+      senderRunningTotal: 100.06,
+      recipientRunningTotal: 100, // trailing by 0.06 → overtake
+      finalSenderActualFp: 0,
+      finalRecipientActualFp: 50, // big swing → decisive, framing still overtake
+    });
+    expect(smallest.framing).toBe("overtake");
+    expect(smallest.needPoints).toBeGreaterThanOrEqual(0.05);
+    // The dropped-sign render: `Need: ${needPoints.toFixed(1)}` is never "0.0".
+    expect(smallest.needPoints.toFixed(1)).not.toBe("0.0");
+    expect(smallest.needPoints).toBeGreaterThan(0);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────
