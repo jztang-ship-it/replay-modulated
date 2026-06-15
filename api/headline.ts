@@ -38,6 +38,11 @@ import type {
 import { buildVoiceContract, buildUserPrompt } from "../shared/commentary/voiceContract.js";
 import { routeCommentary } from "./_lib/router/llmRouter.js";
 import type { RouterConfig, PayoutTier } from "./_lib/router/types.js";
+// RD7.12 — Flavor sub-route lives here (folded in to stay under the Vercel
+// Hobby 12-serverless-function cap; see § RD7.12 doc). Same routeCommentary
+// path; a DIFFERENT prompt + the fail-closed honesty validator.
+import { validateFlavor, type FlavorFacts } from "../shared/explanation/flavorValidator.js";
+import { buildFlavorSystemPrompt, buildFlavorUserPrompt } from "../shared/explanation/flavorPrompt.js";
 
 // ── Knobs ──────────────────────────────────────────────────────────────────
 
@@ -482,6 +487,14 @@ function isValidFactsBody(body: any): body is { facts: CommentaryFacts } {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
 
+  // RD7.12 — Flavor sub-route, discriminated by body.kind. Folded into this
+  // function (not a separate /api/flavor) because Hobby caps at 12 functions
+  // and this is the 13th. Returns { flavor: string|null } (the headline path
+  // returns { headline }), so the two responses never collide.
+  if ((req.body as { kind?: string })?.kind === "flavor") {
+    return handleFlavor(req, res);
+  }
+
   if (!isValidFactsBody(req.body)) {
     return res.status(400).json({ error: "Missing or malformed facts" });
   }
@@ -564,4 +577,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   return res.status(200).json({ headline: v.headline, source: "router" });
+}
+
+// ── RD7.12 Flavor sub-route ─────────────────────────────────────────────────
+// Authors ONE descriptive color line from firewalled box-line facts, validated
+// FAIL-CLOSED before it can return. Same never-block contract as the headline
+// path: any failure → { flavor: null } and the client falls back to the
+// deterministic RD7.11 line. The model is given ONLY stats + nickname + outcome
+// tone (never the user's decision); beatdown losses never reach here (the
+// client only POSTs win / close-loss facts).
+
+/** Structural guard on the POSTed Flavor facts (fail closed on bad shape). */
+function isFlavorFacts(x: unknown): x is FlavorFacts {
+  if (!x || typeof x !== "object") return false;
+  const f = x as Record<string, unknown>;
+  if (f.outcome !== "win" && f.outcome !== "close-loss") return false; // beatdown never posted
+  const p = f.player as Record<string, unknown> | undefined;
+  if (!p || typeof p.last !== "string" || p.last.trim().length === 0) return false;
+  const b = f.box as Record<string, unknown> | undefined;
+  if (!b || typeof b.pts !== "number") return false;
+  return true;
+}
+
+async function generateFlavor(facts: FlavorFacts): Promise<{ raw: string; backgroundWork?: Promise<void> }> {
+  const system = buildFlavorSystemPrompt();
+  const user = buildFlavorUserPrompt(facts);
+  const config = buildRouterConfig();
+  const result = await routeCommentary(system, user, DEFAULT_TIER, config);
+  return { raw: result.commentary, backgroundWork: result.backgroundWork };
+}
+
+async function handleFlavor(req: VercelRequest, res: VercelResponse) {
+  const facts = (req.body as { facts?: unknown })?.facts;
+  if (!isFlavorFacts(facts)) return res.status(400).json({ error: "Missing or malformed flavor facts" });
+
+  let gen: { raw: string; backgroundWork?: Promise<void> } | null = null;
+  try {
+    gen = await withTimeout(generateFlavor(facts), HEADLINE_TIMEOUT_MS);
+  } catch (err) {
+    console.error("[api/flavor] generator threw:", err instanceof Error ? err.message : err);
+    return res.status(200).json({ flavor: null, reason: "generator_error" });
+  }
+  if (!gen) return res.status(200).json({ flavor: null, reason: "timeout" });
+  if (gen.backgroundWork) waitUntil(gen.backgroundWork);
+
+  // FAIL CLOSED — display only on a full validation pass; else null → fallback.
+  const v = validateFlavor(gen.raw, facts);
+  if (!v.ok) {
+    console.log(`[api/flavor] null reason=validation:${v.reason} raw=${JSON.stringify(gen.raw)}`);
+    return res.status(200).json({ flavor: null, reason: `flavor_validation:${v.reason}` });
+  }
+  return res.status(200).json({ flavor: v.line, source: "router" });
 }
