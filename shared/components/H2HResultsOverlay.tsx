@@ -637,64 +637,19 @@ function HeroCell({
               : undefined,
         }}
       >
-        {/* #7 flip-discoverability caption (OCCUPIED-front only). Floats
-            just ABOVE the hero box (bottom: 100%), out of normal flow →
-            zero effect on the locked geometry. pointerEvents:none so taps
-            fall through to the card. Back state → hidden (the card's own
-            "TAP TO FLIP BACK" hint takes over). */}
-        {card && !flipped && (
-          <div
-            data-h2h-overlay-hero-hint="front"
-            style={{
-              position: "absolute",
-              bottom: "calc(100% + 6px)",
-              left: 0,
-              right: 0,
-              textAlign: "center",
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: 0.3,
-              lineHeight: 1.2,
-              color: "rgba(255,255,255,0.45)",
-              pointerEvents: "none",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Tap again — game logs are on the back
-          </div>
-        )}
-        {/* RD7.5 Move 3 (2026-06-14): the EMPTY-state log-inspection prompt
-            now lives INSIDE the dashed card-outline box (centered), making
-            the box self-explanatory, instead of floating above it as its
-            own line. The box IS the log-inspection surface, so the prompt
-            belongs in it; folding it in reclaims the line it used to eat
-            above the hero (feeds the Move-4 fit). Absolute inset-0 inside
-            the (relative) box → no effect on the locked hero/strip
-            geometry; pointerEvents:none so the tap falls through to the
-            strip below. Shares the box's existing empty-only translateX
-            centering — no NEW transform introduced. */}
-        {!card && showEmptyBorder && (
-          <div
-            data-h2h-overlay-hero-hint="empty"
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-              padding: "0 16px",
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: 0.3,
-              lineHeight: 1.3,
-              color: "rgba(255,255,255,0.42)",
-              pointerEvents: "none",
-            }}
-          >
-            tap a card to see game logs
-          </div>
-        )}
+        {/* RD7.10-c (2026-06-15): the "game logs" discoverability hint moved
+            OUT of the hero zone to a permanent footer row (above the CTA, see
+            data-h2h-overlay-logs-hint below). Both former in-hero leaves are
+            retired:
+              • the OCCUPIED-front caption ("Tap again — game logs are on the
+                back") — relocated + reworded to the position-neutral global
+                "Tap any card for game logs";
+              • the EMPTY in-box prompt ("tap a card to see game logs", RD7.5
+                Move 3) — STRIPPED; the dashed box is now a clean placeholder
+                (the footer hint carries the affordance in every state).
+            Removing the absolute hero caption frees the visual gap above the
+            card (RD7.11 substance-line runway). The empty-state wrapper
+            translate (RD6.2 FIX 2b, :634) is UNTOUCHED. */}
         {card && renderCard(card, { flipped })}
       </div>
     </div>
@@ -1617,7 +1572,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               data-h2h-overlay-resolution="true"
               style={{
                 fontSize: 16,
-                fontWeight: 600,
+                // RD7.10 FIX 3 (2026-06-15): 600 → 700. WEIGHT ONLY — the line
+                // read too thin on phone. Copy, headlineColor tint
+                // (selectOutcomeColor red/green/amber), and the RD7.4 minmax
+                // grid track are all untouched. The SUBSTANCE half of the img-4
+                // feedback (commentary-grade flavor) is RD7.11, a separate
+                // engine ticket — not touched here.
+                fontWeight: 700,
                 color: headlineColor,
                 letterSpacing: -0.1,
                 lineHeight: 1.35,
@@ -1754,6 +1715,32 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             background: "linear-gradient(180deg, #070A12 0%, #070A12 100%)",
           }}
         >
+          {/* RD7.10-c (2026-06-15): the relocated "game logs" discoverability
+              hint. Permanent footer row — FIRST child of the reserved band, so
+              it sits BELOW the YOU mini-slot row and ABOVE the CTA. Full-width
+              in normal flow with textAlign:center → centers cleanly (no rail
+              asymmetry down here, which is the whole reason for the move).
+              Position-neutral copy renders in every state (empty + previewed).
+              Kept deliberately MINIMAL — 11px, muted, tight line-height, small
+              marginBottom — because this row ADDS flow height to a no-scroll-
+              tight overlay (the absolute hero caption it replaced freed none).
+              It's an affordance, not the verdict. */}
+          <div
+            data-h2h-overlay-logs-hint="true"
+            style={{
+              width: "100%",
+              textAlign: "center",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              lineHeight: 1.2,
+              color: "rgba(255,255,255,0.40)",
+              marginBottom: 8,
+              pointerEvents: "none",
+            }}
+          >
+            Tap any card for game logs
+          </div>
           <div
             data-h2h-overlay-ctas="true"
             style={{
