@@ -224,22 +224,37 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 
 ---
 
-### `feat/rd7-11-substance` — active (held for phone glass)
+### `feat/rd7-11-substance` — active-parked (committed; base for rd7-12)
 
 - **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-11-substance`
-- **Branch HEAD:** `8b78519` (= pushed main at branch time; commits held for glass)
-- **Unique commits vs main:** 0 (work uncommitted until glass)
-- **What it carries:** RD7.11 — Resolution Engine FLAVOR half (box-line
-  substance, deterministic templates). Data port (YourCardFact gains
-  statLine/gameInfo/achievements; toFact populates) + box-line-aware Flavor
-  templates + adversarial honesty tests. Touches `shared/explanation/`
-  (resolutionEngine.ts, explainH2HResult.ts, the engine test) + docs.
-- **Cross-sport:** YES — `shared/explanation` feeds all three sports via
-  `H2HRecipientReveal`. Box-line formatter is basketball-shaped; non-basketball
-  degrades to today's FP line (D2). MERGE = full tri-sport gate.
-- **Equivalence on main:** none.
-- **Gate state:** ITERATION — full vitest + basketball build; tri-sport deferred
-  to John-authorized merge.
-- **Intent:** John glasses on phone (serve FROM this worktree); commit after
-  sign-off. Do NOT delete/clean — uncommitted at risk until committed.
+- **Branch HEAD:** `815ca40` (RD7.11 deterministic box-line Flavor, COMMITTED 2026-06-15)
+- **Unique commits vs main:** 1 (`815ca40`)
+- **What it carries:** RD7.11 — Resolution Engine deterministic box-line Flavor
+  (engine). Data port + box-line templates + adversarial honesty sweep.
+- **Status change (2026-06-15):** glassed as too STIFF standalone → committed as
+  the FALLBACK FLOOR for RD7.12, NOT a standalone ship. `feat/rd7-12-llm-flavor`
+  is stacked on this branch; the two land together at one tri-sport merge.
+- **Uncommitted state:** only `M package-lock.json` (install drift, excluded).
+- **Cross-sport:** YES — `shared/explanation` feeds all sports. MERGE = tri-sport.
+- **Intent:** do NOT ship alone; do NOT delete (rd7-12 is stacked on it).
+- **Last reviewed:** 2026-06-15
+
+---
+
+### `feat/rd7-12-llm-flavor` — active (DESIGN stage; build not started)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-12-llm-flavor`
+- **Branch HEAD:** `815ca40` (stacked on `feat/rd7-11-substance`; design-doc edit uncommitted)
+- **Unique commits vs main:** 1 inherited (RD7.11 `815ca40`) + 0 own yet
+- **What it carries (planned):** RD7.12 — LLM-authored Flavor clause (constrained
+  hybrid). Engine owns Recognition+Cause (frozen); LLM authors Flavor only;
+  never-block + precompute + honesty-validated; RD7.11 deterministic line is the
+  fallback floor. New `api/flavor.ts` + client util + precompute hook + validator.
+  Model: claude-haiku-4-5 (signed off). See § RD7.12 design doc.
+- **Stacked on:** `feat/rd7-11-substance` (its deterministic Flavor is the floor).
+- **Gate state:** DESIGN — doc written, awaiting John's review at the fork BEFORE
+  any code / API wiring. ITERATION = vitest + basketball; MERGE = tri-sport.
+- **Touches model/cost surface:** flagged + signed off (Haiku-4.5, ~$0.001–0.002/
+  resolution, precomputed + cached).
+- **Intent:** John reviews § RD7.12 design; build only after approval.
 - **Last reviewed:** 2026-06-15

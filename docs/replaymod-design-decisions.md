@@ -2464,6 +2464,193 @@ humble (no agency-creep smuggled in via substance).
 
 ---
 
+## § RD7.12 — LLM-authored Flavor clause (constrained hybrid) — DESIGN (doc-before-code; build NOT started; awaiting John's review at this fork)
+
+Supersedes RD7.11's deterministic Flavor as the *primary* line. RD7.11 (engine
+commit `815ca40`) is the **fallback floor**, never shipped alone. RD7.12 layers
+an LLM-authored Flavor clause on top, behind a never-block + honesty-validated
+hybrid. Branch `feat/rd7-12-llm-flavor` stacked on `feat/rd7-11-substance`;
+RD7.11 + RD7.12 land together at ONE tri-sport merge.
+
+**STATUS: design only. No code, no API wiring yet. John reviews this section
+before any build.**
+
+### 1. The three non-negotiables
+
+**(A) Engine owns Recognition + Cause — deterministic, byte-unchanged.** The LLM
+authors the **FLAVOR clause only** (the descriptive closer). It never authors,
+sees-as-editable, or influences Recognition or Cause. `classify()` and the
+Recognition/Cause render in `resolutionEngine.ts` are RD7.2-frozen. The
+honesty-critical surface never touches the model. Concretely: the engine emits
+`{ recognitionCause: string, deterministicFlavor: string }`; the LLM may replace
+ONLY the flavor segment.
+
+**(B) Never block the screen.** Result-screen render is instant + deterministic:
+celebration fires, Recognition + Cause + the RD7.11 deterministic Flavor paint
+immediately. The LLM line, *if already cached*, is what renders; if not, the
+deterministic line renders and the LLM line **swaps in only if it arrives**
+(it normally won't need to — see precompute). Slow / fail / timeout /
+unreachable → deterministic line stands, no gap, no error, no spinner. **Worst
+case === today's honest RD7.11 line.**
+
+**(C) Precompute primary; two fallbacks.** Generation fires when the resolved
+hand exists, *before* the result screen:
+- **Precompute (primary):** a mount-effect in `H2HRecipientReveal` (resolved
+  `sender`/`recipient` present at mount, `:177`) fires the fetch; the ~20s+
+  reveal arc is the window; result cached on a ref/result object keyed by a hand
+  signature. Haiku ~600ms vs ~20s → effectively always ready.
+- **Live-on-mount (fallback 1):** if precompute didn't finish, the overlay may
+  read an in-flight promise; it still never blocks — deterministic shows until
+  resolve.
+- **Deterministic (fallback 2, final):** RD7.11 line. Always present.
+
+### 2. LLM input scope (the agency firewall — it can't claim a call it's never told about)
+GIVEN to the model:
+- The notable card(s)' **box line(s)** — stats only (reuse RD7.11 `formatBoxLine`
+  data; pass the raw triple + accents).
+- **Nickname / cultural anchor** — from the existing cultural bank (wrapper data;
+  same source `explainH2HResult` already uses via `lookupCulture`).
+- **Outcome + margin bucket** — `win` / `close-loss` / `beatdown` only (so wit is
+  outcome-appropriate). NOT the raw margin-as-decision, NOT totals.
+
+NEVER given (structurally — not in the payload at all):
+- The user's decision, what they held/faded, any "you" framing, any prediction
+  framing, the Cause classification, the leaf, Mike's cards/decisions. The model
+  cannot reference a call because it is never told one was made.
+
+### 3. Endpoint + model (cost flag SIGNED OFF by John)
+- **Model:** `claude-haiku-4-5` via the existing `routeCommentary`
+  (`api/_lib/router/`). Cheap + fast; the Flavor is one clause. ~$0.001–0.002 per
+  resolution, **precomputed once + cached** (re-views never re-call).
+- **Endpoint:** reuse the `api/headline.ts` pattern (timeout-race, validator
+  stack, null→fallback, never-block). New surface `api/flavor.ts` (keeps the
+  honesty-critical Flavor voice separate from the challenge-headline voice;
+  different prompt + outcome-gating). Client wrapper mirrors
+  `fetchAuthoredHeadline.ts` (always-resolves, never-throws, returns string|null).
+- **Prompt:** new Flavor system prompt (NOT the headline VOICE_CONTRACT) encoding
+  §4 honesty rules + §5 calibration. User prompt = the §2 scoped facts only.
+
+### 4. Honesty gate (constrained, not proven — FAILS CLOSED)
+
+**GOVERNING PRINCIPLE — the validator FAILS CLOSED (tightening #1).** Model output
+displays ONLY if it clears EVERY guard. Any failure mode — a guard trips, the
+validator itself errors, the call times out, OR the output is ambiguous/uncertain
+— resolves to the deterministic fallback. **Default on any doubt = the safe
+deterministic line.** The blocklist cannot enumerate every false-agency framing;
+fail-closed is what covers the ones it misses. There is no "display on partial
+pass" path.
+
+- **System prompt** encodes RD7.2/7.3 rules: description only; never
+  causation/prediction/agency; never "you read/called/knew"; never
+  pull-divergence; Mike stays scoreboard.
+- **Router `bannedPhrases`** — inject the forbidden-causation blocklist at the
+  router (pre-generation steer).
+- **Runtime validator (the gate), ALL must pass:**
+  - the **RD7.11 adversarial blocklist** (forbidden-causation set), promoted from
+    test-time to runtime;
+  - the **numeric-grounding guard** — reject any number in the output not present
+    in the facts (blocks invented stats);
+  - a **personal-life/legal denylist** (port `api/headline.ts`'s `PHRASE_DENYLIST`);
+  - **apology-sentinel** detection (all-models-failed string → fallback);
+  - **length cap**;
+  - an **ambiguity check** — empty/degenerate/non-string/over-length/control-char
+    output → reject. Anything the validator can't positively clear → reject.
+  - On ANY of the above, OR a thrown error in the validator → return the
+    deterministic line. Never display unvalidated or partially-validated output.
+
+**Beatdown-loss = SUPPRESS THE MODEL ENTIRELY (tightening #2).** The margin
+buckets:
+- `win`   = `margin > TIE_EPS`
+- `close-loss` = loss with `|margin| < BLOWOUT_MARGIN`
+- `beatdown` = loss with `|margin| >= BLOWOUT_MARGIN`
+- (tie / tiny-margin → treated as their variance line; no LLM call needed there
+  either — the LLM is only invoked when there's a notable box line to describe.)
+
+`BLOWOUT_MARGIN = 25` — **reused from the existing locked engine TUNING constant**
+(it already defines "beatdown" in `renderVariance`); not a new number. *(Flagged
+to John for veto; adopt unless he picks a different cut.)*
+
+On a **beatdown bucket the LLM is NOT called at all** — render the deterministic
+variance-humility line. No model attempt, no "constrained wit." This replaces the
+un-testable "restrained" rule with a testable one: **beatdown bucket → zero model
+call → deterministic line.** (Closes the img-2 "upbeat on a loss" risk by
+construction — there is no model output to be upbeat.)
+
+Wit is permitted on `win`; `close-loss` may carry restrained cultural color (still
+fail-closed validated). Only `beatdown` is hard-suppressed.
+
+### 5. Calibration examples (for the prompt)
+- ✅ "The Big Ticket went for 23-8-3" (nickname = wrapper, stats = description)
+- ✅ win: "Iverson cooked — 41-7-5, vintage AI" (about the game, not your call)
+- ✅ beatdown: "Garnett's 23-8-3, the lone bright spot on a cold night" (restrained)
+- ❌ "you called The Big Ticket and he delivered" (agency — REJECT)
+- ❌ "you knew AI would cook" (prediction — REJECT)
+- ❌ beatdown: "at least you got Garnett going!" (false consolation — REJECT)
+
+### 6. Tests
+- **Validator FAILS CLOSED (tightening #1):** assert output displays only on a
+  full pass; assert each guard's failure → deterministic fallback; assert a
+  validator-internal throw → deterministic fallback; assert empty/ambiguous/
+  over-length/non-string → reject. Default-on-doubt is the asserted property.
+- **Beatdown suppression (tightening #2):** assert a beatdown-bucket input
+  (`loss`, `|margin| >= 25`) makes **zero model calls** (spy/mock the fetch) and
+  renders the deterministic variance line. Buckets computed correctly at the
+  boundary (24.9 → close-loss; 25.0 → beatdown).
+- **Cause/Recognition FROZEN-OUTPUT (tightening #3):** assert RD7.12's engine
+  `explainResolution().text` is byte-identical to RD7.11's for a fixed input
+  table (the engine is untouched; this LOCKS against any shared-codepath
+  perturbation introduced by the RD7.12 plumbing). The honesty-critical clause
+  gets a regression lock.
+- **Never-block:** deterministic line renders without the model; swap-in is
+  non-blocking; failure/timeout/unreachable → deterministic line, no error, no
+  gap, no spinner.
+- **Cross-sport:** non-basketball / no recognized box line → skip the LLM call,
+  deterministic stands.
+- **Cache/dedupe:** re-opening a result does not re-call.
+
+### 6a. Display composition (resolved interpretation — folded 2026-06-15)
+The engine's `explainResolution()` is **FROZEN** (untouched) — it is the
+deterministic fallback floor AND the sole producer of causal language; the
+frozen-output test (#3 above) is trivially green because no engine render code
+changes. The LLM line, when cached + fully validated, **replaces the displayed
+resolution text** (`data-h2h-overlay-resolution`); otherwise the engine's RD7.11
+line shows. The LLM cannot fabricate a cause because (a) it is never given the
+decision/cause inputs (§2 firewall) and (b) the fail-closed validator rejects any
+causal/agency leakage — so a displayed LLM line is descriptive-only, and the
+humble-cause phrasing is carried by the deterministic floor. "Engine owns
+Recognition+Cause" = the engine is the only thing structurally able to express
+causation. *(If glass shows we want the engine cause clause ALWAYS visible with
+the LLM flavor appended as a closer, that's a fast follow — the engine split
+point is clean to add later; this build keeps the engine frozen for #3.)*
+
+### 7. Open implementation questions to resolve DURING build (not blockers)
+- Cache key: a stable hand signature (recipient cardIds + statLine hash) so
+  precompute and live-on-mount dedupe to the same entry.
+- Where to store the cached Flavor: a module-level ref keyed by signature vs on
+  the result object. Lean ref (survives overlay remount, no prop-threading).
+- Feature-flag gate (`VITE_FEATURE_LLM_FLAVOR`) so it can ship dark and flip in
+  Vercel — recommended; confirm with John at build time.
+
+### Touched (planned)
+`api/flavor.ts` (new), `shared/utils/fetchAuthoredFlavor.ts` (new, mirrors
+fetchAuthoredHeadline), a Flavor prompt/validator module, the precompute hook in
+`H2HRecipientReveal.tsx`, the swap-in read in `H2HResultsOverlay.tsx` (reads
+cached LLM Flavor or RD7.11 deterministic), tests, docs. `resolutionEngine.ts`
+gains a clean Recognition+Cause / Flavor split point but NO logic change.
+
+### Gate
+ITERATION — vitest + basketball build. **MERGE = full tri-sport
+(`build-vercel.sh`)** — shared/explanation + the new shared client util feed all
+sports. API-wiring touches the model/cost surface — flagged + signed off.
+
+**Glass checklist (phone):** voice holds its own vs in-game commentary on WIN,
+close LOSS, and BEATDOWN LOSS; beatdown reads restrained (not upbeat); no
+perceptible latency at the result screen (precompute working); forced
+model-failure → deterministic fallback looks right; no-scroll + grows-not-spills
+hold.
+
+---
+
 ## RD7.x — Results Experience + Resolution Engine (locked)
 
 ### Resolution Engine (RD7.2) — architecture
