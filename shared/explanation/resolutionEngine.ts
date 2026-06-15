@@ -395,6 +395,23 @@ export function extractFlavorBox(
   return box;
 }
 
+/** RD7.12-b — the bucket+classification gate for calling the LLM. Eval-driven
+ *  (RD7.12-eval, 200 hands): the LLM voice is strong on wins/star lines but FLAT
+ *  on unremarkable close-losses, where the deterministic line is better because
+ *  it carries the humble cause the LLM firewall strips, and where all the
+ *  staleness clustered. So call the model ONLY where it earns its keep:
+ *    WIN                              → LLM (vivid description wins here)
+ *    CLOSE-LOSS + AGENCY-classified   → LLM (a real card/decision to narrate)
+ *    CLOSE-LOSS + VARIANCE-classified → deterministic (humble cause, honest + better)
+ *    BEATDOWN / TIE                   → deterministic (already suppressed)
+ *  Reuses the engine's EXISTING RD7.2 agency/variance register — no new heuristic. */
+export function shouldAuthorFlavor(margin: number, register: "agency" | "variance"): boolean {
+  const bucket = flavorMarginBucket(margin);
+  if (bucket === "win") return true;
+  if (bucket === "close-loss") return register === "agency";
+  return false; // beatdown / tie
+}
+
 /** The card whose box line the Flavor describes: the decisive card (agency) or
  *  the top scorer (variance). null when none has a usable box line. */
 export function selectFlavorCard(cls: Classification, input: ResolutionInput): YourCardFact | null {

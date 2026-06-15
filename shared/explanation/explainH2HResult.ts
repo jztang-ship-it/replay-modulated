@@ -9,6 +9,7 @@
 import {
   explainResolution,
   flavorMarginBucket,
+  shouldAuthorFlavor,
   selectFlavorCard,
   extractFlavorBox,
   lastName,
@@ -77,18 +78,20 @@ export function explainH2HResult(args: {
   const result = explainResolution(input);
 
   // RD7.12 — build the firewalled LLM-Flavor request. NULL (skip the model) on
-  // beatdown / tie buckets and when no card has a recognized box line
-  // (non-basketball / sparse). The request carries ONLY stats + nickname +
-  // outcome bucket — nothing about the user's decision, so the model cannot
-  // claim agency it was never told about.
+  // beatdown / tie and when no card has a recognized box line (non-basketball /
+  // sparse). RD7.12-b — also skip VARIANCE-classified close-losses: the LLM is
+  // flat there and the deterministic humble-cause line is better (eval finding).
+  // The gate reuses the engine's existing agency/variance register. The request
+  // carries ONLY stats + nickname + outcome bucket — nothing about the user's
+  // decision, so the model cannot claim agency it was never told about.
   const bucket = flavorMarginBucket(margin);
   let flavorRequest: FlavorFacts | null = null;
-  if (bucket === "win" || bucket === "close-loss") {
+  if (shouldAuthorFlavor(margin, result.classification.register)) {
     const card = selectFlavorCard(result.classification, input);
     const box = card ? extractFlavorBox(card.statLine) : null;
     if (card && box) {
       flavorRequest = {
-        outcome: bucket,
+        outcome: bucket as "win" | "close-loss",
         player: { last: lastName(card.name), nickname: card.nickname ?? null },
         box,
       };

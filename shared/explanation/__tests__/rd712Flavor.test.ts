@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import {
   explainResolution,
   flavorMarginBucket,
+  shouldAuthorFlavor,
   extractFlavorBox,
   selectFlavorCard,
   type YourCardFact,
@@ -24,6 +25,31 @@ describe("flavorMarginBucket — beatdown boundary (tightening #2)", () => {
     expect(flavorMarginBucket(-24.9)).toBe("close-loss");  // just under BLOWOUT_MARGIN
     expect(flavorMarginBucket(-25)).toBe("beatdown");      // BLOWOUT_MARGIN → beatdown
     expect(flavorMarginBucket(-60)).toBe("beatdown");
+  });
+});
+
+describe("RD7.12-b — shouldAuthorFlavor gate (call LLM only where it earns its keep)", () => {
+  it("predicate matrix", () => {
+    expect(shouldAuthorFlavor(20, "variance")).toBe(true);   // win (variance) → LLM
+    expect(shouldAuthorFlavor(20, "agency")).toBe(true);     // win (agency)   → LLM
+    expect(shouldAuthorFlavor(-12, "agency")).toBe(true);    // close-loss + agency → LLM
+    expect(shouldAuthorFlavor(-12, "variance")).toBe(false); // close-loss + variance → deterministic
+    expect(shouldAuthorFlavor(-40, "agency")).toBe(false);   // beatdown → deterministic
+    expect(shouldAuthorFlavor(0, "variance")).toBe(false);   // tie → deterministic
+  });
+
+  it("AGENCY-classified close-loss (A2 bust) → gate OPEN (model called)", () => {
+    const input = { yourCards: [c({ name: "Devin Booker", tier: "ORANGE", salary: 62, wasHeld: true, fp: 12, percentile: 6, poolMedian: 50, statLine: { pts: 8, reb: 2, ast: 1 } }), ...fill(5)], margin: -12 };
+    const { classification } = explainResolution(input);
+    expect(classification.register).toBe("agency");
+    expect(shouldAuthorFlavor(input.margin, classification.register)).toBe(true);
+  });
+
+  it("VARIANCE-classified close-loss (slate fell, no single call) → gate CLOSED (deterministic, no model call)", () => {
+    const input = { yourCards: fill(6), margin: -10 };
+    const { classification } = explainResolution(input);
+    expect(classification.register).toBe("variance");
+    expect(shouldAuthorFlavor(input.margin, classification.register)).toBe(false);
   });
 });
 

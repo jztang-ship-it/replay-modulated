@@ -2588,6 +2588,26 @@ construction — there is no model output to be upbeat.)
 Wit is permitted on `win`; `close-loss` may carry restrained cultural color (still
 fail-closed validated). Only `beatdown` is hard-suppressed.
 
+### 4a. RD7.12-b — bucket+classification gate (eval-driven, 2026-06-16)
+The RD7.12-eval 200-hand run found the LLM voice is strong on wins/star lines but
+**FLAT on unremarkable close-losses** — and there the deterministic line is
+*better* (it carries the humble cause the LLM firewall strips), and ALL the
+staleness clustered in that bucket. So the model is called only where it earns
+its keep (`shouldAuthorFlavor(margin, register)` in resolutionEngine.ts, reusing
+the EXISTING RD7.2 agency/variance register — no new heuristic):
+
+| Bucket | Classification | Flavor source |
+|---|---|---|
+| WIN | any | **LLM** |
+| CLOSE-LOSS | agency (a card/decision drove it) | **LLM** (real event to narrate) |
+| CLOSE-LOSS | variance (slate fell, no single call) | **deterministic** (humble cause, honest + better) |
+| BEATDOWN / TIE / non-basketball | — | deterministic (already suppressed) |
+
+Gate: model-call iff `win` OR (`close-loss` AND `register === "agency"`). Locked
+by unit tests (variance close-loss → no call; agency close-loss → call). Nothing
+else changes — fail-closed validator, firewall, frozen Cause, never-block, the
+2-rejection behavior all preserved; this only NARROWS when the model is called.
+
 ### 5. Calibration examples (for the prompt)
 - ✅ "The Big Ticket went for 23-8-3" (nickname = wrapper, stats = description)
 - ✅ win: "Iverson cooked — 41-7-5, vintage AI" (about the game, not your call)
