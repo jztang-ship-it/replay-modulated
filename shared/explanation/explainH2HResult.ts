@@ -40,6 +40,13 @@ export function explainH2HResult(args: {
       percentile: ps ? percentileFromStats(fp, ps) : null,
       poolMedian: ps ? ps.p50 : null,
       nickname: culture?.nicknames?.[0]?.trim() || null,
+      // RD7.11 — log fields for the Flavor slot (DESCRIPTION only). Already on
+      // H2HCard from the resolve; previously projected away. The engine uses
+      // statLine for the box line; gameInfo/achievements are available for
+      // richer Flavor. Sparse/absent → engine degrades to the FP line.
+      statLine: c.statLine ?? null,
+      gameInfo: c.gameInfo ?? null,
+      achievements: c.achievements ?? null,
     };
   };
 

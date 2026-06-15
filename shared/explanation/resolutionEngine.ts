@@ -34,6 +34,13 @@ export interface YourCardFact {
   percentile: number | null;
   poolMedian: number | null;
   nickname?: string | null;   // stars only (caller's lookupCulture); flavor only
+  // RD7.11 — log fields for the Flavor slot (DESCRIPTION only, never causation).
+  // Already on H2HCard; populated by explainH2HResult.toFact. All optional —
+  // missing/sparse degrades to the FP line (graceful, never errors). statLine
+  // is the real box line; gameInfo/achievements available for richer Flavor.
+  statLine?: Record<string, number | string> | null;
+  gameInfo?: { date?: string; opponent?: string; homeAway?: string } | null;
+  achievements?: Array<{ id: string; icon: string; label: string; fp: number }> | null;
 }
 
 export interface OpponentOutlier { name: string; percentile: number; actualFp: number; swing: number; }
@@ -156,36 +163,99 @@ export function classify(input: ResolutionInput): Classification {
 }
 
 // ── Narration ──────────────────────────────────────────────────────────────
-// Renderability filtering: a leaf has a no-nickname variant set always, and a
-// nickname tail appended ONLY when the anchor is a star with a nickname.
+// RD7.11 — the FLAVOR slot carries commentary-grade SUBSTANCE from the REAL box
+// line (DESCRIPTION only, never causation). Recognition + Cause are RD7.2-
+// unchanged; classification is untouched. Generation order stays Recognition →
+// Cause → Flavor → cultural-tag. The box line REPLACES the bland FP scalar in
+// the agency clauses ("went for 41-12-9", not "dropped 41"); FP is the graceful
+// fallback when no box line is available.
+//
+// Renderability: a leaf has a no-nickname variant set always, and a nickname
+// tail appended ONLY when the anchor is a star with a nickname.
 
-const WIN_TEMPLATES: Record<"A1" | "A3", Array<(l: string, fp: number) => string>> = {
+/** Parse a stat value to a finite number, or null. */
+function statNum(v: unknown): number | null {
+  if (v == null) return null;
+  const n = typeof v === "number" ? v : parseFloat(String(v));
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Basketball-shaped descriptive box line ("41-12-9" / "41 points"), or null.
+ *  Null for sparse/absent statLine OR a non-basketball stat shape with no
+ *  recognized scoring key — the caller then degrades to the FP scalar. THIS IS
+ *  ALSO THE CROSS-SPORT SAFETY: baseball/football statLines (different keys)
+ *  return null here → today's FP line, zero regression. Per-sport box-line
+ *  formatting is a documented follow-up (RD7.11 doc D2). DESCRIPTION only —
+ *  pure scoreboard, never a half-triple ("41-undefined-9") or phantom stat. */
+function formatBoxLine(statLine?: Record<string, number | string> | null): string | null {
+  if (!statLine || typeof statLine !== "object") return null;
+  const pts = statNum(statLine.pts ?? statLine.points ?? statLine.PTS);
+  if (pts == null) return null;
+  const reb = statNum(statLine.reb ?? statLine.rebounds ?? statLine.trb ?? statLine.REB);
+  const ast = statNum(statLine.ast ?? statLine.assists ?? statLine.AST);
+  if (reb != null && ast != null) return `${pts}-${reb}-${ast}`;     // classic triple
+  return `${pts} ${pts === 1 ? "point" : "points"}`;                 // points-only (no half-triple)
+}
+
+/** At most ONE accent: a genuinely standout stat (high thresholds → honest),
+ *  else the opponent if present. "" when nothing sharpens the line. */
+function boxAccent(c?: YourCardFact | null): string {
+  const s = c?.statLine;
+  if (s && typeof s === "object") {
+    const blk = statNum(s.blk ?? s.blocks);
+    const threes = statNum(s.threes ?? s.fg3 ?? s.tpm);
+    const stl = statNum(s.stl ?? s.steals);
+    if (blk != null && blk >= 5) return `${blk} blocks`;
+    if (threes != null && threes >= 7) return `${threes} threes`;
+    if (stl != null && stl >= 5) return `${stl} steals`;
+  }
+  const opp = c?.gameInfo?.opponent?.trim();
+  if (opp) return `vs ${opp}`;
+  return "";
+}
+
+/** The stat token woven into a clause: box line (+ optional accent, hash-gated
+ *  for variety so repeats differ), or the FP scalar when no box line exists
+ *  (graceful degrade = today's line). */
+function statToken(full: YourCardFact | undefined, fp: number, key: string): string {
+  const box = formatBoxLine(full?.statLine);
+  if (!box) return `${fp}`;
+  const acc = boxAccent(full);
+  if (acc && stableHash(key + "|acc") % 2 === 0) {
+    return acc.startsWith("vs ") ? `${box} ${acc}` : `${box}, ${acc}`;
+  }
+  return box;
+}
+
+const WIN_TEMPLATES: Record<"A1" | "A3", Array<(l: string, s: string) => string>> = {
   A1: [
-    (l, f) => `${l} dropped ${f} — holding him was the call.`,
-    (l, f) => `You held ${l}, and he went for ${f}. The hold won it.`,
-    (l, f) => `${f} from ${l} — the hold that won it.`,
+    (l, s) => `${l} went for ${s} — holding him was the call.`,
+    (l, s) => `You held ${l}, and he went for ${s}. The hold won it.`,
+    (l, s) => `${s} from ${l} — the hold that won it.`,
+    (l, s) => `${l}'s ${s} — exactly why you held him.`,
   ],
   A3: [
-    (l, f) => `Your ${l} pickup went for ${f} — the redraw that won it.`,
-    (l, f) => `${f} off the ${l} swap — great call.`,
-    (l, f) => `${l} off the redraw for ${f} — the swap that won it.`,
+    (l, s) => `Your ${l} pickup went for ${s} — the redraw that won it.`,
+    (l, s) => `${s} off the ${l} swap — great call.`,
+    (l, s) => `${l} off the redraw for ${s} — the swap that won it.`,
+    (l, s) => `The ${l} redraw paid off — ${s}.`,
   ],
 };
-const LOSS_TEMPLATES: Record<"A2" | "A4" | "A5", Array<(l: string, fp: number) => string>> = {
+const LOSS_TEMPLATES: Record<"A2" | "A4" | "A5", Array<(l: string, s: string) => string>> = {
   A2: [
-    (l, f) => `${l} managed just ${f} — holding him is what cost you.`,
-    (l, f) => `You stuck with ${l} and got ${f}. That's the loss.`,
-    (l, f) => `Just ${f} from ${l} — the hold that sank it.`,
+    (l, s) => `${l} managed just ${s} — holding him is what cost you.`,
+    (l, s) => `You stuck with ${l} and got ${s}. That's the loss.`,
+    (l, s) => `Just ${s} from ${l} — the hold that sank it.`,
   ],
   A4: [
-    (l, f) => `Your ${l} redraw came up empty at ${f} — that gamble cost you.`,
-    (l, f) => `The ${l} swap flopped at ${f} — it sank you.`,
-    (l, f) => `Just ${f} from the ${l} pickup — the gamble that sank it.`,
+    (l, s) => `Your ${l} redraw came up empty at ${s} — that gamble cost you.`,
+    (l, s) => `The ${l} swap flopped at ${s} — it sank you.`,
+    (l, s) => `Just ${s} from the ${l} pickup — the gamble that sank it.`,
   ],
   A5: [
-    (l, f) => `${l} went for ${f}, but it wasn't enough — the rest couldn't keep up.`,
-    (l, f) => `${f} from ${l} carried you to the edge, but the cast fell short.`,
-    (l, f) => `${l} did his part (${f}) — the rest of the slate didn't.`,
+    (l, s) => `${l} went for ${s}, but it wasn't enough — the rest couldn't keep up.`,
+    (l, s) => `${s} from ${l} carried you to the edge, but the cast fell short.`,
+    (l, s) => `${l} did his part (${s}) — the rest of the slate didn't.`,
   ],
 };
 
@@ -197,15 +267,18 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
   const fp = Math.round(d.fp);
   const key = `${d.name}|${cls.leaf}|${input.margin.toFixed(0)}`;
   const leaf = cls.leaf!;
+  const full = input.yourCards.find((c) => c.name === d.name);
+  // FLAVOR: the real box line replaces the FP scalar (degrades to FP when no
+  // statLine). DESCRIPTION only — woven into the SAME Recognition+Cause clause,
+  // which is byte-unchanged from RD7.2 apart from the stat token.
+  const s = statToken(full, fp, key);
   if (leaf === "A1" || leaf === "A3") {
-    const base = pick(WIN_TEMPLATES[leaf], key)(l, fp);
-    const full = input.yourCards.find((c) => c.name === d.name);
+    const base = pick(WIN_TEMPLATES[leaf], key)(l, s);
     const nick = d.isStar ? full?.nickname?.trim() : null; // star + nickname only
     const tail = nick ? ` Classic ${nick}.` : "";
     return tail && base.length + tail.length <= TUNING.MAX_CHARS ? base + tail : base;
   }
-  const base = pick(LOSS_TEMPLATES[leaf], key)(l, fp);
-  const full = input.yourCards.find((c) => c.name === d.name);
+  const base = pick(LOSS_TEMPLATES[leaf], key)(l, s);
   // Flavor only on the bust leaves (A2/A4), star + nickname; A5 stays clean (sympathetic).
   const nick = (leaf === "A2" || leaf === "A4") && d.isStar ? full?.nickname?.trim() : null;
   const tail = nick ? ` Not ${nick}'s night.` : "";
@@ -233,20 +306,48 @@ const MID_WIN = [
   (m: string) => `Up ${m} — a team win, no single hero. The board carried it.`,
 ];
 
+// RD7.11 — optional descriptive box-line color for variance: names the top
+// scorer as a pure RANKING ("Garnett's 47-9-6 led your board"), NEVER a cause.
+// "led/topped/paced/high-mark" are statistical-ranking verbs, not agency. ""
+// when no card has a usable box line (e.g. non-basketball / sparse → today's
+// line stands, preserving variance-voice variety).
+const VARIANCE_RANK: Array<(l: string, s: string) => string> = [
+  (l, s) => `${l}'s ${s} led your board.`,
+  (l, s) => `${l}'s ${s} topped your slate.`,
+  (l, s) => `${l}'s ${s} paced your scoring.`,
+  (l, s) => `${l}'s ${s} was your high mark.`,
+];
+function varianceRanking(input: ResolutionInput, key: string): string {
+  const withBox = input.yourCards
+    .map((c) => ({ c, box: formatBoxLine(c.statLine) }))
+    .filter((x) => x.box != null)
+    .sort((a, b) => b.c.fp - a.c.fp);
+  const top = withBox[0];
+  if (!top) return "";
+  return " " + pick(VARIANCE_RANK, key + "|rank")(lastName(top.c.name), top.box as string);
+}
+
 function renderVariance(cls: Classification, input: ResolutionInput): string {
   const absM = Math.abs(input.margin);
   const m = absM.toFixed(1);
   const key = `${cls.outcome}|${Math.round(input.margin)}`;
+  // Append the descriptive ranking only when it fits MAX_CHARS; degrades to the
+  // bare variance line otherwise. Skipped on tie / tiny-margin / bad-beat (those
+  // lines are about the coin-flip or Mike, not a your-side scoreboard ranking).
+  const withRank = (base: string): string => {
+    const r = varianceRanking(input, key);
+    return r && base.length + r.length <= TUNING.MAX_CHARS ? base + r : base;
+  };
   if (cls.outcome === "tie") return `Dead even — the math couldn't separate you.`;
   if (cls.outcome === "win") {
-    if (absM >= TUNING.BLOWOUT_MARGIN) return pick(BLOWOUT_WIN, key)(m);
+    if (absM >= TUNING.BLOWOUT_MARGIN) return withRank(pick(BLOWOUT_WIN, key)(m));
     if (absM < TUNING.TINY_MARGIN) return `Razor-thin — the logs fell your way. No single call won this one.`;
-    return pick(MID_WIN, key)(m);
+    return withRank(pick(MID_WIN, key)(m));
   }
   if (cls.mikeBadBeat && input.opponentOutlier) return `Lost by ${m} — you played it right. Mike just caught a monster ${lastName(input.opponentOutlier.name)} pull.`;
-  if (absM >= TUNING.BLOWOUT_MARGIN) return pick(BEATDOWN_LOSS, key)(m);
+  if (absM >= TUNING.BLOWOUT_MARGIN) return withRank(pick(BEATDOWN_LOSS, key)(m));
   if (absM < TUNING.TINY_MARGIN) return `Lost by ${m} — no single decision swung it; a coin-flip that landed cold.`;
-  return pick(MID_LOSS, key)(m);
+  return withRank(pick(MID_LOSS, key)(m));
 }
 
 export function render(cls: Classification, input: ResolutionInput): string {

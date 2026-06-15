@@ -2370,6 +2370,100 @@ still grows-not-spills (RD7.4). Run a WIN and a LOSS.
 
 ---
 
+## § RD7.11 — Resolution Engine Flavor: box-line substance (ITERATION — held for phone glass 2026-06-15)
+
+The FLAVOR HALF of the img-4 feedback (the weight half shipped as RD7.10 FIX 3).
+Executes RD7-CANON HONESTY+EXCITEMENT: *"Humility governs CAUSALITY, not
+DESCRIPTION. The Cause clause stays humble; the FLAVOR slot carries
+commentary-grade specificity drawn from the actual logs."* This ticket touches
+**Flavor only** — not Recognition, not Cause, not classification. Branch
+`feat/rd7-11-substance` off pushed main (`8b78519`).
+
+### PART A — data port (projection widening, not plumbing)
+Per RD7.11-investigate the log data is already on `H2HCard` (`statLine`,
+`gameInfo`, `achievements`); `toFact` simply projected it away.
+- `resolutionEngine.ts` — `YourCardFact` gains optional `statLine?`,
+  `gameInfo?`, `achievements?`.
+- `explainH2HResult.ts` — `toFact` populates them from `c.statLine` /
+  `c.gameInfo` / `c.achievements` (already in scope at the call site).
+- NO changes to resolveEngine, H2HCard, reveal flow, serialization, data load.
+
+### PART B — box-line-aware Flavor templates (deterministic)
+- The decisive/hero card's stat token in the agency clauses becomes the REAL
+  **box line** ("went for 41-12-9") instead of the bland FP scalar ("dropped
+  41"). FP scalar is the graceful fallback (see degrade rules).
+- Variance gets an optional **descriptive top-scorer ranking** clause (pure
+  scoreboard: "Garnett's 47 led your slate") — color WITHOUT a cause.
+- Benchmark = the in-game commentary VOICE (`shared/commentary/`), matched in
+  TEXTURE + VARIETY within deterministic templates (not LLM-fluid). Enough
+  variants that repeats don't read identical.
+
+### LOCKED design decisions
+- **D1 — box line REPLACES the FP scalar** in agency clauses (ticket example
+  "went for 41-7-5"); FP scalar is the fallback only.
+- **D2 — box-line formatter is basketball-shaped** (pts-reb-ast core + at most
+  ONE accent: a standout threes/blk/stl). For sparse/absent **or non-basketball**
+  statLine (no recognized keys) it returns `null` → Flavor degrades to the
+  existing FP-based line. **This graceful-degrade IS the cross-sport safety:**
+  baseball/football (different stat keys, and they share this engine via
+  `H2HRecipientReveal`) keep exactly today's behavior — zero regression.
+  Per-sport box-line formatting (a SportAdapter hook fed through `YourCardFact`)
+  is a documented FOLLOW-UP, not this ticket.
+- **D3 — variance top-line ranking is optional + ranking-only**; degrades to the
+  existing variance line when there's no clear top box line.
+- **D4 — generation order Recognition → Cause → Flavor → cultural-tag preserved.**
+  Cause clause TEXT unchanged; classification untouched; cultural tag (nickname)
+  stays the trailing WRAPPER, after Flavor.
+- **D5 — honesty guard is a unit test**: a forbidden-causation blocklist
+  (`came through`, `delivered`, `showed up`, `when it mattered`, `when you
+  needed`, `rose to`, `answered the call`, `clutch`) asserted to NEVER appear
+  across a large generated-output sweep. Deterministic templates make this
+  provable — that's the whole reason we're not using an LLM.
+- **D6 — `MAX_CHARS=200` still enforced**; Flavor degrades to fit in order:
+  drop accent → drop box line (FP fallback) → drop cultural tag.
+
+### HONESTY INVARIANTS (load-bearing)
+- Recognition + Cause UNCHANGED (humility-default, variance-default,
+  agency-must-win-out). This ticket does NOT make Cause less humble, fire agency
+  more often, or change classification.
+- **Flavor is DESCRIPTION, never CAUSATION.** ✅ "Iverson went for 41-7-5" /
+  "Garnett's 47 led your slate". ❌ "delivered when it mattered" / "came through
+  for you" / anything implying the user predicted/read/called it (RD7.3
+  false-ownership, retired).
+- **YOUR-SIDE-ONLY.** Flavor describes YOUR cards' box lines. Mike stays
+  scoreboard — no pull-divergence, no Mike decision-comparand. Bad-beat
+  absolution stays gated exactly as canon; Flavor does not widen it (the
+  bad-beat line is left as-is, no box-line Flavor added to Mike).
+
+### DATA SAFETY
+- No dependence on `injured`/`ejected` (RawLog flags ingestion never populates)
+  or `RawLog.events` (empty under current ingestion). Use only `statLine` stat
+  keys, `gameInfo`, `achievements`.
+- Missing/sparse statLine degrades to recognition-only / FP-fallback — never
+  errors, never a half-line, never a stat that isn't there.
+- `controversy[]` UNTOUCHED (radioactive; culture path, not statLine/gameInfo).
+- Commentary bank stays SEPARATE — we extend the engine's own Flavor slot with
+  data it already reaches; the engine does NOT call selectCommentary/chadChallenge.
+
+### Touched (RD7.11)
+`shared/explanation/resolutionEngine.ts` (YourCardFact fields + box-line
+formatter + Flavor template rewrite); `shared/explanation/explainH2HResult.ts`
+(toFact populates log fields); `shared/explanation/__tests__/resolutionEngine.test.ts`
+(box-line + adversarial honesty + sparse/degrade cases); docs; registry.
+
+### Gate
+ITERATION — full vitest + basketball build. Held for phone glass (serve from
+worktree). Commit held until glass. **MERGE = full tri-sport gate
+(`build-vercel.sh`)** — shared/explanation feeds all three sports.
+
+**Glass checklist:** resolution line reads with commentary-grade SUBSTANCE
+(win AND loss); side-by-side voice check vs an in-game commentary line; long
+line still grows-not-spills (RD7.4 minmax track); no-scroll holds with the
+richer line + the RD7.10 footer row (CTA visible); Cause clause still reads as
+humble (no agency-creep smuggled in via substance).
+
+---
+
 ## RD7.x — Results Experience + Resolution Engine (locked)
 
 ### Resolution Engine (RD7.2) — architecture

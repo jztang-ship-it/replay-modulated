@@ -129,3 +129,99 @@ describe("lastName", () => {
     expect(lastName("Jaren Jackson II")).toBe("Jackson");
   });
 });
+
+// ── RD7.11 — box-line Flavor (DESCRIPTION only, never causation) ─────────────
+describe("RD7.11 Flavor — box-line substance", () => {
+  // The forbidden-causation blocklist (D5). Flavor describes; it must NEVER
+  // imply the user read/called the outcome or that a card "came through". The
+  // deterministic templates make this provable across a full sweep.
+  // The forbidden sense is per-card FALSE-OWNERSHIP (implying the pick was a
+  // read / the player "came through for you"). NOTE: the bare team idiom "your
+  // whole board showed up" (pre-existing RD7.2 blowout-win line) is DESCRIPTIVE,
+  // not agency — so the guard targets the agency-completion form ("showed up
+  // when…"), not bare "showed up".
+  const FORBIDDEN = [
+    /came through/i, /delivered/i, /showed up when/i, /when it mattered/i,
+    /when you needed/i, /rose to/i, /answered the call/i, /\bclutch\b/i,
+    /stepped up/i, /for you when/i,
+  ];
+  const assertClean = (text: string, label: string) => {
+    for (const f of FORBIDDEN) expect(text, `[${label}] "${text}"`).not.toMatch(f);
+    // No malformed box line (half-triple / phantom stat).
+    expect(text, `[${label}] "${text}"`).not.toMatch(/undefined|NaN|-{2,}|\bnull\b/);
+  };
+
+  it("A1 win renders the REAL box line, not the bland FP scalar", () => {
+    const cards = [card({ name: "Nikola Jokić", tier: "RED", salary: 89, wasHeld: true, fp: 113, percentile: 95, poolMedian: 73, nickname: "the Joker", statLine: { pts: 41, reb: 12, ast: 9, min: 39 } }), ...fill(5)];
+    const { text, classification } = explainResolution({ yourCards: cards, margin: 35 });
+    expect(classification.leaf).toBe("A1");
+    expect(text).toContain("41-12-9");           // box line present
+    expect(text).not.toContain("113");           // FP scalar replaced
+    expect(text).toContain("Classic the Joker"); // cultural tag still WRAPPER (after Flavor)
+    assertClean(text, "A1 box");
+  });
+
+  it("ADVERSARIAL: a monster star line stays DESCRIPTIVE — no agency phrasing", () => {
+    // A held star with a huge line. Flavor describes it; it must not slip into
+    // "delivered / came through / when it mattered" — that's agency the engine
+    // never classified beyond the existing humble Cause clause.
+    const cards = [card({ name: "Allen Iverson", tier: "RED", salary: 90, wasHeld: true, fp: 120, percentile: 99, poolMedian: 55, nickname: "AI", statLine: { pts: 51, reb: 7, ast: 8, stl: 6, min: 44 } }), ...fill(5)];
+    const { text } = explainResolution({ yourCards: cards, margin: 40 });
+    expect(text).toMatch(/51-7-8/);
+    assertClean(text, "A1 monster");
+  });
+
+  it("sparse/missing statLine → degrades to the FP line, no error, no half-line", () => {
+    const cards = [card({ name: "Nikola Jokić", tier: "RED", salary: 89, wasHeld: true, fp: 113, percentile: 95, poolMedian: 73, nickname: "the Joker", statLine: null }), ...fill(5)];
+    const { text } = explainResolution({ yourCards: cards, margin: 35 });
+    expect(text).toContain("113");                // FP fallback = today's line
+    assertClean(text, "A1 sparse");
+    // A statLine with no scoring key (e.g. a non-basketball shape) also degrades.
+    const cards2 = [card({ name: "Some One", tier: "RED", salary: 89, wasHeld: true, fp: 90, percentile: 95, poolMedian: 60, statLine: { hits: 3, ab: 4 } }), ...fill(5)];
+    const out2 = explainResolution({ yourCards: cards2, margin: 30 });
+    expect(out2.text).toContain("90");
+    assertClean(out2.text, "A1 non-bball shape");
+  });
+
+  it("held-LOST (A2) bust renders its (low) box line descriptively", () => {
+    const cards = [card({ name: "Devin Booker", tier: "ORANGE", salary: 62, wasHeld: true, fp: 14, percentile: 6, poolMedian: 50, nickname: "Book", statLine: { pts: 8, reb: 2, ast: 1, min: 28 } }), ...fill(5)];
+    const { text, classification } = explainResolution({ yourCards: cards, margin: -12 });
+    expect(classification.leaf).toBe("A2");
+    expect(text).toContain("8-2-1");
+    assertClean(text, "A2 bust");
+  });
+
+  it("variance-default hand → box-line COLOR without manufacturing a cause", () => {
+    // No agency: a held non-star fire is variance. Flavor may rank the top
+    // scorer descriptively, but the register stays variance and no cause/agency
+    // phrasing appears.
+    const cards = [card({ name: "Kevin Garnett", tier: "BLUE", salary: 30, wasHeld: true, fp: 70, percentile: 90, poolMedian: 35, statLine: { pts: 30, reb: 14, ast: 4, min: 38 } }), ...fill(5)];
+    const { text, classification } = explainResolution({ yourCards: cards, margin: 14 });
+    expect(classification.register).toBe("variance");
+    expect(text).toMatch(/Garnett's 30-14-4/);
+    expect(text.toLowerCase()).toMatch(/led your board|topped your slate|paced your scoring|high mark/);
+    assertClean(text, "variance color");
+  });
+
+  it("HONESTY SWEEP: no generated line ever crosses description→causation", () => {
+    const tiers = ["RED", "ORANGE", "BLUE", "WHITE"];
+    const lines: Array<{ pts: number; reb: number; ast: number }> = [
+      { pts: 51, reb: 7, ast: 8 }, { pts: 9, reb: 2, ast: 1 }, { pts: 33, reb: 11, ast: 12 }, { pts: 24, reb: 5, ast: 5 },
+    ];
+    let n = 0;
+    for (const margin of [-46, -12, -8, -2, 0, 3, 14, 35, 60]) {
+      for (const tier of tiers) {
+        for (const held of [true, false]) {
+          for (const sl of lines) {
+            const cards = [card({ name: "Test Player", tier, salary: 80, wasHeld: held, fp: sl.pts * 2, percentile: 88, poolMedian: 40, nickname: "TP", statLine: { ...sl, stl: 6, blk: 5, threes: 8 } }), ...fill(5)];
+            const { text } = explainResolution({ yourCards: cards, margin });
+            assertClean(text, `sweep m=${margin} ${tier} held=${held} ${sl.pts}`);
+            expect(text.length).toBeLessThanOrEqual(200); // MAX_CHARS (D6)
+            n++;
+          }
+        }
+      }
+    }
+    expect(n).toBeGreaterThan(200); // confirm the sweep actually ran broadly
+  });
+});

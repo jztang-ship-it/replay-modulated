@@ -221,3 +221,25 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
   attached (the global `stash@{0}` football-culture WIP belongs to
   `feat/basketball-perseason-layout` and was left untouched).
 - **Last reviewed:** 2026-06-15
+
+---
+
+### `feat/rd7-11-substance` — active (held for phone glass)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-11-substance`
+- **Branch HEAD:** `8b78519` (= pushed main at branch time; commits held for glass)
+- **Unique commits vs main:** 0 (work uncommitted until glass)
+- **What it carries:** RD7.11 — Resolution Engine FLAVOR half (box-line
+  substance, deterministic templates). Data port (YourCardFact gains
+  statLine/gameInfo/achievements; toFact populates) + box-line-aware Flavor
+  templates + adversarial honesty tests. Touches `shared/explanation/`
+  (resolutionEngine.ts, explainH2HResult.ts, the engine test) + docs.
+- **Cross-sport:** YES — `shared/explanation` feeds all three sports via
+  `H2HRecipientReveal`. Box-line formatter is basketball-shaped; non-basketball
+  degrades to today's FP line (D2). MERGE = full tri-sport gate.
+- **Equivalence on main:** none.
+- **Gate state:** ITERATION — full vitest + basketball build; tri-sport deferred
+  to John-authorized merge.
+- **Intent:** John glasses on phone (serve FROM this worktree); commit after
+  sign-off. Do NOT delete/clean — uncommitted at risk until committed.
+- **Last reviewed:** 2026-06-15
