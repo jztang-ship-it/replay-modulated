@@ -184,12 +184,21 @@ function H2HRecipientRevealInner(props: InnerProps) {
   const [poolVer, setPoolVer] = useState(0);
   useEffect(() => subscribePoolStats(() => setPoolVer((v) => v + 1)), []);
   const resolution = useMemo(
-    () => explainH2HResult({ sender, recipient, sport }),
+    // RD8 — pass the shared deal so the rivalry divergence can be derived; gated
+    // on the build-time flag (OFF → clause never computed, behavior unchanged).
+    () => explainH2HResult({
+      sender,
+      recipient,
+      sport,
+      initialRoster: challengeCtx.initialRoster,
+      rivalryEnabled: featureFlags.rivalryClause,
+    }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sender, recipient, sport, poolVer],
+    [sender, recipient, sport, poolVer, challengeCtx.initialRoster],
   );
   const explanation = resolution?.text;          // RD7.11 deterministic floor
   const flavorRequest = resolution?.flavorRequest ?? null;
+  const rivalryClause = resolution?.rivalryClause ?? null; // RD8 — optional sibling
 
   // RD7.12 — PRECOMPUTE the LLM-authored Flavor here, at reveal mount, during
   // the ~20s suspense arc BEFORE the result screen. NEVER blocks: the
@@ -212,7 +221,14 @@ function H2HRecipientRevealInner(props: InnerProps) {
 
   // The line the result screen shows: validated LLM Flavor if ready, else the
   // RD7.11 deterministic floor. Swap-in is just a state update → re-render.
-  const displayExplanation = llmFlavor ?? explanation;
+  // RD8 — the optional rivalry clause composes onto whichever base renders
+  // (LLM or deterministic), here at the swap point — NOT inside explainH2HResult,
+  // whose `text` the LLM swap above discards. Flag OFF → rivalryClause is null →
+  // displayExplanation is byte-identical to today.
+  const baseLine = llmFlavor ?? explanation;
+  const displayExplanation = baseLine
+    ? baseLine + (rivalryClause ? " " + rivalryClause : "")
+    : baseLine;
 
   // initialPhase: "idle" (phase 5a amend3, 2026-05-27) — the production
   // wrapper mounts with the hook in pre-play state so the HOLD-to-arc

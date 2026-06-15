@@ -22,12 +22,34 @@ import { percentileFromStats } from "./poolStats";
 import { getPoolStats } from "./poolStatsProvider";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { H2HHand, H2HCard } from "@shared/components/H2HRevealScreen";
+import type { GeneratedCard } from "@shared/types/index";
+import { featureFlags } from "@shared/featureFlags";
+import {
+  selectDivergence,
+  renderDivergenceClause,
+  validateRivalryClause,
+  type Divergence,
+} from "./selectDivergence";
 
 export function explainH2HResult(args: {
   sender: H2HHand;
   recipient: H2HHand;
   sport: string;
-}): { text: string; classification: Classification; flavorRequest: FlavorFacts | null } | null {
+  // RD8 — the shared deal, needed to derive the rivalry divergence (§6). The
+  // call site passes challengeCtx.initialRoster. Optional so legacy callers and
+  // the flag-OFF path are unaffected.
+  initialRoster?: GeneratedCard[];
+  // RD8 — gate. Defaults to the build-time flag; an explicit value (tests) wins.
+  rivalryEnabled?: boolean;
+}): {
+  text: string;
+  classification: Classification;
+  flavorRequest: FlavorFacts | null;
+  // RD8 — the optional rivalry clause, returned SEPARATELY (never concatenated
+  // into `text`): the LLM swap at H2HRecipientReveal.tsx discards `text`, so the
+  // clause is composed onto displayExplanation at the render site instead.
+  rivalryClause: string | null;
+} | null {
   const { sender, recipient, sport } = args;
   if (!recipient?.cards?.length) return null;
 
@@ -70,10 +92,28 @@ export function explainH2HResult(args: {
     }
   }
 
+  // RD8 — derive the rivalry divergence (flag-gated). Decisions only; score is
+  // read INSIDE selectDivergence to rank, then discarded (§0/§2). Validate the
+  // clause up-front (the named form — coincidence below doesn't affect validity)
+  // so an invalid clause leaves the luck-outlier path fully intact (§4 fail →
+  // base only). When a valid divergence exists we SUBSUME the outlier: build the
+  // input with opponentOutlier:null so the bad-beat pull-frame never renders
+  // (§4, §8.1). When there is no divergence the outlier path is UNCHANGED (§8.3).
+  const rivalryOn = args.rivalryEnabled ?? featureFlags.rivalryClause;
+  let divergence: Divergence | null = null;
+  if (rivalryOn && args.initialRoster?.length) {
+    const senderGC = sender.cards as unknown as GeneratedCard[];
+    const recipientGC = recipient.cards as unknown as GeneratedCard[];
+    const d = selectDivergence(args.initialRoster, senderGC, recipientGC);
+    if (d && validateRivalryClause(renderDivergenceClause(d), d, args.initialRoster, senderGC, recipientGC)) {
+      divergence = d;
+    }
+  }
+
   const input = {
     yourCards: recipient.cards.map(toFact),
     margin,
-    opponentOutlier: outlier,
+    opponentOutlier: divergence ? null : outlier,
   };
   const result = explainResolution(input);
 
@@ -98,5 +138,16 @@ export function explainH2HResult(args: {
     }
   }
 
-  return { ...result, flavorRequest };
+  // RD8 — render the clause now that classification is known. Coincident form
+  // (pronoun, no re-naming/score) when the divergence player is the base's named
+  // subject, so the combined line doesn't double-name him (§9 render nit).
+  let rivalryClause: string | null = null;
+  if (divergence) {
+    const coincident =
+      !!result.classification.decisive &&
+      lastName(result.classification.decisive.name) === lastName(divergence.playerName);
+    rivalryClause = renderDivergenceClause(divergence, { coincident });
+  }
+
+  return { ...result, flavorRequest, rivalryClause };
 }

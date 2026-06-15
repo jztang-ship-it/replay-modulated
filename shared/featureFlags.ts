@@ -13,6 +13,14 @@ export const featureFlags = {
   llmFlavor:
     (typeof import.meta !== "undefined" &&
       (import.meta as any).env?.VITE_FEATURE_LLM_FLAVOR === "true") || false,
+  // RD8 — Rivalry Divergence clause on the H2H result screen. Default OFF: when
+  // off the clause is never computed/rendered and the luck-outlier/bad-beat path
+  // is byte-identical to today. When on, the clause renders AND subsumes the
+  // luck-outlier (see explainH2HResult + docs/rivalry-divergence-spec.md). Flip
+  // in Vercel after phone glass. Build-time flag (VITE_-inlined).
+  rivalryClause:
+    (typeof import.meta !== "undefined" &&
+      (import.meta as any).env?.VITE_FEATURE_RIVALRY_CLAUSE === "true") || false,
 };
 
 /**
