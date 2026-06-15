@@ -2522,11 +2522,20 @@ NEVER given (structurally — not in the payload at all):
 - **Model:** `claude-haiku-4-5` via the existing `routeCommentary`
   (`api/_lib/router/`). Cheap + fast; the Flavor is one clause. ~$0.001–0.002 per
   resolution, **precomputed once + cached** (re-views never re-call).
-- **Endpoint:** reuse the `api/headline.ts` pattern (timeout-race, validator
-  stack, null→fallback, never-block). New surface `api/flavor.ts` (keeps the
-  honesty-critical Flavor voice separate from the challenge-headline voice;
-  different prompt + outcome-gating). Client wrapper mirrors
-  `fetchAuthoredHeadline.ts` (always-resolves, never-throws, returns string|null).
+- **Endpoint:** ~~new surface `api/flavor.ts`~~ → **FOLDED into `api/headline.ts`
+  behind a `{ kind: "flavor" }` body discriminator (2026-06-15).** The
+  "separate endpoint" decision was SUPERSEDED by a hard infra limit found at the
+  first preview deploy: the project is on **Vercel Hobby (12 serverless functions
+  per deployment)** and `api/flavor.ts` was the 13th → the build completed but
+  **"Deploying outputs" failed**. Folding keeps the count at 12. ONLY the HTTP
+  route consolidates — the Flavor path keeps its own prompt
+  (`flavorPrompt.ts`), its own fail-closed validator (`validateFlavor`), and a
+  distinct response shape (`{ flavor }` vs the headline path's `{ headline }`),
+  so the two voices stay fully separate in substance. Client wrapper
+  (`fetchAuthoredFlavor.ts`) POSTs `{ kind:"flavor", facts }` to `/api/headline`;
+  always-resolves, never-throws, returns string|null, re-validates client-side.
+  *(If the plan is later upgraded, splitting back out to `api/flavor.ts` is a
+  trivial revert.)*
 - **Prompt:** new Flavor system prompt (NOT the headline VOICE_CONTRACT) encoding
   §4 honesty rules + §5 calibration. User prompt = the §2 scoped facts only.
 

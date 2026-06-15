@@ -1,7 +1,9 @@
 // shared/utils/fetchAuthoredFlavor.ts
 //
-// RD7.12 — client wrapper around POST /api/flavor. Mirrors
-// fetchAuthoredHeadline.ts: ALWAYS resolves, NEVER throws. Returns the
+// RD7.12 — client wrapper around POST /api/headline with { kind: "flavor" }.
+// The Flavor sub-route lives inside api/headline.ts (folded in to stay under
+// the Vercel Hobby 12-function cap); it returns { flavor: string|null }.
+// Mirrors fetchAuthoredHeadline.ts: ALWAYS resolves, NEVER throws. Returns the
 // server-validated Flavor line OR null on any failure (network, non-200,
 // malformed body, server validator-null). The caller falls back to the RD7.11
 // deterministic line on null — the screen never blocks on this.
@@ -22,10 +24,10 @@ export async function fetchAuthoredFlavor(facts: FlavorFacts): Promise<string | 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
   try {
-    const resp = await fetch("/api/flavor", {
+    const resp = await fetch("/api/headline", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ facts }),
+      body: JSON.stringify({ kind: "flavor", facts }),
       signal: controller.signal,
     });
     if (!resp.ok) return null;
