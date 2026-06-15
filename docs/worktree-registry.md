@@ -224,37 +224,45 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 
 ---
 
-### `feat/rd7-11-substance` — active-parked (committed; base for rd7-12)
+### `feat/rd7-11-substance` — REMOVED (landed + shipped 2026-06-16)
 
-- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-11-substance`
-- **Branch HEAD:** `815ca40` (RD7.11 deterministic box-line Flavor, COMMITTED 2026-06-15)
-- **Unique commits vs main:** 1 (`815ca40`)
-- **What it carries:** RD7.11 — Resolution Engine deterministic box-line Flavor
-  (engine). Data port + box-line templates + adversarial honesty sweep.
-- **Status change (2026-06-15):** glassed as too STIFF standalone → committed as
-  the FALLBACK FLOOR for RD7.12, NOT a standalone ship. `feat/rd7-12-llm-flavor`
-  is stacked on this branch; the two land together at one tri-sport merge.
-- **Uncommitted state:** only `M package-lock.json` (install drift, excluded).
-- **Cross-sport:** YES — `shared/explanation` feeds all sports. MERGE = tri-sport.
-- **Intent:** do NOT ship alone; do NOT delete (rd7-12 is stacked on it).
-- **Last reviewed:** 2026-06-15
+- **Path:** ~~`~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-11-substance`~~ —
+  worktree removed 2026-06-16; branch deleted (local; never pushed to origin).
+- **Landed as:** `815ca40` (RD7.11 deterministic box-line Flavor) → merged with
+  the RD7.12 stack via `29888dd`.
+- **Equivalence on main:** VERIFIED — 0 unique commits vs main, tip is an
+  ancestor of main (no work lost). RD7.11 is the deterministic FALLBACK FLOOR of
+  the shipped Flavor system.
+- **Pushed/shipped:** part of `main` (`8b78519..29888dd`, then `cfaa078`);
+  prod-glassed.
+- **At-risk content at removal:** only `M package-lock.json` (install drift) —
+  discarded. Global `stash@{0}` (football-culture, belongs to
+  `feat/basketball-perseason-layout`) left untouched.
+- **Last reviewed:** 2026-06-16
 
 ---
 
-### `feat/rd7-12-llm-flavor` — active (DESIGN stage; build not started)
+### `feat/rd7-12-llm-flavor` — REMOVED (landed + shipped 2026-06-16)
 
-- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-12-llm-flavor`
-- **Branch HEAD:** `815ca40` (stacked on `feat/rd7-11-substance`; design-doc edit uncommitted)
-- **Unique commits vs main:** 1 inherited (RD7.11 `815ca40`) + 0 own yet
-- **What it carries (planned):** RD7.12 — LLM-authored Flavor clause (constrained
-  hybrid). Engine owns Recognition+Cause (frozen); LLM authors Flavor only;
-  never-block + precompute + honesty-validated; RD7.11 deterministic line is the
-  fallback floor. New `api/flavor.ts` + client util + precompute hook + validator.
-  Model: claude-haiku-4-5 (signed off). See § RD7.12 design doc.
-- **Stacked on:** `feat/rd7-11-substance` (its deterministic Flavor is the floor).
-- **Gate state:** DESIGN — doc written, awaiting John's review at the fork BEFORE
-  any code / API wiring. ITERATION = vitest + basketball; MERGE = tri-sport.
-- **Touches model/cost surface:** flagged + signed off (Haiku-4.5, ~$0.001–0.002/
-  resolution, precomputed + cached).
-- **Intent:** John reviews § RD7.12 design; build only after approval.
-- **Last reviewed:** 2026-06-15
+- **Path:** ~~`~/Desktop/ReplayMod/.claude/worktrees/feat-rd7-12-llm-flavor`~~ —
+  worktree removed 2026-06-16; branch deleted (local + `origin`).
+- **Landed as:** `d9a4205` (tip: RD7.12 + RD7.12-b + RD7.12-c, stacked on RD7.11
+  `815ca40`) → merged `--no-ff` to main as `29888dd`.
+- **Equivalence on main:** VERIFIED — 0 unique commits vs main, tip is an
+  ancestor of main (no work lost). `shared/explanation/flavorValidator.ts`,
+  `flavorPrompt.ts`, `shared/utils/fetchAuthoredFlavor.ts` confirmed on main; the
+  Flavor route is folded into `api/headline.ts {kind:flavor}` (12-fn cap).
+- **What it carried:** RD7.12 LLM-authored Flavor (constrained hybrid: engine
+  owns frozen Recognition+Cause, LLM authors Flavor only, fail-closed validator,
+  input firewall, never-block + precompute) + RD7.12-b bucket gate + RD7.12-c
+  diversified deterministic closers / beatdown-tail gate. Model: claude-haiku-4-5.
+- **Shipped:** merged to main + pushed; **prod live with `VITE_FEATURE_LLM_FLAVOR`
+  ON** (Production, build-time — set + redeploy `dh99c8mjf`, bundle-proven
+  flag-on, John prod-glassed 2026-06-16). Flag rollback = unset + redeploy (doc
+  § RD7.12 "Flag operation").
+- **Preview teardown (2026-06-16):** branch-scoped preview flag removed; 5 preview
+  deployments (`as2nhnrek`, `gbxe2c4z8`, `9ljkd5ed7`, `4fnnhixk3`, `m0pr9yy2h`)
+  removed → preview Haiku endpoint closed (curl → 404).
+- **At-risk content at removal:** only `M package-lock.json` (install drift) —
+  discarded. Global `stash@{0}` left untouched.
+- **Last reviewed:** 2026-06-16
