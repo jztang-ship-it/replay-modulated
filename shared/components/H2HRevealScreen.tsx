@@ -1279,11 +1279,15 @@ function RightColumnRail({
           recipientCard={recipientBattle}
           flashKey={flashKey}
           deltaRunning={reveal?.deltaRunning}
-          finalGapOverride={
-            reveal && (phase === "done" || phase === "end-hold")
-              ? recipient.totalFp - sender.totalFp
-              : undefined
-          }
+          // RD7.9.3 SPOILER FIX (2026-06-15): finalGapOverride REMOVED. It
+          // used to swap the per-set delta for the FINAL MATCH result ("Won/
+          // Lost X.X FP") at phase done/end-hold — announcing the outcome on
+          // the reveal screen BEFORE the results celebration, which made every
+          // celebration decorate a known result. The delta slot now shows ONLY
+          // the per-set delta (deltaRunning); the final match result is
+          // revealed by the full-screen RD7.7 celebration (the moment-of-
+          // truth). The set-delta render, measured anchor, dual-blink, and the
+          // RD3-C no-snap (score cells) are untouched.
         />
       </div>
       {/* Gap layer — mounted only during the pre-final-decisive window,
@@ -1331,14 +1335,19 @@ function RightColumnRail({
           <div
             data-h2h-rail-gap-need-line="true"
             style={{
-              // RD6.2-C-rev3 (2026-06-12): need fontSize 12 → matches
-              // SCORE_CELL_FONT_SIZE_PX, consistent with the name
-              // and the per-set delta.
-              fontSize: SCORE_CELL_FONT_SIZE_PX,
+              // RD7.7 CLIP FIX (2026-06-15): was fontSize:
+              // SCORE_CELL_FONT_SIZE_PX (= 20) — but the whole stat line is
+              // "Need: +X.X" (the bare per-set delta is just "+X.X"), and at
+              // 20px that overflows this RIGHT_RAIL_WIDTH_PX (80px) float and
+              // gets cut off. The RD6.2-C-rev3 comment INTENDED 12 (it
+              // mis-stated that SCORE_CELL_FONT_SIZE_PX was 12); 12px fits
+              // "Need: +X.X" cleanly in the 80px rail. letterSpacing dropped
+              // to 0 to buy a little more room for a worst-case 2-digit need.
+              fontSize: 12,
               fontWeight: 800,
               color: gapStatColor,
               fontVariantNumeric: "tabular-nums",
-              letterSpacing: 0.5,
+              letterSpacing: 0,
               lineHeight: 1,
               textTransform: "uppercase",
               marginTop: 4,
@@ -1921,7 +1930,10 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
       key: idx,
     } : undefined;
 
-    const momentumTag = flipped ? { copy: "TAKES THE LEAD", key: idx } : undefined;
+    // RD7.9.5 (2026-06-15): the "TAKES THE LEAD" momentum tag is removed —
+    // always undefined (the render block below is now dead and deleted). The
+    // score pops + per-set delta carry the lead-change without the label.
+    const momentumTag = undefined;
     setPopState({ senderPop, recipientPop, momentumTag, deltaLandedKey: idx });
   }, [
     reveal,
@@ -2174,41 +2186,8 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
             </div>
           )}
 
-          {/* Relay-tension Phase 2 — momentum tag on a set-boundary
-              flip. Mounted only when popState.momentumTag is non-
-              undefined (i.e., a flip just committed); auto-unmounted
-              ~480ms later by the parent setTimeout. Placement: top:
-              30%, right: 0 — ABOVE the delta float at top: 50%. Width
-              matches the right rail so the tag is visually anchored to
-              the score column. `key` ties to the matchup index so a
-              back-to-back flip remounts cleanly (animation re-fires
-              from 0%). Pointer-events disabled because the tag is
-              visual-only. */}
-          {popState.momentumTag && (
-            <div
-              key={popState.momentumTag.key}
-              data-h2h-momentum-tag="true"
-              style={{
-                position: "absolute",
-                top: "30%",
-                right: 0,
-                width: RIGHT_RAIL_WIDTH_PX,
-                transform: "translateY(-50%)",
-                pointerEvents: "none",
-                fontSize: 9,
-                fontWeight: 800,
-                color: WINNING_COLOR,
-                textAlign: "center",
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                lineHeight: 1.1,
-                textShadow: `0 0 6px rgba(34, 197, 94, 0.55)`,
-                animation: `h2h-momentum-tag-anim 480ms ease-out 1`,
-              }}
-            >
-              {popState.momentumTag.copy}
-            </div>
-          )}
+          {/* RD7.9.5 (2026-06-15): the "TAKES THE LEAD" momentum tag is
+              removed entirely (momentumTag is always undefined now). */}
 
           {/* RD6.2-C (2026-06-12): the Phase 3 anchor-moment center
               overlay (AnchorFrame mount) is RETIRED. The "next opponent

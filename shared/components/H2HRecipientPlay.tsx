@@ -429,7 +429,8 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   if (stage1Ref.current.sig !== introSig) {
     stage1Ref.current = {
       sig: introSig,
-      line: ["Tap the players you'd keep. Draw the rest."],
+      // RD7.9.2b (2026-06-15): initial instruction.
+      line: ["Same hand to start — tap the cards you want to hold"],
     };
   }
   const stage1Line = stage1Ref.current.line;
@@ -1409,12 +1410,19 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             data-h2h-play-preview="card"
             data-h2h-play-preview-slot={previewedSlotIndex}
             data-h2h-play-preview-held={previewedCardHeld ? "true" : "false"}
+            // RD7.9.2c (2026-06-15): the BIG center card toggles HOLD/UNHOLD on
+            // a single tap once it's previewed (being the big card already IS
+            // the previewed state — no second preview step). onTap(i) with
+            // i === previewedSlotIndex flips the held bit (design-lock §3
+            // truth table), so this unifies with the mini-slot's tap-again.
+            onClick={() => onTap(previewedSlotIndex)}
             style={{
               width: previewCardWidthCss,
               height: previewCardHeightCss,
               borderRadius: 8,
               overflow: "hidden",
               boxSizing: "border-box",
+              cursor: "pointer",
             }}
           >
             {renderBattlefieldCard(
@@ -1711,18 +1719,15 @@ function deriveHeadline(
       // for a microtask before the auto-advance fires.
       return "";
     case "deal_in":
-      // PASS 1 PLACEHOLDER: this copy renders in the top-zone stage-
-      // text region under the deal-intro-placeholder branch, NOT in
-      // the hero region (hero shows the empty preview box during
-      // deal_in per design-lock §2). PASS 2 swaps this copy out for
-      // a templated bank line interpolating {opponent}/{score}.
-      return `Here's the same starting hand as ${namedChallenger ?? "your friend"}.`;
+      // RD7.9.2a (2026-06-15): the transient "Here's the same starting hand
+      // as {challenger}" line that flashed on entry is DROPPED — the deal-in
+      // stage-text region renders empty (the new Stage-1 copy carries the
+      // "same hand" framing once hold_select begins).
+      return "";
     case "hold_select":
-      // Polish #11 — instructional copy describes the preview-then-hold
-      // interaction. Surfaced as the headline-fallback in the top
-      // stage-text region when Stage 1 has dismissed but no card is
-      // confirmed-held yet (heldCount===0 && introDismissed).
-      return "Tap a card to preview. Tap again to hold.";
+      // RD7.9.2b: the headline-fallback shown once a card is previewed but
+      // none is held yet (heldCount===0 && introDismissed).
+      return "Tap once to preview, tap again to hold";
     case "redraw_running":
     case "your_redraw_flip":
       // RD3 (2026-06-11): the "Drawing…" headline beat is dead — the

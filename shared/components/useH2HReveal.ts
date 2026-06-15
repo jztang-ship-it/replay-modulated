@@ -310,7 +310,11 @@ export const RELAY_EASING_POWER = 3;
 // pre-final paused window (delta 900ms dwell + 250ms crossfade + 850ms
 // gap-readable hold). The pre-final paused boundary is the arc's
 // climax and is allowed to run long.
-export const ANCHOR_HOLD_MS = 2000;
+// RD7.9.4 (2026-06-15): 2000 → 2900 so the "Need: +X.X to win" gap line
+// LINGERS noticeably longer before the final card (visible ~1750ms now,
+// was ~850ms) — the user reads it and feels the stakes going into the
+// last card. (delta 900 dwell + 250 crossfade + ~1750 gap hold.)
+export const ANCHOR_HOLD_MS = 2900;
 
 // ── Entrance per-card stage timings ────────────────────────────────────────
 // Each entrance card walks through PRE → LAY → BEAT → TRAVEL → SETTLED.
@@ -365,10 +369,13 @@ export const POST_PULSE_SETTLE_MS = 250;
 export const MATCHUP_RESOLVE_PAUSE_MS = 850;
 
 /** Hold after the LAST matchup resolves, before phase transitions to
- *  "done" and onArcResolved fires. The static end-state is visible
- *  throughout; this lets the user absorb the climax before any
- *  next-step UI (replay button, results overlay, etc.) appears. */
-export const END_OF_ARC_HOLD_MS = 1700;
+ *  "done" and onArcResolved fires. Shows the last card's PER-SET delta.
+ *  RD7.9.6 (2026-06-15): 1700 → 700. The reveal no longer announces the
+ *  final result here (RD7.9.3 removed finalGapOverride), so there's no
+ *  verdict to "absorb" — just enough to register the last set delta, then
+ *  flow straight into the full-screen celebration (the moment-of-truth).
+ *  Removes the dead pause so it reads as one beat: delta → boom. */
+export const END_OF_ARC_HOLD_MS = 700;
 
 /** Battlefield card-pull travel window — used by H2HRevealScreen's
  *  BattlefieldSlot for the in/out keyframe animations. Fits inside
