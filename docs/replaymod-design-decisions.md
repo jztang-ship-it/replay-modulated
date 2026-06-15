@@ -2608,6 +2608,45 @@ by unit tests (variance close-loss → no call; agency close-loss → call). Not
 else changes — fail-closed validator, firewall, frozen Cause, never-block, the
 2-rejection behavior all preserved; this only NARROWS when the model is called.
 
+### 4b. RD7.12-c — diversify the deterministic variance closer + gate beatdown consolation (2026-06-16)
+RD7.12-investigate-2 found the literal "[name]'s [stat] was your high mark /
+topped your slate" repetition is **deterministic** (`VARIANCE_RANK`, 4 variants
+of ONE shape, on **100% of variance hands, incl. all beatdowns**; the LLM is
+already varied — 78 distinct closers, "high mark" ~absent). Two fixes, **deterministic
+path only** (LLM untouched):
+- **CHANGE 1 — diversify (`WIN_CLOSERS`/`LOSS_CLOSERS` replace `VARIANCE_RANK`):**
+  mixed STRUCTURES per polarity — some card-naming ("X led the box score"), some
+  margin-focused naming no card ("Decided by 14.0, spread across the board"),
+  some slate ("the board just ran cold"). Breaks the rhythmic sameness, not just
+  adds synonyms. All honest (description/variance-humility, no agency, Mike stays
+  scoreboard). Closer still only appends when a top card has a real box line
+  (fill/non-basketball → bare base line, preserving variance-voice variety).
+- **CHANGE 2 — gate the card-naming consolation tail OFF on big losses:** for a
+  **loss with `|margin| >= BLOWOUT_MARGIN` (25, = the beatdown bucket; CONFIRM-
+  by-alignment, flagged)** the variance line ends on the humble base ("Mike's
+  whole board went off. Not your night.") with NO "but X's stat was your high
+  mark" tail — that undercut the humility and read as a consolation prize.
+  Blowout WINS keep the (diversified) closer; below-threshold variance keeps it.
+- Locked by tests: beatdown variance → no card tail; closers emit >1 structural
+  shape; frozen-Cause still green (agency + fill-beatdown lines byte-unchanged).
+  Preserved: frozen Cause/Recognition, fail-closed validator, firewall,
+  never-block, the RD7.12-b bucket gate, the LLM path.
+
+### 4c. KNOWN FOLLOW-UPS (NOT fixed — recorded ceilings)
+- **Lever 2 — LLM mild uniformity:** the eval found the LLM opens 99% name-first
+  and ~28% of close-loss-bucket passed lines tail on "…in the loss / narrow
+  defeat". Milder + more varied than the deterministic shape; a prompt-variety
+  nudge (vary the opening; vary the loss closer) is available if a later glass
+  wants it. Not done this pass.
+- **CADENCE ROOT — the name-and-cite ceiling:** both paths share a
+  name→stat→tag rhythm because both were *designed* to "name the notable card +
+  cite its line." The deepest fix to "structure too static" is questioning
+  whether every line must name-and-cite — some could lead with the margin/slate
+  or name no one. That's a bigger rewrite of the Flavor contract (and would
+  touch the LLM prompt + the deterministic templates together), deferred. This
+  is the known ceiling of the current Flavor design; RD7.12-c widens within it,
+  does not remove it.
+
 ### 5. Calibration examples (for the prompt)
 - ✅ "The Big Ticket went for 23-8-3" (nickname = wrapper, stats = description)
 - ✅ win: "Iverson cooked — 41-7-5, vintage AI" (about the game, not your call)

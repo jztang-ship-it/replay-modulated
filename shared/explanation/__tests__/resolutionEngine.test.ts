@@ -198,8 +198,10 @@ describe("RD7.11 Flavor — box-line substance", () => {
     const cards = [card({ name: "Kevin Garnett", tier: "BLUE", salary: 30, wasHeld: true, fp: 70, percentile: 90, poolMedian: 35, statLine: { pts: 30, reb: 14, ast: 4, min: 38 } }), ...fill(5)];
     const { text, classification } = explainResolution({ yourCards: cards, margin: 14 });
     expect(classification.register).toBe("variance");
-    expect(text).toMatch(/Garnett's 30-14-4/);
-    expect(text.toLowerCase()).toMatch(/led your board|topped your slate|paced your scoring|high mark/);
+    // RD7.12-c: the closer is now diversified (card-naming OR margin/slate shape).
+    // Assert a descriptive closer was added (box stat or a margin/team phrase),
+    // still honest (no agency).
+    expect(text.toLowerCase()).toMatch(/30-14-4|box score|stood out|on balance|spread across|team effort/);
     assertClean(text, "variance color");
   });
 

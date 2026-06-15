@@ -94,3 +94,37 @@ describe("FROZEN-OUTPUT: engine Recognition+Cause byte-identical to RD7.11", () 
     expect(explainResolution({ yourCards: fill(6), margin: -40 }).text).toBe("Lost by 40.0 — Mike's whole board went off. Not your night.");
   });
 });
+
+describe("RD7.12-c — diversified variance closer + beatdown tail gate", () => {
+  const hero = (box: Record<string, number>, over: Partial<YourCardFact> = {}) =>
+    c({ name: "Kevin Garnett", tier: "BLUE", salary: 30, wasHeld: true, fp: 50, percentile: 60, poolMedian: 48, statLine: box, ...over });
+
+  it("CHANGE 2: beatdown loss (with a box-bearing top card) has NO consolation tail", () => {
+    const input = { yourCards: [hero({ pts: 24, reb: 8, ast: 5 }, { tier: "RED", fp: 37, poolMedian: 37 }), ...fill(5)], margin: -40 };
+    const { text, classification } = explainResolution(input);
+    expect(classification.register).toBe("variance");
+    expect(text).not.toMatch(/24-8-5/);                                  // top card's box NOT appended
+    expect(text.toLowerCase()).not.toMatch(/high mark|topped|led the box|stood out|led it|fell short/);
+  });
+
+  it("below threshold (close-loss variance) DOES still get a diversified closer", () => {
+    // a card-naming OR a no-card closer, but something descriptive is appended
+    const input = { yourCards: [hero({ pts: 24, reb: 8, ast: 5 }), ...fill(5)], margin: -10 };
+    const { text, classification } = explainResolution(input);
+    expect(classification.register).toBe("variance");
+    expect(text.toLowerCase()).toMatch(/24-8-5|no single line|ran cold|came up|short|led it/);
+  });
+
+  it("CHANGE 1: variance closers emit >1 STRUCTURAL shape (not all name-stat-ranking)", () => {
+    const lines: string[] = [];
+    for (let mg = 5; mg <= 24; mg++) {
+      const input = { yourCards: [hero({ pts: 24, reb: 7, ast: 6 }), ...fill(5)], margin: mg };
+      const r = explainResolution(input);
+      if (r.classification.register === "variance") lines.push(r.text);
+    }
+    const cardNaming = lines.filter((t) => /24-7-6/.test(t));
+    const noCard = lines.filter((t) => /on balance|spread across|Decided by/i.test(t));
+    expect(cardNaming.length).toBeGreaterThan(0); // at least one names the card
+    expect(noCard.length).toBeGreaterThan(0);     // at least one names NO card → >1 shape
+  });
+});
