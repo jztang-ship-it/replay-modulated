@@ -120,6 +120,9 @@ export function selectDivergence(
 
   for (const dealt of initialRoster) {
     const pid = String(dealt.basePlayerId);
+    // §3: the clause must name a REAL shared-deal player. A slot with no usable
+    // name/id can't be named honestly → skip it (never emit a placeholder).
+    if (!pid || !String(dealt.name).trim()) continue;
     const sHeld = senderHeld.has(pid);
     const rHeld = receiverHeld.has(pid);
     if (sHeld === rHeld) continue; // agreement (both hold or both fade) → not a divergence

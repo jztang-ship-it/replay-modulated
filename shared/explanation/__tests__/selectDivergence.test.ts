@@ -142,6 +142,12 @@ describe("derivation + invariants carried from v1 (§6, §2)", () => {
     expect(selectDivergence([], [], [], LOSS)).toBeNull();
   });
 
+  it("dealt player with no real name → not nameable → null (§3: must name a real player)", () => {
+    const { initialRoster, senderResolved, myRoster } = makeHand(
+      [{ bp: "blank", name: "  ", fp: 50 }], [[true, false]]);
+    expect(selectDivergence(initialRoster, senderResolved, myRoster, LOSS)).toBeNull();
+  });
+
   it("NO raw score on the returned struct; salience is a bounded 0..1 rank", () => {
     const { initialRoster, senderResolved, myRoster } = makeHand(
       [{ bp: "g", name: "Giannis A", fp: 50 }], [[true, false]]);
