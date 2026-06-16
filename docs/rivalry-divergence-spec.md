@@ -163,7 +163,7 @@ The result-screen clause may end up the *least* important consumer. The same `Di
 
 **Rationale — attention allocation (not a score comparison).** The old line was honest *as luck* ("you played it right, Mike just caught a monster Curry pull"), but it spotlighted the **opponent's pull** — the exact place the constitution says not to send the eye. §0 is not only "no score comparison"; it is "don't make the opponent's outcome the subject." Naming the opponent's hot card does that even while disclaiming causality.
 
-**Constitutional rule (now enforced in copy):** variance is described as a property of the **SLATE, BOARD, GAME, or MATH** — never as a property of a specific opponent card. No opponent card is ever named in a variance line. (Naming the opponent *person* + their *board* — "Mike's whole board went off" — is fine; that's slate-attributed, not a card.)
+**Constitutional rule (now enforced in copy, strengthened):** variance is a property of the **SLATE / BOARD / GAME / MATH as a SYSTEM** — never of the opponent or his board *as an actor*. The system is the grammatical subject; it may *break / fall / tilt / lean* the opponent's **way**. The opponent's **name may appear**, but neither he nor his board may be the **subject of an active heat/agency verb** — no "his board *went off* / *caught fire* / *exploded* / *overwhelmed* / *did the damage*". Widening the subject from one card to "his whole board" does **not** fix it; that still makes his performance the protagonist (the exact attention-allocation problem). This applies to **all** variance loss copy (bad-beat, beatdown, mid), audited and enforced by a sweep test (`resolutionEngine.test.ts`).
 
 ---
 

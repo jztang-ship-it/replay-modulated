@@ -90,8 +90,10 @@ describe("FROZEN-OUTPUT: engine Recognition+Cause byte-identical to RD7.11", () 
     const input = { yourCards: [c({ name: "Devin Booker", tier: "ORANGE", salary: 62, wasHeld: true, fp: 14, percentile: 6, poolMedian: 50, nickname: "Book", statLine: { pts: 8, reb: 2, ast: 1, min: 30 } }), ...fill(5)], margin: -12 };
     expect(explainResolution(input).text).toBe("Just 8-2-1 from Booker — the hold that sank it. Not Book's night.");
   });
-  it("beatdown variance line is unchanged", () => {
-    expect(explainResolution({ yourCards: fill(6), margin: -40 }).text).toBe("Lost by 40.0 — Mike's whole board went off. Not your night.");
+  it("beatdown variance line — RD8 system-variance framing (no opponent-board agency)", () => {
+    // Was "Mike's whole board went off"; RD8 retired the agency/heat verb on the
+    // opponent's board. The slate/math is the subject; it fell the opponent's way.
+    expect(explainResolution({ yourCards: fill(6), margin: -40 }).text).toBe("A 40.0-point gap — the math fell Mike's way, no single call to fix.");
   });
 });
 

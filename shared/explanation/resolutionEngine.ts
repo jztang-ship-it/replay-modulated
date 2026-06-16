@@ -293,11 +293,15 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
   return tail && base.length + tail.length <= TUNING.MAX_CHARS ? base + tail : base;
 }
 
+// RD8 — system-variance framing (no agency/heat verb attributed to the opponent
+// or his board). The SLATE / BOARD / MATH / SPREAD is the subject; it broke /
+// fell / tilted / leaned the opponent's WAY. The opponent's name may appear; his
+// board never "goes off / catches fire / overwhelms". (See spec §8.3, item-1 fix.)
 const BEATDOWN_LOSS = [
-  (m: string, opp: string) => `${opp}'s slate ran hot top to bottom — nothing to second-guess.`,
-  (m: string, opp: string) => `Lost by ${m} — ${opp}'s whole board went off. Not your night.`,
-  (m: string, opp: string) => `A ${m}-point beatdown — ${opp} caught fire across the slate.`,
-  (m: string, opp: string) => `${opp}'s slate overwhelmed yours by ${m} — no single call to fix.`,
+  (m: string, opp: string) => `Lost by ${m} — the slate broke ${opp}'s way top to bottom. Nothing to second-guess.`,
+  (m: string, opp: string) => `A ${m}-point gap — the math fell ${opp}'s way, no single call to fix.`,
+  (m: string, opp: string) => `Down ${m} — the board tilted ${opp}'s way all night. No one call to blame.`,
+  (m: string, opp: string) => `Lost by ${m} — the spread leaned ${opp}'s way wire to wire; nothing to take back.`,
 ];
 const BLOWOUT_WIN = [
   (m: string, opp: string) => `You ran them off the floor — by ${m}.`,

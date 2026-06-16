@@ -54,7 +54,8 @@ describe("LOSS naming requires a CLOSE loss + a STAR", () => {
     const { text, classification } = explainResolution({ yourCards: cards, margin: -46 });
     expect(classification.register).toBe("variance");
     expect(text).not.toContain("Trae");
-    expect(text.toLowerCase()).toMatch(/beatdown|ran hot|whole board|overwhelmed/);
+    // RD8 system-variance framing: the slate/board/math broke/fell/tilted/leaned the opponent's way.
+    expect(text.toLowerCase()).toMatch(/(broke|fell|tilted|leaned).*way|gap/);
   });
 
   it("close loss, NON-star bust → variance (non-star never blamed)", () => {
@@ -123,6 +124,34 @@ describe("bad-beat 3 gates (unchanged) — luck line names NO opponent card (RD8
   it("blowout never bad-beats", () => { expect(classify({ yourCards: fill(6), margin: -85, opponentOutlier: good }).mikeBadBeat).toBe(false); });
   it("scrub outlier (low FP) → no bad-beat", () => { expect(classify({ yourCards: fill(6), margin: -9, opponentOutlier: { name: "Scrub", percentile: 99, actualFp: 20, swing: 8 } }).mikeBadBeat).toBe(false); });
   it("WIN never bad-beats", () => { expect(classify({ yourCards: fill(6), margin: 9, opponentOutlier: good }).mikeBadBeat).toBe(false); });
+});
+
+describe("RD8 — NO opponent-agency in any variance LOSS line (system-variance only)", () => {
+  // The strengthened rule: the opponent (NAME, or his/their board/slate) is never
+  // the SUBJECT of an active heat/agency verb. Variance is a property of the
+  // SLATE / BOARD / MATH as a SYSTEM. Naming the opponent person is fine; his
+  // board may not "go off / explode / catch fire / overwhelm / do the damage".
+  const HEAT =
+    "went off|goes off|caught fire|catches fire|exploded|explodes|ran hot|runs hot|" +
+    "blew up|blows up|erupted|erupts|took over|takes over|overwhelmed|overwhelms|" +
+    "torched|lit it up|lit up|did the damage|came alive|poured it on|got hot|on fire|carried the day";
+  const opp = "John Tang";
+  // opponent ref (name | his | their), optional possessive + board noun, then a heat verb.
+  const oppAgency = new RegExp(
+    `(?:${opp}|\\bhis\\b|\\btheir\\b)(?:'s)?\\s+(?:whole\\s+)?(?:board|slate|lineup|cards|hand|squad|roster)?\\s*(?:${HEAT})`,
+    "i",
+  );
+  const outlier = { name: "Stephen Curry", percentile: 96, actualFp: 55, swing: 30 };
+  it("no variance loss across the full margin range frames the opponent or his board as a heat actor", () => {
+    for (let m = 5; m <= 85; m++) {
+      const { text, classification } = explainResolution({
+        yourCards: fill(6), margin: -m, opponentName: opp, opponentOutlier: outlier,
+      });
+      if (classification.register !== "variance") continue;
+      expect(text, `margin -${m}: "${text}"`).not.toMatch(oppAgency);
+      expect(text, `margin -${m}: "${text}"`).not.toContain("Curry"); // never names the opponent's card
+    }
+  });
 });
 
 describe("lastName", () => {
