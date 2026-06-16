@@ -109,13 +109,16 @@ describe("variance voice variety", () => {
   });
 });
 
-describe("bad-beat 3 gates (unchanged from r1) + lastName on Mike", () => {
+describe("bad-beat 3 gates (unchanged) — luck line names NO opponent card (RD8)", () => {
   const good = { name: "Stephen Curry", percentile: 96, actualFp: 55, swing: 30 };
-  it("close + well-played + monster → fires, lastName form", () => {
+  it("close + well-played + monster → fires, but variance is a property of the SLATE, not a card", () => {
     const { text, classification } = explainResolution({ yourCards: fill(6), margin: -9, opponentOutlier: good });
     expect(classification.mikeBadBeat).toBe(true);
-    expect(text).toContain("Curry");
-    expect(text).not.toContain("Stephen Curry");
+    // RD8 luck-line retirement: no opponent card is ever named in a variance line.
+    expect(text).not.toContain("Curry");
+    expect(text).not.toContain("Stephen");
+    expect(text).not.toMatch(/pull|caught fire|went off|exploded/i);
+    expect(text).toMatch(/slate|board|coin-flip|math/i);
   });
   it("blowout never bad-beats", () => { expect(classify({ yourCards: fill(6), margin: -85, opponentOutlier: good }).mikeBadBeat).toBe(false); });
   it("scrub outlier (low FP) → no bad-beat", () => { expect(classify({ yourCards: fill(6), margin: -9, opponentOutlier: { name: "Scrub", percentile: 99, actualFp: 20, swing: 8 } }).mikeBadBeat).toBe(false); });

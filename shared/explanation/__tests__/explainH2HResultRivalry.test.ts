@@ -74,18 +74,29 @@ const WIN = { sender: hand(winSender, 100), recipient: hand(winRecipient, 130) }
 
 const ON = (extra: Record<string, unknown>) => ({ sport: "basketball", rivalryEnabled: true, opponentName: "John Tang", ...extra });
 
-describe("flag OFF — byte-identical (luck-outlier intact, hardcoded Mike)", () => {
-  it("variance bad-beat loss: rivalryClause null, bad-beat fires, copy says 'Mike'", () => {
-    // BLUE recipient (no star bust) → variance; monster outlier → bad-beat.
-    const vRecipient = [0, 1, 2, 3, 4, 5].map((i) => card({ bp: `r${i}`, name: `R ${i}`, fp: 17, slotIndex: i }));
+describe("flag OFF — copy fixes apply (un-gated); only the clause is gated", () => {
+  const vRecipient = [0, 1, 2, 3, 4, 5].map((i) => card({ bp: `r${i}`, name: `R ${i}`, fp: 17, slotIndex: i }));
+
+  it("beatdown loss: real name un-gated (not 'Mike'), opponent's BOARD not a card", () => {
     const r = explainH2HResult({
-      sender: hand(lossSender, 112), recipient: hand(vRecipient, 100),
-      sport: "basketball", initialRoster: lossDeal, rivalryEnabled: false,
+      sender: hand(lossSender, 135), recipient: hand(vRecipient, 100), // margin -35 → beatdown
+      sport: "basketball", initialRoster: lossDeal, rivalryEnabled: false, opponentName: "John Tang",
     })!;
-    expect(r.rivalryClause).toBeNull();
+    expect(r.rivalryClause).toBeNull();              // clause still gated OFF
+    expect(r.text).toContain("John Tang");           // name fix un-gated
+    expect(r.text).not.toContain("Mike");
+    expect(r.text).not.toContain("Nikola Monster");  // never names an opponent card
+  });
+
+  it("bad-beat close loss: luck line retired un-gated → card-free slate, no 'pull'", () => {
+    const r = explainH2HResult({
+      sender: hand(lossSender, 112), recipient: hand(vRecipient, 100), // margin -12 → bad-beat-eligible
+      sport: "basketball", initialRoster: lossDeal, rivalryEnabled: false, opponentName: "John Tang",
+    })!;
     expect(r.classification.mikeBadBeat).toBe(true);
-    expect(r.text).toContain("Mike");          // hardcoded name preserved when OFF
-    expect(r.text).not.toContain("John Tang");
+    expect(r.text).not.toContain("Nikola Monster");  // no opponent card named
+    expect(r.text).not.toMatch(/pull|caught fire|went off|exploded/i);
+    expect(r.text).toMatch(/slate|board|coin-flip|math/i);
   });
 });
 
@@ -122,13 +133,11 @@ describe("result-congruent clause (§5)", () => {
 });
 
 describe("§9 Step 2/3 — base copy: real name + delta-once", () => {
-  it("variance bad-beat loss with flag ON uses the real name, not 'Mike'", () => {
+  it("beatdown loss with flag ON also uses the real name (un-gated, both flag states)", () => {
     const vRecipient = [0, 1, 2, 3, 4, 5].map((i) => card({ bp: `r${i}`, name: `R ${i}`, fp: 17, slotIndex: i }));
     const r = explainH2HResult(ON({
-      sender: hand(lossSender, 112), recipient: hand(vRecipient, 100), initialRoster: lossDeal,
+      sender: hand(lossSender, 135), recipient: hand(vRecipient, 100), initialRoster: lossDeal,
     }))!;
-    expect(r.rivalryClause).toBeNull();          // variance loss → no divergence
-    expect(r.classification.mikeBadBeat).toBe(true);
     expect(r.text).toContain("John Tang");
     expect(r.text).not.toContain("Mike");
   });

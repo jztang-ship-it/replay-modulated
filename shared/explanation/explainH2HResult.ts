@@ -100,18 +100,25 @@ export function explainH2HResult(args: {
 
   const yourCards = recipient.cards.map(toFact);
 
+  // RD8 — base-copy honesty fixes ship UN-GATED (they correct already-wrong
+  // shipped copy, independent of the rivalry-clause feature): the real opponent
+  // name in place of "Mike" (§9 Step 2), delta-once margin (§9 Step 3), and the
+  // retired opponent-card luck line (engine-side). Only the rivalry CLAUSE stays
+  // behind the flag.
+  const opponentName = args.opponentName?.trim() || undefined;
+
   // RD8 — derive the rivalry divergence (flag-gated). Decisions only; score is
   // read INSIDE selectDivergence to rank, then discarded (§0/§2). Selection is
   // RESULT-CONGRUENT: it consumes the base engine's verdict (decisive line vs.
   // variance) so the clause can never contradict it (§0 corollary; §5). The
   // verdict's register/outcome are independent of opponentOutlier, so computing
-  // it here (before the subsume decision) is safe. Validate the clause up-front
-  // (named form — coincidence doesn't affect validity) so an invalid clause
-  // leaves the luck-outlier path intact (§4 fail → base only). A valid divergence
-  // SUBSUMES the outlier (opponentOutlier:null → bad-beat never renders, §4/§8.1);
-  // no divergence → outlier path UNCHANGED (§8.3).
+  // it here is safe. Validate the clause up-front (named form — coincidence
+  // doesn't affect validity) so an invalid clause leaves the base intact (§4
+  // fail → base only). NOTE the subsume (opponentOutlier:null) is removed: under
+  // result-congruent gating the clause fires only on agency/tie hands, which
+  // never carry a bad-beat, and the luck line is now a card-free slate phrase —
+  // so there is no pull-frame left to suppress.
   const rivalryOn = args.rivalryEnabled ?? featureFlags.rivalryClause;
-  const opponentName = rivalryOn ? (args.opponentName?.trim() || undefined) : undefined;
   let divergence: Divergence | null = null;
   if (rivalryOn && args.initialRoster?.length) {
     const senderGC = sender.cards as unknown as GeneratedCard[];
@@ -127,14 +134,12 @@ export function explainH2HResult(args: {
     }
   }
 
-  // Base-copy improvements (§9 Steps 2/3) ride the same flag, so flag-OFF stays
-  // byte-identical: opponentName woven into variance copy, deltaOnce on.
   const input = {
     yourCards,
     margin,
-    opponentOutlier: divergence ? null : outlier,
-    opponentName,
-    deltaOnce: rivalryOn,
+    opponentOutlier: outlier,
+    opponentName,   // un-gated
+    deltaOnce: true, // un-gated
   };
   const result = explainResolution(input);
 

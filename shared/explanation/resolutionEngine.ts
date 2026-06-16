@@ -314,6 +314,20 @@ const MID_WIN = [
   (m: string) => `Up ${m} — a team win, no single hero. The board carried it.`,
 ];
 
+// RD8 — luck-line retirement (closes spec §8.3, unconditional). On a variance
+// loss where you played it right, variance is described as a property of the
+// SLATE / BOARD / GAME / MATH — NEVER a specific opponent card. The old line
+// ("…caught a monster <Card> pull") spotlighted the opponent's pull, the exact
+// place the constitution says not to send the eye. No card is ever named here.
+const VARIANCE_SLATE = [
+  `The slate leaned his way.`,
+  `The board ran hot.`,
+  `A coin-flip landed against you.`,
+  `The math broke his way tonight.`,
+  `The slate never really turned.`,
+  `The board stayed cold.`,
+];
+
 // RD7.11/RD7.12-c — descriptive variance closer. RD7.11 added ONE shape
 // ("[name]'s [stat] [ranking]"); RD7.12-investigate-2 found it fired on 100% of
 // variance hands → rhythmic sameness. RD7.12-c diversifies into MIXED structures
@@ -373,7 +387,9 @@ function renderVariance(cls: Classification, input: ResolutionInput): string {
     if (absM < TUNING.TINY_MARGIN) return `Razor-thin — the logs fell your way. No single call won this one.`;
     return withCloser(pick(MID_WIN, key)(m));
   }
-  if (cls.mikeBadBeat && input.opponentOutlier) return `Lost by ${m} — you played it right. ${opp} just caught a monster ${lastName(input.opponentOutlier.name)} pull.`;
+  // RD8 — luck line retired: validate the process ("you played it right") but
+  // attribute the variance to the slate/board/math, never the opponent's card.
+  if (cls.mikeBadBeat && input.opponentOutlier) return `Lost by ${m} — you played it right. ${pick(VARIANCE_SLATE, key)}`;
   // RD7.12-c — BIG LOSS (beatdown, |margin| >= BLOWOUT_MARGIN): NO card-naming
   // consolation tail. The honest end is the variance-humility base line; "but
   // X's stat was your high mark" undercut it and read as a consolation prize.

@@ -1,6 +1,6 @@
 # Rivalry Arc — Divergence Primitive
 
-**Status:** §8 closed against real code; build-ready on the divergence path. One open call (§8.3, bad-beat residual) is John's constitution, not a blocker for the divergence build. Doc-before-code.
+**Status:** SHIPPED behind `VITE_FEATURE_RIVALRY_CLAUSE` (push-held on `feat/rd8-rivalry-divergence`). Reconciled to the built code: v2 result-congruent selection + the ship pass (real name + delta-once un-gated, luck line retired, §8.3 closed). Variety/salience deliberately OUT (§10). Doc-before-code.
 **Scope class:** RD7.2-sized design, but the build is a render-time derivation over data already present — no artifact / serialization / API re-plumbing (per the investigation report).
 
 ---
@@ -12,6 +12,8 @@
 The selector may ask *"which disagreement mattered most?"* It may **not** ask *"which outcome comparison makes the best story?"* The first is ownership. The second is sports-media narrative generation. Everything below exists to make the second one structurally impossible, not merely discouraged.
 
 This is the RD7.2 constitution applied to rivalry: **decisions are ownable, pulls are not.**
+
+**Attribution corollary (v2).** Praise/blame attaches to what actually happened. If the result was luck, the **base** says luck and the clause stays **silent** — the clause must never contradict the base's verdict (enforced by the result-congruent bar, §5). And the eye is never sent to the opponent's pull: variance is a property of the slate/board/math, never of a named opponent card (§8.3). Score still never crosses the `Divergence` boundary (§2).
 
 ---
 
@@ -44,10 +46,15 @@ selectDivergence(
   initialRoster: GeneratedCard[],   // the shared deal (same slots both sides)
   senderResolved: GeneratedCard[],  // Mike's post-redraw roster (carries his wasHeld)
   myRoster: GeneratedCard[],        // recipient's resolved roster (carries my wasHeld)
+  result: ResultContext,            // v2 — { outcome, decisiveLineFound } from the base engine
 ): Divergence | null
 ```
 
-Returns **at most one** consequential shared-deal disagreement, or `null` when nothing diverged-and-mattered, or the hand is legacy / pre-enrichment (see §6).
+`ResultContext` is the result the clause must stay congruent with (§5): the win/loss/tie `outcome` plus `decisiveLineFound` (the base engine's `register === "agency"` verdict — did the base name a single decisive line, or attribute the result to variance/luck). Selection is **result-congruent**, not valence-blind (§5).
+
+Returns **at most one** consequential shared-deal disagreement, or `null` when nothing diverged-and-mattered, when no divergence is congruent with the result, when the consequential bar isn't cleared, or the hand is legacy / pre-enrichment (see §5/§6).
+
+**Salience is normalized, never a raw score.** `salience` = the disputed player's actualFp as a share (0..1) of the holding hand's total — read inside, the raw FP discarded. A consumer can rank by it but cannot reconstruct or render a point value from it (§0).
 
 The selector thinks in terms of **divergence**, not "consequential player." The player is presentation; the divergence is the truth. Consumers decide how to talk about it.
 
@@ -108,13 +115,21 @@ renderDivergenceClause(d: Divergence): string   // states disagreement, no causa
 - **States the disagreement; does not argue causality.** Render: *"Giannis scored 91. Mike let him go."* / *"Curry exploded. Mike kept him. You didn't."* The player's brain builds the rivalry story. The moment the copy argues it ("Mike's decision beat you"), we assert false certainty the data cannot support — with 12 divergent decisions and thousands of points through variance, the selector knows only which disagreement was most *salient*, not what *caused* the result. Restraint is the only honest version. **"Mike let Giannis go" over "Mike's decision beat you."**
 - **Validator-gated** on the §3 invariant. Fail → `rivalryClause: null`, base renders alone.
 
-**Subsume — decision divergence demotes the luck-outlier (constitutional, not just plumbing).** The existing luck-outlier read (`explainH2HResult.ts:62-71`) selects a sender card by *score* (`swing = fp − p50`) and feeds the bad-beat pull-frame (`resolutionEngine.ts:112,358`: *"Mike just caught a monster Curry pull"*). That is itself a pull-frame. A literal one-pass merge is impossible — §2 forbids score crossing the `Divergence` boundary, so the selector cannot reproduce the score-axis pick. Resolution: **`selectDivergence` is the single sender-side "what mattered" authority.** When it returns non-null, `explainH2HResult` builds `ResolutionInput` with `opponentOutlier: null` (→ `badBeatEligible` false → pull-frame never renders; base loss line degrades to the honest `MID_LOSS` variance cause) and returns the divergence clause instead. When it returns null, today's outlier/bad-beat path is unchanged. Exactly one sender-side frame ever renders, and where a real decision divergence exists the pull-frame is retired in its favor — the constitution choosing decisions over pulls. (Residual: see §8.3.)
+**Subsume — REMOVED in the v2 ship pass (the luck line is gone entirely).** v1 suppressed the bad-beat pull-frame (`opponentOutlier: null`) only where a divergence existed. Two facts retired that: (1) under result-congruent gating (§5) the clause fires only on agency/tie hands, which never carry a bad-beat (bad-beat is a variance-LOSS frame) — so the subsume was already inert; (2) the ship pass **retires the opponent-card luck line unconditionally** (§8.3) — there is no pull-frame left to suppress on any hand. `explainH2HResult` now always passes the real `opponentOutlier` (used only for bad-beat *eligibility*, never to name a card). One sender-side frame still ever renders; the constitution's "decisions over pulls" is now enforced by deleting the pull-frame outright, not by conditional suppression.
 
 ---
 
-## 5. Wins and losses — both, loss is sharper
+## 5. Wins and losses — both, loss is sharper, selection is RESULT-CONGRUENT (v2)
 
 Fires on both. The loss case is the stronger one, but **for the right reason**: it gives the loss a *face* without claiming the face caused it. "Mike's decision became the most important disagreement" — never "Mike's decision caused the loss." A loss with a face creates rematches; accountability is a better engine than celebration. The sharpness comes from restraint, not from stronger causality.
+
+**v2 — result-congruent selection (the valence-blind bug glass found).** The clause must praise/blame the side that actually owns the verdict, and must never contradict the base's verdict (§0 attribution corollary):
+
+- **WIN** → the most-salient divergence where you *held* and Mike *faded* (your call that paid off).
+- **LOSS** → the most-salient where Mike *held* and you *faded* (the call that beat you).
+- **TIE** → the sharper side, either direction.
+
+**Consequential bar (reuses the base engine's decisiveness judgment).** On WIN/LOSS the bar is `decisiveLineFound` — i.e. the base named a single decisive line (`register === "agency"`). If the base found **no** decisive line (it called the result variance/luck — "no single hot hand"), `selectDivergence` returns `null`: the clause stays silent rather than contradict a luck verdict. This is the **image-3 fix** — a balanced blowout won on the redraw has no shared-deal call to brag about, so the clause is quiet. TIE has no decisive-line concept (always variance), so it gates on a **salience floor** (`0.20` — the disputed player carried >20% of the holding hand, above the 1/6≈16.7% even-split; a genuine swing piece, reversible).
 
 ---
 
@@ -140,25 +155,55 @@ The result-screen clause may end up the *least* important consumer. The same `Di
 
 ## 8. Resolved against `explainH2HResult` (build-ready)
 
-**8.1 — Luck-outlier relationship: SUBSUME, as arbiter.** Resolved in §4. The luck-outlier is itself a pull-frame; the §8.1 contradiction (it can name a sender card by score while the clause names a shared-deal player by decision — both as "what mattered," same screen) is real on close losses. Subsume = mutual exclusion via `opponentOutlier: null` suppression when divergence is non-null; **not** a merge (a merge would export score, violating §2).
+**8.1 — Luck-outlier relationship: subsume → SUPERSEDED by retirement (v2 ship pass).** v1 resolved this with mutual-exclusion suppression (`opponentOutlier: null` when a divergence fired). The ship pass goes further: it **deletes the pull-frame entirely** (§8.3), so there is nothing to suppress and the subsume is removed (§4). The luck-outlier read is kept only for bad-beat *eligibility*; it never names a card.
 
 **8.2 — Compose point: separate field, append after the LLM swap.** Resolved in §4. `rivalryClause: string | null` returned by `explainH2HResult`; physical `+` at `H2HRecipientReveal.tsx:215` onto `displayExplanation`, so it survives both LLM and deterministic bases. `explainH2HResult` gains `initialRoster`. Single call site → contained change.
 
-**8.3 — OPEN (John's constitution, not a build blocker): the bad-beat residual.** Subsume retires the pull-frame only where a divergence exists. On a loss with **no** divergence (or a legacy hand we can't name honestly), today's *"Mike caught a monster pull"* line still ships. Two options:
-- **Conditional (CC's proposal, current spec):** arc touches only what it replaces. Keeps the build aggressively small. Leaves a known pull-frame shipping on no-divergence losses.
-- **Unconditional retirement:** always fall to the `MID_LOSS` humble-variance line, divergence or not. Constitutionally cleaner (the constitution has no "forbidden unless we've nothing better" clause). One-line branch, but expands blast radius into loss copy on no-rivalry hands and costs the "you played it right" specificity there; the bare variance line may want its own copy pass first.
+**8.3 — RESOLVED (ship pass): unconditional retirement of the opponent-card luck line.** John's call landed on unconditional. The bad-beat line (`resolutionEngine.ts`) no longer names an opponent card; it keeps the process-validation ("you played it right") and attributes the variance to the **slate / board / game / math** via a rotating card-free phrase (`VARIANCE_SLATE`). "you played it right" specificity is preserved.
 
-Lean: ship **conditional** in this build; log **unconditional retirement** as a near-term honest-copy fast-follow (§9, same family as killing "you called it"). Reversible either way. John's call.
+**Rationale — attention allocation (not a score comparison).** The old line was honest *as luck* ("you played it right, Mike just caught a monster Curry pull"), but it spotlighted the **opponent's pull** — the exact place the constitution says not to send the eye. §0 is not only "no score comparison"; it is "don't make the opponent's outcome the subject." Naming the opponent's hot card does that even while disclaiming causality.
+
+**Constitutional rule (now enforced in copy):** variance is described as a property of the **SLATE, BOARD, GAME, or MATH** — never as a property of a specific opponent card. No opponent card is ever named in a variance line. (Naming the opponent *person* + their *board* — "Mike's whole board went off" — is fine; that's slate-attributed, not a card.)
 
 ---
 
-## 9. Tracked separately (not part of this build, not forgotten)
+## 9. Copy fixes folded into the ship pass (UN-GATED) + still tracked
 
-- **Honest-copy cleanup** (independent, near-free, should ship regardless): kill "You knew." / "You called it." / "That's the read." Keep "You held him." / "Mike let him go."
-- **The two parked deterministic-copy nits:** agency-win dangling "it" (`resolutionEngine.ts` agency-win template); variance-loss margin doubling (RD7.12-c VARIANCE/LOSS_CLOSERS — if the cause clause stated the margin, the closer omits it).
-- **Coincident-player clause redundancy (build-time render nit):** when the LLM Flavor base already centers the player the clause names (both = Giannis), the score gets stated twice. `renderDivergenceClause` needs a score-free variant for the coincident case ("…and Mike let him go" without restating 91). Same family as the variance-loss margin-doubling nit above.
-- **Bad-beat unconditional retirement (fast-follow, pending §8.3):** if John reads the residual as "a pull-frame is a pull-frame," retire `resolutionEngine.ts:358` on no-divergence losses too → always `MID_LOSS` variance. Same family as the honest-copy cleanup.
-- **Confirm RD7.11/7.12 cleanup ran:** preview teardown, registry, worktree archives (`feat/rd7-11-substance`, `feat/rd7-12-llm-flavor`). Left open in the handover.
+**Shipped un-gated this pass** (corrections to already-wrong base copy — they apply regardless of `VITE_FEATURE_RIVALRY_CLAUSE`, so flag-OFF is deliberately *no longer* byte-identical to old prod):
+- **Real opponent name** — base variance copy (beatdown/blowout) said "Mike"; now uses the challenger's `namedChallenger` (fallback "Mike"). Threaded via `ResolutionInput.opponentName`.
+- **Delta-once** — the margin number (and its idea) now appears exactly once; margin-restating variance closers are dropped (`ResolutionInput.deltaOnce`).
+- **Luck-line retirement** — §8.3 (also un-gated; it's a constitutional copy fix, not part of the clause feature).
+- **Coincident-player render nit** — `renderDivergenceClause` already has the score-free pronoun variant; resolved.
+
+**Still tracked (not this build):**
+- **Honest-copy cleanup:** kill "You knew." / "You called it." / "That's the read." Keep "You held him." / "Mike let him go."
+- **Agency-win dangling "it"** nit (`resolutionEngine.ts` agency-win template).
+- **Confirm RD7.11/7.12 cleanup ran:** preview teardown, registry, worktree archives (`feat/rd7-11-substance`, `feat/rd7-12-llm-flavor`).
+
+---
+
+## 10. Out of scope, by explicit decision — variety & salience (World A vs World B)
+
+This ship is the **honest skeleton**, not the tuned product. Two deliberately-deferred axes:
+
+- **Variety** — the clause has a small fixed phrasing set ("You held X. Mike let him go." / "Mike kept X. You let him go." + coincident pronoun forms). No rotation pool, no LLM-authored variety.
+- **Salience** — ranking is a single normalized contribution share (disputed player's actualFp / holding-hand total). No multi-signal salience (recency, tier, margin-share, narrative weight).
+
+**World A vs World B (the reason to defer).**
+- **World A (ship now):** rivalry-reveal's value is *visibility* of a disagreement that already happened (§1, Type 2) — it does not depend on phrasing richness or salience sophistication. Ship the honest skeleton, watch whether surfacing the disagreement moves ownership/rematch behavior at all.
+- **World B (invest later):** richer variety + a tuned salience model. This is real work with its own eval surface — and it is **unjustified until World A shows the lever exists.** Building World B first would tax the thesis (*sports fan → emotional sweat, no learning curve*) and risk polishing a frame nobody responds to.
+
+Decision: **ship World A; gate World B behind evidence from World A.** Reversible — the `Divergence` primitive already exposes `salience` and the renderer is swappable, so World B is additive, not a rewrite.
+
+## 11. The four-item ship membrane (what's IN this ship, what's OUT)
+
+**IN (this pass):**
+1. The rivalry **clause** — result-congruent, one shared-deal identity, no causal verb, no score (flag-gated).
+2. **Real opponent name** in base copy (un-gated).
+3. **Delta-once** margin (un-gated).
+4. **Luck-line retirement** — no opponent card named in any variance line (un-gated).
+
+**OUT (explicitly, not forgotten):** variety, salience tuning (§10); the honest-copy cleanup family (§9); World B. Anything touching selection/invariant/render of the clause beyond the four items above is outside the membrane for this ship.
 
 ---
 
