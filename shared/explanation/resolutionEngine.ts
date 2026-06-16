@@ -49,6 +49,14 @@ export interface ResolutionInput {
   yourCards: YourCardFact[];
   margin: number;             // yourTotal − opponentTotal
   opponentOutlier?: OpponentOutlier | null;
+  // RD8 (flag-gated by the caller; absent → today's behavior, byte-identical):
+  // the real opponent display name woven into variance copy in place of the
+  // hardcoded "Mike" (§9 Step 2). Absent/blank → "Mike".
+  opponentName?: string;
+  // RD8 delta-once (§9 Step 3): when true, variance closers that restate the
+  // margin are suppressed so the margin (and its idea) appears exactly once —
+  // the cause/base line owns it. Absent → today's behavior (closers may repeat).
+  deltaOnce?: boolean;
 }
 
 export interface Classification {
@@ -286,16 +294,16 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
 }
 
 const BEATDOWN_LOSS = [
-  (m: string) => `Mike's slate ran hot top to bottom — nothing to second-guess.`,
-  (m: string) => `Lost by ${m} — Mike's whole board went off. Not your night.`,
-  (m: string) => `A ${m}-point beatdown — Mike caught fire across the slate.`,
-  (m: string) => `Mike's slate overwhelmed yours by ${m} — no single call to fix.`,
+  (m: string, opp: string) => `${opp}'s slate ran hot top to bottom — nothing to second-guess.`,
+  (m: string, opp: string) => `Lost by ${m} — ${opp}'s whole board went off. Not your night.`,
+  (m: string, opp: string) => `A ${m}-point beatdown — ${opp} caught fire across the slate.`,
+  (m: string, opp: string) => `${opp}'s slate overwhelmed yours by ${m} — no single call to fix.`,
 ];
 const BLOWOUT_WIN = [
-  (m: string) => `You ran them off the floor — by ${m}.`,
-  (m: string) => `A ${m}-point demolition — your whole board showed up.`,
-  (m: string) => `Wire to wire — you buried Mike by ${m}.`,
-  (m: string) => `Total control, ${m} clear — nothing close about it.`,
+  (m: string, opp: string) => `You ran them off the floor — by ${m}.`,
+  (m: string, opp: string) => `A ${m}-point demolition — your whole board showed up.`,
+  (m: string, opp: string) => `Wire to wire — you buried ${opp} by ${m}.`,
+  (m: string, opp: string) => `Total control, ${m} clear — nothing close about it.`,
 ];
 const MID_LOSS = [
   (m: string) => `Lost by ${m} — no single call swung it; the slate just landed cold.`,
@@ -313,19 +321,22 @@ const MID_WIN = [
 // path no longer ends every line the same way. All honest: description /
 // variance-humility only, never agency, Mike stays scoreboard. "" when no card
 // has a usable box line (fill / non-basketball / sparse) → bare base line stands.
-const WIN_CLOSERS: Array<(l: string, s: string, m: string) => string> = [
-  (l, s) => `${l}'s ${s} led the box score.`,           // card-naming
-  (l, s) => `${s} from ${l} stood out.`,                // card-naming, diff verb
-  (_l, _s, m) => `Up ${m} on balance — no single hot hand.`, // no card, margin
-  (_l, _s, m) => `Decided by ${m}, spread across the board.`, // no card, margin
-  (l, s) => `A team effort — ${s} from ${l} the headline.`,   // card-naming, diff shape
+// Each closer is tagged `usesMargin` so RD8 delta-once (§9 Step 3) can drop the
+// margin-restating variants — the base/cause line already owns the number.
+type Closer = { usesMargin: boolean; f: (l: string, s: string, m: string) => string };
+const WIN_CLOSERS: Closer[] = [
+  { usesMargin: false, f: (l, s) => `${l}'s ${s} led the box score.` },        // card-naming
+  { usesMargin: false, f: (l, s) => `${s} from ${l} stood out.` },             // card-naming, diff verb
+  { usesMargin: true,  f: (_l, _s, m) => `Up ${m} on balance — no single hot hand.` }, // no card, margin
+  { usesMargin: true,  f: (_l, _s, m) => `Decided by ${m}, spread across the board.` }, // no card, margin
+  { usesMargin: false, f: (l, s) => `A team effort — ${s} from ${l} the headline.` },   // card-naming, diff shape
 ];
-const LOSS_CLOSERS: Array<(l: string, s: string, m: string) => string> = [
-  (l, s) => `${l}'s ${s} topped a board that fell short.`,        // card-naming
-  (l, s, m) => `${s} from ${l}, but the slate came up ${m} short.`, // card + margin
-  (_l, _s, m) => `Lost by ${m} with no single line to point to.`,   // no card, margin
-  (_l, _s, m) => `${m} short — the board just ran cold.`,           // no card, margin
-  (l, s) => `${l} (${s}) led it; the rest stayed quiet.`,          // card-naming, diff shape
+const LOSS_CLOSERS: Closer[] = [
+  { usesMargin: false, f: (l, s) => `${l}'s ${s} topped a board that fell short.` },     // card-naming
+  { usesMargin: true,  f: (l, s, m) => `${s} from ${l}, but the slate came up ${m} short.` }, // card + margin
+  { usesMargin: true,  f: (_l, _s, m) => `Lost by ${m} with no single line to point to.` },   // no card, margin
+  { usesMargin: true,  f: (_l, _s, m) => `${m} short — the board just ran cold.` },           // no card, margin
+  { usesMargin: false, f: (l, s) => `${l} (${s}) led it; the rest stayed quiet.` },          // card-naming, diff shape
 ];
 function varianceCloser(input: ResolutionInput, key: string, outcome: Outcome): string {
   const withBox = input.yourCards
@@ -335,31 +346,38 @@ function varianceCloser(input: ResolutionInput, key: string, outcome: Outcome): 
   const top = withBox[0];
   if (!top) return "";
   const m = Math.abs(input.margin).toFixed(1);
-  const pool = outcome === "win" ? WIN_CLOSERS : LOSS_CLOSERS;
-  return " " + pick(pool, key + "|closer")(lastName(top.c.name), top.box as string, m);
+  let pool = outcome === "win" ? WIN_CLOSERS : LOSS_CLOSERS;
+  // Delta-once: drop margin-restating closers so the number appears exactly once.
+  if (input.deltaOnce) {
+    const marginFree = pool.filter((c) => !c.usesMargin);
+    if (marginFree.length) pool = marginFree;
+  }
+  return " " + pick(pool, key + "|closer").f(lastName(top.c.name), top.box as string, m);
 }
 
 function renderVariance(cls: Classification, input: ResolutionInput): string {
   const absM = Math.abs(input.margin);
   const m = absM.toFixed(1);
   const key = `${cls.outcome}|${Math.round(input.margin)}`;
+  // RD8 Step 2: the real opponent name (flag-gated upstream); absent → "Mike".
+  const opp = input.opponentName?.trim() || "Mike";
   // Append the diversified closer only when it fits MAX_CHARS. Skipped on tie /
-  // tiny-margin / bad-beat (those are about the coin-flip or Mike).
+  // tiny-margin / bad-beat (those are about the coin-flip or the opponent).
   const withCloser = (base: string): string => {
     const r = varianceCloser(input, key, cls.outcome);
     return r && base.length + r.length <= TUNING.MAX_CHARS ? base + r : base;
   };
   if (cls.outcome === "tie") return `Dead even — the math couldn't separate you.`;
   if (cls.outcome === "win") {
-    if (absM >= TUNING.BLOWOUT_MARGIN) return withCloser(pick(BLOWOUT_WIN, key)(m));
+    if (absM >= TUNING.BLOWOUT_MARGIN) return withCloser(pick(BLOWOUT_WIN, key)(m, opp));
     if (absM < TUNING.TINY_MARGIN) return `Razor-thin — the logs fell your way. No single call won this one.`;
     return withCloser(pick(MID_WIN, key)(m));
   }
-  if (cls.mikeBadBeat && input.opponentOutlier) return `Lost by ${m} — you played it right. Mike just caught a monster ${lastName(input.opponentOutlier.name)} pull.`;
+  if (cls.mikeBadBeat && input.opponentOutlier) return `Lost by ${m} — you played it right. ${opp} just caught a monster ${lastName(input.opponentOutlier.name)} pull.`;
   // RD7.12-c — BIG LOSS (beatdown, |margin| >= BLOWOUT_MARGIN): NO card-naming
   // consolation tail. The honest end is the variance-humility base line; "but
   // X's stat was your high mark" undercut it and read as a consolation prize.
-  if (absM >= TUNING.BLOWOUT_MARGIN) return pick(BEATDOWN_LOSS, key)(m);
+  if (absM >= TUNING.BLOWOUT_MARGIN) return pick(BEATDOWN_LOSS, key)(m, opp);
   if (absM < TUNING.TINY_MARGIN) return `Lost by ${m} — no single decision swung it; a coin-flip that landed cold.`;
   return withCloser(pick(MID_LOSS, key)(m));
 }

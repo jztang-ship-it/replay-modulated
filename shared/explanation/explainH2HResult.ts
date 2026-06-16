@@ -8,6 +8,7 @@
 
 import {
   explainResolution,
+  classify,
   flavorMarginBucket,
   shouldAuthorFlavor,
   selectFlavorCard,
@@ -29,6 +30,7 @@ import {
   renderDivergenceClause,
   validateRivalryClause,
   type Divergence,
+  type ResultContext,
 } from "./selectDivergence";
 
 export function explainH2HResult(args: {
@@ -41,6 +43,10 @@ export function explainH2HResult(args: {
   initialRoster?: GeneratedCard[];
   // RD8 — gate. Defaults to the build-time flag; an explicit value (tests) wins.
   rivalryEnabled?: boolean;
+  // RD8 Step 2 — the real opponent display name (the call site's namedChallenger).
+  // Threaded into the clause AND the base variance copy when the flag is on;
+  // absent → "Mike". Only applied when rivalryEnabled.
+  opponentName?: string;
 }): {
   text: string;
   classification: Classification;
@@ -92,28 +98,43 @@ export function explainH2HResult(args: {
     }
   }
 
+  const yourCards = recipient.cards.map(toFact);
+
   // RD8 — derive the rivalry divergence (flag-gated). Decisions only; score is
-  // read INSIDE selectDivergence to rank, then discarded (§0/§2). Validate the
-  // clause up-front (the named form — coincidence below doesn't affect validity)
-  // so an invalid clause leaves the luck-outlier path fully intact (§4 fail →
-  // base only). When a valid divergence exists we SUBSUME the outlier: build the
-  // input with opponentOutlier:null so the bad-beat pull-frame never renders
-  // (§4, §8.1). When there is no divergence the outlier path is UNCHANGED (§8.3).
+  // read INSIDE selectDivergence to rank, then discarded (§0/§2). Selection is
+  // RESULT-CONGRUENT: it consumes the base engine's verdict (decisive line vs.
+  // variance) so the clause can never contradict it (§0 corollary; §5). The
+  // verdict's register/outcome are independent of opponentOutlier, so computing
+  // it here (before the subsume decision) is safe. Validate the clause up-front
+  // (named form — coincidence doesn't affect validity) so an invalid clause
+  // leaves the luck-outlier path intact (§4 fail → base only). A valid divergence
+  // SUBSUMES the outlier (opponentOutlier:null → bad-beat never renders, §4/§8.1);
+  // no divergence → outlier path UNCHANGED (§8.3).
   const rivalryOn = args.rivalryEnabled ?? featureFlags.rivalryClause;
+  const opponentName = rivalryOn ? (args.opponentName?.trim() || undefined) : undefined;
   let divergence: Divergence | null = null;
   if (rivalryOn && args.initialRoster?.length) {
     const senderGC = sender.cards as unknown as GeneratedCard[];
     const recipientGC = recipient.cards as unknown as GeneratedCard[];
-    const d = selectDivergence(args.initialRoster, senderGC, recipientGC);
-    if (d && validateRivalryClause(renderDivergenceClause(d), d, args.initialRoster, senderGC, recipientGC)) {
+    const verdict = classify({ yourCards, margin });
+    const result: ResultContext = {
+      outcome: verdict.outcome,
+      decisiveLineFound: verdict.register === "agency",
+    };
+    const d = selectDivergence(args.initialRoster, senderGC, recipientGC, result);
+    if (d && validateRivalryClause(renderDivergenceClause(d, { opponentName }), d, args.initialRoster, senderGC, recipientGC)) {
       divergence = d;
     }
   }
 
+  // Base-copy improvements (§9 Steps 2/3) ride the same flag, so flag-OFF stays
+  // byte-identical: opponentName woven into variance copy, deltaOnce on.
   const input = {
-    yourCards: recipient.cards.map(toFact),
+    yourCards,
     margin,
     opponentOutlier: divergence ? null : outlier,
+    opponentName,
+    deltaOnce: rivalryOn,
   };
   const result = explainResolution(input);
 
@@ -146,7 +167,7 @@ export function explainH2HResult(args: {
     const coincident =
       !!result.classification.decisive &&
       lastName(result.classification.decisive.name) === lastName(divergence.playerName);
-    rivalryClause = renderDivergenceClause(divergence, { coincident });
+    rivalryClause = renderDivergenceClause(divergence, { coincident, opponentName });
   }
 
   return { ...result, flavorRequest, rivalryClause };

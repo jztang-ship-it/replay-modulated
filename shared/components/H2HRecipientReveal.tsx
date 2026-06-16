@@ -192,9 +192,12 @@ function H2HRecipientRevealInner(props: InnerProps) {
       sport,
       initialRoster: challengeCtx.initialRoster,
       rivalryEnabled: featureFlags.rivalryClause,
+      // RD8 Step 2 — the real challenger name (already validated as a real name
+      // at :152). undefined → engine falls back to "Mike".
+      opponentName: namedChallenger ?? undefined,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sender, recipient, sport, poolVer, challengeCtx.initialRoster],
+    [sender, recipient, sport, poolVer, challengeCtx.initialRoster, namedChallenger],
   );
   const explanation = resolution?.text;          // RD7.11 deterministic floor
   const flavorRequest = resolution?.flavorRequest ?? null;

@@ -38,6 +38,25 @@ export type Divergence = {
   salience: number; // 0..1, computed from score then the raw score is discarded
 };
 
+/**
+ * The result the clause must stay congruent with (§5, §0 attribution corollary).
+ * `decisiveLineFound` is the base engine's verdict (resolutionEngine `register
+ * === "agency"`): true → the base named a single decisive line; false → the base
+ * attributed the result to variance/luck ("no single hot hand"). The clause must
+ * never contradict that verdict — so on a win/loss where the base found no
+ * decisive line, the selector returns null (the image-3 fix).
+ */
+export type ResultContext = {
+  outcome: "win" | "loss" | "tie";
+  decisiveLineFound: boolean;
+};
+
+// Tie consequential bar: the disputed player carried >20% of the holding hand —
+// above the 1/6≈16.7% even-split baseline, i.e. a genuine swing piece, not
+// filler. Ties have no base decisive-line verdict (always variance), so this
+// salience floor is the only available bar. Reversible.
+const TIE_SALIENCE_FLOOR = 0.2;
+
 type RosterLike = Pick<GeneratedCard, "basePlayerId" | "wasHeld" | "actualFp" | "name">;
 
 /** basePlayerIds the side held (wasHeld === true). Identity-keyed, not slot. */
@@ -55,15 +74,30 @@ function totalActualFp(roster: ReadonlyArray<RosterLike>): number {
   return t;
 }
 
+/** Is this divergence congruent with the result — i.e. does it praise/blame the
+ *  side that actually owns the verdict (§5)?  WIN → your hold that paid off
+ *  (receiver hold / sender fade). LOSS → the call that beat you (sender hold /
+ *  receiver fade). TIE → either direction (sharper side). */
+function isCongruent(d: Divergence, outcome: ResultContext["outcome"]): boolean {
+  if (outcome === "win") return d.receiverDecision === "hold" && d.senderDecision === "fade";
+  if (outcome === "loss") return d.senderDecision === "hold" && d.receiverDecision === "fade";
+  return true; // tie
+}
+
 /**
- * Returns the single most-salient shared-deal disagreement, or null when
- * nothing diverged-and-mattered (or the hand carries no holds on either side —
- * the pre-enrichment / legacy degenerate case). Never fabricates.
+ * Returns the single most-salient RESULT-CONGRUENT shared-deal disagreement, or
+ * null. Null when: nothing diverged; no holds on either side (legacy/pre-
+ * enrichment); no divergence is congruent with the result; or the consequential
+ * bar isn't cleared. The bar reuses the base engine's decisiveness verdict on
+ * win/loss (no decisive line → silent, never contradict the base — §0
+ * attribution corollary, the image-3 fix), and a salience floor on ties. Never
+ * fabricates; selection is no longer valence-blind.
  */
 export function selectDivergence(
   initialRoster: ReadonlyArray<GeneratedCard>,
   senderResolved: ReadonlyArray<GeneratedCard>,
   myRoster: ReadonlyArray<GeneratedCard>,
+  result: ResultContext,
 ): Divergence | null {
   if (!initialRoster?.length || !senderResolved?.length || !myRoster?.length) return null;
 
@@ -73,6 +107,11 @@ export function selectDivergence(
   // Legacy / no-decision hand: neither side recorded any hold → no honest
   // divergence to name. Silent null (§6).
   if (senderHeld.size === 0 && receiverHeld.size === 0) return null;
+
+  // Win/loss: the clause may only speak when the base found a decisive line.
+  // No decisive line → the base attributed it to variance/luck; the clause stays
+  // silent rather than contradict that verdict (§0 corollary; image-3 fix).
+  if (result.outcome !== "tie" && !result.decisiveLineFound) return null;
 
   const senderTotal = totalActualFp(senderResolved);
   const receiverTotal = totalActualFp(myRoster);
@@ -93,18 +132,22 @@ export function selectDivergence(
     const disputedFp = Number(heldCard?.actualFp ?? 0);
     const salience = disputedFp / Math.max(1, holdingTotal); // 0..1, raw fp discarded
 
-    if (!best || salience > best.salience) {
-      best = {
-        slotIndex: Number(dealt.slotIndex),
-        playerId: pid,
-        playerName: String(dealt.name),
-        senderDecision: sHeld ? "hold" : "fade",
-        receiverDecision: rHeld ? "hold" : "fade",
-        salience,
-      };
-    }
+    const cand: Divergence = {
+      slotIndex: Number(dealt.slotIndex),
+      playerId: pid,
+      playerName: String(dealt.name),
+      senderDecision: sHeld ? "hold" : "fade",
+      receiverDecision: rHeld ? "hold" : "fade",
+      salience,
+    };
+    // Valence filter: only consider divergences congruent with the result.
+    if (!isCongruent(cand, result.outcome)) continue;
+    if (!best || cand.salience > best.salience) best = cand;
   }
 
+  if (!best) return null;
+  // Tie has no base decisive-line verdict → gate on the salience floor instead.
+  if (result.outcome === "tie" && best.salience < TIE_SALIENCE_FLOOR) return null;
   return best;
 }
 
@@ -120,16 +163,17 @@ export function selectDivergence(
  */
 export function renderDivergenceClause(
   d: Divergence,
-  opts?: { coincident?: boolean },
+  opts?: { coincident?: boolean; opponentName?: string },
 ): string {
   const coincident = opts?.coincident === true;
+  const opp = opts?.opponentName?.trim() || "Mike"; // real challenger name (§9), else "Mike"
   const receiverHeld = d.receiverDecision === "hold" && d.senderDecision === "fade";
   if (receiverHeld) {
-    // You held him; Mike let him go.
-    return coincident ? `Mike let him go.` : `You held ${d.playerName}. Mike let him go.`;
+    // You held him; the opponent let him go.
+    return coincident ? `${opp} let him go.` : `You held ${d.playerName}. ${opp} let him go.`;
   }
-  // Mike kept him; you let him go.
-  return coincident ? `Mike kept him — you didn't.` : `Mike kept ${d.playerName}. You let him go.`;
+  // The opponent kept him; you let him go.
+  return coincident ? `${opp} kept him — you didn't.` : `${opp} kept ${d.playerName}. You let him go.`;
 }
 
 /**
