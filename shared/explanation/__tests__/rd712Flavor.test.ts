@@ -81,14 +81,14 @@ describe("selectFlavorCard — decisive (agency) or top scorer (variance)", () =
 // These exact strings are RD7.11's engine output; RD7.12 added only new exports
 // and touched no render/classify code. Any future change that perturbs the
 // shared engine codepath breaks this lock.
-describe("FROZEN-OUTPUT: engine Recognition+Cause byte-identical to RD7.11", () => {
+describe("FROZEN-OUTPUT: agency line = RD8 Register A (fantasy-scalar token, not the RD7.11 box triple)", () => {
   it("A1 held-star line is unchanged", () => {
     const input = { yourCards: [c({ name: "Nikola Jokić", tier: "RED", salary: 89, wasHeld: true, fp: 113, percentile: 96, poolMedian: 73, nickname: "the Joker", statLine: { pts: 41, reb: 12, ast: 9, min: 39 } }), ...fill(5)], margin: 31 };
-    expect(explainResolution(input).text).toBe("Jokić's 41-12-9 — exactly why you held him. Classic the Joker.");
+    expect(explainResolution(input).text).toBe("Jokić's 113 — exactly why you held him. Classic the Joker.");
   });
   it("A2 held-bust line is unchanged", () => {
     const input = { yourCards: [c({ name: "Devin Booker", tier: "ORANGE", salary: 62, wasHeld: true, fp: 14, percentile: 6, poolMedian: 50, nickname: "Book", statLine: { pts: 8, reb: 2, ast: 1, min: 30 } }), ...fill(5)], margin: -12 };
-    expect(explainResolution(input).text).toBe("Just 8-2-1 from Booker — the hold you stuck with. Not Book's night.");
+    expect(explainResolution(input).text).toBe("Just 14 from Booker — the hold you stuck with. Not Book's night.");
   });
   it("beatdown variance line — RD8 system-variance framing (no opponent-board agency)", () => {
     // Was "Mike's whole board went off"; RD8 retired the agency/heat verb on the

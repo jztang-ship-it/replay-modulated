@@ -457,6 +457,23 @@ Process rules now live in `/Users/john/Desktop/ReplayMod/CLAUDE.md` at the repo 
 - Still open beyond the investor build: **R4** transition copy and **R5** persistence are not
   in the RD sequence; design when the investor build lands.
 
+### RD8 — variance-closer card-conflict (decision pending; next conversation)
+
+- **What:** the variance-loss/win *closer* (`varianceCloser`, `shared/explanation/resolutionEngine.ts`)
+  still emits the box triple — e.g. `"Jokić's 41-12-9 led the box score."`, `"…topped a board"`,
+  `"…led it"`. The box pts (41) is a **second number for the same player** alongside the card's
+  fantasy total (113) — the exact reader-reconcile conflict that RD8 Register A removed from the
+  **agency** line (the agency token now shows the fantasy scalar; shipped this session).
+- **Scope:** fires on **variance hands — the ~majority** (agency/clause hands are the minority per
+  the RD8 firing-rate sim), so the conflict still ships to most users via the closer.
+- **Why it's NOT folded into the deferred narrative-salience / stat-citation pass:** that pass is
+  about *which* stat to spotlight + phrasing variety. This is a units conflict. BUT it is **not a
+  clean units swap either** — the closers are *box-score-framed* (`"led the box score"`,
+  `"topped a board"`), so `"Jokić's 113 led the box score"` reads wrong (113 is fantasy, not a box
+  line). Fixing it is a **copy reframe** (its own small decision), not the agency-line units swap.
+- **Status:** explicitly out of scope for the Register A change (agency-only boundary confirmed by
+  John). Decision pending — next conversation, not this one.
+
 ### Win path
 
 - We never designed what happens when the recipient WINS the challenge they were sent

@@ -199,14 +199,18 @@ describe("RD7.11 Flavor — box-line substance", () => {
     expect(text, `[${label}] "${text}"`).not.toMatch(/undefined|NaN|-{2,}|\bnull\b/);
   };
 
-  it("A1 win renders the REAL box line, not the bland FP scalar", () => {
+  it("A1 agency token shows the card-congruent fantasy figure, not the box triple", () => {
+    // RD8 Register A: the statLine HAS a box line (41-12-9) — the agency token
+    // must still cite the fantasy scalar (113 = the card's number), not the box
+    // pts, so the line agrees with the card instead of putting two numbers for
+    // one player on screen. (Supersedes RD7.11's box-triple agency token.)
     const cards = [card({ name: "Nikola Jokić", tier: "RED", salary: 89, wasHeld: true, fp: 113, percentile: 95, poolMedian: 73, nickname: "the Joker", statLine: { pts: 41, reb: 12, ast: 9, min: 39 } }), ...fill(5)];
     const { text, classification } = explainResolution({ yourCards: cards, margin: 35 });
     expect(classification.leaf).toBe("A1");
-    expect(text).toContain("41-12-9");           // box line present
-    expect(text).not.toContain("113");           // FP scalar replaced
+    expect(text).toContain("113");               // fantasy scalar = the card's number
+    expect(text).not.toContain("41-12-9");       // box triple retired from the agency line
     expect(text).toContain("Classic the Joker"); // cultural tag still WRAPPER (after Flavor)
-    assertClean(text, "A1 box");
+    assertClean(text, "A1 agency");
   });
 
   it("ADVERSARIAL: a monster star line stays DESCRIPTIVE — no agency phrasing", () => {
@@ -215,7 +219,10 @@ describe("RD7.11 Flavor — box-line substance", () => {
     // never classified beyond the existing humble Cause clause.
     const cards = [card({ name: "Allen Iverson", tier: "RED", salary: 90, wasHeld: true, fp: 120, percentile: 99, poolMedian: 55, nickname: "AI", statLine: { pts: 51, reb: 7, ast: 8, stl: 6, min: 44 } }), ...fill(5)];
     const { text } = explainResolution({ yourCards: cards, margin: 40 });
-    expect(text).toMatch(/51-7-8/);
+    // Load-bearing guard is assertClean (the no-agency FORBIDDEN blocklist). The
+    // number match is cosmetic — just "a fantasy figure rendered" under Register A
+    // (was the box triple /51-7-8/; it never carried the no-agency guarantee).
+    expect(text).toMatch(/\b120\b/);
     assertClean(text, "A1 monster");
   });
 
@@ -231,11 +238,11 @@ describe("RD7.11 Flavor — box-line substance", () => {
     assertClean(out2.text, "A1 non-bball shape");
   });
 
-  it("held-LOST (A2) bust renders its (low) box line descriptively", () => {
+  it("held-LOST (A2) bust renders its (low) fantasy total, not the box triple", () => {
     const cards = [card({ name: "Devin Booker", tier: "ORANGE", salary: 62, wasHeld: true, fp: 14, percentile: 6, poolMedian: 50, nickname: "Book", statLine: { pts: 8, reb: 2, ast: 1, min: 28 } }), ...fill(5)];
     const { text, classification } = explainResolution({ yourCards: cards, margin: -12 });
     expect(classification.leaf).toBe("A2");
-    expect(text).toContain("8-2-1");
+    expect(text).toContain("14");   // RD8 Register A: fantasy total (card number), not the box triple 8-2-1
     assertClean(text, "A2 bust");
   });
 

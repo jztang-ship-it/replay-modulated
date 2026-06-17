@@ -210,35 +210,15 @@ function formatBoxLine(statLine?: Record<string, number | string> | null): strin
   return `${pts} ${pts === 1 ? "point" : "points"}`;                 // points-only (no half-triple)
 }
 
-/** At most ONE accent: a genuinely standout stat (high thresholds → honest),
- *  else the opponent if present. "" when nothing sharpens the line. */
-function boxAccent(c?: YourCardFact | null): string {
-  const s = c?.statLine;
-  if (s && typeof s === "object") {
-    const blk = statNum(s.blk ?? s.blocks);
-    const threes = statNum(s.threes ?? s.fg3 ?? s.tpm);
-    const stl = statNum(s.stl ?? s.steals);
-    if (blk != null && blk >= 5) return `${blk} blocks`;
-    if (threes != null && threes >= 7) return `${threes} threes`;
-    if (stl != null && stl >= 5) return `${stl} steals`;
-  }
-  const opp = c?.gameInfo?.opponent?.trim();
-  if (opp) return `vs ${opp}`;
-  return "";
-}
-
-/** The stat token woven into a clause: box line (+ optional accent, hash-gated
- *  for variety so repeats differ), or the FP scalar when no box line exists
- *  (graceful degrade = today's line). */
-function statToken(full: YourCardFact | undefined, fp: number, key: string): string {
-  const box = formatBoxLine(full?.statLine);
-  if (!box) return `${fp}`;
-  const acc = boxAccent(full);
-  if (acc && stableHash(key + "|acc") % 2 === 0) {
-    return acc.startsWith("vs ") ? `${box} ${acc}` : `${box}, ${acc}`;
-  }
-  return box;
-}
+// RD8 Register A (units fix, NOT the deferred stat-citation pass): the AGENCY
+// line cites the FANTASY scalar (the card's scoreboard number), never the box
+// triple. The triple (e.g. "41-12-9") put the box points (41) on screen next to
+// the card's fantasy total (113) — a second number for the same player that the
+// reader has to reconcile mid-line. Units must agree with the card. The token is
+// now just `String(fp)` inline in renderAgency, so the old statToken/boxAccent
+// weave is gone. formatBoxLine survives below — the VARIANCE closer still emits a
+// box-framed triple ("…led the box score"); that surface carries the same
+// conflict but is a separate copy decision (box-framed, not a clean units swap).
 
 // RD8 — agency lines STATE the decisive line + the decision (Type-1 ownership),
 // but never claim the decision WON/LOST the game. Retired the causal
@@ -287,10 +267,9 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
   const key = `${d.name}|${cls.leaf}|${input.margin.toFixed(0)}`;
   const leaf = cls.leaf!;
   const full = input.yourCards.find((c) => c.name === d.name);
-  // FLAVOR: the real box line replaces the FP scalar (degrades to FP when no
-  // statLine). DESCRIPTION only — woven into the SAME Recognition+Cause clause,
-  // which is byte-unchanged from RD7.2 apart from the stat token.
-  const s = statToken(full, fp, key);
+  // RD8 Register A: cite the FANTASY scalar (matches the card), not the box
+  // triple. See the note above formatBoxLine for why.
+  const s = String(fp);
   if (leaf === "A1" || leaf === "A3") {
     const base = pick(WIN_TEMPLATES[leaf], key)(l, s);
     const nick = d.isStar && !input.suppressFlavorTail ? full?.nickname?.trim() : null; // star + nickname only; suppressed when a rivalry clause follows
