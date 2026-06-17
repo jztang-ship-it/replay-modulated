@@ -2730,32 +2730,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               lastCardFp={lastCardFp}
               isSkip={false}
               visible
-              ftueSuppressNormal={false}
-              ftueOscillate={false}
-              ftueLockStaticBar={false}
               regularFinalCardKick={regularFinalGaugeKick}
               onTierCross={undefined}
               postRevealCopy={postRevealCopy}
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
-              ftueTypewriter={isFTUE}
-              stickyLastOverride={isFTUE && ftueReplayReady}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
-              }}
-              onCommentaryDone={() => {
-                if (isFTUE) {
-                  setFtueCommentaryDone(true);
-                }
-              }}
-              onFtueOscillateComplete={() => {
-                setFtueGaugeOscDone(true);
-                setFtueOscillating(false);
-                setCelebrationHeld(false);
-                pendingCelebration.current = null;
-                setGameState("RESULTS");
-                setTimeout(() => setFtueWinCelebrationActive(true), 300);
               }}
             />
           </div>
