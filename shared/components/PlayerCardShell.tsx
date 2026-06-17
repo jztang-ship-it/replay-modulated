@@ -280,7 +280,6 @@ export interface CardShellProps {
   onRollComplete?: () => void;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
-  isFTUE?: boolean;
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
@@ -341,7 +340,7 @@ export function PlayerCardShell(props: CardShellProps) {
     noTransition, flipDurationMs, fpCountUpMs,
     shakeType, cardShakeType, badges,
     isSpotlight, spotlightLevel, isDimmed, onRollComplete,
-    heldFpVisible, isTapTarget, isFTUE,
+    heldFpVisible, isTapTarget,
     glowActive, glowTier, glowDurationMs,
     staticEndState = false,
     ignoreHeldStatus = false,
@@ -564,7 +563,7 @@ export function PlayerCardShell(props: CardShellProps) {
         <div className="pcs-face pcs-face-back">
           {canFlip
             ? renderBack({ card, stableCard })
-            : <CardBackGeneric isTapTarget={isTapTarget} isFTUE={isFTUE} />
+            : <CardBackGeneric isTapTarget={isTapTarget} />
           }
         </div>
       </div>{/* end pcs-inner */}
