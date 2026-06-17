@@ -610,6 +610,7 @@ function AppInner() {
       {resumeSent && (
         <ChallengeSentConfirmation
           shareUrl={resumeSent.shareUrl}
+          challengeId={resumeSent.challengeId}
           sport={resumeSent.sport}
           shareHeadline={resumeSent.shareHeadline}
           onDismiss={() => setResumeSent(null)}

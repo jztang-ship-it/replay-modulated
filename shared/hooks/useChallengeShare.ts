@@ -51,6 +51,16 @@ export interface CreateChallengeArgs {
   triggerResult: TriggerResult;
 }
 
+// Lifetime hand ordinal — same source as gameplay/hand_dealt
+// (useGameAnalytics.ts:21): replaymod_hand_count + 1. Stamped on
+// challenge_create so the Q1 conversion step (first-time player →
+// challenge sent) can segment new (low hand_number) vs returning users.
+function currentHandNumber(): number {
+  try {
+    return parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) + 1;
+  } catch { return 1; }
+}
+
 // Per-challenge marker: rm_challenge_attempted_<id>. Used as a UI hint
 // that this user has *already played* this challenge (so the next
 // attempt is practice — doesn't count toward challenge stats). Does NOT
@@ -144,6 +154,7 @@ export function useChallengeShare(sportKey: string) {
       track("challenges", "challenge_create", {
         challenge_id: data.challenge_id, sport: args.sport,
         trigger: trigger.trigger, target_score: args.totalFp,
+        hand_number: currentHandNumber(),
       });
       return data.challenge_id;
     } catch (err) {

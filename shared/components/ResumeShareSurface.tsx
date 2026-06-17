@@ -28,6 +28,16 @@ import { supabase } from "@shared/lib/supabase";
 import { track } from "@shared/analytics/analytics";
 import { setNickname } from "@shared/utils/playerIdentity";
 
+/** Lifetime hand ordinal — same source as gameplay/hand_dealt
+ *  (useGameAnalytics.ts:21): replaymod_hand_count + 1. Stamped on
+ *  challenge_create so the Q1 conversion step (first-time player →
+ *  challenge sent) can segment new (low hand_number) vs returning users. */
+function currentHandNumber(): number {
+  try {
+    return parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) + 1;
+  } catch { return 1; }
+}
+
 /** SessionStorage key. Versioned suffix so future schema changes don't
  *  collide with in-flight sessions. Bump when the payload shape changes. */
 export const PENDING_SHARE_KEY = "replaymod_pending_challenge_share_v1";
@@ -199,6 +209,7 @@ export function ResumeShareSurface({ onResumeChallengeCreated }: ResumeShareSurf
         challenge_id: data.challenge_id, sport: pending.sport,
         trigger: pending.trigger_type, target_score: pending.total_fp,
         resumed_from_oauth: true,
+        hand_number: currentHandNumber(),
       });
       // Resolve the share URL once. Same fallback shape as
       // useChallengeShare.shareChallenge.

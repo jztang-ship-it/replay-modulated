@@ -87,7 +87,7 @@ export function ChallengeSharePrompt({
   // surface is open over the RESULTS-phase prompt. shareHeadline is
   // `effectiveHeadline` from settleHeadline() — passed by value, never
   // re-resolved inside the modal.
-  const [sentModal, setSentModal] = useState<{ shareUrl: string; shareHeadline: string } | null>(null);
+  const [sentModal, setSentModal] = useState<{ challengeId: string; shareUrl: string; shareHeadline: string } | null>(null);
 
   // Rivalry-back mode forces the prominent prompt regardless of the
   // underlying trigger (default-trigger fresh hands would otherwise
@@ -317,7 +317,7 @@ export function ChallengeSharePrompt({
     // now land on the same surface — link field, six destination
     // buttons, Copy link bar. effectiveHeadline arrives as a string by
     // value through the prop; the modal renders it as-is.
-    setSentModal({ shareUrl: url, shareHeadline: effectiveHeadline });
+    setSentModal({ challengeId: cid, shareUrl: url, shareHeadline: effectiveHeadline });
   }
 
   // Static labels for the fixed-text triggers. The miss trigger is
@@ -443,6 +443,7 @@ export function ChallengeSharePrompt({
         {sentModal && (
           <ChallengeSentConfirmation
             shareUrl={sentModal.shareUrl}
+            challengeId={sentModal.challengeId}
             sport={sport}
             shareHeadline={sentModal.shareHeadline}
             onDismiss={() => setSentModal(null)}
@@ -479,6 +480,7 @@ export function ChallengeSharePrompt({
     {sentModal && (
       <ChallengeSentConfirmation
         shareUrl={sentModal.shareUrl}
+        challengeId={sentModal.challengeId}
         sport={sport}
         shareHeadline={sentModal.shareHeadline}
         onDismiss={() => setSentModal(null)}

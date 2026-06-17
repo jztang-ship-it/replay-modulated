@@ -28,6 +28,7 @@
 // prop; this file authors NO share copy.
 
 import { useState } from "react";
+import { track } from "@shared/analytics/analytics";
 import {
   COPY_LINK_LABEL,
   LINK_COPIED_LABEL,
@@ -66,6 +67,10 @@ import {
 
 interface Props {
   shareUrl: string;
+  /** Challenge id for the row being shared — emitted as the `challenge_id`
+   *  prop on each `challenge_shared` event so the send can be joined to the
+   *  recipient-side funnel (challenge_link_open → challenge_attempt_complete). */
+  challengeId: string;
   sport: string;
   /** Pre-resolved share message string from upstream (effectiveHeadline:
    *  authored line when available, bank fallback otherwise). Rendered
@@ -76,11 +81,15 @@ interface Props {
 }
 
 export function ChallengeSentConfirmation({
-  shareUrl, sport, shareHeadline, onDismiss,
+  shareUrl, challengeId, sport, shareHeadline, onDismiss,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
+    // The real "sent" signal — fire on the copy-link gesture regardless of
+    // whether the clipboard write below succeeds (the user still intends to
+    // send via paste).
+    track("challenges", "challenge_shared", { challenge_id: challengeId, channel: "copy_link", sport });
     // User gesture — clipboard.writeText is reliable here even on the
     // post-OAuth surface.
     try {
@@ -92,7 +101,10 @@ export function ChallengeSentConfirmation({
     }
   };
 
-  const openIntent = (url: string) => {
+  const openIntent = (channel: string, url: string) => {
+    // The real "sent" signal for each destination tap. `channel` is the
+    // destination key (x / facebook / bluesky / whatsapp / telegram / reddit).
+    track("challenges", "challenge_shared", { challenge_id: challengeId, channel, sport });
     // noopener — never expose window.opener to the target tab.
     try { window.open(url, "_blank", "noopener"); } catch { /* popup blocked */ }
   };
@@ -205,7 +217,7 @@ export function ChallengeSentConfirmation({
           {destinations.map(({ key, label, url, icon }) => (
             <button
               key={key}
-              onClick={() => openIntent(url)}
+              onClick={() => openIntent(key, url)}
               data-share-destination={key}
               style={{
                 padding: "10px 6px", borderRadius: 10,
