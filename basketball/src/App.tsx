@@ -17,6 +17,7 @@ import { LandingPage } from "./components/LandingPage";
 // route is too narrow to justify the lazy mechanism's failure modes.
 import H2HRevealMockRoute from "./dev/H2HRevealMockRoute";
 import H2HPlayMockRoute from "./dev/H2HPlayMockRoute";
+import WinClauseDemoRoute from "./dev/WinClauseDemoRoute";
 import ChallengeLandingMockRoute from "./dev/ChallengeLandingMockRoute";
 import HeadlineMockRoute from "./dev/HeadlineMockRoute";
 import GameView from "./views/GameView";
@@ -111,6 +112,9 @@ function AppInner() {
   const devSlug = getDevRouteSlug();
   if (import.meta.env.DEV && devSlug === "h2h-reveal-mock") {
     return <H2HRevealMockRoute />;
+  }
+  if (import.meta.env.DEV && devSlug === "win-clause") {
+    return <WinClauseDemoRoute />;
   }
   if (import.meta.env.DEV && devSlug === "h2h-play-mock") {
     return <H2HPlayMockRoute />;
