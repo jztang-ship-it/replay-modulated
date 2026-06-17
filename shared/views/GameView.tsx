@@ -603,9 +603,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   }, [user, isAnonymous, bellOpen]);
 
   const [gameError, setGameError] = useState<string | null>(null);
-  // FTUE removed (slice 1): permanently false. Kept as a constant only until
-  // the last FTUE child-prop reads are stripped in step 6 — then it goes too.
-  const isFTUE = false;
   const initialRosterRef = useRef<import("@shared/types/index").GeneratedCard[]>([]);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
@@ -981,7 +978,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
   const completedCardsRef = useRef<Set<string>>(new Set());
-  const ftueTierSlamPlayedRef = useRef(false);
   const bonusPoolRef = useRef<number>(1000);
 
   // (dead effect removed in Task 7: it wrote `replaymod_lb_nudge_shown`
@@ -1671,15 +1667,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     return held;
   }, [gameState, roster, lockedCardIds]);
 
-  // FTUE anchor's slot index in the current roster. Used for the spotlight /
-  // dim-others effect during HOLD and post-results. Derived per sport: basketball
-  // Tatum lives at slotIndex 2, baseball Ohtani at slotIndex 0. Falls back to
-  // `null` (no spotlight) if the anchor isn't found in the current hand.
-  const ftueAnchorSlot = useMemo(() => {
-    const anchor = roster.find(c => cardId(c) === FTUE_ANCHOR_ID);
-    return anchor ? ((anchor as any).slotIndex ?? null) : null;
-  }, [roster, FTUE_ANCHOR_ID]);
-
   // ── Handlers ──────────────────────────────────────────────────────
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
@@ -1716,7 +1703,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       completedCardsRef.current = new Set();
       setDisplayTier("BUST");
       setTierResultPhase(1);
-      ftueTierSlamPlayedRef.current = false;
       setLockedCardIds(new Set());
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
@@ -1724,7 +1710,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       deductedSalaryCardsRef.current = new Set();
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
-      setFtueOscillating(false);
       setFtueGaugeOscDone(false);
       setFtueCommentaryDone(false);
       setFtueCommentaryOverride(null);
@@ -2886,15 +2871,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           pendingBalanceUpdateRef.current?.();
           pendingBalanceUpdateRef.current = null;
         }}
-        ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has(FTUE_ANCHOR_ID)}
-        ftueHideSkip={isFTUE}
-        ftueHideBalance={isFTUE && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD")}
-        ftuePulseNearMiss={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueGaugeOscDone}
-        ftueReplayBlocked={isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && !ftueReplayReady}
-        ftueReplayPulse={(isFTUE && ftueReplayReady) || (!isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled)}
-        dataFtuePrimaryAnchor={isFTUE ? (gameState === "HOLD" ? "draw" : "deal") : undefined}
+        replayPulse={(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled}
         splitFooter={{ multipliersHost, controlsHost }}
-        splitMultiplierRowVisible={isPreRevealFooter && !isFTUE}
+        splitMultiplierRowVisible={isPreRevealFooter}
         onViewLeaderboard={() => {
           setShowLeaderboard(true);
           setTrophyPulsing(false);
@@ -2906,9 +2885,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           setFtueCommentaryOverride(null);
           track("leaderboard", "viewed", { source: "gamebar_trophy" });
         }}
-        legendPulsing={legendGold && !isFTUE}
-        trophyPulsing={trophyPulsing && !isFTUE}
-        trophyBurst={trophyBurst && !isFTUE}
+        legendPulsing={legendGold}
+        trophyPulsing={trophyPulsing}
+        trophyBurst={trophyBurst}
         streak={streak}
         streakTiers={streakTiers}
         onLegendOpened={() => {

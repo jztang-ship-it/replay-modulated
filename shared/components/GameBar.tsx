@@ -108,26 +108,14 @@ type Props = {
   /** Called when user taps blurred zone to exit celebration */
   onWinCelebrationComplete?: () => void;
   onWageAnimationComplete?: () => void;
-  /** FTUE: block the Draw button until the anchor is held */
-  ftueDrawBlocked?: boolean;
-  /** FTUE: hide the AUTO button during reveal */
-  ftueHideSkip?: boolean;
-  /** FTUE: pulse the near-miss bar to draw attention (shown during runback) */
-  ftuePulseNearMiss?: boolean;
-  /** FTUE: block the replay/deal button (before final bubble dismissed) */
-  ftueReplayBlocked?: boolean;
-  /** FTUE: pulse the replay button to draw attention */
-  ftueReplayPulse?: boolean;
-  /** FTUE: hide balance+wage+legend row until after DRAW */
-  ftueHideBalance?: boolean;
+  /** Pulse the replay/deal button to draw attention on results. */
+  replayPulse?: boolean;
   /** Challenge mode: the recipient is playing a friend's hand. Hides
    *  the bet-multiplier selector AND the balance/wallet display since
    *  the matchup is decided by head-to-head score comparison, not by
    *  bet payout. Internally the effective multiplier is locked to 1x
    *  by the caller (GameView) — this prop only controls visibility. */
   challengeMode?: boolean;
-  /** FTUE: CoachLayer spotlight target for primary action (Deal / Draw / replay) */
-  dataFtuePrimaryAnchor?: "deal" | "draw";
   /** Hide the built-in TierBar — use when an external TierGauge is shown */
   hideTierBar?: boolean;
   /** Slot rendered between tier bar and multipliers — used for external TierGauge */
@@ -141,8 +129,7 @@ type Props = {
   splitMultiplierRowVisible?: boolean;
   /**
    * Tap target for the leaderboard trophy button rendered to the right of the
-   * primary action button (DEAL / DRAW / REPLAY). Hidden during FTUE
-   * (gated on ftueHideSkip).
+   * primary action button (DEAL / DRAW / REPLAY).
    */
   onViewLeaderboard?: () => void;
   /** Pulse the legend (ⓘ) icon to draw attention — e.g. daily bonus refresh */
@@ -426,7 +413,7 @@ function CoinBurst({ active, color }: { active: boolean; color: string }) {
 
 function TierBar({
   totalFp, gameState, winTiers, isCelebration,
-  lastCardProgress, lastCardFp, onOvershootSettled, ftuePulseNearMiss = false,
+  lastCardProgress, lastCardFp, onOvershootSettled,
   challengeTarget,
 }: {
   totalFp: number;
@@ -436,7 +423,6 @@ function TierBar({
   lastCardProgress: number;
   lastCardFp: number;
   onOvershootSettled: () => void;
-  ftuePulseNearMiss?: boolean;
   challengeTarget?: { name: string; fp: number };
 }) {
   const { label, fillPct, color, glow, fptNeeded } = getTierState(totalFp, winTiers);
@@ -585,20 +571,6 @@ function TierBar({
           @keyframes nearMissPulse { 0%,100%{opacity:0.15} 50%{opacity:0.55} }
           @keyframes legendIconPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.2)} }
         `}</style>
-        {/* FTUE near-miss pulsing segment — shows gap from current fill to next tier */}
-        {ftuePulseNearMiss && fptNeeded > 0 && displayPct < 99 && (() => {
-          const nextTierPct = Math.min(100, displayPct + (fptNeeded / tierTop) * 100);
-          const gapWidth = Math.max(1, nextTierPct - displayPct);
-          return (
-            <div style={{
-              position: "absolute", left: `${displayPct}%`, top: 0, bottom: 0,
-              width: `${gapWidth}%`,
-              background: "linear-gradient(90deg, #C084FC33, #C084FC88)",
-              borderRadius: "0 6px 6px 0",
-              animation: "nearMissPulse 1.0s ease-in-out infinite",
-            }} />
-          );
-        })()}
       </div>
     </div>
   );
@@ -1067,7 +1039,7 @@ function CoinFlyFromPoint({
 
 // ── CelebrationBottom ────────────────────────────────────────────────────────
 
-function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebration: CelebrationData; onDismiss: () => void; isFTUE?: boolean }) {
+function CelebrationBottom({ celebration, onDismiss }: { celebration: CelebrationData; onDismiss: () => void }) {
   const [visible, setVisible] = useState(false);
   const copy = getStreakCopy(celebration.streak, celebration.isBust);
 
@@ -1099,37 +1071,26 @@ function CelebrationBottom({ celebration, onDismiss, isFTUE = false }: { celebra
         borderRadius: 10, padding: "12px 14px",
       }}>
         <div style={{ display: "flex", gap: 4, flexShrink: 0, alignItems: "center" }}>
-          {isFTUE ? (
-            // FTUE: always show 1 solid + 2 empty dots
-            <>
-              <div style={{ width: 9, height: 9, borderRadius: "50%", background: pipColor, boxShadow: `0 0 7px ${pipGlow}` }} />
-              <div style={{ width: 9, height: 9, borderRadius: "50%", background: "transparent", border: `1.5px solid ${pipColor}55` }} />
-              <div style={{ width: 9, height: 9, borderRadius: "50%", background: "transparent", border: `1.5px solid ${pipColor}55` }} />
-            </>
-          ) : (
-            <>
-              {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_: unknown, i: number) => (
-                <div key={i} style={{
-                  width: 9, height: 9, borderRadius: "50%",
-                  background: celebration.streak === 0 ? "#333" : pipColor,
-                  boxShadow: celebration.streak === 0 ? "none" : `0 0 7px ${pipGlow}`,
-                  animation: `pip_in 0.28s ease ${i * 0.06}s both`,
-                }} />
-              ))}
-              {celebration.streak > 6 && (
-                <span style={{ fontSize: 10, color: pipColor, alignSelf: "center", fontFamily: FF, marginLeft: 2 }}>
-                  +{celebration.streak - 6}
-                </span>
-              )}
-            </>
+          {Array.from({ length: Math.max(1, Math.min(celebration.streak, 6)) }).map((_: unknown, i: number) => (
+            <div key={i} style={{
+              width: 9, height: 9, borderRadius: "50%",
+              background: celebration.streak === 0 ? "#333" : pipColor,
+              boxShadow: celebration.streak === 0 ? "none" : `0 0 7px ${pipGlow}`,
+              animation: `pip_in 0.28s ease ${i * 0.06}s both`,
+            }} />
+          ))}
+          {celebration.streak > 6 && (
+            <span style={{ fontSize: 10, color: pipColor, alignSelf: "center", fontFamily: FF, marginLeft: 2 }}>
+              +{celebration.streak - 6}
+            </span>
           )}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: pipColor, fontFamily: FF, lineHeight: 1.2 }}>
-            {isFTUE ? "WIN STREAK STARTED 🔥" : copy.head}
+            {copy.head}
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3, fontFamily: FF }}>
-            {isFTUE ? "Unlock 23-24 Season" : copy.sub}
+            {copy.sub}
           </div>
         </div>
         <div style={{ fontSize: 18, color: "rgba(255,255,255,0.18)", flexShrink: 0 }}>›</div>
@@ -1365,14 +1326,8 @@ export function GameBar({
   betMultiplier, baseBet, onBetMultiplier, onAction,
   winTiers, legend,
   celebration, onWinCelebrationComplete, onWageAnimationComplete,
-  ftueDrawBlocked = false,
-  ftueHideSkip = false,
-  ftuePulseNearMiss = false,
-  ftueReplayBlocked = false,
-  ftueReplayPulse = false,
-  ftueHideBalance = false,
+  replayPulse = false,
   challengeMode = false,
-  dataFtuePrimaryAnchor,
   hideTierBar = false,
   tierGaugeSlot,
   splitFooter,
@@ -1391,8 +1346,7 @@ export function GameBar({
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
-  // has landed on the daily leaderboard (rm_on_board_today === "1"). Hidden
-  // during FTUE (gated on ftueHideSkip).
+  // has landed on the daily leaderboard (rm_on_board_today === "1").
   const trophyOnBoard = (() => {
     if (typeof window === "undefined") return false;
     try { return localStorage.getItem("rm_on_board_today") === "1"; } catch { return false; }
@@ -1410,7 +1364,7 @@ export function GameBar({
         && localStorage.getItem("rm_board_ack") !== "1";
     } catch { return false; }
   })();
-  const TrophyButton = onViewLeaderboard && !ftueHideSkip ? (
+  const TrophyButton = onViewLeaderboard ? (
     <button
       type="button"
       aria-label="View leaderboard"
@@ -1621,7 +1575,7 @@ export function GameBar({
           `}</style>
 
           {/* Streak row — stretched across line, tiers unlock progressively */}
-          {streak != null && !ftueHideSkip && (
+          {streak != null && (
             <div style={{ display: "flex", alignItems: "center", paddingBottom: 4 }}>
               <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} streakTiers={streakTiers} />
             </div>
@@ -1631,7 +1585,7 @@ export function GameBar({
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
             {/* Wallet chip — left. Hidden in challenge mode (no wager). */}
             {!challengeMode && (
-              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: ftueHideBalance ? 0 : 1, transition: "opacity 0.3s ease" }}>
+              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: 1, transition: "opacity 0.3s ease" }}>
                 <span style={{
                   fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
                   color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
@@ -1645,29 +1599,28 @@ export function GameBar({
 
             <button
               onClick={onAction}
-              disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
+              disabled={isDisabled(gameState)}
               data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
-              data-ftue-anchor={dataFtuePrimaryAnchor}
               style={{
                 width: "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",
                 padding: "11px 0",
                 fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
-                background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : ftueReplayBlocked ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD")) ? 0.3 : 1,
-                pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
-                boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                cursor: (isDisabled(gameState)) ? "default" : "pointer",
+                background: (isDisabled(gameState)) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                color: (isDisabled(gameState)) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                opacity: isDisabled(gameState) ? 0.3 : 1,
+                pointerEvents: "auto" as const,
+                boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 300ms ease", lineHeight: 1,
-                animation: ftueReplayPulse ? "ftueReplayPulse 1.2s ease-in-out infinite" : "none",
+                animation: replayPulse ? "replayPulse 1.2s ease-in-out infinite" : "none",
               }}>
-              {ftueReplayPulse && <style>{`@keyframes ftueReplayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
+              {replayPulse && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState)}
             </button>
 
             {/* Legend + trophy — right (both hidden during FTUE) */}
-            <div style={{ position: "absolute", right: 0, display: ftueHideSkip ? "none" : "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
               <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
                 width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
                 background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
@@ -1677,7 +1630,7 @@ export function GameBar({
                 display: "flex", alignItems: "center", justifyContent: "center", padding: 0,
                 animation: legendPulsing ? "iconBlink 1.2s ease-in-out infinite" : "none",
               }}>i</button>
-              {onViewLeaderboard && !ftueHideSkip && (
+              {onViewLeaderboard && (
                 <button
                   type="button"
                   aria-label="View leaderboard"
@@ -1708,7 +1661,7 @@ export function GameBar({
           </div>
         </div>
 
-        {isCelebration && celebration && !ftueHideSkip && (
+        {isCelebration && celebration && (
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", flexDirection: "column",
@@ -1721,7 +1674,6 @@ export function GameBar({
             <CelebrationBottom
               celebration={celebration}
               onDismiss={onWinCelebrationComplete ?? (() => { })}
-              isFTUE={false}
             />
           </div>
         )}
@@ -1785,7 +1737,6 @@ export function GameBar({
             lastCardProgress={lastCardProgress}
             lastCardFp={lastCardFp}
             onOvershootSettled={() => setOvershootSettled(true)}
-            ftuePulseNearMiss={ftuePulseNearMiss}
             challengeTarget={challengeTarget}
           />
         </div>}
@@ -1823,7 +1774,7 @@ export function GameBar({
           }}>
             {!challengeMode && multiplierRow}
 
-            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: (ftueHideBalance || challengeMode) ? 0 : 1, pointerEvents: (ftueHideBalance || challengeMode) ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: challengeMode ? 0 : 1, pointerEvents: challengeMode ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
               {/* Balance — left */}
               <div ref={walletRef} style={{ flexShrink: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -1856,7 +1807,7 @@ export function GameBar({
               </div>
 
               {/* Legend — right (hidden during FTUE) */}
-              {!ftueHideSkip && (
+              {(
                 <button onClick={() => setShowLegend(true)} style={{
                   width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
                   background: "transparent",
@@ -1870,20 +1821,19 @@ export function GameBar({
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
               <button
                 onClick={onAction}
-                disabled={isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked}
+                disabled={isDisabled(gameState)}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
-                data-ftue-anchor={dataFtuePrimaryAnchor}
                 style={{
                   width: "min(168px, 50%)",
                   borderRadius: THEME.button.action.borderRadius, border: "none",
                   padding: "11px 0",
                   fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                  cursor: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "default" : "pointer",
-                  background: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                  color: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                  opacity: (ftueHideSkip && gameState === "REVEALING") ? 0 : (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? 0.3 : 1,
-                  pointerEvents: (ftueHideSkip && gameState === "REVEALING" || ftueReplayBlocked) ? "none" as const : "auto" as const,
-                  boxShadow: (isDisabled(gameState) || (ftueDrawBlocked && gameState === "HOLD") || ftueReplayBlocked) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                  cursor: (isDisabled(gameState)) ? "default" : "pointer",
+                  background: (isDisabled(gameState)) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                  color: (isDisabled(gameState)) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                  opacity: isDisabled(gameState) ? 0.3 : 1,
+                  pointerEvents: "auto" as const,
+                  boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                   transition: "opacity 150ms ease", lineHeight: 1,
                 }}>
                 {actionLabel(gameState)}
@@ -1906,7 +1856,6 @@ export function GameBar({
               <CelebrationBottom
                 celebration={celebration}
                 onDismiss={onWinCelebrationComplete ?? (() => { })}
-                isFTUE={ftueHideSkip}
               />
             </div>
           )}
