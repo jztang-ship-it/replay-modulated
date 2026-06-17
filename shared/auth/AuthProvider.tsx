@@ -2,7 +2,29 @@ import { createContext, useEffect, useState, useRef, type ReactNode } from "reac
 import { supabase } from "@shared/lib/supabase";
 import type { User, AuthError } from "@supabase/supabase-js";
 import { setAuthUid, getNickname } from "@shared/utils/playerIdentity";
-import { track } from "@shared/analytics/analytics";
+import { track, identify } from "@shared/analytics/analytics";
+
+// Tier-1b.1: bridges the anon distinct_id across an OAuth full-page redirect.
+// Written before signInWithOAuth navigates away (the redirect tears down the
+// React tree, so in-memory state is lost), then read by the post-redirect
+// SIGNED_IN handler to stitch the anon identity to the new authed uuid.
+const PENDING_ALIAS_KEY = "replaymod_pending_alias_anon_id";
+
+// The localStorage key analytics actually attributes events to (see
+// playerIdentity.getPlayerUid / analytics construction). We persist THIS
+// value — not getPlayerUid(), which can return the anon Supabase uuid once
+// the anon session resolves — so $anon_distinct_id matches what pre-redirect
+// events were sent under.
+const RM_UID_KEY = "rm_uid";
+
+// Snapshot the anon distinct_id into the pending-alias key immediately before
+// an OAuth redirect, so the post-redirect SIGNED_IN handler can stitch it.
+function persistPendingAlias(): void {
+  try {
+    const anonId = localStorage.getItem(RM_UID_KEY);
+    if (anonId) localStorage.setItem(PENDING_ALIAS_KEY, anonId);
+  } catch { /* localStorage unavailable — stitch silently skipped */ }
+}
 
 export interface AuthContextValue {
   user: User | null;
@@ -290,6 +312,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
             const provider = session.user.app_metadata?.provider ?? "unknown";
             track("auth", "signin_success", { provider });
+            // Tier-1b.1: complete an OAuth-from-anon identity stitch. The
+            // pending key is set pre-redirect (signInGoogle / linkGoogle anon
+            // branch). Idempotent: cleared on first handling, so repeat
+            // SIGNED_IN fires (token refresh) find nothing. No key → returning
+            // user signing in fresh → do nothing. Same id → clear, no alias.
+            try {
+              const pendingAnonId = localStorage.getItem(PENDING_ALIAS_KEY);
+              if (pendingAnonId) {
+                if (pendingAnonId !== session.user.id) identify(session.user.id, pendingAnonId);
+                localStorage.removeItem(PENDING_ALIAS_KEY);
+              }
+            } catch { /* localStorage unavailable — stitch silently skipped */ }
             // Phase 5b piece 1 — Item B B5 (2026-05-28, doc lock edc58d9):
             // anon→signed-in transition promotes any local FTUE-completion
             // to the server-side profile so the user doesn't re-see FTUE
@@ -390,15 +424,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const wasAnonymous = currentUser?.is_anonymous ?? false;
 
     let error: AuthError | null;
+    // The authed uid this signup resolves to — captured so analytics can
+    // stitch the prior anon distinct_id to it (Tier-1b identity continuity).
+    let newUid: string | null = null;
     if (currentUser && wasAnonymous) {
       // Upgrade the existing anonymous user → permanent email user.
       const res = await supabase.auth.updateUser({ email, password });
       error = res.error;
+      newUid = res.data.user?.id ?? currentUser.id;
       console.info("[auth] signUp via updateUser (upgrade anon) →", error ? `ERR ${error.message}` : "OK");
     } else {
       // No session, or session is already a permanent user → create a fresh user.
       const res = await supabase.auth.signUp({ email, password });
       error = res.error;
+      newUid = res.data.user?.id ?? null;
       console.info("[auth] signUp via signUp (new user) →", error
         ? `ERR ${error.message}`
         : { id: res.data.user?.id, email: res.data.user?.email, confirmed: !!res.data.user?.email_confirmed_at });
@@ -409,6 +448,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!error) {
+      // Stitch pre-signup (anon) events to this authed id BEFORE the signup
+      // events fire, so PostHog treats the whole journey as one person and
+      // the Q1 funnel (first-time player → challenge sent) doesn't fracture
+      // across the anon→authed boundary. No-op if the id is unchanged.
+      if (newUid) identify(newUid);
       track("auth", "signup_email", { from_anonymous: wasAnonymous, hand_number: handCountForAuthEvent() });
       if (wasAnonymous) track("auth", "account_linked_from_anon", { method: "email", hand_number: handCountForAuthEvent() });
     } else {
@@ -442,6 +486,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const linkGoogle = async () => {
     const wasAnonymous = user?.is_anonymous ?? true;
     if (wasAnonymous) {
+      persistPendingAlias(); // Tier-1b.1: stitch anon → authed across the redirect
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: oauthRedirectUrl() },
@@ -467,6 +512,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    // TODO (analytics identity, deferred): do NOT add identify() here to
+    // stitch anon→authed on sign-IN. rm_uid persists in localStorage across
+    // users on a shared device, so stitching on sign-in could merge two
+    // distinct accounts into one PostHog person. Proper fix = rotate rm_uid
+    // on signOut FIRST (so each sign-in starts from a clean anon id), then
+    // stitch here. Until rm_uid rotation lands, sign-in stays unstitched.
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) track("auth", "signin_email", {});
     else track("auth", "signin_email_failed", { reason: error.message });
@@ -474,6 +525,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInGoogle = async () => {
+    persistPendingAlias(); // Tier-1b.1: stitch anon → authed across the redirect
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: oauthRedirectUrl() },
