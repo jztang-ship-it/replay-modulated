@@ -50,7 +50,6 @@ export type RosterGridCardProps = {
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
-  isFTUE?: boolean;
   /** Top Games tier for this card. null = no Top Games visual. */
   topGameTier?: TopGameTier | null;
   /** Top Games full result (tier + primaryReason). Used by the back-of-card
@@ -78,8 +77,6 @@ type Props = {
   shakingCardId?: string | null;
   shakeType?: ShakeType | null;
   cardShakeTypeMap?: Map<string, ShakeType | null>;
-  /** FTUE: slot indices to dim (all except the anchor) */
-  ftueDimmedSlots?: Set<number>;
   visibleBadgesMap?: Map<string, Array<{ id: string; icon: string; label: string; fp: number }>>;
   activeRevealCardId?: string | null;
   canFlip: boolean;
@@ -94,15 +91,10 @@ type Props = {
   heldRevealedIds?: Set<string>;
   tappedCardIds?: Set<string>;
   isRevealingPhase?: boolean;  // true when gameState === "REVEALING"
-  isFTUEHoldPhase?: boolean;   // true when isFTUE && gameState === "HOLD"
-  isFTUEDrawingPhase?: boolean; // true when isFTUE && gameState === "DRAWING"
   glowCardId?: string | null;
   glowTier?: string;
   glowDurationMs?: number;
   isSkipping?: boolean;
-  ftueLockedSlot?: number | null;  // FTUE: slot index that stays lit; all others dim
-  ftueFlipTargetId?: string | null; // FTUE: show TAP hint on this card in RESULTS
-  isFTUE?: boolean; // FTUE: gold pulse on card backs
   /** basePlayerId of the star card (if any). Used to pick which card receives topGameTier. */
   topGameStarBasePlayerId?: string | null;
   /** Top Games tier for the star card. Non-star cards always receive null. */
@@ -123,11 +115,10 @@ export function RosterGrid(props: Props) {
     flippedIds, revealingIds, noTransition,
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
-    shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId, ftueDimmedSlots,
-    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false, isFTUEHoldPhase = false, isFTUEDrawingPhase = false, ftueLockedSlot = null, ftueFlipTargetId = null,
+    shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId,
+    revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false,
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
-    isFTUE = false,
     topGameStarBasePlayerId = null,
     topGameTier = null,
     topGameResult = null,
@@ -172,11 +163,8 @@ export function RosterGrid(props: Props) {
         const wasHeld = (card as any).wasHeld === true;
         const isTapped = tappedCardIds?.has(id) ?? false;
         // In tap mode during REVEALING: unheld untapped cards are tappable
-        const isTapTarget = (revealMode === "tap" && isRevealingPhase
-          && !wasHeld && !isTapped)
-          || (ftueFlipTargetId !== null && id === ftueFlipTargetId)
-          || (isFTUEHoldPhase && !wasHeld)
-          || (isFTUEDrawingPhase && !wasHeld);
+        const isTapTarget = revealMode === "tap" && isRevealingPhase
+          && !wasHeld && !isTapped;
         // Per-card: held card FP shows when its ID is in heldRevealedIds OR
         // when heldFpVisible is true (set by skip path after rollup completes)
         const thisHeldRevealed = wasHeld && ((heldRevealedIds?.has(id) ?? false) || (heldFpVisible ?? false));
@@ -213,9 +201,6 @@ export function RosterGrid(props: Props) {
               cursor: isTapTarget ? "pointer" : "default",
               boxShadow: "none",
               transition: "box-shadow 300ms ease",
-              ...(ftueLockedSlot !== null && (card.slotIndex ?? 0) !== ftueLockedSlot
-                ? { opacity: 0.18, pointerEvents: "none" as const }
-                : {}),
             }}
           >
             {/* Dim overlay — sits above 3D card as a sibling, never touches preserve-3d */}
@@ -281,7 +266,6 @@ export function RosterGrid(props: Props) {
                 ) : 0
               }
               isDimmed={isDimmed}
-              isFTUE={isFTUE && !isFlipped && !isRevealing}
               topGameTier={cardTopGameTier}
               topGameResult={cardTopGameResult}
             />

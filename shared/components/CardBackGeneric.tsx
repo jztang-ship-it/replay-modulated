@@ -12,10 +12,9 @@ import React from "react";
 type Props = {
   isFlipping?: boolean;
   isTapTarget?: boolean;
-  isFTUE?: boolean;
 };
 
-export function CardBackGeneric({ isFlipping, isTapTarget = false, isFTUE = false }: Props) {
+export function CardBackGeneric({ isFlipping, isTapTarget = false }: Props) {
   return (
     <div
       style={{
@@ -26,23 +25,15 @@ export function CardBackGeneric({ isFlipping, isTapTarget = false, isFTUE = fals
         background: "linear-gradient(160deg, #1A2540 0%, #111828 50%, #0C1220 100%)",
         boxShadow: isFlipping
           ? "0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(255,177,74,0.12)"
-          : isFTUE
-            ? "0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.6)"
-            : "0 8px 24px rgba(0,0,0,0.4)",
+          : "0 8px 24px rgba(0,0,0,0.4)",
         transition: "box-shadow 300ms ease",
-        animation: isFTUE && !isFlipping ? "ftueCardPulse 1.4s ease-in-out infinite" : "none",
+        animation: "none",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      {isFTUE && !isFlipping && (
-        <style>{`@keyframes ftueCardPulse {
-          0%,100% { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.5); }
-          50%      { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,177,74,1), 0 0 18px rgba(255,177,74,0.5); }
-        }`}</style>
-      )}
       {/* Diamond grid pattern */}
       <div
         style={{

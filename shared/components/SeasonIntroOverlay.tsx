@@ -22,13 +22,11 @@ import { useEffect, useState } from "react";
 type Props = {
   seasonLabel: string;
   introText: string;
-  /** When true, append the FTUE-only "tap the gold icon" coaching line. */
-  showFtueFollowup?: boolean;
   /** Called when the user dismisses (tap anywhere / tap the button). */
   onDismiss: () => void;
 };
 
-export function SeasonIntroOverlay({ seasonLabel, introText, showFtueFollowup, onDismiss }: Props) {
+export function SeasonIntroOverlay({ seasonLabel, introText, onDismiss }: Props) {
   // Tiny mount-in delay so the overlay doesn't read as a jump-cut from the reel.
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -95,23 +93,6 @@ export function SeasonIntroOverlay({ seasonLabel, introText, showFtueFollowup, o
       }}>
         {introText}
       </div>
-
-      {/* FTUE-only follow-up — appears below the intro with a slight delay */}
-      {showFtueFollowup && (
-        <div style={{
-          maxWidth: 520,
-          marginTop: 6,
-          fontSize: 14,
-          lineHeight: 1.5,
-          fontWeight: 600,
-          color: "rgba(255,215,0,0.9)",
-          textAlign: "center",
-          opacity: ready ? 1 : 0,
-          transition: "opacity 260ms ease 220ms",
-        }}>
-          Alright, you're in. Tap the gold ⓘ icon any time to see the scoring rules.
-        </div>
-      )}
 
       {/* Hint to dismiss */}
       <div style={{

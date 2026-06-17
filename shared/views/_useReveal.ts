@@ -91,10 +91,6 @@ export interface UseRevealArgs {
     streak: number,
   ) => number;
 
-  /** FTUE anchor card ID (basketball: "ftue-tatum"; baseball: "ftue-ohtani").
-   *  Used by onCardComplete to start gauge oscillation when the anchor's
-   *  stamp lands. */
-  ftueAnchorId: string;
   /** Current bet (BASE_BET * betMultiplier in basketball). */
   currentBet: number;
   /** Bet multiplier (passed separately for engagement.recordMultiplierUsed). */
@@ -103,11 +99,6 @@ export interface UseRevealArgs {
   // ── Roster / FTUE refs ──────────────────────────────────────────────
   /** Mutable ref containing the live roster (resolved actualFp). */
   rosterRef: React.MutableRefObject<PlayerCard[]>;
-
-  /** isFTUE flag, lifted from useFTUE. */
-  isFTUE: boolean;
-  /** Ref for FTUE last-hand FP — written here, read by other UI. */
-  ftueLastHandFpRef: React.MutableRefObject<number>;
 
   /** True when the user is anonymous (no auth) — gates big-win nudges. */
   isAnonymous: boolean;
@@ -186,10 +177,8 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     adapter, state,
     springTiers = DEFAULT_SPRING_TIERS,
     calculateWinTier, calculatePayoutWithStreak,
-    ftueAnchorId,
     currentBet, betMultiplier,
     rosterRef,
-    isFTUE, ftueLastHandFpRef,
     isAnonymous, setBigWinFired, setOnBoardTick,
     recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
     recordStreakWin, recordStreakBust, recordBonusPlayerUsed, recordMultiplierUsed,
@@ -202,7 +191,6 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
   const {
     streak, handCount,
     setRevealedSalary, setRevealIndex, setLastRevealedCardId,
-    setFtueOscillating,
     setSpringFp, setSpringSettled,
     setWinTier, setWinPayout,
     setGameState, setBalance,
@@ -329,13 +317,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
       return next;
     });
     setLastRevealedCardId(cId);
-
-    // FTUE: start gauge oscillation shortly after the sport's anchor card
-    // lands its stamp (Tatum for basketball, Ohtani for baseball).
-    if (isFTUE && cId === ftueAnchorId) {
-      setTimeout(() => setFtueOscillating(true), 100);
-    }
-  }, [isFTUE, ftueAnchorId, rosterRef, setRevealIndex, setLastRevealedCardId, setFtueOscillating]);
+  }, [rosterRef, setRevealIndex, setLastRevealedCardId]);
 
   // ── onAnchorFpComplete ─────────────────────────────────────────────
   const onAnchorFpComplete = useCallback((_hookTotal: number) => {
@@ -410,27 +392,14 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
 
       // Multiplier used this hand
       recordMultiplierUsed(betMultiplier);
-      if (isFTUE) {
-        // FTUE: same flow as real game — WIN_CELEBRATION triggers wage animation
-        ftueLastHandFpRef.current = totalFp;
-        pendingBalanceUpdateRef.current = () => {
-          if (payout > 0) {
-            setBalance(prev => { const next = prev + payout; persistBalance(next); return next; });
-          }
-        };
-        const t = window.setTimeout(() => {
-          setGameState("WIN_CELEBRATION");
-        }, 1200);
-        springTimersRef.current.push(t);
-      } else {
+      {
         // Increment the persistent hand counter at hand-resolution — single
         // source of truth, independent of which user-action path exits
         // WIN_CELEBRATION later. Prior site (onWinCelebrationComplete) was
         // bypassed when the user advanced via the action/play-again button
         // instead of tapping the celebration area, leaving all handCount-
         // gated surfaces (name_prompt, chad nudges, PWA install prompt,
-        // first_share_invitation, etc.) silently broken. FTUE hands stay
-        // excluded — the outer if (isFTUE) above gates this branch.
+        // first_share_invitation, etc.) silently broken.
         incrementHandCount();
         pendingBalanceUpdateRef.current = () => {
           if (payout > 0) {
@@ -505,8 +474,8 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     });
   }, [
     adapter,
-    isFTUE, currentBet, betMultiplier, streak, handCount, isAnonymous,
-    rosterRef, ftueLastHandFpRef,
+    currentBet, betMultiplier, streak, handCount, isAnonymous,
+    rosterRef,
     runSpring, calculateWinTier, calculatePayoutWithStreak,
     setWinTier, setWinPayout, setBalance, persistBalance, setGameState,
     submitToLeaderboard, checkLeaderboardRank, logHandToDb,

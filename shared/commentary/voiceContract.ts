@@ -247,8 +247,8 @@ REGISTER: A plain, observational line about THIS hand that a smart sports fan wo
  *  trims.
  *
  *  Also retires the pre-Phase-4 "to" mis-key: source statLines carry
- *  "turnovers" (basketballConfig.projectionWeights, ftueRoster fixtures,
- *  computeBasketballFp), but the prior order list used "to" and silently
+ *  "turnovers" (basketballConfig.projectionWeights, computeBasketballFp),
+ *  but the prior order list used "to" and silently
  *  routed turnovers to a tail bucket of unweighted stats. The allowlist
  *  now reads the source key the FP formula uses ("turnovers"), so the
  *  rendered statLine and the salience signal agree on the key name. */

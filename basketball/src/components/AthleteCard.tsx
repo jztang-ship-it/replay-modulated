@@ -417,7 +417,6 @@ type Props = {
   onRollComplete?: () => void;
   heldFpVisible?: boolean;
   isTapTarget?: boolean;
-  isFTUE?: boolean;
   glowActive?: boolean;
   glowTier?: string;
   glowDurationMs?: number;
@@ -467,7 +466,7 @@ const SCALAR_KEYS: Array<keyof Props> = [
   "isRevealing", "visibleFp", "visibleBadgeCount", "noTransition",
   "flipDurationMs", "fpCountUpMs", "performanceTag", "pulse", "shakeType",
   "cardShakeType", "isSpotlight", "spotlightLevel", "isDimmed",
-  "heldFpVisible", "isTapTarget", "isFTUE", "glowActive", "glowTier",
+  "heldFpVisible", "isTapTarget", "glowActive", "glowTier",
   "glowDurationMs", "topGameTier",
 ];
 

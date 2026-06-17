@@ -78,15 +78,10 @@ type Props = {
    *  snapshot resolve correctly). Caller passes `challengeCtx?.season`
    *  here when in challenge mode. */
   bypassSeasonKey?: string | null;
-  /** When true, append the FTUE follow-up line to the intro overlay
-   *  ("Tap the gold icon to see the scoring rules"). Set true on the
-   *  first hand after FTUE completes so the user sees the rules pointer
-   *  exactly once. Returning users get the intro without the follow-up. */
-  showFtueIntroFollowup?: boolean;
   children: React.ReactNode;
 };
 
-export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSeasonKey = null, showFtueIntroFollowup = false, children }: Props) {
+export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSeasonKey = null, children }: Props) {
   const [manifest, setManifest] = useState<SeasonsManifest | null>(null);
   const [pick, setPick] = useState<SeasonManifestEntry | null>(null);
   // null = unresolved; true = show reel; false = skip reel
@@ -242,8 +237,7 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
     );
   }
 
-  // Season intro overlay — shows once after the reel lands. FTUE users get
-  // an additional "tap the gold icon" follow-up paragraph.
+  // Season intro overlay — shows once after the reel lands.
   if (showIntro && pick) {
     const introText = (seasonIntros as Record<string, string>)[pick.key]
       ?? `Today we're going back to ${pick.label}. Good luck.`;
@@ -253,7 +247,6 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
         <SeasonIntroOverlay
           seasonLabel={pick.label}
           introText={introText}
-          showFtueFollowup={showFtueIntroFollowup}
           onDismiss={() => setShowIntro(false)}
         />
       </>

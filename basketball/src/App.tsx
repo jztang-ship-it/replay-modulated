@@ -22,7 +22,6 @@ import HeadlineMockRoute from "./dev/HeadlineMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { useFTUE } from "@shared/hooks/useFTUE";
 import { AuthProvider } from "@shared/auth/AuthProvider";
 import { useAuth } from "@shared/auth/useAuth";
 import { RegisterModal } from "@shared/components/RegisterModal";
@@ -62,8 +61,6 @@ function getProfileUserId(): string | null {
   const match = window.location.pathname.match(/\/basketball\/profile\/([0-9a-f-]{36})/);
   return match ? match[1] : null;
 }
-
-const FTUE_INTRO_FOLLOWUP_KEY = "replaymod_ftue_intro_followup_seen_basketball";
 
 /** Walk the rm_challenge_attempted_<uuid> markers in localStorage and
  *  return one of them. Order is insertion-order on most browsers, so
@@ -122,33 +119,7 @@ function AppInner() {
     return <HeadlineMockRoute />;
   }
 
-  const { isFTUE } = useFTUE(SPORT);
   const challengeIdFromUrl = getChallengeId();
-  const [showFtueIntroFollowup] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      // QA bypass — same params as useFTUE. When a tester is on
-      // `?skipFtue=1` / `?skip_ftue=1` / `?debug=1`, suppress the
-      // followup prompt this session too. We deliberately don't
-      // touch FTUE_INTRO_FOLLOWUP_KEY here — the persistence happens
-      // in the QA-shortcut effect below so all writes live in one
-      // place.
-      const sp = new URLSearchParams(window.location.search);
-      if (sp.get("skipFtue") === "1" || sp.get("skip_ftue") === "1" || sp.get("debug") === "1") {
-        return false;
-      }
-      // Challenge acceptors don't see the followup THIS session — but leave
-      // the seen flag alone so a fresh non-challenge hand later still fires it.
-      if (challengeIdFromUrl) return false;
-      const ftueDone = localStorage.getItem("replaymod_ftue_basketball") === "1";
-      const followupSeen = localStorage.getItem(FTUE_INTRO_FOLLOWUP_KEY) === "1";
-      if (ftueDone && !followupSeen) {
-        localStorage.setItem(FTUE_INTRO_FOLLOWUP_KEY, "1");
-        return true;
-      }
-    } catch { /* ignore */ }
-    return false;
-  });
   const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const profileUserId = getProfileUserId();
   const [challengeCtx, setChallengeCtx] = useState<ChallengeCtx | null>(null);
@@ -181,7 +152,6 @@ function AppInner() {
     shareHeadline: string;
   } | null>(null);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
-  const skipFTUE = isAuthenticated && !isAnonymous;
   const showDebug = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
 
@@ -198,14 +168,13 @@ function AppInner() {
     try { return localStorage.getItem(SKIP_LANDING_KEY) === "1"; } catch { return false; }
   })();
 
-  // First-timers see the landing page. Veterans skip straight to game.
-  // Challenge URL visitors always skip landing — the ChallengeLandingScreen
-  // overlay is their accept surface; the marketing landing has no role.
-  const [view, setView] = useState<"landing" | "game">(
-    challengeIdFromUrl
-      ? "game"
-      : (isFTUE && !skipFTUE && !skipLanding) ? "landing" : "game"
-  );
+  // FTUE removed (feat/kill-ftue-real-game): the marketing landing interstitial
+  // was gated on the first-time-user flag (anon first-timers). With FTUE gone, the daily season
+  // reel is the front door for everyone, so the initial view is always "game"
+  // (the reel gate renders inside it). The `view === "landing"` branch +
+  // LandingPage are left intact for a possible future re-enable; nothing
+  // auto-routes to them now.
+  const [view, setView] = useState<"landing" | "game">("game");
 
   // Modal/overlay state lifted to App level so it overlays both landing
   // and game views, AND so query-param entry points (?signin=1 from the
@@ -233,35 +202,6 @@ function AppInner() {
     const remaining = sp.toString();
     const next = remaining ? `${window.location.pathname}?${remaining}` : window.location.pathname;
     window.history.replaceState({}, "", next);
-  }, []);
-
-  // QA shortcut: any of `?skipFtue=1`, `?skip_ftue=1`, or `?debug=1`
-  // marks the basketball FTUE flags done in localStorage, dropping
-  // straight into normal play on this load and on every subsequent
-  // reload from the same browser — even without the param. Bypasses
-  // both the main FTUE flow (CoachLayer overlays, tutorial state,
-  // payout adjustments via useFTUE) AND the "Look who decided to
-  // play for real" intro followup. `?debug=1` is bundled because
-  // testers always want the debug panel + FTUE-off together.
-  //
-  // Use `?ftue=1` to reset: clears both flags so the next load runs
-  // the full FTUE again. Symmetric with the bypass.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const sp = new URLSearchParams(window.location.search);
-    const skip = sp.get("skipFtue") === "1" || sp.get("skip_ftue") === "1" || sp.get("debug") === "1";
-    if (skip) {
-      try {
-        localStorage.setItem(`replaymod_ftue_${SPORT}`, "1");
-        localStorage.setItem(FTUE_INTRO_FOLLOWUP_KEY, "1");
-      } catch { /* ignore */ }
-    }
-    if (sp.get("ftue") === "1") {
-      try {
-        localStorage.removeItem(`replaymod_ftue_${SPORT}`);
-        localStorage.removeItem(FTUE_INTRO_FOLLOWUP_KEY);
-      } catch { /* ignore */ }
-    }
   }, []);
 
   const handlePlay = () => {
@@ -312,9 +252,9 @@ function AppInner() {
           fontSize: 10, padding: "6px 8px", lineHeight: 1.4, wordBreak: "break-all",
           pointerEvents: "none",
         }}>
-          isAnon={String(isAnonymous)} | view={view} | skipFTUE={String(skipFTUE)} | skipLanding={String(skipLanding)} | isFTUE={String(isFTUE)}<br/>
+          isAnon={String(isAnonymous)} | view={view} | skipLanding={String(skipLanding)}<br/>
           uid={uid?.slice(0, 16) || "none"} | email={user?.email || "none"} | confirmed={user?.email_confirmed_at ? "Y" : "N"} | provider={(user?.app_metadata as any)?.provider || "none"}<br/>
-          stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"} | ftueDone={typeof window !== "undefined" ? localStorage.getItem("replaymod_ftue_basketball") || "unset" : "ssr"}
+          stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"}
         </div>
       )}
       {/* ?debug=1 challenge overlay — renders on every route, not just
@@ -417,7 +357,7 @@ function AppInner() {
         />
       ) : (
         <DailySeasonReelGate
-          bypass={isFTUE || !!challengeCtx}
+          bypass={!!challengeCtx}
           /* Recipients of a challenge link skip the reel for the whole
              session — pre-Accept they're on the landing screen which has
              its own era caption (data.share_headline above the score),
@@ -435,7 +375,6 @@ function AppInner() {
              bypass passes null here so the gate falls back to its
              FTUE_SEASON_KEY default. */
           bypassSeasonKey={challengeCtx?.season ?? null}
-          showFtueIntroFollowup={showFtueIntroFollowup}
         >
           <GameView
             challengeCtx={challengeCtx ?? undefined}
