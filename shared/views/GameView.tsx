@@ -419,9 +419,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     dealInitialRoster,
     redrawRoster,
     resolveRoster,
-    ftueDealRoster,
-    ftueRedrawRoster,
-    ftueResolveRoster,
     getTodaysStars,
     computeRosterCeiling,
     CardComponent,
@@ -608,17 +605,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   }, [user, isAnonymous, bellOpen]);
 
   const [gameError, setGameError] = useState<string | null>(null);
-  const { isFTUE: isFTUERaw, completeFTUE } = useFTUE(sportKey);
-  // Challenge acceptors bypass FTUE entirely — drop straight into the deal.
-  const isFTUE = isFTUERaw && !challengeCtx;
-  const isFTUERef = useRef(isFTUE);
-  useEffect(() => { isFTUERef.current = isFTUE; }, [isFTUE]);
+  const { completeFTUE } = useFTUE(sportKey);
+  // FTUE removed (slice 1): permanently false. Kept as a constant only until
+  // the last FTUE reads (CoachLayer mount in step 4, child ftue* props in
+  // step 6) are stripped — then this and completeFTUE go too.
+  const isFTUE = false;
   const coachDismissRef = useRef<(() => void) | null>(null);
   const initialRosterRef = useRef<import("@shared/types/index").GeneratedCard[]>([]);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
     if (typeof window === "undefined") return false;
-    if (localStorage.getItem(`replaymod_ftue_${sportKey}`) !== "1") return false;
     const today = new Date().toISOString().slice(0, 10);
     const seenToday = localStorage.getItem("replaymod_legend_seen_date") === today;
     const introSeen = localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1";
@@ -651,7 +647,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   }, [gameState]);
 
   useEffect(() => {
-    if (isFTUE) return;
     if (gameState !== "IDLE") return;
     if (localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1") return;
     // Challenge acceptors get their own intro chip instead. Skip firing
@@ -662,7 +657,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
-  }, [isFTUE, gameState]); // eslint-disable-line
+  }, [gameState]); // eslint-disable-line
 
   // ── Challenge mode: auto-deal on accept + intro chip ──
   // Accept Challenge → instant deal. No DEAL button tap required.
@@ -831,14 +826,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // (their first impression of the game shouldn't be a tutorial-style
   // Chad nudge about ROOKIE tier rules). onChallengeUrl covers pre-Accept.
   useEffect(() => {
-    if (isFTUE || challengeCtx || onChallengeUrl) return;
+    if (challengeCtx || onChallengeUrl) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (winTier !== "ROOKIE") return;
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
     localStorage.setItem("rm_usher_rookie_first_win", "1");
     setLegendGold(true);
     setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win")], sticky: true });
-  }, [gameState, winTier, isFTUE, challengeCtx]); // eslint-disable-line
+  }, [gameState, winTier, challengeCtx]); // eslint-disable-line
 
   // All other Chad messages — evaluated once per IDLE.
   // Challenge recipients don't see retention/auth-nudge Chad lines — the
@@ -846,7 +841,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // challenge flow. onChallengeUrl gate covers pre-Accept (challengeCtx
   // null but landing screen open).
   useEffect(() => {
-    if (isFTUE || challengeCtx || onChallengeUrl || gameState !== "IDLE") return;
+    if (challengeCtx || onChallengeUrl || gameState !== "IDLE") return;
     // OAuth-resume race guard (build lock rev 3): skip the entire chad
     // pass while a resume payload is queued. The chained
     // tryOpenAuthModal at ~:872 below is fire-and-forget — its cleanup
@@ -912,7 +907,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       }
       return;
     }
-  }, [gameState, handCount, isFTUE, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
+  }, [gameState, handCount, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
 
   // [Auth:challenge-skip] Auth nudge — MVP+ hand while anonymous.
   // Challenge recipients are guests landing through a deep link — pushing a
@@ -934,19 +929,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // nudge IS cancelled), but the belt-and-suspenders check keeps the
     // intent local to this gate. Skip ordering matches the existing
     // !isAnonymous gate's intent.
-    if (!isAnonymous || isFTUE || challengeCtx || onChallengeUrl || hasPendingResumeShare()) return;
+    if (!isAnonymous || challengeCtx || onChallengeUrl || hasPendingResumeShare()) return;
     if (gameState !== "IDLE") return;
     if (winTier !== "MVP" && winTier !== "LEGEND") return;
     return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
+  }, [winTier, isAnonymous, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
 
   // Auth nudge — fallback at hand 5. Same challenge-mode skip as above.
   useEffect(() => {
-    if (!isAnonymous || isFTUE || challengeCtx || onChallengeUrl || hasPendingResumeShare()) return;
+    if (!isAnonymous || challengeCtx || onChallengeUrl || hasPendingResumeShare()) return;
     if (gameState !== "IDLE") return;
     if (handCount < 5) return;
     return tryOpenAuthModal("hand_5", 3500);
-  }, [handCount, isAnonymous, isFTUE, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
+  }, [handCount, isAnonymous, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
@@ -957,7 +952,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // effect so the burst lands on IDLE after the share prompt dismisses,
   // never during it.
   useEffect(() => {
-    if (isFTUE || challengeCtx || gameState !== "IDLE") return;
+    if (challengeCtx || gameState !== "IDLE") return;
     if (hasPendingResumeShare()) return;
     let onBoard = false;
     let lastCelebrated: string | null = null;
@@ -979,7 +974,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // rm_board_ack alone — it'll re-zero on the next not→on edge.
       try { localStorage.setItem("rm_board_pulsed_state", "0"); } catch { }
     }
-  }, [gameState, handCount, isFTUE, challengeCtx, onBoardTick]);
+  }, [gameState, handCount, challengeCtx, onBoardTick]);
 
   // (prepareChallenge removed in push 2a. Send It Back from the
   // comparison sheet no longer shares from the played hand directly —
@@ -1209,7 +1204,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     return "HOLD";
   }, [gameState]);
 
-  const isPreRevealFooter = gameState === "HOLD" && !isFTUE;
+  const isPreRevealFooter = gameState === "HOLD";
 
   const CELEBRATION_TIER_COLORS: Record<string, { color: string; glow: string }> = {
     LEGEND: { color: "#EF4444", glow: "#EF444499" },
@@ -1261,14 +1256,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
       const sum = roster.reduce((s, c) => s + Number(c.actualFp ?? 0), 0);
       if (sum > 0) return sum;
-      if (isFTUE && ftueLastHandFpRef.current > 0) return ftueLastHandFpRef.current;
       return 0;
     }
     if (gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING") {
       return roster.reduce((sum, c) => sum + ((c as any).fp ?? 0), 0);
     }
     return 0;
-  }, [gameState, runningTotalFp, roster, isFTUE]);
+  }, [gameState, runningTotalFp, roster]);
 
   const ceilingPct = useMemo(() => {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return null;
@@ -1429,9 +1423,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       return postRevealCopyRef.current;
     }
     if ((gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") || !winTier || !springSettled) return null;
-    if (isFTUE) {
-      return null;
-    }
     // Challenge mode: the tactical chad chip + auto-rising comparison sheet
     // own the post-reveal moment. Skip the standard tier commentary so it
     // doesn't speak over the challenge-aware framing.
@@ -1468,7 +1459,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       prevStreak: winTier === "BUST" ? streak : Math.max(0, streak - 1),
       isBust: winTier === "BUST",
       ceilingPct: ceilingPct ?? undefined,
-      isFTUE,
       handCount,
       sport: sportKey,
       topGame: topGameInfo.topGame,
@@ -1609,8 +1599,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Tier result phase
   useEffect(() => {
     if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier) {
-      if (isFTUE && ftueTierSlamPlayedRef.current) return;
-      if (isFTUE) ftueTierSlamPlayedRef.current = true;
       nearMissChoreTimersRef.current.forEach(clearTimeout);
       nearMissChoreTimersRef.current = [];
       setNearMissTeasing(false);
@@ -1627,7 +1615,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       }
       return () => { nearMissChoreTimersRef.current.forEach(clearTimeout); };
     }
-  }, [gameState, winTier, isFTUE]); // eslint-disable-line
+  }, [gameState, winTier]); // eslint-disable-line
 
   const tierFlipTimersRef = useRef<number[]>([]);
 
@@ -1707,8 +1695,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // ── Handlers ──────────────────────────────────────────────────────
   function toggleLock(cardKey: string) {
     if (gameState !== "HOLD") return;
-    if (isFTUE && cardKey !== FTUE_ANCHOR_ID) return;
-    if (isFTUE && cardKey === FTUE_ANCHOR_ID && lockedCardIds.has(cardKey)) return;
     setLockedCardIds(prev => {
       const next = new Set(prev);
       if (next.has(cardKey)) {
@@ -1726,17 +1712,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   function toggleStatsFlip(cardKey: string) {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
-    if (isFTUE && ftueCardsBlocked) return;
-    if (isFTUE && ftueResultsDim && cardKey !== FTUE_ANCHOR_ID) return;
     setStatsFlippedIds(prev => {
       const next = new Set(prev);
       next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
-    if (isFTUE && cardKey === FTUE_ANCHOR_ID) {
-      setFtueAnchorFlipped(true);
-      setFtueAnchorPulse(false);
-    }
   }
 
   async function onPrimaryAction() {
@@ -1792,7 +1772,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // FTUE removed (slice 1): every hand — including hand 1 — deals a
           // real roster. The old `ftueStillActive` localStorage/URL gate that
           // routed first-timers into ftueDealRoster() is gone. It was
-          // INDEPENDENT of isFTUE (the second deal gate), so cutting it here
+          // INDEPENDENT of the FTUE flag (the second deal gate), so cut here
           // is what actually stops the scripted Tatum hand from dealing.
           res = await dealInitialRoster();
         }
@@ -1840,13 +1820,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       await sleep(DRAWING_DWELL_MS);
       let drawRes: any, resolveRes: any;
       try {
-        drawRes = isFTUE
-          ? await ftueRedrawRoster({ currentCards: markedRoster, lockedCardIds })
-          : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+        drawRes = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
         const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-        resolveRes = isFTUE
-          ? await ftueResolveRoster({ finalCards: drawnRoster })
-          : await resolveRoster({ finalCards: drawnRoster });
+        resolveRes = await resolveRoster({ finalCards: drawnRoster });
       } catch {
         setGameError("Something went wrong during the draw. Tap to try again.");
         setGameState("HOLD");
@@ -1904,27 +1880,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
 
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
-      if (isFTUE) {
-        try {
-          localStorage.setItem(`replaymod_ftue_${sportKey}`, "1");
-        } catch { /* ignore */ }
-        gameAnalytics.ftueCompleted();
-        completeFTUE();
-        setFtueCommentaryOverride(null);
-        setFtueCommentaryDone(false);
-        setFtueWinCelebrationActive(false);
-        setFtueReplayReady(false);
-        setFtueAnchorFlipped(false);
-        setFtueAnchorPulse(false);
-        setFtueHoldSpotlight(false);
-        setFtueResultsDim(false);
-        ftueTierSlamPlayedRef.current = false;
-      }
       gameAnalytics.sessionEnd();
       resetReveal();
       resetAllOverlays();
-      ftueLastHandFpRef.current = 0;
-      setFtueGaugeOscDone(false);
       completedCardsRef.current = new Set();
       setRevealedSalary(0);
       deductedSalaryCardsRef.current = new Set();
@@ -1944,42 +1902,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }
 
-  // FTUE: when RESULTS starts, dim non-anchor, fire bubble
-  useEffect(() => {
-    if (!isFTUE || gameState !== "RESULTS") return;
-    setFtueResultsDim(true);
-    setStatsFlippedIds(new Set());
-    const t = setTimeout(() => setFtueWinCelebrationActive(true), 300);
-    return () => {
-      setFtueResultsDim(false);
-      clearTimeout(t);
-    };
-  }, [gameState, isFTUE]); // eslint-disable-line
-
-  useEffect(() => {
-    if (ftueReplayReady) setFtueResultsDim(false);
-  }, [ftueReplayReady]); // eslint-disable-line
-
   function onWinCelebrationComplete() {
-    if (!isFTUE) {
-      // handCount is already post-incremented here — the increment now
-      // fires in _useReveal at hand resolution (single source of truth),
-      // not here. Prior to that move, this branch called
-      // incrementHandCount() inline, but the celebration-area-tap path was
-      // only one of three exits from WIN_CELEBRATION, so handCount-gated
-      // surfaces (this name_prompt, chad nudges, PWA install,
-      // first_share_invitation, etc.) silently never fired for users who
-      // advanced via the action/play-again button.
-      if (handCount >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
-        // Attention mutex: defer to a later IDLE if another surface is
-        // already in-flight. Do NOT set replaymod_name_prompted yet so this
-        // can fire on a subsequent celebration when the moment is clear.
-        setTimeout(() => {
-          if (!tryClaimAttention("name_prompt")) return;
-          localStorage.setItem("replaymod_name_prompted", "true");
-          setShowNamePrompt(true);
-        }, 3500);
-      }
+    // handCount is already post-incremented here — the increment fires in
+    // _useReveal at hand resolution (single source of truth), not here.
+    // handCount-gated surfaces (name_prompt, chad nudges, PWA install,
+    // first_share_invitation, etc.) hang off this path.
+    if (handCount >= 3 && !localStorage.getItem("replaymod_name_prompted")) {
+      // Attention mutex: defer to a later IDLE if another surface is already
+      // in-flight. Do NOT set replaymod_name_prompted yet so this can fire on
+      // a subsequent celebration when the moment is clear.
+      setTimeout(() => {
+        if (!tryClaimAttention("name_prompt")) return;
+        localStorage.setItem("replaymod_name_prompted", "true");
+        setShowNamePrompt(true);
+      }, 3500);
     }
     setWinTier(null);
     setWinPayout(0);
@@ -2023,20 +1959,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       onPrimaryAction();
     }
   }
-
-  // FTUE legendary detection
-  useEffect(() => {
-    if (!isFTUE || gameState !== "REVEALING") return;
-    for (const [cId, tag] of performanceTagMap.entries()) {
-      if (tag === "GREAT") {
-        const card = rosterRef.current.find(c => cardId(c) === cId);
-        if (card && card.name) {
-          setLegendaryCardName(card.name);
-          break;
-        }
-      }
-    }
-  }, [performanceTagMap, gameState, isFTUE]); // eslint-disable-line
 
   // Evaluate challenge trigger at WIN_CELEBRATION entry — winTier is valid here
   // (setWinTier fires 1200ms before setGameState("WIN_CELEBRATION") in _useReveal.ts).
