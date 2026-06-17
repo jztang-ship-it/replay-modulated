@@ -189,6 +189,19 @@ describe("renderDivergenceClause — disagreement, no causal verb, real name (§
     expect(c).not.toContain("Giannis A");
     expect(c.length).toBeGreaterThan(0);
   });
+
+  it("named clause: BOTH punctuation variants renderable (smooth default + beat)", () => {
+    const senderHeld = base({ senderDecision: "hold", receiverDecision: "fade", playerName: "Steph Curry" });
+    // default + explicit smooth → one sentence, em-dash, lowercase "you"
+    expect(renderDivergenceClause(senderHeld, { opponentName: "Jon" })).toBe("Jon kept Steph Curry — you let him go.");
+    expect(renderDivergenceClause(senderHeld, { opponentName: "Jon", namedStyle: "smooth" })).toBe("Jon kept Steph Curry — you let him go.");
+    // beat → two hard sentences
+    expect(renderDivergenceClause(senderHeld, { opponentName: "Jon", namedStyle: "beat" })).toBe("Jon kept Steph Curry. You let him go.");
+    // receiver-held direction, both variants
+    const recvHeld = base({ senderDecision: "fade", receiverDecision: "hold", playerName: "Steph Curry" });
+    expect(renderDivergenceClause(recvHeld, { opponentName: "Jon", namedStyle: "smooth" })).toBe("You held Steph Curry — Jon let him go.");
+    expect(renderDivergenceClause(recvHeld, { opponentName: "Jon", namedStyle: "beat" })).toBe("You held Steph Curry. Jon let him go.");
+  });
 });
 
 describe("validateRivalryClause — one shared-deal identity (§3)", () => {

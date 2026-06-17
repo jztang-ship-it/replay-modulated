@@ -106,15 +106,27 @@ describe("result-congruent clause (§5)", () => {
     expect(r.rivalryClause).not.toBeNull();
     expect(r.rivalryClause).toContain("Nikola Monster");
     expect(r.rivalryClause).toContain("John Tang");   // real opponent name (§9 Step 2)
-    expect(r.rivalryClause).toMatch(/kept .*Nikola Monster.* You let him go/);
+    // smooth named clause (default): one sentence, em-dash, lowercase "you".
+    expect(r.rivalryClause).toMatch(/kept .*Nikola Monster — you let him go\./);
     expect(r.rivalryClause).not.toMatch(/\b(beat|caused|revenge|made him pay|because)\b/i);
+    // STEP 3 sibling: clause fired ⇒ base agency line carries NO flavor tail.
+    expect(r.text).not.toContain("Classic");
+    expect(r.text).not.toMatch(/'s night\./);
   });
 
   it("WIN (agency) surfaces YOUR call that paid off — your hold / their fade", () => {
     const r = explainH2HResult(ON({ ...WIN, initialRoster: winDeal }))!;
     expect(r.rivalryClause).not.toBeNull();
     expect(r.rivalryClause).toContain("Your Guy");
-    expect(r.rivalryClause).toMatch(/You held Your Guy\. John Tang let him go\./);
+    expect(r.rivalryClause).toMatch(/You held Your Guy — John Tang let him go\./); // smooth named (default)
+    expect(r.text).not.toContain("Classic"); // STEP 3: no flavor tail when clause fires
+  });
+
+  it("named-clause punctuation: both variants renderable (smooth default + beat)", () => {
+    const r = explainH2HResult(ON({ ...LOSS, initialRoster: lossDeal }))!;
+    // The composed clause (smooth) for the LOSS path; the beat variant is the
+    // same minus the em-dash join — both available via renderDivergenceClause.
+    expect(r.rivalryClause).toContain(" — you let him go.");
   });
 
   it("image-3: balanced variance WIN (no decisive line) → clause silent", () => {

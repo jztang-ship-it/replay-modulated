@@ -47,6 +47,11 @@ export function explainH2HResult(args: {
   // Threaded into the clause AND the base variance copy when the flag is on;
   // absent → "Mike". Only applied when rivalryEnabled.
   opponentName?: string;
+  // RD8 — non-coincident NAMED clause punctuation: "smooth" (one sentence,
+  // em-dash) | "beat" (two sentences). Default "smooth". The production call site
+  // omits it (uses smooth); the dev demo passes both so the punctuation can be
+  // picked on device. The coincident pronoun (common win) form is unaffected.
+  namedStyle?: "smooth" | "beat";
 }): {
   text: string;
   classification: Classification;
@@ -140,6 +145,11 @@ export function explainH2HResult(args: {
     opponentOutlier: outlier,
     opponentName,   // un-gated
     deltaOnce: true, // un-gated
+    // RD8 composition — the SAME `divergence` computed once above drives both
+    // (a) suppressing the agency nickname tail here and (b) the rivalryClause
+    // below, so the base line and the clause never desync into a hole or three
+    // stapled fragments. Tail dropped only when a clause will actually render.
+    suppressFlavorTail: !!divergence,
   };
   const result = explainResolution(input);
 
@@ -172,7 +182,7 @@ export function explainH2HResult(args: {
     const coincident =
       !!result.classification.decisive &&
       lastName(result.classification.decisive.name) === lastName(divergence.playerName);
-    rivalryClause = renderDivergenceClause(divergence, { coincident, opponentName });
+    rivalryClause = renderDivergenceClause(divergence, { coincident, opponentName, namedStyle: args.namedStyle });
   }
 
   return { ...result, flavorRequest, rivalryClause };

@@ -166,17 +166,27 @@ export function selectDivergence(
  */
 export function renderDivergenceClause(
   d: Divergence,
-  opts?: { coincident?: boolean; opponentName?: string },
+  opts?: { coincident?: boolean; opponentName?: string; namedStyle?: "smooth" | "beat" },
 ): string {
   const coincident = opts?.coincident === true;
   const opp = opts?.opponentName?.trim() || "Mike"; // real challenger name (§9), else "Mike"
+  // NON-coincident NAMED clause punctuation: "smooth" = one sentence (em-dash);
+  // "beat" = two hard sentences. Default smooth. The COINCIDENT pronoun forms
+  // (the common win case) are one short phrase and unaffected.
+  const smooth = (opts?.namedStyle ?? "smooth") === "smooth";
   const receiverHeld = d.receiverDecision === "hold" && d.senderDecision === "fade";
   if (receiverHeld) {
     // You held him; the opponent let him go.
-    return coincident ? `${opp} let him go.` : `You held ${d.playerName}. ${opp} let him go.`;
+    if (coincident) return `${opp} let him go.`;
+    return smooth
+      ? `You held ${d.playerName} — ${opp} let him go.`
+      : `You held ${d.playerName}. ${opp} let him go.`;
   }
   // The opponent kept him; you let him go.
-  return coincident ? `${opp} kept him — you didn't.` : `${opp} kept ${d.playerName}. You let him go.`;
+  if (coincident) return `${opp} kept him — you didn't.`;
+  return smooth
+    ? `${opp} kept ${d.playerName} — you let him go.`
+    : `${opp} kept ${d.playerName}. You let him go.`;
 }
 
 /**

@@ -154,6 +154,22 @@ describe("RD8 — NO opponent-agency in any variance LOSS line (system-variance 
   });
 });
 
+describe("RD8 — suppressFlavorTail drops the agency nickname tail (clause-follows path)", () => {
+  it("A1 win: 'Classic <nick>' present by default, GONE when suppressed; base line intact", () => {
+    const cards = [card({ name: "Nikola Jokić", tier: "RED", salary: 89, wasHeld: true, fp: 113, percentile: 95, poolMedian: 73, nickname: "the Joker" }), ...fill(5)];
+    const on = explainResolution({ yourCards: cards, margin: 35 }).text;
+    const off = explainResolution({ yourCards: cards, margin: 35, suppressFlavorTail: true }).text;
+    expect(on).toContain("Classic the Joker");
+    expect(off).not.toContain("Classic");
+    expect(off).toContain("Jokić");            // the cause line itself survives
+  });
+  it("A2 loss: 'Not <nick>'s night' tail GONE when suppressed", () => {
+    const cards = [card({ name: "Devin Booker", tier: "ORANGE", salary: 62, wasHeld: true, fp: 14, percentile: 6, poolMedian: 50, nickname: "Book" }), ...fill(5)];
+    expect(explainResolution({ yourCards: cards, margin: -12 }).text).toContain("Not Book's night");
+    expect(explainResolution({ yourCards: cards, margin: -12, suppressFlavorTail: true }).text).not.toMatch(/'s night\./);
+  });
+});
+
 describe("lastName", () => {
   it("strips suffixes and keeps the surname", () => {
     expect(lastName("Nikola Jokić")).toBe("Jokić");

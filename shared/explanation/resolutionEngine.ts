@@ -57,6 +57,11 @@ export interface ResolutionInput {
   // margin are suppressed so the margin (and its idea) appears exactly once —
   // the cause/base line owns it. Absent → today's behavior (closers may repeat).
   deltaOnce?: boolean;
+  // RD8 — when a rivalry clause will render after the base line, the agency
+  // nickname flavor tail ("Classic the Joker." / "Not the Joker's night.") is the
+  // orphan between the cause line and the clause. Suppress it so the composed
+  // line reads as two clean parts (cause + clause), not three stapled fragments.
+  suppressFlavorTail?: boolean;
 }
 
 export interface Classification {
@@ -288,7 +293,7 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
   const s = statToken(full, fp, key);
   if (leaf === "A1" || leaf === "A3") {
     const base = pick(WIN_TEMPLATES[leaf], key)(l, s);
-    const nick = d.isStar ? full?.nickname?.trim() : null; // star + nickname only
+    const nick = d.isStar && !input.suppressFlavorTail ? full?.nickname?.trim() : null; // star + nickname only; suppressed when a rivalry clause follows
     // Lowercase a leading article so the nickname reads mid-sentence:
     // "The Joker" → "Classic the Joker." (never "Classic The Joker.").
     const tail = nick ? ` Classic ${nick.replace(/^The\s+/, "the ")}.` : "";
@@ -296,7 +301,7 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
   }
   const base = pick(LOSS_TEMPLATES[leaf], key)(l, s);
   // Flavor only on the bust leaves (A2/A4), star + nickname; A5 stays clean (sympathetic).
-  const nick = (leaf === "A2" || leaf === "A4") && d.isStar ? full?.nickname?.trim() : null;
+  const nick = (leaf === "A2" || leaf === "A4") && d.isStar && !input.suppressFlavorTail ? full?.nickname?.trim() : null;
   const tail = nick ? ` Not ${nick.replace(/^The\s+/, "the ")}'s night.` : "";
   return tail && base.length + tail.length <= TUNING.MAX_CHARS ? base + tail : base;
 }
