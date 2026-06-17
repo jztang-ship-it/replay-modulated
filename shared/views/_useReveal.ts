@@ -399,8 +399,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
         // bypassed when the user advanced via the action/play-again button
         // instead of tapping the celebration area, leaving all handCount-
         // gated surfaces (name_prompt, chad nudges, PWA install prompt,
-        // first_share_invitation, etc.) silently broken. FTUE hands stay
-        // excluded — the outer if (isFTUE) above gates this branch.
+        // first_share_invitation, etc.) silently broken.
         incrementHandCount();
         pendingBalanceUpdateRef.current = () => {
           if (payout > 0) {

@@ -345,7 +345,7 @@ function Typewriter({ text, style, onDone, msPerChar = 25, rush = false, start =
 
 // ── Inline trigger stamps (bucket 2 — S1 slot-split restoration) ─────────
 //
-// Visual idiom adapted from FTUE DEAL/DRAW chips in CoachLayer.tsx
+// Visual idiom: inline DEAL/DRAW-style chips
 // (inline-block, fontWeight 900, fontSize 11, letterSpacing .10em,
 // uppercase, lineHeight 1.2, vertical-align middle). Per-trigger color
 // palette mirrors the win-tier panel TeamStamp so inline + panel stamps
