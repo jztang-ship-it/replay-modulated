@@ -1765,17 +1765,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       ftueLastHandFpRef.current = 0;
-      const ftueStillActive = (() => {
-        try {
-          const params = new URLSearchParams(window.location.search);
-          if (params.get("ftue") === "1") return true;
-          if (params.get("skip") === "1") return false;
-          if (localStorage.getItem(`replaymod_ftue_${sportKey}`) === "1") return false;
-          return true;
-        } catch {
-          return true;
-        }
-      })();
       let res: any;
       try {
         // Challenge snapshot replay requires BOTH: a present challengeCtx
@@ -1800,7 +1789,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           challengeNextDealRef.current = false;
         } else {
           if (challengeCtx) clearChallengeCtx?.();
-          res = ftueStillActive ? await ftueDealRoster() : await dealInitialRoster();
+          // FTUE removed (slice 1): every hand — including hand 1 — deals a
+          // real roster. The old `ftueStillActive` localStorage/URL gate that
+          // routed first-timers into ftueDealRoster() is gone. It was
+          // INDEPENDENT of isFTUE (the second deal gate), so cutting it here
+          // is what actually stops the scripted Tatum hand from dealing.
+          res = await dealInitialRoster();
         }
       } catch (e) {
         // Surface the real error to the console — the on-screen banner is
