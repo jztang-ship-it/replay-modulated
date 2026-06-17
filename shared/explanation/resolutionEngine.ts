@@ -289,13 +289,15 @@ function renderAgency(cls: Classification, input: ResolutionInput): string {
   if (leaf === "A1" || leaf === "A3") {
     const base = pick(WIN_TEMPLATES[leaf], key)(l, s);
     const nick = d.isStar ? full?.nickname?.trim() : null; // star + nickname only
-    const tail = nick ? ` Classic ${nick}.` : "";
+    // Lowercase a leading article so the nickname reads mid-sentence:
+    // "The Joker" → "Classic the Joker." (never "Classic The Joker.").
+    const tail = nick ? ` Classic ${nick.replace(/^The\s+/, "the ")}.` : "";
     return tail && base.length + tail.length <= TUNING.MAX_CHARS ? base + tail : base;
   }
   const base = pick(LOSS_TEMPLATES[leaf], key)(l, s);
   // Flavor only on the bust leaves (A2/A4), star + nickname; A5 stays clean (sympathetic).
   const nick = (leaf === "A2" || leaf === "A4") && d.isStar ? full?.nickname?.trim() : null;
-  const tail = nick ? ` Not ${nick}'s night.` : "";
+  const tail = nick ? ` Not ${nick.replace(/^The\s+/, "the ")}'s night.` : "";
   return tail && base.length + tail.length <= TUNING.MAX_CHARS ? base + tail : base;
 }
 
