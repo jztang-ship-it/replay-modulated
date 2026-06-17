@@ -235,30 +235,36 @@ function statToken(full: YourCardFact | undefined, fp: number, key: string): str
   return box;
 }
 
+// RD8 — agency lines STATE the decisive line + the decision (Type-1 ownership),
+// but never claim the decision WON/LOST the game. Retired the causal
+// "won it / sank it / cost you / that's the loss / sank you / the X that
+// {won,sank} it" constructions on BOTH sides (§4/§5: state the line, not that it
+// decided the result). Decision credit ("you held him", "the call", "great
+// call") stays; the no-opponent-agency rule (variance copy) is untouched.
 const WIN_TEMPLATES: Record<"A1" | "A3", Array<(l: string, s: string) => string>> = {
   A1: [
     (l, s) => `${l} went for ${s} — holding him was the call.`,
-    (l, s) => `You held ${l}, and he went for ${s}. The hold won it.`,
-    (l, s) => `${s} from ${l} — the hold that won it.`,
+    (l, s) => `You held ${l}, and he went for ${s}.`,
+    (l, s) => `${s} from ${l} — the hold you stuck with.`,
     (l, s) => `${l}'s ${s} — exactly why you held him.`,
   ],
   A3: [
-    (l, s) => `Your ${l} pickup went for ${s} — the redraw that won it.`,
+    (l, s) => `Your ${l} pickup went for ${s} — the redraw you made.`,
     (l, s) => `${s} off the ${l} swap — great call.`,
-    (l, s) => `${l} off the redraw for ${s} — the swap that won it.`,
+    (l, s) => `${l} off the redraw for ${s} — the swap you made.`,
     (l, s) => `The ${l} redraw paid off — ${s}.`,
   ],
 };
 const LOSS_TEMPLATES: Record<"A2" | "A4" | "A5", Array<(l: string, s: string) => string>> = {
   A2: [
-    (l, s) => `${l} managed just ${s} — holding him is what cost you.`,
-    (l, s) => `You stuck with ${l} and got ${s}. That's the loss.`,
-    (l, s) => `Just ${s} from ${l} — the hold that sank it.`,
+    (l, s) => `${l} managed just ${s} — and you held him.`,
+    (l, s) => `You stuck with ${l} and got ${s}.`,
+    (l, s) => `Just ${s} from ${l} — the hold you stuck with.`,
   ],
   A4: [
-    (l, s) => `Your ${l} redraw came up empty at ${s} — that gamble cost you.`,
-    (l, s) => `The ${l} swap flopped at ${s} — it sank you.`,
-    (l, s) => `Just ${s} from the ${l} pickup — the gamble that sank it.`,
+    (l, s) => `Your ${l} redraw came up empty at ${s}.`,
+    (l, s) => `The ${l} swap flopped at ${s}.`,
+    (l, s) => `Just ${s} from the ${l} pickup — the gamble you took.`,
   ],
   A5: [
     (l, s) => `${l} went for ${s}, but it wasn't enough — the rest couldn't keep up.`,
