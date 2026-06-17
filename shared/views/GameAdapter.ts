@@ -87,11 +87,15 @@ export interface GameAdapter {
   resolveRoster: (args: { finalCards: PlayerCard[] })
                 => Promise<{ roster: PlayerCard[]; mvpCardId?: string }>;
 
-  // ── Roster lifecycle (FTUE) — sport-specific scripted hands ────────
-  ftueDealRoster: () => Promise<{ roster: PlayerCard[] }>;
-  ftueRedrawRoster: (args: { currentCards: PlayerCard[]; lockedCardIds: Set<string> })
+  // ── Roster lifecycle (FTUE) — DEPRECATED + OPTIONAL ────────────────
+  // FTUE removed (feat/kill-ftue-real-game): shared GameView no longer calls
+  // these. Kept as OPTIONAL members so baseball/football still satisfy the
+  // contract until the cross-sport pass retires them; basketball no longer
+  // provides them.
+  ftueDealRoster?: () => Promise<{ roster: PlayerCard[] }>;
+  ftueRedrawRoster?: (args: { currentCards: PlayerCard[]; lockedCardIds: Set<string> })
                     => Promise<{ roster: PlayerCard[] }>;
-  ftueResolveRoster: (args: { finalCards: PlayerCard[] })
+  ftueResolveRoster?: (args: { finalCards: PlayerCard[] })
                     => Promise<{ roster: PlayerCard[]; mvpCardId?: string }>;
 
   // ── Sport-specific data lookups ────────────────────────────────────

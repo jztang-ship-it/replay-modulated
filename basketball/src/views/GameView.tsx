@@ -8,7 +8,6 @@
  * Anything basketball-specific flows through this adapter:
  *   - sportAdapter (rosterSize, salaryCap)
  *   - dealInitialRoster / redrawRoster / resolveRoster
- *   - dealFTUERoster / redrawFTUERoster / resolveFTUERoster
  *   - calculateWinTier / calculatePayoutWithStreak / BASKETBALL_WIN_TIERS
  *   - getStreakMultiplier
  *   - AthleteCard (card render slot)
@@ -39,11 +38,6 @@ import {
   computeRosterCeiling,
   getTodaysStars,
 } from "../adapters/gameAdapter";
-import {
-  dealFTUERoster,
-  redrawFTUERoster,
-  resolveFTUERoster,
-} from "../adapters/ftueRoster";
 import { AthleteCard, resetAllOverlays } from "../components/AthleteCard";
 import {
   calculateWinTier,
@@ -222,9 +216,6 @@ export default function GameView({
     dealInitialRoster,
     redrawRoster,
     resolveRoster,
-    ftueDealRoster: dealFTUERoster,
-    ftueRedrawRoster: redrawFTUERoster,
-    ftueResolveRoster: resolveFTUERoster,
     getTodaysStars,
     computeRosterCeiling,
     // AthleteCard's Props type marks several fields optional (locked,
