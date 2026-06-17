@@ -2455,7 +2455,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     noTransition={noTransition}
                     visibleFpMap={visibleFpMap}
                     canFlip={gameState === "RESULTS" || gameState === "WIN_CELEBRATION"}
-                    ftueFlipTargetId={isFTUE && (ftueAnchorPulse || ftueHoldSpotlight) ? FTUE_ANCHOR_ID : null}
                     flipMsMap={flipMsMap}
                     fpCountUpMsMap={fpCountUpMsMap}
                     performanceTagMap={performanceTagMap}
@@ -2472,21 +2471,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     onToggleLock={toggleLock}
                     onToggleFlip={toggleStatsFlip}
                     revealMode={REVEAL_MODE}
-                    onTapReveal={isFTUE && ftueCardsBlocked ? undefined : tapRevealCard}
+                    onTapReveal={tapRevealCard}
                     heldFpVisible={heldFpVisible}
                     heldRevealedIds={heldRevealedIds}
                     tappedCardIds={tappedCardIds}
                     isRevealingPhase={gameState === "REVEALING"}
-                    isFTUEHoldPhase={isFTUE && gameState === "HOLD"}
-                    isFTUEDrawingPhase={isFTUE && gameState === "DRAWING"}
-                    isFTUE={isFTUE && (gameState === "HOLD" || gameState === "DRAWING")}
-                    ftueLockedSlot={
-                      (isFTUE && ftueResultsDim)
-                        ? ftueAnchorSlot
-                        : (isFTUE && (ftueHoldSpotlight || heldCardIds.has(FTUE_ANCHOR_ID)) && gameState === "HOLD")
-                          ? ftueAnchorSlot
-                          : null
-                    }
                     topGameStarBasePlayerId={topGameInfo.star?.basePlayerId ?? null}
                     topGameTier={topGameInfo.topGame.tier as any}
                     topGameResult={topGameInfo.topGame as any}
@@ -2516,9 +2505,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
           {/* ROW 1 — Stats row */}
           <div
-            {...(isFTUE && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")
-              ? { "data-ftue-anchor": "ftue-darnit-focus" }
-              : {})}
             data-ftue-anchor="score-row"
             onClick={() => {
               if (gameState === "WIN_CELEBRATION" && showRawScore) {
@@ -2537,8 +2523,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               alignItems: "center",
               overflow: "visible",
               position: "relative",
-              zIndex: isFTUE ? 1100 : undefined,
-              pointerEvents: isFTUE ? "none" as const : "auto" as const,
+              pointerEvents: "auto" as const,
               cursor:
                 (gameState === "WIN_CELEBRATION" ||
                   (gameState === "RESULTS" && winTier && !showRawScore))
@@ -2709,7 +2694,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     );
                   })()}
                 </div>
-                {gameState === "HOLD" && !isFTUE && !challengeCtx && (
+                {gameState === "HOLD" && !challengeCtx && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
                     <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
                       {BASE_BET} × {betMultiplier}x =
@@ -2735,8 +2720,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               flexDirection: "column",
               justifyContent: "flex-start",
               overflow: "visible",
-              zIndex: isFTUE ? 1100 : undefined,
-              pointerEvents: isFTUE ? "none" as const : "auto" as const,
+              pointerEvents: "auto" as const,
             }}
           >
             <TierGauge
@@ -2818,7 +2802,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 overflow: "hidden",
               }}
             >
-              {showCollect && !isFTUE && (
+              {showCollect && (
                 (() => {
                   const bonusPlayers = getTodaysStars();
                   return (
@@ -2919,12 +2903,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         onWageAnimationComplete={() => {
           pendingBalanceUpdateRef.current?.();
           pendingBalanceUpdateRef.current = null;
-          if (isFTUE) {
-            setTimeout(() => {
-              setFtueWinCelebrationActive(true);
-              setFtueCommentaryDone(true);
-            }, 800);
-          }
         }}
         ftueDrawBlocked={isFTUE && gameState === "HOLD" && !heldCardIds.has(FTUE_ANCHOR_ID)}
         ftueHideSkip={isFTUE}
@@ -2969,7 +2947,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           when its flag fires. Showing nothing while a chunk loads is the
           right behavior (chunk loads in <100ms on warm cache). */}
       <Suspense fallback={null}>
-        {showLeaderboard && !isFTUE && (
+        {showLeaderboard && (
           <LeaderboardScreen
             currentUid={getPlayerUid()}
             sport={leaderboardScope}
@@ -3041,7 +3019,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
         {/* PWA install prompt — gated by attention mutex so it doesn't stack
             on top of chad commentary / register modal / name prompt. */}
-        {!isFTUE && (gameState === "IDLE" || gameState === "RESULTS") && (
+        {(gameState === "IDLE" || gameState === "RESULTS") && (
           <PwaInstallPrompt
             active={handCount >= 3}
             tryClaimAttention={tryClaimAttention}
@@ -3071,7 +3049,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           challenge mode so it doesn't collide with ChallengeComparisonScreen.
           The challenge head-to-head sheet IS the post-hand surface for the
           recipient; running both would double-up the result frame. */}
-      {PostHandSheet && !isFTUE && !challengeCtx && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
+      {PostHandSheet && !challengeCtx && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && springSettled && (() => {
         const gaugeSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_BAND);
         return (
           <PostHandSheet
@@ -3099,7 +3077,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           share prompt regardless of whether anything share-worthy
           happened, including plain STARTER hands with no pulls. Challenge
           mode guard (challengeCtx) added in Task 10. */}
-      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && challengeTrigger.trigger !== "default" && !isFTUE && (
+      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && challengeTrigger.trigger !== "default" && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
             sport={sportKey}
