@@ -12,7 +12,7 @@
  *   - Reveal-adjacent state (revealIndex, revealedSalary, lastRevealedCardId,
  *     springFp, springSettled — the *state*; the orchestrator/callbacks
  *     stay in the per-sport file until Task 4)
- *   - FTUE flag state (ftueCardsBlocked, ftueReplayReady, …)
+ *   - Commentary-chip channel state (ftueCommentaryOverride — legacy name)
  *   - Leaderboard helpers (submitToLeaderboard, checkLeaderboardRank,
  *     logHandToDb) bound to adapter.leaderboardScope
  *
@@ -63,7 +63,7 @@ const MIN_BALANCE_FLOOR = 500;
 /** The fields the hook actually reads off the adapter. Keeping the
  *  parameter narrowed to a Pick<> means call sites can pass a partial
  *  literal during the multi-PR lift instead of constructing dummy
- *  CardComponent / ftueRoster values. */
+ *  CardComponent values. */
 type SharedGameStateAdapter = Pick<
   GameAdapter,
   "sportKey" | "localStorageNamespace" | "leaderboardScope" | "competition"
@@ -177,21 +177,12 @@ export function useSharedGameState(
   const [springFp, setSpringFp] = useState<number | null>(null);
   const [springSettled, setSpringSettled] = useState(false);
 
-  // ── FTUE flags (shared FTUE flow drives these in both sports) ──────
-  const [ftueCardsBlocked, setFtueCardsBlocked] = useState(false);
-  const [ftueReplayReady, setFtueReplayReady] = useState(false);
-  const [ftueResultsDim, setFtueResultsDim] = useState(false);
-  const [ftueAnchorFlipped, setFtueAnchorFlipped] = useState(false);
-  const [ftueOscillating, setFtueOscillating] = useState(false);
-  const [ftueCommentaryDone, setFtueCommentaryDone] = useState(false);
+  // Commentary-chip channel (NOT FTUE — survived the FTUE kill). Drives the
+  // sticky Chad / challenge commentary pill rendered by TierGauge. The
+  // `ftue*` name is legacy; retained to avoid churn across consumers.
   const [ftueCommentaryOverride, setFtueCommentaryOverride] = useState<{
     parts: React.ReactNode[]; sticky?: boolean;
   } | null>(null);
-  const [ftueGaugeOscDone, setFtueGaugeOscDone] = useState(false);
-  const [ftueWinCelebrationActive, setFtueWinCelebrationActive] = useState(false);
-  const [ftueAnchorPulse, setFtueAnchorPulse] = useState(false);
-  const [ftueHoldSpotlight, setFtueHoldSpotlight] = useState(false);
-  const [ftueCoachBubbleKey, setFtueCoachBubbleKey] = useState<string | null>(null);
 
   // ── Bound balance persistence helpers ──────────────────────────────
   const persistBalance = useCallback((v: number) => saveBalance(adapter, v), [adapter]);
@@ -431,18 +422,7 @@ export function useSharedGameState(
     springSettled, setSpringSettled,
 
     // FTUE flags
-    ftueCardsBlocked, setFtueCardsBlocked,
-    ftueReplayReady, setFtueReplayReady,
-    ftueResultsDim, setFtueResultsDim,
-    ftueAnchorFlipped, setFtueAnchorFlipped,
-    ftueOscillating, setFtueOscillating,
-    ftueCommentaryDone, setFtueCommentaryDone,
     ftueCommentaryOverride, setFtueCommentaryOverride,
-    ftueGaugeOscDone, setFtueGaugeOscDone,
-    ftueWinCelebrationActive, setFtueWinCelebrationActive,
-    ftueAnchorPulse, setFtueAnchorPulse,
-    ftueHoldSpotlight, setFtueHoldSpotlight,
-    ftueCoachBubbleKey, setFtueCoachBubbleKey,
 
     // Leaderboard helpers
     submitToLeaderboard,

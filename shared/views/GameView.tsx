@@ -474,18 +474,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     nearMissTeasing, setNearMissTeasing,
     springSettled,
     setSpringFp, setSpringSettled,
-    ftueCardsBlocked, setFtueCardsBlocked,
-    ftueReplayReady, setFtueReplayReady,
-    ftueResultsDim, setFtueResultsDim,
-    ftueAnchorFlipped, setFtueAnchorFlipped,
-    setFtueOscillating,
-    ftueCommentaryDone, setFtueCommentaryDone,
     ftueCommentaryOverride, setFtueCommentaryOverride,
-    ftueGaugeOscDone, setFtueGaugeOscDone,
-    ftueWinCelebrationActive, setFtueWinCelebrationActive,
-    ftueAnchorPulse, setFtueAnchorPulse,
-    ftueHoldSpotlight, setFtueHoldSpotlight,
-    setFtueCoachBubbleKey,
     incrementHandCount,
     newlyUnlockedAchievements,
     clearNewlyUnlockedAchievements,
@@ -1710,12 +1699,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       deductedSalaryCardsRef.current = new Set();
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
-      setFtueGaugeOscDone(false);
-      setFtueCommentaryDone(false);
       setFtueCommentaryOverride(null);
-      setFtueWinCelebrationActive(false);
-      setFtueAnchorPulse(false);
-      setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
       let res: any;
       try {
