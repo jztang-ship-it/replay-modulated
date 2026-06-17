@@ -156,6 +156,26 @@ class Analytics {
     if (this.queue.length >= this.config.batchSize) this.flush();
   }
 
+  /** Stitch the current (anonymous) distinct_id to a now-known authed id so
+   *  PostHog merges the two into one person. Pre-signup events fired under
+   *  the anon id therefore attach to the same person as post-signup events.
+   *  Uses the raw capture API ($identify event carrying $anon_distinct_id)
+   *  because this pipeline ships no PostHog SDK — there is no posthog.identify()
+   *  method to call. Also updates the in-memory userId so every SUBSEQUENT
+   *  event attaches to the identified id. No-op when the id is unchanged. */
+  //  anonDistinctId override: pass the anon id explicitly when the prior
+  //  session no longer lives in memory (e.g. after an OAuth full-page
+  //  redirect rebuilt this singleton). When omitted, the current in-memory
+  //  userId is used (the same-tab signup path).
+  identify(newDistinctId: string, anonDistinctId?: string): void {
+    if (this.config.disabled) return;
+    if (!newDistinctId) return;
+    const anonId = anonDistinctId ?? this.userId;
+    this.userId = newDistinctId;
+    if (anonId === newDistinctId) return; // nothing to stitch
+    this.sendIdentifyToPostHog(newDistinctId, anonId);
+  }
+
   setProduct(product: Product): void { this.currentProduct = product; }
   configure(overrides: Partial<AnalyticsConfig>): void { this.config = { ...this.config, ...overrides }; }
   use(fn: (e: ReplayEvent) => ReplayEvent | null): void { this.middleware.push(fn); }
@@ -240,9 +260,37 @@ class Analytics {
       if (this.config.debug) console.warn('[Analytics] PostHog send failed:', e);
     }
   }
+
+  // ── PostHog identity merge ($identify with $anon_distinct_id) ─────────────
+  // Sent through the same /batch/ endpoint as regular events. PostHog merges
+  // the anon person into the identified person when it sees an $identify event
+  // whose $anon_distinct_id is the prior id. Non-critical: never re-queues.
+  private async sendIdentifyToPostHog(distinctId: string, anonDistinctId: string): Promise<void> {
+    if (!POSTHOG_KEY) return; // key not set → silently skip
+    const batch = [{
+      event:       '$identify',
+      distinct_id: distinctId,
+      timestamp:   new Date(Date.now()).toISOString(),
+      properties: {
+        $anon_distinct_id: anonDistinctId,
+        $lib:              'replaymod-web',
+      },
+    }];
+    try {
+      await fetch(`${POSTHOG_HOST}/batch/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: POSTHOG_KEY, batch }),
+        keepalive: true,
+      });
+    } catch (e) {
+      if (this.config.debug) console.warn('[Analytics] PostHog identify failed:', e);
+    }
+  }
 }
 
 export const analytics = new Analytics();
 export function track(feature: Feature, action: string, props: Record<string, string | number | boolean | null> = {}, product?: Product): void { analytics.track(feature, action, props, product); }
+export function identify(newDistinctId: string, anonDistinctId?: string): void { analytics.identify(newDistinctId, anonDistinctId); }
 export function setProduct(product: Product): void { analytics.setProduct(product); }
 export default analytics;

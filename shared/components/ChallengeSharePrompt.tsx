@@ -6,7 +6,6 @@ import type { TriggerResult } from "@shared/utils/triggerEvaluation";
 import { useChallengeShare } from "@shared/hooks/useChallengeShare";
 import { getNickname, setNickname } from "@shared/utils/playerIdentity";
 import { isRealName } from "@shared/utils/isRealName";
-import { track } from "@shared/analytics/analytics";
 import { selectChallengeInitiation } from "@shared/commentary/chadChallenge";
 import {
   buildCommentaryFacts,
@@ -274,7 +273,11 @@ export function ChallengeSharePrompt({
   // path-α (email) RegisterModal flow can pass the user's entered name
   // directly. When omitted, getNickname() is read at POST time as before.
   async function continueShareAfterName(nameOverride?: string) {
-    track("challenges", "challenge_create", { sport, trigger: triggerResult.trigger });
+    // Tier-1b funnel de-dupe: the intent-fire of challenge_create that used
+    // to be here carried NO challenge_id and fired before the POST, so it
+    // double-counted against the authoritative post-POST fire in
+    // useChallengeShare.createChallenge (which carries the real id). Removed
+    // so one create == one event, always with challenge_id.
     // Phase 3 step 1: settle the headline BEFORE the create POST so the
     // authored string lands on the row. Phase 3.2: the settle now
     // returns BOTH the effective (authored OR bank) and the strictly-
