@@ -980,7 +980,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
-  const ftueLastHandFpRef = useRef(0);
   const completedCardsRef = useRef<Set<string>>(new Set());
   const ftueTierSlamPlayedRef = useRef(false);
   const bonusPoolRef = useRef<number>(1000);
@@ -1071,12 +1070,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       bet: number,
       streak: number,
     ) => number,
-    ftueAnchorId: FTUE_ANCHOR_ID,
     currentBet,
     betMultiplier: effectiveBetMultiplier,
     rosterRef,
-    isFTUE,
-    ftueLastHandFpRef,
     isAnonymous,
     setBigWinFired,
     setOnBoardTick,
@@ -1736,7 +1732,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setFtueAnchorPulse(false);
       setFtueHoldSpotlight(false);
       pendingCelebration.current = null;
-      ftueLastHandFpRef.current = 0;
       let res: any;
       try {
         // Challenge snapshot replay requires BOTH: a present challengeCtx
