@@ -63,8 +63,6 @@ import {
   type RosterGridCardProps,
 } from "@shared/components/RosterGrid";
 import { AppHeader } from "@shared/components/AppHeader";
-import { CoachLayer } from "@shared/components/CoachLayer";
-import { useFTUE } from "@shared/hooks/useFTUE";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import {
   useEmotionalReveal,
@@ -605,12 +603,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   }, [user, isAnonymous, bellOpen]);
 
   const [gameError, setGameError] = useState<string | null>(null);
-  const { completeFTUE } = useFTUE(sportKey);
   // FTUE removed (slice 1): permanently false. Kept as a constant only until
-  // the last FTUE reads (CoachLayer mount in step 4, child ftue* props in
-  // step 6) are stripped — then this and completeFTUE go too.
+  // the last FTUE child-prop reads are stripped in step 6 — then it goes too.
   const isFTUE = false;
-  const coachDismissRef = useRef<(() => void) | null>(null);
   const initialRosterRef = useRef<import("@shared/types/index").GeneratedCard[]>([]);
   /** Legend icon gold-filled when pre-game msg is active OR daily bonus unseen */
   const [legendGold, setLegendGold] = useState(() => {
@@ -986,7 +981,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const pendingCelebration = useRef<{ totalFp: number } | null>(null);
   /** FTUE: roster sum can read 0 briefly in RESULTS — keep last resolved hand FP for TierGauge */
   const ftueLastHandFpRef = useRef(0);
-  const heldRevealResumeRef = useRef<(() => void) | null>(null);
   const completedCardsRef = useRef<Set<string>>(new Set());
   const ftueTierSlamPlayedRef = useRef(false);
   const bonusPoolRef = useRef<number>(1000);
@@ -1183,9 +1177,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     revealMode: REVEAL_MODE,
     seedFp: heldFpAtDraw,
     flipState,
-    onBeforeHeldReveal: isFTUE ? (resume) => {
-      heldRevealResumeRef.current = resume;
-    } : undefined,
+    onBeforeHeldReveal: undefined,
     onCardRevealStart: handleCardRevealStart,
     onCardFpStart,
     onCardComplete,
@@ -2772,7 +2764,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
-                coachDismissRef.current?.();
               }}
               onCommentaryDone={() => {
                 if (isFTUE) {
@@ -2832,68 +2823,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 overflow: "hidden",
               }}
             >
-              <CoachLayer
-                isFTUE={isFTUE}
-                gameState={gameState}
-                lockedCount={lockedCardIds.size}
-                revealIndex={revealIndex}
-                legendaryCardName={legendaryCardName}
-                lastRevealedCardId={lastRevealedCardId}
-                ftueAnchorFlipped={ftueAnchorFlipped}
-                ftueTextConfig={ftueTextConfig}
-                onCoachBubbleKey={(key) => {
-                  setFtueCoachBubbleKey(key);
-                  // CoachLayer emits "hold_<anchorSuffix>" — basketball anchor
-                  // "ftue-tatum" → "hold_tatum"; baseball "ftue-ohtani" →
-                  // "hold_ohtani". Use the derived anchor key so the side
-                  // effect fires for both sports.
-                  const holdKey = `hold_${FTUE_ANCHOR_ID.replace(/^ftue-/, "")}`;
-                  if (key === holdKey) setFtueHoldSpotlight(true);
-                }}
-                onResumeHeldReveal={() => {
-                  const resume = heldRevealResumeRef.current;
-                  heldRevealResumeRef.current = null;
-                  resume?.();
-                }}
-                onCelebrationReady={() => {
-                  if (!isFTUE) {
-                    setCelebrationHeld(false);
-                    if (pendingCelebration.current) {
-                      pendingCelebration.current = null;
-                      setGameState("WIN_CELEBRATION");
-                    }
-                  }
-                }}
-                onBubbleActive={(active) => setFtueCardsBlocked(active)}
-                ftueWinCelebrationActive={ftueWinCelebrationActive}
-                ftueCommentaryDone={ftueCommentaryDone}
-                onCommentaryText={(parts, sticky) => setFtueCommentaryOverride(parts ? { parts, sticky } : null)}
-                dismissRef={coachDismissRef}
-                onReplayReady={() => setFtueReplayReady(true)}
-                onFtueReadyToFlip={() => setFtueAnchorPulse(true)}
-                onFtueAnchorHeld={() => { /* draw pulse handled inside CoachLayer */ }}
-                onFtueAllDone={() => {
-                  setFtueResultsDim(false);
-                }}
-                onReplay={() => {
-                  completeFTUE();
-                  setFtueCommentaryOverride(null);
-                  setFtueCommentaryDone(false);
-                  setFtueWinCelebrationActive(false);
-                  setLastRevealedCardId(null);
-                  setCelebrationHeld(false);
-                  setFtueCardsBlocked(false);
-                  setFtueReplayReady(false);
-                  setFtueAnchorFlipped(false);
-                  setFtueAnchorPulse(false);
-                  setFtueHoldSpotlight(false);
-                  setFtueGaugeOscDone(false);
-                  ftueTierSlamPlayedRef.current = false;
-                  pendingCelebration.current = null;
-                  heldRevealResumeRef.current = null;
-                  setTimeout(() => handleButtonClick(), 0);
-                }}
-              />
               {showCollect && !isFTUE && (
                 (() => {
                   const bonusPlayers = getTodaysStars();
