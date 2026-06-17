@@ -54,57 +54,18 @@ const MULTIPLIERS: Record<WinTierKey, number> = {
   LEGEND: 20, MVP: 8, ALL_STAR: 3, STARTER: 1.5, ROOKIE: 0.5, BUST: 0,
 };
 
-// Fallback thresholds — used when active season is unset (e.g. unit tests,
-// FTUE bypass before reel runs). Match the pre-per-season static design so
+// Fallback thresholds — used when active season is unset (e.g. unit tests, or
+// before the reel resolves a season). Match the pre-per-season static design so
 // existing tests don't shift behavior unexpectedly.
 const FALLBACK_MIN_FP: Record<Exclude<WinTierKey, "BUST">, number> = {
   LEGEND: 255, MVP: 235, ALL_STAR: 225, STARTER: 205, ROOKIE: 185,
 };
 
-// FTUE-specific thresholds. The FTUE roster is hand-tuned to land at 224 FP —
-// exactly 1 shy of the legacy ALL_STAR 225. Per-season thresholds in 24-25
-// (ALL_STAR 308) would render that "55 FP shy of nothing" and break the
-// "so close it hurts" narrative. During the FTUE hand we override the
-// thresholds back to the legacy static set so the script lands as designed.
-const FTUE_MIN_FP: Record<Exclude<WinTierKey, "BUST">, number> = {
-  LEGEND: 255, MVP: 235, ALL_STAR: 225, STARTER: 205, ROOKIE: 185,
-};
-
-const FTUE_STORAGE_KEY = "replaymod_ftue_basketball";
-
-/** Mirror of useFTUE.readFtueActive — payoutLogic is a pure utility that
- *  doesn't have access to the React hook, so we read the same localStorage
- *  signal directly. URL params take precedence (?ftue=1 forces FTUE,
- *  ?skip=1 forces post-FTUE). */
-function isFtueActiveBasketball(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("ftue") === "1") return true;
-    if (params.get("skip") === "1") return false;
-    if (localStorage.getItem(FTUE_STORAGE_KEY) === "1") return false;
-    return true;
-  } catch {
-    return true;
-  }
-}
-
 type SeasonThresholds = Record<Exclude<WinTierKey, "BUST">, number>;
 const SEASON_TABLE = perSeasonThresholds as Record<string, SeasonThresholds>;
 
-/** Build the WinTierMap for the active season (or fallback if unset).
- *  FTUE hand uses legacy static thresholds — see FTUE_MIN_FP above. */
+/** Build the WinTierMap for the active season (or fallback if unset). */
 export function getBasketballWinTiers(): WinTierMap {
-  if (isFtueActiveBasketball()) {
-    return {
-      LEGEND:   { minFp: FTUE_MIN_FP.LEGEND,   multiplier: MULTIPLIERS.LEGEND },
-      MVP:      { minFp: FTUE_MIN_FP.MVP,      multiplier: MULTIPLIERS.MVP },
-      ALL_STAR: { minFp: FTUE_MIN_FP.ALL_STAR, multiplier: MULTIPLIERS.ALL_STAR },
-      STARTER:  { minFp: FTUE_MIN_FP.STARTER,  multiplier: MULTIPLIERS.STARTER },
-      ROOKIE:   { minFp: FTUE_MIN_FP.ROOKIE,   multiplier: MULTIPLIERS.ROOKIE },
-      BUST:     { minFp: 0, multiplier: MULTIPLIERS.BUST },
-    };
-  }
   const season = getActiveSeason();
   const minFps = (season && SEASON_TABLE[season]) ? SEASON_TABLE[season] : FALLBACK_MIN_FP;
   return {
