@@ -124,8 +124,6 @@ import {
 import { PartsLine } from "./TierGauge";
 import { type Line } from "@shared/commentary/chadChallenge";
 
-const ROSTER_SIZE = 6;
-
 /** Inter-card delay during the state-2 deal-in cascade. Each card
  *  lands one-by-one after Deal is tapped. Live-verification tunable. */
 export const DEAL_CASCADE_INTERVAL_MS = 120;
@@ -159,7 +157,7 @@ export const PRE_REVEAL_HOLD_MS = 1000;
  *  expansion + bottom-strip slide-down still fire at ab_transition.
  *  This constant remains the structural-shift duration (height
  *  growth on the wrapper); the opacity + translateY fade-up uses
- *  TOP_STRIP_FADE_UP_MS below. */
+ *  topStripFadeUpMs(rosterSize) below. */
 export const AB_TRANSITION_DURATION_MS = 300;
 
 /** RD6.1-e (2026-06-12) opponent-strip fade-up window. After Draw,
@@ -168,12 +166,12 @@ export const AB_TRANSITION_DURATION_MS = 300;
  *  recipient already saw his lineup on the challenge landing per
  *  design-lock §1/§3). Synced to the bottom cascade so both rows
  *  finish populating together. Derived from the cascade duration
- *  (`ROSTER_SIZE × (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS)`
- *  = 6 × 400ms = 2400ms) so any tune of those constants keeps the
- *  two motions synced. */
-export const TOP_STRIP_FADE_UP_MS =
-  6 /* = ROSTER_SIZE; ROSTER_SIZE is declared after this block */ *
-  (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
+ *  (`rosterSize × (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS)`
+ *  = 5 × 400ms = 2000ms for basketball's 5-card hand) so any tune of
+ *  those constants keeps the two motions synced. rosterSize comes from
+ *  the replayed hand (initialRoster.length), not a literal. */
+export const topStripFadeUpMs = (rosterSize: number) =>
+  rosterSize * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
 
 /** Cross-fade window for the playing-strip inner content when state
  *  advances to "arc" (Fix C2). Matches H2HRecipientReveal's own
@@ -270,7 +268,7 @@ type PlayingState =
        *  THE BOTTOM STRIP ONLY (your replacements). The top strip is
        *  NOT touched here — design-lock §3 step 2 isolates your-flip
        *  from opponent-appear. CSS rotateY transition handles the
-       *  actual 250ms flip animation per column. Range: 0..ROSTER_SIZE. */
+       *  actual 250ms flip animation per column. Range: 0..rosterSize. */
       revealedColumns: number;
       held: Set<number>;
       finalRoster: GeneratedCard[];
@@ -406,6 +404,13 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     [challengeCtx.initialRoster],
   );
 
+  // Roster size for this replay = the recipient's actual dealt hand. Drives
+  // the deal-in / column-flip cascade counts, the fade-up window, and the
+  // strip cell counts. Data-derived (NOT a literal 6, NOT a shared→sport
+  // adapter import — `sport` is only a key string here) so the replay follows
+  // whatever config produced the challenge: 5 for basketball today.
+  const rosterSize = initialRoster.length;
+
   const [state, setState] = useState<PlayingState>({ kind: "loading" });
 
   // Phase 5c S3 — recipient contextual intro. Flag flips true on first
@@ -493,7 +498,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     if (!dataReady) return;
     if (cascadeTimersRef.current.length > 0) return; // already scheduled
     const timers: number[] = [];
-    for (let n = 1; n <= ROSTER_SIZE; n++) {
+    for (let n = 1; n <= rosterSize; n++) {
       const id = window.setTimeout(() => {
         setState((s) =>
           s.kind === "deal_in" ? { kind: "deal_in", cardsLanded: n } : s,
@@ -503,14 +508,14 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     }
     const finalId = window.setTimeout(() => {
       setState((s) =>
-        s.kind === "deal_in" && s.cardsLanded === ROSTER_SIZE
+        s.kind === "deal_in" && s.cardsLanded === rosterSize
           ? { kind: "hold_select", held: new Set(), previewedSlotIndex: null }
           : s,
       );
-    }, DEAL_CASCADE_INTERVAL_MS * (ROSTER_SIZE + 1));
+    }, DEAL_CASCADE_INTERVAL_MS * (rosterSize + 1));
     timers.push(finalId);
     cascadeTimersRef.current = timers;
-  }, [state, dataReady]);
+  }, [state, dataReady, rosterSize]);
   // Unmount-only cleanup for all cascade timers (Try Again key bump
   // remounts the surface; pending timers from a previous cascade get
   // cleared here).
@@ -595,7 +600,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     // Column N's flip kicks off when revealedColumns crosses N → N+1.
     // The first column fires at delay=0 (engine just returned; the
     // recipient doesn't need a pause before the cascade starts).
-    for (let n = 1; n <= ROSTER_SIZE; n++) {
+    for (let n = 1; n <= rosterSize; n++) {
       const delay = (n - 1) * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS);
       const id = window.setTimeout(() => {
         setState((s) =>
@@ -606,7 +611,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     }
     const finalId = window.setTimeout(() => {
       setState((s) =>
-        s.kind === "your_redraw_flip" && s.revealedColumns === ROSTER_SIZE
+        s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
           ? {
               kind: "ab_transition",
               finalRoster: s.finalRoster,
@@ -614,10 +619,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
             }
           : s,
       );
-    }, ROSTER_SIZE * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS));
+    }, rosterSize * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS));
     timers.push(finalId);
     columnTimersRef.current = timers;
-  }, [state]);
+  }, [state, rosterSize]);
   useEffect(() => () => {
     columnTimersRef.current.forEach(clearTimeout);
     columnTimersRef.current = [];
@@ -770,7 +775,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // intro/pick beats). At your_redraw_flip the wrapper expands
   // structurally (height 0→80 over AB_TRANSITION_DURATION_MS) and
   // Mike's row fades opacity 0→1 + translateY rise over
-  // TOP_STRIP_FADE_UP_MS (= the full bottom-cascade window). The
+  // topStripFadeUpMs(rosterSize) (= the full bottom-cascade window). The
   // hero region's Layout-A→B expansion stays at ab_transition (per
   // inLayoutA above) — that's the bigger structural shift.
   const topStripVisible =
@@ -1097,19 +1102,18 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           //     structural growth of the wrapper at your_redraw_flip
           //     entry; the bottom strip + reserved-bottom slot absorb
           //     the +80px in 300ms.
-          //   opacity      runs over TOP_STRIP_FADE_UP_MS (= cascade
-          //     window, 2400ms): Mike's row fades in WHILE the bottom
-          //     cascade flips, both finishing together.
-          //   transform    same 2400ms window as opacity for the
-          //     settle feel.
+          //   opacity      runs over topStripFadeUpMs(rosterSize) (= cascade
+          //     window, 2000ms at 5 cards): Mike's row fades in WHILE the
+          //     bottom cascade flips, both finishing together.
+          //   transform    same window as opacity for the settle feel.
           // Pre-RD6.1-e this fired the whole motion at ab_transition
           // (a single coordinated A→B beat). RD6.1-e moves the strip
           // visibility onto your_redraw_flip so Mike's box isn't
           // empty during the bottom cascade.
-          transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, opacity ${TOP_STRIP_FADE_UP_MS}ms ease-out, transform ${TOP_STRIP_FADE_UP_MS}ms ease-out`,
+          transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, opacity ${topStripFadeUpMs(rosterSize)}ms ease-out, transform ${topStripFadeUpMs(rosterSize)}ms ease-out`,
         }}
       >
-        {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
+        {Array.from({ length: rosterSize }).map((_, i) => {
           const senderCard = challengeCtx.resolvedSenderHand?.cards[i] ?? null;
           return (
             <TopStripCell
@@ -1243,7 +1247,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         height: MINI_CELL_HEIGHT_PX,
       }}
     >
-      {Array.from({ length: ROSTER_SIZE }).map((_, i) => {
+      {Array.from({ length: rosterSize }).map((_, i) => {
         const slot = bottomCellSlot(i);
         return (
           <BottomStripCell

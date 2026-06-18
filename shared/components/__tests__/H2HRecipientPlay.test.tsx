@@ -716,7 +716,7 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
     // Mechanism (wrapper-level fade, no flip):
     //   - height 0 → MINI_CELL_HEIGHT_PX over AB_TRANSITION_DURATION_MS
     //     (300ms) — structural growth at your_redraw_flip entry.
-    //   - opacity 0 → 1 over TOP_STRIP_FADE_UP_MS (= the cascade
+    //   - opacity 0 → 1 over topStripFadeUpMs(rosterSize) (= the cascade
     //     window) — Mike's row fades in for the duration the bottom
     //     cells flip column-by-column.
     //   - transform translateY(-6px) → translateY(0) over the same
