@@ -327,8 +327,18 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     // cards' FP rolls up independently. In skipToEnd mode, all cards are in one
     // sequence with one anchor — never skip.
     const hasHeldCards = rosterRef.current.some((c: any) => c.wasHeld);
+    const hasUnheldCards = rosterRef.current.some((c: any) => !c.wasHeld);
     const isSkipping = isSkippingRefHolder.current?.current ?? false;
-    if (hasHeldCards && anchorFpCallCountRef.current === 0 && !isSkipping) {
+    // Tap mode with BOTH held AND unheld cards fires onAnchorFpComplete twice: once
+    // for the unheld sequence's anchor, once for the held anchor. Skip the first
+    // (unheld) and wait for the held anchor to drive the spring. But when ALL cards
+    // are held (B2a early-lock all-held → useEmotionalReveal's revealHeldCards runs
+    // with NO unheld sequence), onAnchorFpComplete fires ONCE (the held anchor) —
+    // swallowing it as the "first" call leaves the spring unfired and REVEALING
+    // hangs forever. Gate the skip on hasUnheldCards so the lone held-anchor call
+    // drives the spring in the all-held case. (Skip mode bypasses this entirely via
+    // !isSkipping; this term only affects the tap-mode held-vs-all-held split.)
+    if (hasHeldCards && hasUnheldCards && anchorFpCallCountRef.current === 0 && !isSkipping) {
       anchorFpCallCountRef.current = 1;
       return; // Non-held anchor's call in tap mode — skip, wait for held anchor
     }
