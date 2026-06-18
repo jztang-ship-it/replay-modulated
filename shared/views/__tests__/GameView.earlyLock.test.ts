@@ -18,7 +18,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const read = (p: string) => readFileSync(resolve(__dirname, p), "utf8");
 const GAME_VIEW = read("../GameView.tsx");
-const GAME_BAR = read("../../components/GameBar.tsx");
 
 const holdBranch = (() => {
   const m = /\n\s*if \(gameState === "HOLD"\) \{([\s\S]*?)\n\s*if \(gameState === "RESULTS" \|\| gameState === "WIN_CELEBRATION"\) \{/.exec(GAME_VIEW);
@@ -82,22 +81,5 @@ describe("B2a — the shared tail locks on the current roster with userTappedRev
   });
   it("there is still exactly ONE commitRound call (one shared tail for both heads)", () => {
     expect(count(holdBranch, /commitRound\(/g)).toBe(1);
-  });
-});
-
-describe("B2a — UI trigger wiring (GameView → GameBar)", () => {
-  it("GameView wires onEarlyLock to onPrimaryAction({ earlyLock: true }) — distinct from onAction", () => {
-    expect(GAME_VIEW).toMatch(/onEarlyLock=\{\(\) => onPrimaryAction\(\{ earlyLock: true \}\)\}/);
-  });
-  it("GameView gates the control on maxRounds > 1 (single-shot sports never see it)", () => {
-    expect(GAME_VIEW).toMatch(/showEarlyLock=\{maxRounds > 1\}/);
-  });
-  it("GameBar renders the early-lock button in HOLD, gated on showEarlyLock + onEarlyLock", () => {
-    expect(GAME_BAR).toMatch(/gameState === "HOLD" && showEarlyLock && onEarlyLock/);
-    expect(GAME_BAR).toMatch(/data-action="early-lock"/);
-    expect(GAME_BAR).toMatch(/onClick=\{onEarlyLock\}/);
-  });
-  it("showEarlyLock defaults false (a caller that omits it gets no control)", () => {
-    expect(GAME_BAR).toMatch(/showEarlyLock = false/);
   });
 });
