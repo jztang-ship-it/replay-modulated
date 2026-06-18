@@ -320,7 +320,7 @@ export const ANCHOR_HOLD_MS = 2900;
 // Each entrance card walks through PRE → LAY → BEAT → TRAVEL → SETTLED.
 // Cards are dealt SEQUENTIALLY (one pair at a time): card N's lifecycle
 // completes before card N+1 starts. Total entrance ≈ N × (lifecycle +
-// stagger) ms; for 6 cards ≈ 5.25s. Intentionally slow — the entrance
+// stagger) ms; for 5 cards ≈ 4.4s. Intentionally slow — the entrance
 // should feel like a deliberate dealing motion, not a function call.
 
 /** Card fades in (opacity 0 → 1) at the middle-of-screen position. */

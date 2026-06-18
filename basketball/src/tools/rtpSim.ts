@@ -101,8 +101,8 @@ const ECONOMY_CONFIG: EconomyConfig = {
     { tier: "GREEN" as TierColor, minSalary: 20 },
   ],
 };
-const FLEX_SLOTS: SlotRequirement[] = ["FLEX","FLEX","FLEX","FLEX","FLEX","FLEX"];
-const ROSTER_CONFIG = { rosterSize: 6, slotRequirements: FLEX_SLOTS, excludeFromFlex: [] as string[], positionAware: false };
+const FLEX_SLOTS: SlotRequirement[] = ["FLEX","FLEX","FLEX","FLEX","FLEX"];
+const ROSTER_CONFIG = { rosterSize: 5, slotRequirements: FLEX_SLOTS, excludeFromFlex: [] as string[], positionAware: false };
 const TIER_POOL_CAPS: Record<string, number> = { BLUE: 40, GREEN: 25, WHITE: 20 };
 const SLATE_COMPOSITION = {
   tierRanges: {
@@ -199,7 +199,7 @@ function loadSeason(season: string): SeasonData {
 
 function makeSlateAdapter(season: string, data: SeasonData) {
   return {
-    sportKey: "basketball", rosterSize: 6,
+    sportKey: "basketball", rosterSize: 5,
     config: { slateSize: 60, anchorCount: 9, weightExponent: 1.0 },
     getCareerFPById: (id: string) => data.careerFpById.get(id) ?? 0,
     getTierById: (id: string) => String(data.playerById.get(id)?.tier ?? "WHITE").toUpperCase(),
@@ -251,7 +251,7 @@ interface SeasonResult {
 
 function runSeasonRtp(season: string): SeasonResult | null {
   const data = loadSeason(season);
-  if (data.eligible.length < 6) return null;
+  if (data.eligible.length < ROSTER_CONFIG.rosterSize) return null;
   const winTiers = makeWinTiersMap(season);
   const rngSeed = 9_000_000 + 42 + season.charCodeAt(0) * 257 + season.charCodeAt(1) * 31
     + (season.charCodeAt(2) ?? 0) * 13 + (season.charCodeAt(3) ?? 0);
@@ -273,9 +273,9 @@ function runSeasonRtp(season: string): SeasonResult | null {
     i++;
     const slateIds = getCachedSlate(adapter as any, date);
     const evalPool = buildEvalFromIds(slateIds, data, season);
-    if (evalPool.length < 6) continue;
+    if (evalPool.length < ROSTER_CONFIG.rosterSize) continue;
     const roster = generateRoster(evalPool, ROSTER_CONFIG, ECONOMY_CONFIG, rng);
-    if (roster.length < 6) continue;
+    if (roster.length < ROSTER_CONFIG.rosterSize) continue;
     const bonusPool: Array<{ basePlayerId: string; name: string; tier: string }> = [];
     for (const id of slateIds) {
       const p = data.playerById.get(id);

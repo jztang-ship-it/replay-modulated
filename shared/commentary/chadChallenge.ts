@@ -1825,7 +1825,7 @@ export function selectIntroAnchor(args: SelectIntroAnchorArgs): RecipientIntroAn
 // PLAYER ({name}) — choke language attaches to {challengerName}'s decision,
 // never the player on the card. §2 length + clean rules hold.
 const INTRO_CHOKE_CULTURE: Line[] = [
-  ["{challengerName} held {name} and still bricked it — ", { stamp: "choke" }, ", {targetScore} flat. {cultureLine} Same six are yours — read it cleaner."],
+  ["{challengerName} held {name} and still bricked it — ", { stamp: "choke" }, ", {targetScore} flat. {cultureLine} Same five are yours — read it cleaner."],
   ["{challengerName} talked himself into {name} and got buried for it — ", { stamp: "choke" }, ", {targetScore}. {cultureLine} Prove you'd have read it cleaner, or admit you'd have choked the same."],
   ["The conviction pick was {name}. The conviction was the problem. ", { stamp: "choke" }, " — {targetScore} on the board. {cultureLine} Your turn to actually pull it off."],
   ["{challengerName} leaned the whole {targetScore} on {name} and watched it tip over. ", { stamp: "choke" }, " — {cultureLine} Same hand says you'd have done it cleaner. Show your work."],
@@ -1837,27 +1837,27 @@ const INTRO_CHOKE_NAME: Line[] = [
   ["{challengerName} held {name} and choked the rest of the slate around it — ", { stamp: "choke" }, ", {targetScore} flat. Beat it or admit you'd have done the same."],
   ["{name} was supposed to be the safe one. {challengerName} settled for {targetScore} and a ", { stamp: "choke" }, ". You're not better than that — prove me wrong."],
   ["Premium pick, premium fold. {challengerName} rode {name} into a ", { stamp: "choke" }, " and left you {targetScore} to either clear or match."],
-  [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed up. Same six. Show me you'd have held different."],
+  [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed up. Same five. Show me you'd have held different."],
   ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". The only way to look smarter is to actually be smarter."],
 ];
 
 const INTRO_CHOKE_GENERIC: Line[] = [
   ["{challengerName} choked {targetScore} with a loaded hand — ", { stamp: "choke" }, ". The only worse look is scrolling past without trying."],
-  [{ stamp: "choke" }, ". {challengerName} couldn't drag the same six past {targetScore}. Either you can or you can't — find out."],
+  [{ stamp: "choke" }, ". {challengerName} couldn't drag the same five past {targetScore}. Either you can or you can't — find out."],
   ["Looked like a winner on paper for {challengerName}. It paid {targetScore}. ", { stamp: "choke" }, " — same hand, your move, no excuses."],
   ["{challengerName} read the slate; the hands didn't read the room — ", { stamp: "choke" }, ", {targetScore} to beat. Prove you'd hold steadier."],
 ];
 
 const INTRO_BIG_SCORE_CULTURE: Line[] = [
   ["{name} went off and {challengerName} was holding the ticket — ", { stamp: "win_tier" }, ". {cultureLine} {targetScore} to clear."],
-  ["{challengerName} stacked {name} on exactly the right night — ", { stamp: "win_tier" }, ". {cultureLine} Same six cards, {targetScore} on the board."],
+  ["{challengerName} stacked {name} on exactly the right night — ", { stamp: "win_tier" }, ". {cultureLine} Same five cards, {targetScore} on the board."],
   ["{cultureLine} That's the night {name} put {challengerName} at {targetScore} — ", { stamp: "win_tier" }, ". Your move."],
   [{ stamp: "win_tier" }, ". {name} took the building down for {challengerName}. {cultureLine} {targetScore} to beat."],
   ["{name} ate; {challengerName} ate right after — ", { stamp: "win_tier" }, ", {targetScore} on the receipt. {cultureLine}"],
 ];
 
 const INTRO_BIG_SCORE_NAME: Line[] = [
-  ["{name} cooked and {challengerName} was sitting at the table — ", { stamp: "win_tier" }, ", {targetScore} on the board. Same six."],
+  ["{name} cooked and {challengerName} was sitting at the table — ", { stamp: "win_tier" }, ", {targetScore} on the board. Same five."],
   ["{challengerName} put the right name on the right night. {name} delivered — ", { stamp: "win_tier" }, ", {targetScore} to clear."],
   [{ stamp: "win_tier" }, ". {name} carried the hand for {challengerName} and left you {targetScore} to answer."],
   ["{name} torched the slate and {challengerName} cleared {targetScore} — ", { stamp: "win_tier" }, ". Your move."],
@@ -1880,7 +1880,7 @@ const INTRO_RARE_PULL_CULTURE: Line[] = [
 
 const INTRO_RARE_PULL_NAME: Line[] = [
   ["{name} did something the league hadn't seen in years, and {challengerName} had the ticket — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} to chase."],
-  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} carved {challengerName} into the record books at {targetScore}. Same six cards."],
+  [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} carved {challengerName} into the record books at {targetScore}. Same five cards."],
   ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} on the board."],
   ["{name} hung a historic number for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} is the bar."],
 ];
@@ -1905,7 +1905,7 @@ const INTRO_MISS_GENERIC: Line[] = [
 ];
 
 const INTRO_DEFAULT: Line[] = [
-  ["{challengerName} played the slate and walked with {targetScore}. Same six cards — see what you've got."],
+  ["{challengerName} played the slate and walked with {targetScore}. Same five cards — see what you've got."],
   ["{targetScore} on the board from {challengerName}. Your move."],
   ["{challengerName} sent {targetScore}. Same cards, your shot."],
 ];

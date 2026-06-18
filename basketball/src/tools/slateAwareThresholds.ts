@@ -43,9 +43,9 @@ const ECONOMY_CONFIG: EconomyConfig = {
   ],
 };
 
-const FLEX_SLOTS: SlotRequirement[] = ["FLEX", "FLEX", "FLEX", "FLEX", "FLEX", "FLEX"];
+const FLEX_SLOTS: SlotRequirement[] = ["FLEX", "FLEX", "FLEX", "FLEX", "FLEX"];
 const ROSTER_CONFIG = {
-  rosterSize: 6, slotRequirements: FLEX_SLOTS,
+  rosterSize: 5, slotRequirements: FLEX_SLOTS,
   excludeFromFlex: [] as string[], positionAware: false,
 };
 const HANDS = 10000;
@@ -176,7 +176,7 @@ function loadSeason(season: string): SeasonData {
 // ── Inline SlateAdapter ───────────────────────────────────────────────────
 function makeSlateAdapter(season: string, data: SeasonData) {
   return {
-    sportKey: "basketball", rosterSize: 6,
+    sportKey: "basketball", rosterSize: 5,
     config: { slateSize: 60, anchorCount: 9, weightExponent: 1.0 },
     getCareerFPById(id: string): number { return data.careerFpById.get(id) ?? 0; },
     getTierById(id: string): string {
@@ -235,7 +235,7 @@ interface SeasonResult {
 
 function runSeason(season: string): SeasonResult | null {
   const data = loadSeason(season);
-  if (data.eligible.length < 6) return null;
+  if (data.eligible.length < ROSTER_CONFIG.rosterSize) return null;
 
   // Slate-mode seed (matches slateAwareCalibrate.ts so distributions align).
   const rngSeed = 1_000_000 + 42
@@ -252,9 +252,9 @@ function runSeason(season: string): SeasonResult | null {
     const date = new Date(baseDate + i * DAY_MS);
     const slateIds = getCachedSlate(adapter as any, date);
     const evalPool = buildEvalFromIds(slateIds, data, season);
-    if (evalPool.length < 6) continue;
+    if (evalPool.length < ROSTER_CONFIG.rosterSize) continue;
     const roster = generateRoster(evalPool, ROSTER_CONFIG, ECONOMY_CONFIG, rng);
-    if (roster.length < 6) continue;
+    if (roster.length < ROSTER_CONFIG.rosterSize) continue;
     // Daily bonus: production picks 3 slate-eligible players per UTC day
     // (+20/+10/+5 FP, ORANGE/PURPLE/BLUE/GREEN only). Build the pool from
     // the same slate that fed the deal; buildDailyBonusMap handles tier

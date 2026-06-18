@@ -27,7 +27,7 @@
 //                   Different decisions."). Real visual weight — the
 //                   fairness mechanic + differentiator. Directly under
 //                   the TAKE.
-//   EVIDENCE      — six cards. Held bright + HOLD badge + name +
+//   EVIDENCE      — five cards. Held bright + HOLD badge + name +
 //                   salary + rarity. Discards dim. NO per-card FP chip
 //                   in either mode (the FP-spoiler rule).
 //   HELD LIST     — labeled "John held: X, Y" — structured names from
@@ -473,7 +473,7 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
         </div>
       )}
 
-      {/* EVIDENCE — the six cards (proof of what was held). Held =
+      {/* EVIDENCE — the five cards (proof of what was held). Held =
           yellow-H corner glyph (same as live game / H2H per spec
           §"Layout"). No per-card FP chip. */}
       <div

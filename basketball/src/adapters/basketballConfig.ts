@@ -5,8 +5,8 @@
  * Calibrated for $250 cap (raised from $200 to enable 2-star rosters), engine-accurate sim:
  *   BUST ~44%, ROOKIE ~26%, STARTER ~17%, ALL_STAR ~9%, MVP ~3.5%, LEGEND ~0.5%
  *
- * Hand 1 is always FTUE (hardcoded Tatum-anchored roster, ~$245 total — leaves a few dollars
- * of cap unused by design since FTUE is a fixed narrative sequence, not a full cap-optimized roster).
+ * Hand 1 is the real game — scripted FTUE was removed (merge ebe20b2); new users get a
+ * normal cap-constrained deal on their first hand, identical to every subsequent hand.
  */
 
 export const BasketballSportConfig = {
@@ -19,10 +19,10 @@ export const BasketballSportConfig = {
   // card's front. Kept.
   positions:    ['PG', 'SG', 'SF', 'PF', 'C'] as string[],
   // Roster slots are all-FLEX because basketball's deal is position-agnostic
-  // (see `positionAware: false` below). Declared as 6 FLEX entries so the
+  // (see `positionAware: false` below). Declared as 5 FLEX entries so the
   // shared simulator + any downstream consumer that iterates slotRequirements
   // sees a real array of the right length, not a misleading positional list.
-  rosterSlots:  ['FLEX', 'FLEX', 'FLEX', 'FLEX', 'FLEX', 'FLEX'] as string[],
+  rosterSlots:  ['FLEX', 'FLEX', 'FLEX', 'FLEX', 'FLEX'] as string[],
   excludeFromFlex: [] as string[],
   // All five basketball positions accumulate the same stat categories
   // (pts/reb/ast/stl/blk/etc.), so the deal does NOT enforce positional
@@ -37,8 +37,8 @@ export const BasketballSportConfig = {
   } as Record<string, string>,
 
   salaryCap:    250,
-  minPlayers:   6,
-  maxPlayers:   6,
+  minPlayers:   5,
+  maxPlayers:   5,
   positionLimits: {} as Record<string, { min: number; max: number }>,
 
   // Slate v2 (flag-gated; see shared/utils/slateSelector.ts)

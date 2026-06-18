@@ -34,9 +34,9 @@ function makeCard(overrides: Partial<GeneratedCard>): GeneratedCard {
   } as GeneratedCard;
 }
 
-// Basketball roster size is 6 — validateRosterSnapshot enforces it.
-function sixCards(overrideAt: Record<number, Partial<GeneratedCard>> = {}): GeneratedCard[] {
-  return Array.from({ length: 6 }, (_, i) =>
+// Basketball roster size is 5 — validateRosterSnapshot enforces it.
+function fiveCards(overrideAt: Record<number, Partial<GeneratedCard>> = {}): GeneratedCard[] {
+  return Array.from({ length: 5 }, (_, i) =>
     makeCard({
       basePlayerId: `p${i + 1}`,
       personKey: `p${i + 1}`,
@@ -50,7 +50,7 @@ function sixCards(overrideAt: Record<number, Partial<GeneratedCard>> = {}): Gene
 
 describe("basketball SportAdapter.serializeRoster — Phase 0 enrichment fields", () => {
   it("writes top-level holdsRecorded:true and sport:'basketball'", () => {
-    const snap = sportAdapter.serializeRoster(sixCards());
+    const snap = sportAdapter.serializeRoster(fiveCards());
     expect((snap as any).holdsRecorded).toBe(true);
     expect((snap as any).sport).toBe("basketball");
     expect((snap as any).v).toBe(1);
@@ -58,7 +58,7 @@ describe("basketball SportAdapter.serializeRoster — Phase 0 enrichment fields"
 
   it("writes wasHeld + actualFp per card", () => {
     const snap = sportAdapter.serializeRoster(
-      sixCards({
+      fiveCards({
         0: { wasHeld: true,  actualFp: 42.5 },
         3: { wasHeld: false, actualFp: 8.0  },
       }),
@@ -73,7 +73,7 @@ describe("basketball SportAdapter.serializeRoster — Phase 0 enrichment fields"
 
 describe("basketball SportAdapter round-trip", () => {
   it("preserves per-card wasHeld and actualFp through serialize→deserialize", () => {
-    const enriched = sixCards({
+    const enriched = fiveCards({
       0: { wasHeld: true,  actualFp: 42.5 },
       1: { wasHeld: true,  actualFp: 51.0 },
       2: { wasHeld: false, actualFp: 0    },
@@ -94,7 +94,7 @@ describe("basketball SportAdapter legacy snapshot", () => {
     const legacy = {
       v: 1,
       sport: "basketball",
-      cards: Array.from({ length: 6 }, (_, i) => ({
+      cards: Array.from({ length: 5 }, (_, i) => ({
         id: `p${i + 1}`, basePlayerId: `p${i + 1}`, personKey: `p${i + 1}`,
         cardId: `c${i + 1}`, name: `Player ${i + 1}`, team: "ORL",
         season: "2024-25", position: "G", photoCode: null,
@@ -111,7 +111,7 @@ describe("basketball SportAdapter legacy snapshot", () => {
 describe("basketball SportAdapter.validateRosterSnapshot", () => {
   it("accepts the enriched snapshot", () => {
     const snap = sportAdapter.serializeRoster(
-      sixCards({ 0: { wasHeld: true, actualFp: 30 } }),
+      fiveCards({ 0: { wasHeld: true, actualFp: 30 } }),
     );
     expect(sportAdapter.validateRosterSnapshot(snap)).toBe(true);
   });
@@ -120,7 +120,7 @@ describe("basketball SportAdapter.validateRosterSnapshot", () => {
     const legacy = {
       v: 1,
       sport: "basketball",
-      cards: Array.from({ length: 6 }, (_, i) => ({
+      cards: Array.from({ length: 5 }, (_, i) => ({
         basePlayerId: `p${i + 1}`, name: `Player ${i + 1}`,
         tier: "BLUE", salary: 50,
       })),

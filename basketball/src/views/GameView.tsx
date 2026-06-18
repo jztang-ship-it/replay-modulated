@@ -224,7 +224,31 @@ export default function GameView({
     // call site, but TypeScript treats the optional/required asymmetry as
     // an incompatible signature. Cast pins it to the contract.
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
-    rosterGridColumns: 3,
+    // 5-card layout: row 1 = 2 cards centered (slots 0-1), row 2 = 3 cards
+    // (slots 2-4). Mirror image of baseball's "dice 5" (bb-dice5) — same
+    // shared scaffold, inverted row counts. Six grid columns give each card a
+    // 2-of-6 span (= 1/3 width) so both rows share one card size and the top
+    // row centers over the bottom with no empty 6th cell. Slots stay FLEX /
+    // position-agnostic (positionAware:false); data-slot is the deal index,
+    // NOT a court position.
+    rosterGridColumns: 6,
+    rosterGridLayout: {
+      className: "bball-23",
+      css: `
+        .bball-23 > .roster-grid {
+          grid-template-columns: repeat(6, 1fr);
+          grid-template-rows: 1fr 1fr;
+          row-gap: 8px;
+        }
+        /* Row 1 — two cards centered */
+        .bball-23 > .roster-grid > .card-slot[data-slot="0"] { grid-column: 2 / span 2; grid-row: 1; }
+        .bball-23 > .roster-grid > .card-slot[data-slot="1"] { grid-column: 4 / span 2; grid-row: 1; }
+        /* Row 2 — three cards equally spaced */
+        .bball-23 > .roster-grid > .card-slot[data-slot="2"] { grid-column: 1 / span 2; grid-row: 2; }
+        .bball-23 > .roster-grid > .card-slot[data-slot="3"] { grid-column: 3 / span 2; grid-row: 2; }
+        .bball-23 > .roster-grid > .card-slot[data-slot="4"] { grid-column: 5 / span 2; grid-row: 2; }
+      `,
+    },
     resetAllOverlays,
     ftueTextConfig: BASKETBALL_FTUE_CONFIG,
     // PostHandSheet — basketball does not surface this overlay.
