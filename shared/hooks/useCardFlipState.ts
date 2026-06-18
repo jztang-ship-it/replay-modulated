@@ -40,6 +40,13 @@ export interface CardFlipState {
   /** Call when new roster is dealt. All cards start BACK. */
   initCards: (cardIds: string[]) => void;
 
+  /** Re-deal a round PRESERVING held cards' FRONT face. Atomic rebuild of the
+   *  phase map for the current roster: heldIds → FRONT, every other id → BACK,
+   *  stale ids (not in allRosterIds) dropped. Unlike initCards(subset), this does
+   *  NOT evict held cards to a default BACK — held render FRONT throughout, so a
+   *  round reroll never blinks/re-flips kept cards. */
+  dealRound: (allRosterIds: string[], heldIds: string[]) => void;
+
   /** Call when REVEALING starts. Cards will flip to front one by one via revealCard(). */
   beginReveal: () => void;
 
@@ -99,6 +106,17 @@ export function useCardFlipState(): CardFlipState {
     setPhaseMap(new Map(next));
   }, []);
 
+  const dealRound = useCallback((allRosterIds: string[], heldIds: string[]) => {
+    // Atomic rebuild for the current roster: held → FRONT, others → BACK, stale
+    // ids dropped. Does NOT evict held cards (cf. initCards(subset)), so a reroll
+    // never blinks/re-flips kept cards.
+    const held = new Set(heldIds);
+    const next = new Map<string, CardPhase>();
+    for (const id of allRosterIds) next.set(id, held.has(id) ? "FRONT" : "BACK");
+    phaseMapRef.current = next;
+    setPhaseMap(new Map(next));
+  }, []);
+
   const beginReveal = useCallback(() => {
     // No-op: cards stay BACK until revealCard() is called per card
   }, []);
@@ -148,6 +166,6 @@ export function useCardFlipState(): CardFlipState {
 
   return {
     isBack, isFlipping, isFront, getPhase,
-    initCards, beginReveal, revealCard, completeReveal, beginDraw, resetAll,
+    initCards, dealRound, beginReveal, revealCard, completeReveal, beginDraw, resetAll,
   };
 }

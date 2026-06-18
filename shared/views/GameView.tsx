@@ -1861,9 +1861,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         // flipState phase map stays clean for the eventual lock-round reveal.
         // No reveal, no money. (Reroll animation polish = B2.)
         rosterRef.current = finalRoster;
+        const loopHeldIds = finalRoster.filter(c => (c as any).wasHeld).map(cardId);
         const loopNonHeldIds = finalRoster.filter(c => !(c as any).wasHeld).map(cardId);
         setNoTransition(true);
-        flipState.initCards(loopNonHeldIds);
+        // dealRound keeps held cards FRONT (no eviction → no blink/re-flip) and
+        // sets only the new replacements BACK; then we animate ONLY the
+        // replacements up. (cf. initCards(subset), which evicted held → default BACK.)
+        flipState.dealRound(finalRoster.map(cardId), loopHeldIds);
         setRoster(finalRoster);
         await sleep(50);
         setNoTransition(false);
@@ -1889,11 +1893,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         }
       });
       setNoTransition(true);
-      const nonHeldIds = finalRoster.filter(c => !(c as any).wasHeld).map(cardId);
       const heldIds = finalRoster.filter(c => (c as any).wasHeld).map(cardId);
-      flipState.initCards(nonHeldIds);
-      heldIds.forEach(id => flipState.revealCard(id));
-      setTimeout(() => heldIds.forEach(id => flipState.completeReveal(id)), 0);
+      // Pre-REVEALING state, atomic: held → FRONT (kept cards stay face-up, no
+      // re-flip), every unheld → BACK (revealed one-by-one during REVEALING).
+      // Replaces the destructive initCards(nonHeld)+revealCard(held) pattern whose
+      // held cards survived only by a same-batch synchronous repair (fragile).
+      flipState.dealRound(finalRoster.map(cardId), heldIds);
       setRoster(finalRoster);
       (window as any).debugRoster = finalRoster;
       setStatsFlippedIds(new Set());
