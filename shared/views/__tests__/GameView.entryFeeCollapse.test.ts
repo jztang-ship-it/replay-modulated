@@ -37,7 +37,7 @@ describe("entryFee collapse — adapter-gated, defaults preserve current behavio
       resolvedRoster: [{ basePlayerId: "p", actualFp: 20 }] as any,
       resolveOutcome: () => ({ totalFp: 20, tier: "BUST", payout: 0 }),
       effects: {
-        telemetry: () => {}, persistLock: async () => {},
+        telemetry: () => {}, persistLock: async () => ({ ok: true as const, handId: "h" }),
         charge: () => { charges += 1; }, rake: () => {},
       },
     });

@@ -56,6 +56,7 @@ import {
 import { useSharedGameState } from "./_useSharedGameState";
 import { useReveal } from "./_useReveal";
 import { commitRound } from "./_roundMachine";
+import { boundedPersist } from "./_persistLock";
 import type { GameAdapter } from "./GameAdapter";
 import type { GamePhase, PlayerCard } from "@shared/types";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
@@ -1831,14 +1832,21 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           return { totalFp, tier: String(t), payout: (calculatePayoutWithStreak as any)(t, fee, strk) };
         },
         effects: {
-          telemetry: (ev) => track("gameplay", ev, { sport: sportKey, hand_number: handCount }),
-          persistLock: async (rec) => {
+          telemetry: (ev, meta) => track("gameplay", ev, { sport: sportKey, hand_number: handCount, ...(meta ?? {}) }),
+          persistLock: (rec) => {
             const handId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
               ? crypto.randomUUID()
               : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-            // logHandToDb sets currentHandIdRef.current = handId; _useReveal reads
-            // it for the leaderboard hand_best linkage (no second write at reveal).
-            await logHandToDb(rec.roster as any[], rec.totalFp, rec.tier, rec.payout, rec.streak, handId);
+            // Bounded: a slow/hung hand_log insert must NOT block REVEALING. ok=true
+            // only when the write confirms within PERSIST_TIMEOUT_MS — the controller
+            // gates the charge on it (record-before-money). logHandToDb sets
+            // currentHandIdRef synchronously before its network insert, so _useReveal's
+            // handId linkage holds even when the write is bounded out (and the row may
+            // still land later — reconcilable via the entry_fee_skipped handId).
+            return boundedPersist(
+              () => logHandToDb(rec.roster as any[], rec.totalFp, rec.tier, rec.payout, rec.streak, handId),
+              handId,
+            );
           },
           charge: (fee) => setBalance(prev => { const next = prev - fee; saveBalance(next); return next; }),
           rake: () => setBetNonce(n => n + 1),

@@ -35,12 +35,28 @@ export interface LockRecord {
   entryFee: number;
 }
 
+/** Outcome of a bounded persist. ok = the owed-result write was CONFIRMED within
+ *  the bound (the charge is gated on this). handId identifies the (attempted)
+ *  hand_log row; reason explains a failure so skips are tunable (timeout = DB
+ *  slow / raise the dial) and reconcilable (handId cross-checks whether the row
+ *  eventually landed → skip + row = under-charged-but-persisted). */
+export interface PersistResult {
+  ok: boolean;
+  handId: string;
+  reason?: "timeout" | "throw";
+}
+
 /** Side effects injected by onPrimaryAction (real impls) or by tests (spies). */
 export interface RoundLockEffects {
-  telemetry: (event: "lineup_locked" | "entry_fee_committed") => void;
-  /** Persist the owed-result record. Awaited before charge — the record must
-   *  exist before money moves (crash-boundary safety). */
-  persistLock: (record: LockRecord) => Promise<void>;
+  telemetry: (
+    event: "lineup_locked" | "entry_fee_committed" | "entry_fee_skipped",
+    meta?: Record<string, string | number | boolean | null>,
+  ) => void;
+  /** Persist the owed-result record, BOUNDED (the timeout lives in the effect
+   *  impl, NOT this pure module). Returns ok=true only when the write is
+   *  CONFIRMED within the bound — the charge is gated on it (record-before-money).
+   *  Awaited before charge. Must never throw (catch → ok:false). */
+  persistLock: (record: LockRecord) => Promise<PersistResult>;
   /** Deduct the single entry fee. */
   charge: (entryFee: number) => void;
   /** Fire the once-per-hand bonus-pool rake. */
@@ -97,19 +113,24 @@ export async function commitRound(input: CommitRoundInput): Promise<CommitRoundR
     return { next: "HOLD", roundsUsed: nextRoundsUsed, locked: false };
   }
 
-  // ── Lineup lock — money crosses the seam exactly once. ────────────────────
-  // Ordering is a crash-boundary invariant (pinned by test):
-  //   lineup_locked → persistLock (awaited) → charge → entry_fee_committed → rake
-  // Record the owed result BEFORE charging, so a charge-then-crash always has a
-  // recoverable record; the only crash gap (post-persist / pre-charge) leaves a
-  // record with no charge (safe — re-chargeable/voidable), never the reverse.
+  // ── Lineup lock — money crosses the seam at most once. ────────────────────
+  // Crash-boundary invariant (pinned by tests): the charge is GATED on a
+  // CONFIRMED persist. Sequence on success:
+  //   lineup_locked → persistLock(ok) → charge → entry_fee_committed → rake
+  // On a failed/bounded-out persist: no charge (safe, re-chargeable direction),
+  // emit entry_fee_skipped (handId+reason) for reconciliation — and REVEALING
+  // STILL fires (reveal is never blocked on a slow/hung network).
   // payout is computed from the SAME entryFee that charge deducts (reconcile).
   const { totalFp, tier, payout } = resolveOutcome(resolvedRoster, entryFee, streak);
   effects.telemetry("lineup_locked");
-  await effects.persistLock({ roster: resolvedRoster, totalFp, tier, payout, streak, entryFee });
-  effects.charge(entryFee);
-  effects.telemetry("entry_fee_committed");
-  effects.rake();
+  const persisted = await effects.persistLock({ roster: resolvedRoster, totalFp, tier, payout, streak, entryFee });
+  if (persisted.ok) {
+    effects.charge(entryFee);
+    effects.telemetry("entry_fee_committed", { handId: persisted.handId });
+    effects.rake();
+  } else {
+    effects.telemetry("entry_fee_skipped", { handId: persisted.handId, reason: persisted.reason ?? "throw" });
+  }
 
   return { next: "REVEALING", roundsUsed: nextRoundsUsed, locked: true };
 }

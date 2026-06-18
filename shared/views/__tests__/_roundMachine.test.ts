@@ -46,6 +46,7 @@ function makeSpies() {
       await Promise.resolve();
       lockRecords.push(rec);
       order.push("persistLock");
+      return { ok: true as const, handId: "h-test" };
     }),
     charge: vi.fn((fee: number) => { charges.push(fee); order.push("charge"); }),
     rake: vi.fn(() => { order.push("rake"); }),
@@ -125,19 +126,45 @@ describe("_roundMachine — pinned crash-boundary contracts", () => {
     ]);
   });
 
-  it("persistLock fully resolves before charge fires (await is real, not fire-and-forget)", async () => {
+  it("slow-but-successful persist: charge fires AFTER persist resolves (ordering preserved)", async () => {
     const order: string[] = [];
     const effects: RoundLockEffects = {
       telemetry: () => {},
       persistLock: vi.fn(async () => {
-        await new Promise((r) => setTimeout(r, 5)); // slow persist
+        await new Promise((r) => setTimeout(r, 5)); // slow persist that still confirms
         order.push("persist-done");
+        return { ok: true as const, handId: "h-slow" };
       }),
       charge: vi.fn(() => { order.push("charge"); }),
       rake: () => {},
     };
-    await commitRound(input({ roundsUsed: 0, userTappedReveal: true }, effects));
+    await commitRound(input({ roundsUsed: 1, userTappedReveal: true }, effects));
     expect(order).toEqual(["persist-done", "charge"]); // charge waited for the slow persist
+  });
+
+  // ── THE HANG FIX: persist false → NO charge, skipped telemetry, still REVEALING ─
+  it("persist failure (ok:false): NO charge, entry_fee_skipped(handId+reason), still REVEALING", async () => {
+    const events: Array<{ ev: string; meta?: any }> = [];
+    let charged = false;
+    const effects: RoundLockEffects = {
+      telemetry: (ev, meta) => events.push({ ev, meta }),
+      persistLock: async () => ({ ok: false, handId: "h-fail", reason: "timeout" as const }),
+      charge: () => { charged = true; },
+      rake: () => {},
+    };
+    const r = await commitRound(input({ roundsUsed: 1, userTappedReveal: true }, effects));
+    expect(r.next).toBe("REVEALING");   // reveal is NEVER blocked by a failed persist
+    expect(charged).toBe(false);        // no charge without a confirmed record (safe direction)
+    const skip = events.find(e => e.ev === "entry_fee_skipped");
+    expect(skip?.meta).toMatchObject({ handId: "h-fail", reason: "timeout" });
+    expect(events.find(e => e.ev === "entry_fee_committed")).toBeUndefined();
+  });
+
+  // ── Anon fast-path: persist confirms (logHandToDb no-ops) → charge fires ──────
+  it("anon fast-path: persist ok:true (logHandToDb no-op) → charge DOES fire", async () => {
+    const { effects, charges } = makeSpies(); // makeSpies persistLock returns ok:true
+    await commitRound(input({ roundsUsed: 1, userTappedReveal: true }, effects));
+    expect(charges).toEqual([ENTRY_FEE]); // anon hands still charge — must not regress
   });
 
   // ── Persist record carries RESOLVED FP, not card ids ────────────────────────

@@ -59,7 +59,7 @@ describe("B1 wiring — money crosses the seam only via the controller's lock pa
   it("charge + rake + persist are wired as commitRound effects (not inline per-draw)", () => {
     expect(holdBranch).toMatch(/charge:\s*\(fee\)\s*=>\s*setBalance\(prev\s*=>\s*\{\s*const next = prev - fee/);
     expect(holdBranch).toMatch(/rake:\s*\(\)\s*=>\s*setBetNonce\(n\s*=>\s*n\s*\+\s*1\)/);
-    expect(holdBranch).toMatch(/persistLock:\s*async/);
+    expect(holdBranch).toMatch(/persistLock:\s*\(rec\)\s*=>/);
   });
 
   // ── A round LOOP is FREE — zero money ops on the loop-back path ─────────────
@@ -71,8 +71,8 @@ describe("B1 wiring — money crosses the seam only via the controller's lock pa
 });
 
 describe("B1 wiring — persist once at lock (relocated from reveal)", () => {
-  it("the persistLock effect writes the hand_log row (logHandToDb) at lock", () => {
-    expect(holdBranch).toMatch(/persistLock:\s*async[\s\S]*?logHandToDb\(/);
+  it("the persistLock effect writes the hand_log row (logHandToDb) at lock, bounded", () => {
+    expect(holdBranch).toMatch(/persistLock:\s*\(rec\)\s*=>[\s\S]*?boundedPersist\([\s\S]*?logHandToDb\(/);
   });
   it("_useReveal NO LONGER writes hand_log (reads the lock-set handId instead) — one write per hand", () => {
     expect(USE_REVEAL).not.toMatch(/logHandToDb\(/);            // no second write at reveal
