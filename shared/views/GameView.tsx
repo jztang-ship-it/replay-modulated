@@ -1749,6 +1749,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         return;
       }
       setGameError(null);
+      // ── Economic invariant (build-phase prep): ONE hand pays once and rakes
+      // once, independent of draw count. The entry bet + its 5% bonus-pool rake
+      // (betNonce) fire HERE, once per successfully-dealt hand — NOT per HOLD→DRAW.
+      // Placed after the deal-validity guard above so a failed/empty deal is never
+      // charged (mirrors the prior HOLD-entry timing, which also only ran after a
+      // successful deal). Single-draw behavior is identical; the Commit-B round
+      // loop can now redraw freely without re-charging. betNonce's only consumer
+      // is the BonusPoolPill rake effect.
+      setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
+      setBetNonce(n => n + 1);
       rosterRef.current = nextRoster;
       gameAnalytics.handDealt(nextRoster);
       setNoTransition(true);
@@ -1766,8 +1776,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
 
     if (gameState === "HOLD") {
-      setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
-      setBetNonce(n => n + 1);
+      // Bet + bonus-pool rake moved to the deal entry (IDLE branch) — see the
+      // economic-invariant note there. A draw NEVER touches balance or the rake,
+      // so the Commit-B round loop can redraw up to 3× on one paid hand without
+      // re-charging. (per-draw → per-hand invariant repair.)
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
       setRoster(markedRoster);
