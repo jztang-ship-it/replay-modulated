@@ -1846,18 +1846,22 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       });
       setRoundsUsed(decision.roundsUsed);
       if (decision.next === "HOLD") {
-        // Loop: show the rerolled hand face-up and return to HOLD for another
-        // round. Held cards carry forward; no reveal, no money. (Reroll
-        // animation polish = B2.)
+        // Loop back to HOLD for another round. Only the UNHELD (rerolled)
+        // replacement cards re-deal; HELD cards are left untouched (already
+        // FRONT — beginDraw above only flips unheld). Mirrors the deal/lock
+        // nonHeldIds/heldIds split so held cards don't flip face-down and the
+        // flipState phase map stays clean for the eventual lock-round reveal.
+        // No reveal, no money. (Reroll animation polish = B2.)
         rosterRef.current = finalRoster;
+        const loopNonHeldIds = finalRoster.filter(c => !(c as any).wasHeld).map(cardId);
         setNoTransition(true);
-        flipState.initCards(finalRoster.map(cardId));
+        flipState.initCards(loopNonHeldIds);
         setRoster(finalRoster);
         await sleep(50);
         setNoTransition(false);
-        for (const c of finalRoster) flipState.revealCard(cardId(c));
+        for (const id of loopNonHeldIds) flipState.revealCard(id);
         await sleep(50);
-        for (const c of finalRoster) flipState.completeReveal(cardId(c));
+        for (const id of loopNonHeldIds) flipState.completeReveal(id);
         setGameState("HOLD");
         return;
       }
