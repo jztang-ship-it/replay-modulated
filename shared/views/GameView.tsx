@@ -1033,7 +1033,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // bet math (payout, animations, FTUE seeds) reads 1x even if the
   // user's preferred multiplier from a prior session is higher. The UI
   // hides the multiplier selector entirely so it can't drift from this.
-  const effectiveBetMultiplier = challengeCtx ? 1 : betMultiplier;
+  // Build-phase entryFee collapse: when the sport disables the multiplier
+  // (basketball, adapter.multiplierEnabled === false), the bet is a single
+  // entryFee — pin the effective multiplier to 1. Default true ⇒ multiplier
+  // live (baseball/football unchanged). betMultiplier state + setBetMultiplier
+  // stay intact and re-wireable; only the input-to-bet role is disconnected.
+  const multiplierEnabled = adapter.multiplierEnabled ?? true;
+  const effectiveBetMultiplier = (!multiplierEnabled || challengeCtx) ? 1 : betMultiplier;
   const currentBet = BASE_BET * effectiveBetMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
 
@@ -2675,7 +2681,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     );
                   })()}
                 </div>
-                {gameState === "HOLD" && !challengeCtx && (
+                {gameState === "HOLD" && !challengeCtx && multiplierEnabled && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
                     <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
                       {BASE_BET} × {betMultiplier}x =
@@ -2859,6 +2865,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         legend={legendWithStars}
         sportKey={sportKey}
         hideTierBar
+        showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
         celebration={celebrationData}

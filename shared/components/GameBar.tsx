@@ -94,6 +94,9 @@ type Props = {
   betMultiplier: number;
   baseBet: number;
   onBetMultiplier: (m: number) => void;
+  /** When false, the bet-multiplier selector is hidden (entryFee/build-phase mode).
+   *  Default true ⇒ selector shown (current behavior). State/handlers stay intact. */
+  showBetMultiplier?: boolean;
   onAction: () => void;
   /** Sport-specific win tier thresholds + colors */
   winTiers: WinTierDisplay[];
@@ -1323,7 +1326,7 @@ export function GameBar({
   lastCardProgress = 0,
   lastCardFp = 0,
   capMax, capUsed, lockedSalary, revealedSalary,
-  betMultiplier, baseBet, onBetMultiplier, onAction,
+  betMultiplier, baseBet, onBetMultiplier, showBetMultiplier = true, onAction,
   winTiers, legend,
   celebration, onWinCelebrationComplete, onWageAnimationComplete,
   replayPulse = false,
@@ -1700,7 +1703,7 @@ export function GameBar({
           document.body
         )}
         {ReactDOM.createPortal(
-          splitMultiplierRowVisible && !challengeMode ? multiplierRow : <></>,
+          splitMultiplierRowVisible && !challengeMode && showBetMultiplier ? multiplierRow : <></>,
           splitFooter!.multipliersHost as Element
         )}
         {ReactDOM.createPortal(controlsFooter, splitFooter!.controlsHost as Element)}
@@ -1772,7 +1775,7 @@ export function GameBar({
             transition: "filter 0.35s ease, opacity 0.35s ease",
             pointerEvents: showCelebContent ? "none" : "auto",
           }}>
-            {!challengeMode && multiplierRow}
+            {!challengeMode && showBetMultiplier && multiplierRow}
 
             <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: challengeMode ? 0 : 1, pointerEvents: challengeMode ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
               {/* Balance — left */}

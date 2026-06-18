@@ -117,6 +117,17 @@ export interface GameAdapter {
    *  Basketball/worldcup omit. Shape:
    *    { className: "bb-dice5", css: "..."}                        */
   rosterGridLayout?: { className: string; css: string };
+  /** Build-phase v1 (basketball). Max hold/reroll rounds in one hand. The shared
+   *  GameView reads `adapter.maxRounds ?? 1`; absent ⇒ 1 ⇒ single-shot (today's
+   *  flow), so baseball/football are unchanged until their own cross-sport port. */
+  maxRounds?: number;
+  /** Build-phase v1 (basketball). When false, the bet collapses to a single
+   *  entryFee — the multiplier is pinned to 1 and its selector hidden, but the
+   *  betMultiplier state/setter stay intact (re-wireable). GameView reads
+   *  `adapter.multiplierEnabled ?? true`; absent ⇒ true ⇒ multiplier live (today's
+   *  flow). The `?? true` / `?? 1` defaults live at the shared read site so a
+   *  sport that doesn't set these fields keeps current behavior. */
+  multiplierEnabled?: boolean;
   /** Optional per-slot label badge (e.g. football's FLEX slot showing
    *  "ANY OUTFIELD" with a tooltip explaining the rule). Keyed by slot
    *  index. Basketball/baseball omit. */
