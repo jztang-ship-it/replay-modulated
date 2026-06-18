@@ -195,7 +195,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     setWinTier, setWinPayout,
     setGameState, setBalance,
     persistBalance,
-    submitToLeaderboard, checkLeaderboardRank, logHandToDb,
+    submitToLeaderboard, checkLeaderboardRank, currentHandIdRef,
     incrementStreak, resetStreak, incrementHandCount,
   } = state;
 
@@ -361,14 +361,13 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
           isStarCard: true,
         });
       }
-      // Generate the hand id once and reuse it for hand_log and leaderboard
-      // hand_best so api/leaderboard can verify the submitted score against
-      // a real audit-trail row (Option C — existence check, see
-      // docs/superpowers/specs/2026-04-30-prelaunch-section-2.md drafted notes).
-      const handIdForAudit = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
-        ? crypto.randomUUID()
-        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-      logHandToDb(rosterRef.current, totalFp, tier ?? "BUST", payout, streak, handIdForAudit);
+      // The hand was persisted at LINEUP-LOCK (round-machine controller →
+      // persistLock generated the handId, wrote the single hand_log row, and set
+      // currentHandIdRef). Read it here for the leaderboard hand_best audit
+      // linkage — no second hand_log write at reveal. Guarded below: if the ref
+      // is unset (shouldn't happen by flow), we skip the linked hand_best submit
+      // rather than send an unlinked/null-handId row.
+      const handIdForAudit = currentHandIdRef.current ?? undefined;
       recordHandPlayed();
       if (!bust) recordHandWon(); else recordHandLost();
 
@@ -423,10 +422,16 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
           if (!bust) {
             submitToLeaderboard("fp", totalFp);
             if (handCount >= 8) submitToLeaderboard("hand_avg", totalFp, { handCount });
-            // Reuse the same handId logHandToDb just persisted — api/leaderboard
-            // will look it up in hand_log to confirm the submission corresponds
-            // to a real audit-trail row.
-            submitToLeaderboard("hand_best", totalFp, { proof, handId: handIdForAudit });
+            // Reuse the lock-generated handId (currentHandIdRef) — api/leaderboard
+            // looks it up in hand_log to confirm the submission corresponds to a
+            // real audit-trail row. Guard: skip the linked submit if the ref is
+            // unset rather than send an unlinked row (binding: no silent null link).
+            if (handIdForAudit) {
+              submitToLeaderboard("hand_best", totalFp, { proof, handId: handIdForAudit });
+            } else {
+              // eslint-disable-next-line no-console
+              console.warn("[reveal] lock handId missing — skipping hand_best submit");
+            }
             submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
             track("gameplay", "score_submitted", {
               sport: adapter.sportKey,
@@ -478,7 +483,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     rosterRef,
     runSpring, calculateWinTier, calculatePayoutWithStreak,
     setWinTier, setWinPayout, setBalance, persistBalance, setGameState,
-    submitToLeaderboard, checkLeaderboardRank, logHandToDb,
+    submitToLeaderboard, checkLeaderboardRank,
     incrementStreak, resetStreak, incrementHandCount,
     setBigWinFired, setOnBoardTick, gameAnalytics, getTopGameInfo,
     recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,

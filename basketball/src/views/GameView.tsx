@@ -225,8 +225,9 @@ export default function GameView({
     // an incompatible signature. Cast pins it to the contract.
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
     // Build-phase: single entryFee (multiplier dormant — state/selector intact but
-    // hidden + disconnected from the bet). maxRounds wires in with the round loop.
+    // hidden + disconnected from the bet) + up to 3 hold/reroll rounds per hand.
     multiplierEnabled: false,
+    maxRounds: 3,
     // 5-card layout: row 1 = 2 cards centered (slots 0-1), row 2 = 3 cards
     // (slots 2-4). Mirror image of baseball's "dice 5" (bb-dice5) — same
     // shared scaffold, inverted row counts. Six grid columns give each card a

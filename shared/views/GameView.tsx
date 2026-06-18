@@ -55,6 +55,7 @@ import {
 } from "./_gameViewHelpers";
 import { useSharedGameState } from "./_useSharedGameState";
 import { useReveal } from "./_useReveal";
+import { commitRound } from "./_roundMachine";
 import type { GameAdapter } from "./GameAdapter";
 import type { GamePhase, PlayerCard } from "@shared/types";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
@@ -446,6 +447,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const shared = useSharedGameState(sharedAdapter, { rosterSize: ROSTER_SIZE });
   const {
     gameState, setGameState,
+    roundsUsed, setRoundsUsed,
     dataReady, setDataReady,
     noTransition, setNoTransition,
     roster, setRoster,
@@ -1039,6 +1041,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // live (baseball/football unchanged). betMultiplier state + setBetMultiplier
   // stay intact and re-wireable; only the input-to-bet role is disconnected.
   const multiplierEnabled = adapter.multiplierEnabled ?? true;
+  // Build-phase round cap. Default 1 ⇒ single-shot (today's flow) for any sport
+  // that doesn't opt in. Basketball sets 3. Read site owns the default.
+  const maxRounds = adapter.maxRounds ?? 1;
   const effectiveBetMultiplier = (!multiplierEnabled || challengeCtx) ? 1 : betMultiplier;
   const currentBet = BASE_BET * effectiveBetMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
@@ -1694,6 +1699,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
       resetAllOverlays();
+      setRoundsUsed(0); // new hand → reset the build-phase round counter
       initialRosterRef.current = [];
       completedCardsRef.current = new Set();
       setDisplayTier("BUST");
@@ -1755,16 +1761,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         return;
       }
       setGameError(null);
-      // ── Economic invariant (build-phase prep): ONE hand pays once and rakes
-      // once, independent of draw count. The entry bet + its 5% bonus-pool rake
-      // (betNonce) fire HERE, once per successfully-dealt hand — NOT per HOLD→DRAW.
-      // Placed after the deal-validity guard above so a failed/empty deal is never
-      // charged (mirrors the prior HOLD-entry timing, which also only ran after a
-      // successful deal). Single-draw behavior is identical; the Commit-B round
-      // loop can now redraw freely without re-charging. betNonce's only consumer
-      // is the BonusPoolPill rake effect.
-      setBalance(prev => { const next = prev - currentBet; saveBalance(next); return next; });
-      setBetNonce(n => n + 1);
+      // Economic invariant: ONE hand pays once and rakes once. The entry bet +
+      // bonus rake now fire at LINEUP-LOCK (via the round-machine controller's
+      // lock path — see the HOLD branch below), NOT here at deal entry and NOT
+      // per HOLD→DRAW. A deal is free; money crosses the seam only when the
+      // lineup locks. (Relocated from the deal-entry position of Commit A.)
       rosterRef.current = nextRoster;
       gameAnalytics.handDealt(nextRoster);
       setNoTransition(true);
@@ -1782,10 +1783,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
 
     if (gameState === "HOLD") {
-      // Bet + bonus-pool rake moved to the deal entry (IDLE branch) — see the
-      // economic-invariant note there. A draw NEVER touches balance or the rake,
-      // so the Commit-B round loop can redraw up to 3× on one paid hand without
-      // re-charging. (per-draw → per-hand invariant repair.)
+      // One build-phase ROUND: reroll the unheld cards, resolve, then ask the
+      // round-machine controller whether to loop back to HOLD (free) or lock to
+      // REVEALING. A round NEVER touches balance or the rake directly — money
+      // crosses the seam only inside commitRound's lock path (below), once per
+      // hand regardless of round count. Held cards carry forward (lockedCardIds
+      // are keyed by cardId; redraw preserves held cards' ids).
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
       setRoster(markedRoster);
@@ -1806,6 +1809,59 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
       const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);
+
+      // ── Round-machine decision. Loop back to HOLD (free) or lock to REVEALING.
+      //    On lock, the controller runs the once-per-hand economics in
+      //    crash-boundary order: lineup_locked → persistLock (generates handId +
+      //    writes the single hand_log row + sets currentHandIdRef, awaited) →
+      //    charge → entry_fee_committed → rake. resolvedRoster is finalRoster
+      //    (post-resolveRoster — actualFp baked), so the persisted record is a
+      //    reconstructable owed result; payout derives from the same entryFee
+      //    that charge deducts.
+      const decision = await commitRound({
+        roundsUsed,
+        maxRounds,
+        userTappedReveal: false, // B1: auto-lock at maxRounds; early-lock control = B2
+        entryFee: currentBet,
+        streak,
+        resolvedRoster: finalRoster,
+        resolveOutcome: (roster, fee, strk) => {
+          const totalFp = (roster as any[]).reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
+          const t = calculateWinTier(totalFp) ?? "BUST";
+          return { totalFp, tier: String(t), payout: (calculatePayoutWithStreak as any)(t, fee, strk) };
+        },
+        effects: {
+          telemetry: (ev) => track("gameplay", ev, { sport: sportKey, hand_number: handCount }),
+          persistLock: async (rec) => {
+            const handId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
+              ? crypto.randomUUID()
+              : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+            // logHandToDb sets currentHandIdRef.current = handId; _useReveal reads
+            // it for the leaderboard hand_best linkage (no second write at reveal).
+            await logHandToDb(rec.roster as any[], rec.totalFp, rec.tier, rec.payout, rec.streak, handId);
+          },
+          charge: (fee) => setBalance(prev => { const next = prev - fee; saveBalance(next); return next; }),
+          rake: () => setBetNonce(n => n + 1),
+        },
+      });
+      setRoundsUsed(decision.roundsUsed);
+      if (decision.next === "HOLD") {
+        // Loop: show the rerolled hand face-up and return to HOLD for another
+        // round. Held cards carry forward; no reveal, no money. (Reroll
+        // animation polish = B2.)
+        rosterRef.current = finalRoster;
+        setNoTransition(true);
+        flipState.initCards(finalRoster.map(cardId));
+        setRoster(finalRoster);
+        await sleep(50);
+        setNoTransition(false);
+        for (const c of finalRoster) flipState.revealCard(cardId(c));
+        await sleep(50);
+        for (const c of finalRoster) flipState.completeReveal(cardId(c));
+        setGameState("HOLD");
+        return;
+      }
+      // LOCK → fall through to the reveal-prep choreography + REVEALING below.
 
       const heldSalaryAtDraw = finalRoster.reduce(
         (s, c: any) => c.wasHeld ? s + Number(c.salary ?? 0) : s, 0
