@@ -28,10 +28,11 @@ describe("entryFee collapse — adapter-gated, defaults preserve current behavio
   it("GameView reads multiplierEnabled with a `?? true` default at the read site", () => {
     expect(GAME_VIEW).toMatch(/adapter\.multiplierEnabled\s*\?\?\s*true/);
   });
-  it("maxRounds=1 inertness (runtime): controller locks on round 1 = single-shot", async () => {
+  it("maxRounds=1 inertness (runtime): first reroll locks = single-shot", async () => {
     let charges = 0;
     const r = await commitRound({
-      roundsUsed: 0, maxRounds: 1, userTappedReveal: false,
+      roundsUsed: 1, maxRounds: 1, userTappedReveal: false, // deal=lineup 1; first reroll locks
+
       entryFee: 10, streak: 0,
       resolvedRoster: [{ basePlayerId: "p", actualFp: 20 }] as any,
       resolveOutcome: () => ({ totalFp: 20, tier: "BUST", payout: 0 }),
@@ -40,8 +41,8 @@ describe("entryFee collapse — adapter-gated, defaults preserve current behavio
         charge: () => { charges += 1; }, rake: () => {},
       },
     });
-    expect(r.next).toBe("REVEALING");   // no loop — locks immediately, like today
-    expect(r.roundsUsed).toBe(1);
+    expect(r.next).toBe("REVEALING");   // no loop — locks on the first reroll, like today
+    expect(r.roundsUsed).toBe(2);       // lineup 1 (deal) → first reroll → lock
     expect(charges).toBe(1);            // one charge, single-shot
     expect(MAX_ROUNDS).toBe(3);         // basketball's value, distinct from the default
   });

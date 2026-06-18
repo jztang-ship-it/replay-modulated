@@ -1699,7 +1699,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
       resetAllOverlays();
-      setRoundsUsed(0); // new hand → reset the build-phase round counter
+      setRoundsUsed(1); // new hand → the deal is round/lineup 1 (lock fires after 2 rerolls = 3 lineups at maxRounds 3; first reroll locks at maxRounds 1 = single-shot)
       initialRosterRef.current = [];
       completedCardsRef.current = new Set();
       setDisplayTier("BUST");

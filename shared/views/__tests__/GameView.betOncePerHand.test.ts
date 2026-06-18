@@ -43,8 +43,8 @@ describe("B1 wiring — money crosses the seam only via the controller's lock pa
     expect(idleBranch).not.toMatch(/prev - currentBet/);
     expect(idleBranch).not.toMatch(/setBetNonce\s*\(/);
   });
-  it("the deal resets the round counter", () => {
-    expect(idleBranch).toMatch(/setRoundsUsed\(0\)/);
+  it("the deal sets the round counter to 1 (deal = lineup 1)", () => {
+    expect(idleBranch).toMatch(/setRoundsUsed\(1\)/);
   });
 
   // ── HOLD delegates the decision to the controller, AFTER resolveRoster ──────

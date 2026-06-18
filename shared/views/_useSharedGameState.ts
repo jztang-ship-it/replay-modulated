@@ -129,10 +129,12 @@ export function useSharedGameState(
 
   // ── Core flow ──────────────────────────────────────────────────────
   const [gameState, setGameState] = useState<GameState>("IDLE");
-  // Build-phase round counter. Rounds used in the current hand; reset to 0 at
-  // deal. The round-machine controller drives loop-vs-lock off this; with
-  // adapter.maxRounds defaulting to 1, a hand locks on round 1 (single-shot).
-  const [roundsUsed, setRoundsUsed] = useState(0);
+  // Build-phase lineup counter. The DEAL is lineup/round 1, so this resets to 1
+  // at deal (not 0). The round-machine controller locks when roundsUsed+1 >=
+  // maxRounds: basketball (maxRounds 3) locks after 2 rerolls (3 lineups);
+  // baseball/football (maxRounds defaulting to 1) lock on the first reroll =
+  // today's single-shot.
+  const [roundsUsed, setRoundsUsed] = useState(1);
   const [dataReady, setDataReady] = useState(false);
   const [noTransition, setNoTransition] = useState(false);
 

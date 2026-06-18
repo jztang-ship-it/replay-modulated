@@ -63,26 +63,23 @@ function input(over: Partial<Parameters<typeof commitRound>[0]>, effects: RoundL
 }
 
 describe("_roundMachine — money crosses the seam once per hand, at lock", () => {
-  // ── HEADLINE: 3 rounds → exactly one charge/rake, fired only at round 3 ─────
-  it("3-round hand: rounds 1-2 fire ZERO effects; round 3 locks and charges once", async () => {
+  // ── HEADLINE: deal=lineup 1, then 2 rerolls → exactly one charge, on the 2nd ─
+  // Round model: the deal is lineup 1 (choreography sets roundsUsed=1; NOT a
+  // commit). The player rerolls twice (3 lineups total); lock fires on the 2nd
+  // reroll. maxRounds=3.
+  it("basketball (maxRounds 3): deal=lineup 1, 2 rerolls → lock on the 2nd (3 lineups, one charge)", async () => {
     const { effects, charges } = makeSpies();
 
-    const r1 = await commitRound(input({ roundsUsed: 0, userTappedReveal: false }, effects));
-    expect(r1).toMatchObject({ next: "HOLD", roundsUsed: 1, locked: false });
-
-    const r2 = await commitRound(input({ roundsUsed: 1, userTappedReveal: false }, effects));
-    expect(r2).toMatchObject({ next: "HOLD", roundsUsed: 2, locked: false });
-
-    // rounds 1-2 touched no money/persist/telemetry
+    // reroll 1 (from lineup 1): loops to lineup 2, zero effects
+    const r1 = await commitRound(input({ roundsUsed: 1, userTappedReveal: false }, effects));
+    expect(r1).toMatchObject({ next: "HOLD", roundsUsed: 2, locked: false });
     expect(effects.charge).toHaveBeenCalledTimes(0);
-    expect(effects.rake).toHaveBeenCalledTimes(0);
     expect(effects.persistLock).toHaveBeenCalledTimes(0);
     expect(effects.telemetry).toHaveBeenCalledTimes(0);
 
-    const r3 = await commitRound(input({ roundsUsed: 2, userTappedReveal: false }, effects));
-    expect(r3).toMatchObject({ next: "REVEALING", roundsUsed: 3, locked: true });
-
-    // exactly one of each, only at the lock transition
+    // reroll 2 (from lineup 2): LOCK → lineup 3 reveals
+    const r2 = await commitRound(input({ roundsUsed: 2, userTappedReveal: false }, effects));
+    expect(r2).toMatchObject({ next: "REVEALING", roundsUsed: 3, locked: true });
     expect(effects.charge).toHaveBeenCalledTimes(1);
     expect(charges).toEqual([ENTRY_FEE]);
     expect(effects.rake).toHaveBeenCalledTimes(1);
@@ -90,22 +87,21 @@ describe("_roundMachine — money crosses the seam once per hand, at lock", () =
     expect(effects.telemetry).toHaveBeenCalledTimes(2); // lineup_locked + entry_fee_committed
   });
 
-  it("1-round hand (lock immediately): one charge, one rake", async () => {
+  it("single-shot (maxRounds 1): the first reroll locks = today's behavior, one charge", async () => {
     const { effects, charges } = makeSpies();
-    const r = await commitRound(input({ roundsUsed: 0, userTappedReveal: true }, effects));
+    // deal set roundsUsed=1; first reroll: 1+1 >= 1 → lock immediately
+    const r = await commitRound(input({ roundsUsed: 1, maxRounds: 1, userTappedReveal: false }, effects));
+    expect(r).toMatchObject({ next: "REVEALING", locked: true });
+    expect(charges).toEqual([ENTRY_FEE]);
+    expect(effects.charge).toHaveBeenCalledTimes(1);
+  });
+
+  it("early lock (userTappedReveal): locks before maxRounds, one charge (B2 control)", async () => {
+    const { effects, charges } = makeSpies();
+    const r = await commitRound(input({ roundsUsed: 1, userTappedReveal: true }, effects));
     expect(r).toMatchObject({ next: "REVEALING", locked: true });
     expect(charges).toEqual([ENTRY_FEE]);
     expect(effects.rake).toHaveBeenCalledTimes(1);
-  });
-
-  it("2-round hand (loop once, then lock): one charge", async () => {
-    const { effects, charges } = makeSpies();
-    const r1 = await commitRound(input({ roundsUsed: 0, userTappedReveal: false }, effects));
-    expect(r1.next).toBe("HOLD");
-    const r2 = await commitRound(input({ roundsUsed: 1, userTappedReveal: true }, effects));
-    expect(r2.next).toBe("REVEALING");
-    expect(charges).toEqual([ENTRY_FEE]);
-    expect(effects.charge).toHaveBeenCalledTimes(1);
   });
 
   it("auto-locks at MAX_ROUNDS even without an explicit lock tap", async () => {
