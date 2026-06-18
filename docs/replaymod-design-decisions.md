@@ -1,7 +1,7 @@
 # ReplayMod — Design Decisions & Session State
 
-**Last updated:** 2026-06-08
-**Status:** #7 (results hero-slot flip) shipped to `origin/main` at `8d3d7d9` (fast-forward from `08b95c8`); challenge-redesign roadmap **RD0–RD5** sequenced for the investor build (objective + non-goals locked below; build sequence revised 2026-06-08 supersedes the 2026-05-23 sender/stamps sequence, which is deferred behind the investor build). Prior: stamps feature shipped 2026-05-22 (merge `ce9c277`); position-data fix shipped 2026-05-22 (`87742bb`).
+**Last updated:** 2026-06-18
+**Status:** **5-card basketball + recalibrated win-tier balance shipped to `origin/main` at `f2f06f7` (2026-06-18; rollback `ebe20b2`)** — Slice A (UI + deal) and Slice B (threshold recalibration at 5 slots) merged together; watched prod deploy succeeded. Prior: #7 (results hero-slot flip) shipped to `origin/main` at `8d3d7d9` (fast-forward from `08b95c8`); challenge-redesign roadmap **RD0–RD5** sequenced for the investor build (objective + non-goals locked below; build sequence revised 2026-06-08 supersedes the 2026-05-23 sender/stamps sequence, which is deferred behind the investor build). Prior: stamps feature shipped 2026-05-22 (merge `ce9c277`); position-data fix shipped 2026-05-22 (`87742bb`).
 **Purpose:** home-base document for the ReplayMod project. Every chat in this project should start with this in context. Update at the end of each session — *and during the session, whenever a decision is locked.*
 
 ---
@@ -85,6 +85,14 @@ Recipient side:
 - **R5** — Persistent challenge floating icon (if lost, hangs over normal-game play).
 
 ---
+
+## Recently shipped — 5-card basketball + recalibrated balance (2026-06-18)
+
+- **5-card basketball — Slice A + B** (shipped 2026-06-18, merge commit `f2f06f7`; rollback `ebe20b2`) — basketball flipped 6→5 cards and win-tier thresholds recalibrated at 5 slots, merged together so prod never ran 5-card hands on 6-card tiers.
+  - **Slice A (UI + deal):** `basketballConfig` maxPlayers/minPlayers/rosterSlots 6→5; roster grid 2-top/3-bottom via the `bb-dice5` `rosterGridLayout` scaffold mirror (`bball-23`); `H2HRecipientPlay` roster size now from `initialRoster.length` (not literal 6).
+  - **Slice B (balance):** thresholds regenerated for all 29 seasons via `slateAwareThresholds.ts` (production-parity generator). RTP restored to target — **79.25% (5-card hands on stale 6-card tiers) → 89.02% (on new 5-card tiers)**; streak schedule holds; **cap held at $250** (reconciles on target; no scaling). Player salaries untouched.
+  - **Premise correction:** the FP drop at 5 cards is only **~2–3 FP, not ~25–40** — the $250 cap binds and redistributes across 5 pricier cards (sim mean 185.4→183.4). The harshness was threshold-vs-distribution leverage (dense clustering at tier boundaries × high multipliers), not an FP collapse.
+  - **Tier balance is good-enough, NOT final** — line placement is deliberately deferred until after build-phase mechanics land (they change the outcome distribution the tiers sit on). Do NOT re-tune tiers before then. BUST currently unreached (0% sim, 0/10 glass) — parked to that same pass, not a bug.
 
 ## Recently shipped — stamps + position fix + worktree registry (2026-05-22 → 2026-05-23)
 
@@ -1093,7 +1101,7 @@ the score race is the unambiguous hero).
 
 **Decision (John):** "the tracker" = the **top/bottom small-card hand strips** during the
 reveal — NOT the battlefield, NOT the score rail. Shrink ~80px → ~half so they become supporting
-context, not a visual co-hero. **Preserve their job:** show which six-card hand is being revealed;
+context, not a visual co-hero. **Preserve their job:** show which five-card hand is being revealed;
 show reveal progress (dim-as-revealed); don't compete with the central card/running-score race.
 
 ### Recon
@@ -1107,7 +1115,7 @@ show reveal progress (dim-as-revealed); don't compete with the central card/runn
 
 ### Implementation
 - `H2HRevealScreen.tsx`: `HAND_STRIP_HEIGHT_PX` 80 → **~40** (start at 40; **glass-confirm the
-  mini-cards still read as the six cards + show dim-progress**; if 40 clips the card content,
+  mini-cards still read as the five cards + show dim-progress**; if 40 clips the card content,
   floor at ~48 — "roughly half" with a legibility floor). Derived scale follows automatically.
 - **Export `HAND_STRIP_HEIGHT_PX`; `H2HRecipientPlay` imports it** (remove the hand-synced magic
   80) so play strips shrink in lockstep and the two surfaces can't drift again. (Minimal-scope
@@ -1126,12 +1134,12 @@ geometry-of-strips only; the live YOU/JOHN/diff race is RD3; the results overlay
 
 ### Tests
 `H2HRevealScreen.test.tsx` (asserts strip geometry ~:126 via `HAND_STRIP_HEIGHT_PX`);
-`H2HRecipientPlay` mini-cell dimension test. Assert: strips still render 6 cells; dim-as-revealed
+`H2HRecipientPlay` mini-cell dimension test. Assert: strips still render 5 cells; dim-as-revealed
 behavior intact; the new height is ~half the old.
 
 ### Verify
 `bash scripts/build-vercel.sh` (tri-sport) + **full root `npm test`**. **Glass MANDATORY** —
-animated surface: watch a FULL reveal and confirm (a) strips still legibly show the six cards,
+animated surface: watch a FULL reveal and confirm (a) strips still legibly show the five cards,
 (b) dim-progress still reads, (c) the battlefield/score-race now visually dominates, (d) no
 overflow; **also check the play screen** (shares the constant). Push held.
 
@@ -1179,6 +1187,19 @@ Pre-existing defect surfaced by RD2 glass (NOT introduced by RD2 — geometry is
 pre-RD2; CC live-DOM probe confirmed). Un-gated (a bug on already-built surfaces, correct
 regardless of GATE-A). **Sequenced before RD3** (RD3 builds on these reveal surfaces; don't stack
 the running-score race on a known overflow). Branch off RD2's tip (`fix/rd2-strip-shrink`).
+
+> ⚠️ **DOC-INTEGRITY WARNING (2026-06-18 — STALE AT 5 CARDS, do not trust the conclusion below).**
+> This derivation assumes a **6-card** strip. Basketball shipped 5 cards (main `f2f06f7`).
+> **Surface = the H2H reveal/play hand STRIP**, a single horizontal flex row of cells
+> (`H2HRecipientPlay` bottom strip is `display:flex; justify-content:center` — one row), so the
+> **1-row sum is the correct model for this surface.** (This is NOT the in-game `bball-23` roster
+> grid — that's a separate 2-row 2-top/3-bottom layout; do not conflate them.) Numbers verified:
+> 6-cell 1-row = `6×55.06 + 5×4 ≈ 350px > 332` (overflow, as written); 5-cell 1-row =
+> `5×55.06 + 4×4 ≈ 291px < 332`, which **INVERTS the conclusion** — at 5 the cells no longer
+> overflow / squeeze. **The shipped 5-card strip glassed clean** (H2HRecipientPlay rendered 5
+> cards, no broken/empty/overlapping strip) — so this warning flags the **stale derivation, NOT
+> the working layout.** Left un-rewritten to preserve the historical RD2 reasoning; do NOT use the
+> "squeeze each cell to ~52px" result for the current 5-card strip — re-derive if you touch it.
 
 ### Root cause (verified against code, 2026-06-08)
 The strip cell (`H2HRevealScreen.tsx:522–525`) is `height:"100%" / aspectRatio:"329/478" /
