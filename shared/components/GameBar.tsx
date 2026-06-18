@@ -169,6 +169,13 @@ type Props = {
   /** Challenge mode: when present, replace the tier-countdown label with
    *  "TARGET: {fp} — {name}" so the recipient knows the score to beat. */
   challengeTarget?: { name: string; fp: number };
+  /** Build-phase B2a: called when the player taps the early-lock control to
+   *  finish the hand on the CURRENT lineup with no redraw. Wired by GameView
+   *  to onPrimaryAction({ earlyLock: true }). Distinct from onAction (= DRAW). */
+  onEarlyLock?: () => void;
+  /** Show the early-lock control in HOLD. GameView sets this from maxRounds > 1
+   *  — a single-shot sport (maxRounds 1) never offers it. Default false. */
+  showEarlyLock?: boolean;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -1346,6 +1353,8 @@ export function GameBar({
   onTrophyOpened,
   sportKey,
   challengeTarget,
+  onEarlyLock,
+  showEarlyLock = false,
 }: Props) {
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
@@ -1621,6 +1630,31 @@ export function GameBar({
               {replayPulse && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState)}
             </button>
+
+            {/* B2a early-lock — finish on the CURRENT lineup (no redraw). Sits to
+                the right of DRAW, HOLD only, and only when the sport allows >1
+                round (maxRounds > 1 → showEarlyLock). Single-shot sports never
+                render it, so DRAW is unchanged there. */}
+            {gameState === "HOLD" && showEarlyLock && onEarlyLock && (
+              <button
+                onClick={onEarlyLock}
+                data-action="early-lock"
+                style={{
+                  marginLeft: 10,
+                  borderRadius: THEME.button.action.borderRadius,
+                  border: "1px solid rgba(255,255,255,0.35)",
+                  padding: "11px 14px",
+                  fontWeight: 900, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase",
+                  cursor: "pointer",
+                  background: "transparent",
+                  color: "#FFFFFF",
+                  pointerEvents: "auto" as const,
+                  lineHeight: 1,
+                  whiteSpace: "nowrap",
+                }}>
+                Lock In
+              </button>
+            )}
 
             {/* Legend + trophy — right (both hidden during FTUE) */}
             <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>

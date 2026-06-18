@@ -2975,6 +2975,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
+        onEarlyLock={() => onPrimaryAction({ earlyLock: true })}
+        showEarlyLock={maxRounds > 1}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
         onWageAnimationComplete={() => {
