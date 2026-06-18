@@ -32,10 +32,14 @@ const earlyLockHead = (() => {
 })();
 const count = (s: string, re: RegExp) => (s.match(re) ?? []).length;
 
-describe("B2a — onPrimaryAction takes the early-lock opt", () => {
-  it("the signature accepts an optional { earlyLock } param", () => {
-    expect(GAME_VIEW).toMatch(/async function onPrimaryAction\(opts\?: \{ earlyLock\?: boolean \}\)/);
-    expect(GAME_VIEW).toMatch(/const earlyLock = !!opts\?\.earlyLock;/);
+describe("B2a — onPrimaryAction derives the trigger from hold count (no param)", () => {
+  it("onPrimaryAction takes no args (the early-lock opts param is gone)", () => {
+    expect(GAME_VIEW).toMatch(/async function onPrimaryAction\(\) \{/);
+    expect(GAME_VIEW).not.toMatch(/opts\?\.earlyLock/);
+  });
+  it("earlyLock is computed from allHeld (every card held) gated by maxRounds > 1", () => {
+    expect(GAME_VIEW).toMatch(/const allHeld = markedRoster\.length > 0 && markedRoster\.every\(c => \(c as any\)\.wasHeld\);/);
+    expect(GAME_VIEW).toMatch(/const earlyLock = allHeld && maxRounds > 1;/);
   });
 });
 

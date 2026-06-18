@@ -1695,7 +1695,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     });
   }
 
-  async function onPrimaryAction(opts?: { earlyLock?: boolean }) {
+  async function onPrimaryAction() {
     if (gameState === "IDLE") {
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
@@ -1795,8 +1795,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // with no redraw; the REDRAW head (else) is byte-for-byte today's behavior.
       // The only economic delta between them is the `userTappedReveal` token fed
       // to commitRound below (earlyLock vs the hardcoded false the redraw uses).
-      const earlyLock = !!opts?.earlyLock;
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
+      // Trigger: tapping the primary CTA with EVERY card held = "lock what I see
+      // now". markedRoster is freshly marked from the CURRENT lockedCardIds at tap
+      // time, so .every() reads holds as they are now — never a stale wasHeld from
+      // a prior round. Roster-size-agnostic (no literal 5; respects rosterSize).
+      // Gated to maxRounds > 1: a single-shot sport has no early lock, so earlyLock
+      // stays false → redraw head + userTappedReveal:false, byte-identical to today.
+      const allHeld = markedRoster.length > 0 && markedRoster.every(c => (c as any).wasHeld);
+      const earlyLock = allHeld && maxRounds > 1;
       let finalRoster: PlayerCard[];
       let mvp: string | undefined;
 
@@ -1856,7 +1863,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       const decision = await commitRound({
         roundsUsed,
         maxRounds,
-        userTappedReveal: earlyLock, // B2a: false on the redraw path (= today); true only when the early-lock control fired
+        userTappedReveal: earlyLock, // B2a: earlyLock = allHeld && maxRounds>1. false on the redraw path (= today); true only when the player taps with every card held
         entryFee: currentBet,
         streak,
         resolvedRoster: finalRoster,
