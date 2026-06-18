@@ -235,7 +235,7 @@ interface SeasonResult {
 
 function runSeason(season: string): SeasonResult | null {
   const data = loadSeason(season);
-  if (data.eligible.length < 6) return null;
+  if (data.eligible.length < ROSTER_CONFIG.rosterSize) return null;
 
   // Slate-mode seed (matches slateAwareCalibrate.ts so distributions align).
   const rngSeed = 1_000_000 + 42
@@ -252,9 +252,9 @@ function runSeason(season: string): SeasonResult | null {
     const date = new Date(baseDate + i * DAY_MS);
     const slateIds = getCachedSlate(adapter as any, date);
     const evalPool = buildEvalFromIds(slateIds, data, season);
-    if (evalPool.length < 6) continue;
+    if (evalPool.length < ROSTER_CONFIG.rosterSize) continue;
     const roster = generateRoster(evalPool, ROSTER_CONFIG, ECONOMY_CONFIG, rng);
-    if (roster.length < 6) continue;
+    if (roster.length < ROSTER_CONFIG.rosterSize) continue;
     // Daily bonus: production picks 3 slate-eligible players per UTC day
     // (+20/+10/+5 FP, ORANGE/PURPLE/BLUE/GREEN only). Build the pool from
     // the same slate that fed the deal; buildDailyBonusMap handles tier
