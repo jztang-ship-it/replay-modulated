@@ -1695,7 +1695,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     });
   }
 
-  async function onPrimaryAction() {
+  async function onPrimaryAction(opts?: { earlyLock?: boolean }) {
     if (gameState === "IDLE") {
       if (balance < currentBet) { alert("Insufficient balance!"); return; }
       resetReveal();
@@ -1790,25 +1790,59 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // crosses the seam only inside commitRound's lock path (below), once per
       // hand regardless of round count. Held cards carry forward (lockedCardIds
       // are keyed by cardId; redraw preserves held cards' ids).
+      // B2a: a round can finish two ways and they converge on ONE shared tail
+      // (commitRound + reveal-prep). The EARLY-LOCK head locks the CURRENT lineup
+      // with no redraw; the REDRAW head (else) is byte-for-byte today's behavior.
+      // The only economic delta between them is the `userTappedReveal` token fed
+      // to commitRound below (earlyLock vs the hardcoded false the redraw uses).
+      const earlyLock = !!opts?.earlyLock;
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
-      flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
-      setRoster(markedRoster);
-      setGameState("DRAWING");
-      gameAnalytics.redrawUsed();
-      await sleep(DRAWING_DWELL_MS);
-      let drawRes: any, resolveRes: any;
-      try {
-        drawRes = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+      let finalRoster: PlayerCard[];
+      let mvp: string | undefined;
+
+      if (earlyLock) {
+        // ── EARLY-LOCK HEAD: lock what the player is looking at, no redraw. ──
+        // Resolution keys off round state, not card inspection (dealt cards carry
+        // actualFp:0, so resolution can't be detected from the cards):
+        //   roundsUsed === 1 → freshly dealt, never redrawn → unresolved → resolve now.
+        //   roundsUsed >= 2  → produced by a redraw → already resolved → reuse as-is.
+        // (No resolveRoster idempotency assumption — we resolve at most once.)
+        setRoster(markedRoster);
+        if (roundsUsed === 1) {
+          let resolveRes: any;
+          try {
+            resolveRes = await resolveRoster({ finalCards: markedRoster });
+          } catch {
+            setGameError("Something went wrong. Tap to try again.");
+            setGameState("HOLD");
+            return;
+          }
+          finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? markedRoster) as PlayerCard[];
+          mvp = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
+        } else {
+          finalRoster = markedRoster;
+        }
+      } else {
+        // ── REDRAW HEAD: unchanged from today (now wrapped in else). ──
+        flipState.beginDraw(markedRoster.filter(c => !(c as any).wasHeld).map(cardId));
+        setRoster(markedRoster);
+        setGameState("DRAWING");
+        gameAnalytics.redrawUsed();
+        await sleep(DRAWING_DWELL_MS);
+        let drawRes: any, resolveRes: any;
+        try {
+          drawRes = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+          const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
+          resolveRes = await resolveRoster({ finalCards: drawnRoster });
+        } catch {
+          setGameError("Something went wrong during the draw. Tap to try again.");
+          setGameState("HOLD");
+          return;
+        }
         const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-        resolveRes = await resolveRoster({ finalCards: drawnRoster });
-      } catch {
-        setGameError("Something went wrong during the draw. Tap to try again.");
-        setGameState("HOLD");
-        return;
+        finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
+        mvp = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       }
-      const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-      const finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
-      const mvp: string | undefined = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       if (mvp) setMvpId(mvp);
 
       // ── Round-machine decision. Loop back to HOLD (free) or lock to REVEALING.
@@ -1822,7 +1856,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       const decision = await commitRound({
         roundsUsed,
         maxRounds,
-        userTappedReveal: false, // B1: auto-lock at maxRounds; early-lock control = B2
+        userTappedReveal: earlyLock, // B2a: false on the redraw path (= today); true only when the early-lock control fired
         entryFee: currentBet,
         streak,
         resolvedRoster: finalRoster,
