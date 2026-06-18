@@ -43,9 +43,9 @@ const ECONOMY_CONFIG: EconomyConfig = {
   ],
 };
 
-const FLEX_SLOTS: SlotRequirement[] = ["FLEX", "FLEX", "FLEX", "FLEX", "FLEX", "FLEX"];
+const FLEX_SLOTS: SlotRequirement[] = ["FLEX", "FLEX", "FLEX", "FLEX", "FLEX"];
 const ROSTER_CONFIG = {
-  rosterSize: 6, slotRequirements: FLEX_SLOTS,
+  rosterSize: 5, slotRequirements: FLEX_SLOTS,
   excludeFromFlex: [] as string[], positionAware: false,
 };
 const HANDS = 10000;
@@ -176,7 +176,7 @@ function loadSeason(season: string): SeasonData {
 // ── Inline SlateAdapter ───────────────────────────────────────────────────
 function makeSlateAdapter(season: string, data: SeasonData) {
   return {
-    sportKey: "basketball", rosterSize: 6,
+    sportKey: "basketball", rosterSize: 5,
     config: { slateSize: 60, anchorCount: 9, weightExponent: 1.0 },
     getCareerFPById(id: string): number { return data.careerFpById.get(id) ?? 0; },
     getTierById(id: string): string {

@@ -101,8 +101,8 @@ const ECONOMY_CONFIG: EconomyConfig = {
     { tier: "GREEN" as TierColor, minSalary: 20 },
   ],
 };
-const FLEX_SLOTS: SlotRequirement[] = ["FLEX","FLEX","FLEX","FLEX","FLEX","FLEX"];
-const ROSTER_CONFIG = { rosterSize: 6, slotRequirements: FLEX_SLOTS, excludeFromFlex: [] as string[], positionAware: false };
+const FLEX_SLOTS: SlotRequirement[] = ["FLEX","FLEX","FLEX","FLEX","FLEX"];
+const ROSTER_CONFIG = { rosterSize: 5, slotRequirements: FLEX_SLOTS, excludeFromFlex: [] as string[], positionAware: false };
 const TIER_POOL_CAPS: Record<string, number> = { BLUE: 40, GREEN: 25, WHITE: 20 };
 const SLATE_COMPOSITION = {
   tierRanges: {
@@ -199,7 +199,7 @@ function loadSeason(season: string): SeasonData {
 
 function makeSlateAdapter(season: string, data: SeasonData) {
   return {
-    sportKey: "basketball", rosterSize: 6,
+    sportKey: "basketball", rosterSize: 5,
     config: { slateSize: 60, anchorCount: 9, weightExponent: 1.0 },
     getCareerFPById: (id: string) => data.careerFpById.get(id) ?? 0,
     getTierById: (id: string) => String(data.playerById.get(id)?.tier ?? "WHITE").toUpperCase(),
