@@ -9,13 +9,18 @@ football and the shared `WinTierKey` union are untouched (they still run the ful
 economy). The governing pattern is an **adapter flag read at a shared site with a
 `?? <today's-default>`** — basketball opts out; absent ⇒ unchanged.
 
-> **HEADLINE OPEN ITEM — the F2P layer is NOT actually free yet.** Tiers/streaks
-> are cosmetic, but the **money seam still moves real balance**: every locked hand
-> debits `BASE_BET` (=10) from the wallet, an affordability gate can block a deal,
-> wager/net math renders, and the balance persists to `localStorage`. Making the
-> game truly free is an unfinished task, not a done one — see **Economy surface
-> (live, pending F2P gating)** below for the five sub-surfaces and the
-> `ECONOMY_ENABLED` boundary flag that should gate them.
+> **RESOLVED — the basketball F2P layer is now free** (the wallet does not move).
+> Implemented via the `economyEnabled` adapter flag (basketball `false`, read-site
+> default `?? true` so baseball/football stay live). When off, the three
+> wallet-movement sites are bypassed (no entry-fee debit, no affordability
+> lockout, no payout credit) and the balance/payout displays are hidden. The
+> charge/gate/credit code stays intact and re-wireable — flip `economyEnabled` to
+> restore. See **Economy surface** below for the gated sites + how each bypass
+> preserved the pinned money-path test text. Two surfaces stay LIVE on purpose
+> (not wallet movement, and gating either collides with a pinned test): the `rake`
+> bonus-pill nonce and the `money_won` leaderboard submit (the latter deferred to
+> the leaderboard-revamp task). **`coins` is a SEPARATE currency — left untouched
+> (see Parked items).**
 
 ---
 
@@ -29,53 +34,58 @@ economy). The governing pattern is an **adapter flag read at a shared site with 
   (`basketball/src/views/GameView.tsx`). Read-site default is
   `adapter.multiplierEnabled ?? true`, so removing the flag also restores it.
 
-## Entry-fee / rake seam — NOT free yet (the open item, not a paused one)
-- **Was / IS:** the once-per-hand charge + bonus rake + hand_log persist at
-  lineup-lock. **Unlike everything else in this doc, this is NOT paused — it is
-  fully live and moves real money.** A locked hand actually **debits the wallet**
-  by `BASE_BET` (=10): `charge` runs `setBalance(prev - fee)` **and** `saveBalance`,
-  there is a live **affordability gate** (`balance < currentBet → alert("Insufficient
-  balance!")`), wager/net math renders, and the balance **persists** to
-  `localStorage` (`replaymod_balance`, one wallet across sports). Coins/multipliers
-  being "gone" describes the *intent*; the spend path is still wired.
-- **Where:** `shared/views/_roundMachine.ts` lock path → `persistLock → charge →
-  rake` (controller UNTOUCHED all task); GameView wires the effects. See the
-  **Economy surface** section below for the five concrete sub-surfaces + lines.
-- **To make the F2P layer actually free — gate with `ECONOMY_ENABLED`, do NOT
-  zero `BASE_BET`.** A zeroed `BASE_BET` still executes the debit / persist /
-  affordability-gate code paths (a "spend $0" that re-saves the wallet and can
-  still gate at balance 0) — wrong mechanism. Introduce an `ECONOMY_ENABLED`
-  boundary flag (off for the F2P layer) that **bypasses** charge + gate + wager +
-  persist at their call sites; flip it on to restore real pricing (alongside the
-  multiplier above + real payout weight). It is the single on/off seam for the
-  whole money layer.
+## Entry-fee / rake seam — GATED off for basketball (`economyEnabled: false`)
+- **Was:** the once-per-hand charge + bonus rake + hand_log persist at lineup-lock,
+  moving real balance — debit `BASE_BET` (=10) via `setBalance(prev - fee)` +
+  `saveBalance`, a live affordability lockout, wager/net math, balance persisted to
+  `localStorage` (`replaymod_balance`).
+- **Now:** bypassed for basketball by the `economyEnabled` adapter flag (default
+  `?? true`; basketball sets `false`). The wallet never moves: no debit, no
+  lockout, no payout credit; `saveBalance` never fires for outcomes (balance loads
+  once and stays static). `_roundMachine.ts` UNTOUCHED — the controller still calls
+  the charge effect; the effect itself no-ops when off.
+- **Reactivate:** set `economyEnabled: true` on the basketball adapter (read-site
+  default `?? true`). Restoring real *pricing* also wants the multiplier (above) +
+  real payout weight. It is the single on/off seam for the wallet layer. **Do NOT
+  zero `BASE_BET`** — a zeroed fee still runs the debit/persist/gate paths
+  (spend-$0 that re-saves the wallet); `economyEnabled` bypasses at the call sites
+  instead. See **Economy surface** below for each gated site + the test-text
+  constraint that shaped the bypass.
 
-## Economy surface (live, pending F2P gating)
-The five concrete sub-surfaces the `ECONOMY_ENABLED` flag must gate to make the
-game free. All currently live in `shared/views/GameView.tsx` unless noted.
-- **(a) Charge closure — `GameView:1903`:** `charge: (fee) => setBalance(prev => {
-  const next = prev - fee; saveBalance(next); return next; })`. The actual debit
-  + persist. Wired as the `_roundMachine` lock effect.
-- **(b) Affordability gate — `GameView:1711`:** `if (balance < currentBet) {
-  alert("Insufficient balance!"); return; }` in the IDLE/deal branch — can block a
-  deal at low balance.
-- **(c) Wager / net math — `GameView:2672`:** `amountWagered = BASE_BET *
-  effectiveBetMultiplier`; `net = winPayout - amountWagered` (drives the post-hand
-  net readout).
-- **(d) Persistence — `saveBalance` → `replaymod_balance`:** `setBalance` is
-  mirrored to `localStorage` via `saveBalance` (`_useSharedGameState.ts:91`;
-  `persistBalance: saveBalance` alias at `GameView:462`). One wallet across sports.
-- **(e) Coin / balance display:** GameBar wallet readout fed by `balance={balance}`
-  (`GameView:2977`) + `coins={coins}` (`:2909`); the `BASE_BET × {mult} = $X` wager
-  readout at `:2812` is already `multiplierEnabled`-gated (hidden for basketball).
-- **TEST CONSTRAINT — gate at call sites, do not rewrite the pinned lines.** The
-  protected money-path test `GameView.betOncePerHand.test.ts` asserts the **literal
-  text** of the charge closure (`:60`, matches `charge: (fee) => setBalance(prev =>
-  { const next = prev - fee …`) and the affordability gate (`:88`, matches `if
-  (balance < currentBet)`). `ECONOMY_ENABLED` must therefore wrap/bypass these at
-  their **call sites** — leave the closure body and the gate expression byte-for-byte
-  intact, or that test goes red (same collision that forced Step 3's streak pause to
-  be surfacing-only).
+## Economy surface (now gated by `economyEnabled`)
+The concrete sub-surfaces and how each was gated. Line numbers drift; the symbols
+are the durable anchors. All in `shared/views/GameView.tsx` unless noted.
+- **(a) Charge closure — `charge` effect:** `(fee) => setBalance(prev => { const
+  next = prev - fee; if (!economyEnabled) return prev; saveBalance(next); return
+  next; })`. **Gated in-body, after** the pinned prefix → no debit, no persist when
+  off. Invoked by the untouched `_roundMachine` lock path.
+- **(b) Affordability gate — IDLE branch:** wrapped `if (economyEnabled) { if
+  (balance < currentBet) { alert("Insufficient balance!"); return; } }`. **Outer
+  wrap** keeps the inner line byte-identical → no lockout when off.
+- **(c) Payout credit — `_useReveal` `pendingBalanceUpdateRef`:** `if
+  (economyEnabled && payout > 0) setBalance(prev => prev + payout …)`. New
+  `economyEnabled` arg into `useReveal`. **Both debit (a) and credit (c) are gated**
+  — gating only one would make the wallet drift.
+- **(d) Wager / net math + payout `$` display:** `amountWagered`/`net` are
+  display-only (no downstream consumer; the `net` span is BUST-branch, dead for
+  basketball). The post-reveal `+$payout` / net display is hidden via `{!challengeCtx
+  && economyEnabled && …}`; FP + ceiling still show.
+- **(e) Persistence — `saveBalance` → `replaymod_balance` (`_useSharedGameState.ts`):**
+  not gated directly — with (a) and (c) bypassed, `saveBalance` never fires for
+  outcomes, so the balance loads once (`STARTING_BALANCE`) and stays static.
+- **(f) Balance display — GameBar wallet:** `balance={balance}` prop still passed;
+  the two wallet readouts (action-row chip + non-split "Balance") are render-gated
+  on `economyEnabled` (new GameBar prop, default true). The `walletRef` coin-fly
+  anchor node stays mounted. (The `coins` prop is a SEPARATE currency — not gated;
+  see Parked items.)
+- **TEST CONSTRAINT (held) — gated at call sites, pinned text untouched.**
+  `betOncePerHand` pins the literal charge-closure prefix (`:60`,
+  `charge: (fee) => setBalance(prev => { const next = prev - fee`) and the
+  affordability line (`:88`, `if (balance < currentBet)`). The in-body guard (after
+  the prefix) and the outer-wrap (keeping the inner line) leave both byte-identical;
+  the payout-credit gate touches `_useReveal:pendingBalanceUpdateRef`, not the
+  pinned payout *computation* (`:91`). `betOncePerHand` + `entryFeeCollapse` stayed
+  green UNEDITED.
 
 ## Streaks (consecutive-win multiplier escalation)
 - **Was:** 3/5/10-win streak → 1.2/1.5/2.0× payout escalation, with a fire-row
@@ -134,3 +144,20 @@ game free. All currently live in `shared/views/GameView.tsx` unless noted.
   single-draw sim, which scores lower than real multi-round hold-and-improve play
   (median sim ~185 vs real ~191; LEGEND p98 ~248 vs real ~246). Known/accepted at
   launch; corrected by monthly recalibration via `slateAwareThresholds.ts --write`.
+- **`coins` is a SECOND currency — deliberately NOT gated.** `coins` (`rp_coins`,
+  `shared/engagement/useEngagement.ts`) is the engagement-task reward currency,
+  distinct from the wager wallet (`replaymod_balance`). It is earned/spent entirely
+  in the engagement layer and is NOT touched by `economyEnabled`. The
+  `coins={coins}` display on `CollectScreen` (and any coin UI) still shows. Whether
+  the F2P layer keeps, hides, or reworks `coins` is an **engagement-economy
+  decision**, owned by the leaderboard/engagement-revamp task — not papered over here.
+- **`money_won` leaderboard submit — deferred, still live.** `_useReveal` still runs
+  `submitToLeaderboard("money_won", payout)` (pinned `betOncePerHand:94`). It's a
+  leaderboard stat (not a wallet write), and `economyEnabled` does not gate it.
+  Logged as the leaderboard-revamp task's first item: F2P ranks on FP/session_score,
+  not money_won; pause money_won + audit all economy-signal surfaces there.
+- **`economyEnabled` display hide is NOT device-glassed.** The hidden wallet chip /
+  payout `$` display (Step 2) are wired but unverified in a real browser — glass the
+  free experience: no wallet, no charge, no insufficient-balance lockout, free
+  replays, and the reveal/celebration still composing correctly with the money
+  chrome gone.
