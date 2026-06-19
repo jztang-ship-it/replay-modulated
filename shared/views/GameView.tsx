@@ -2528,13 +2528,21 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               </div>
             ) : (
               <>
-                <BonusPoolPill
-                  betAmount={currentBet}
-                  betNonce={betNonce}
-                  sportKey={sportKey}
-                  competition={adapter.competition}
-                  onAmountChange={(v) => { bonusPoolRef.current = v; }}
-                />
+                {/* BONUS POOL paused for the F2P layer (economyEnabled=false):
+                    the surface is hidden AND the 5% rake stops accruing — the
+                    sole contributeBet() call site lives inside BonusPoolPill, so
+                    not rendering it pauses the rake. The store
+                    (bonusPoolStore.ts) is intact and re-wireable. SlateChip is a
+                    non-economy surface and stays. */}
+                {economyEnabled && (
+                  <BonusPoolPill
+                    betAmount={currentBet}
+                    betNonce={betNonce}
+                    sportKey={sportKey}
+                    competition={adapter.competition}
+                    onAmountChange={(v) => { bonusPoolRef.current = v; }}
+                  />
+                )}
                 {SlateChipComponent && <SlateChipComponent />}
               </>
             )}

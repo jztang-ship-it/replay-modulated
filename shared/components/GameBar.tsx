@@ -738,9 +738,13 @@ function LegendModal({
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-                    Bonus pool funded by 5% rake per hand. Resets after payout.
-                  </div>
+                  {/* Bonus-pool rake note hidden when the economy is off (pool
+                      paused — no rake accruing). */}
+                  {economyEnabled && (
+                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                      Bonus pool funded by 5% rake per hand. Resets after payout.
+                    </div>
+                  )}
                 </div>
               )}
             </div>

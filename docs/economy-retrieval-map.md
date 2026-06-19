@@ -87,6 +87,27 @@ are the durable anchors. All in `shared/views/GameView.tsx` unless noted.
   pinned payout *computation* (`:91`). `betOncePerHand` + `entryFeeCollapse` stayed
   green UNEDITED.
 
+## Bonus pool — PAUSED for basketball (5% rake prize mechanic)
+- **Was:** a full prize-pool mechanic, not a pill — `shared/utils/bonusPoolStore.ts`
+  defines a 5% rake on every bet (`BONUS_POOL_RAKE_RATE = 0.05`), daily injection
+  (`BONUS_POOL_DAILY_BASE = 1000`), two lanes (`hand_best`, `session_score`), and a
+  10-place payout distribution (`POOL_DISTRIBUTION`). Surfaced in-game by the
+  `BonusPoolPill` meter (`shared/views/GameView.tsx`) + a legend note ("Bonus pool
+  funded by 5% rake per hand"). The rake accrued via `contributeBet`.
+- **Now:** paused for basketball by gating the `BonusPoolPill` render on
+  `economyEnabled` (the surface is hidden) — and because the **sole `contributeBet`
+  call site lives inside `BonusPoolPill`'s effect**, not rendering it also **stops
+  the rake from accruing**. The legend bonus-pool note is gated on `economyEnabled`
+  too. Baseball/football (`?? true`) keep the pool live.
+- **Preserved (hide-don't-delete):** `bonusPoolStore.ts` is untouched — the rake
+  rate, injection, lanes, and distribution are intact and re-wireable. `bonusPoolRef`
+  + the `BonusPoolPill` component itself also remain.
+- **Reactivate:** set `economyEnabled: true` on the basketball adapter — the Pill
+  re-renders and `contributeBet` resumes. (No store change needed.)
+- **Pause point (the line that stops the rake):** `BonusPoolPill` render gated at
+  its call site in `shared/views/GameView.tsx` (the `{economyEnabled && (...)}`
+  wrap around `<BonusPoolPill>` in the non-challenge footer branch).
+
 ## Streaks (consecutive-win multiplier escalation)
 - **Was:** 3/5/10-win streak → 1.2/1.5/2.0× payout escalation, with a fire-row
   display + celebration pips.
