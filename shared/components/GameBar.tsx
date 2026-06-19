@@ -604,10 +604,14 @@ function LegendModal({
   onClose,
   legend,
   sportKey,
+  economyEnabled = true,
 }: {
   onClose: () => void;
   legend: LegendData;
   sportKey?: string;
+  /** When false (F2P layer — basketball), the legend's Payout column is hidden.
+   *  Default true ⇒ shown (live-economy sports). Row data is unchanged. */
+  economyEnabled?: boolean;
 }) {
   const [tab, setTab] = useState<"payouts" | "scoring" | "badges">("payouts");
   // Bonus row is shown only when slate v2 is OFF for this sport. When ON,
@@ -698,16 +702,20 @@ function LegendModal({
                   </div>
                 </div>
               )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
+              {/* Payout column is gated on economyEnabled: hidden for the F2P
+                  layer (basketball), shown for live-economy sports (baseball/
+                  football, economyEnabled ?? true). The payout DATA on each row is
+                  untouched — only the column render is suppressed. */}
+              <div style={{ display: "grid", gridTemplateColumns: economyEnabled ? "1fr auto auto" : "1fr auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
                 <span style={colHdr}>Tier</span>
                 <span style={{ ...colHdr, textAlign: "right" }}>Team FP</span>
-                <span style={{ ...colHdr, textAlign: "right", minWidth: 38 }}>Payout</span>
+                {economyEnabled && <span style={{ ...colHdr, textAlign: "right", minWidth: 38 }}>Payout</span>}
               </div>
               {legend.payoutRows.map(r => (
-                <div key={r.label} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 10, background: r.bg, border: `1px solid ${r.border}` }}>
+                <div key={r.label} style={{ display: "grid", gridTemplateColumns: economyEnabled ? "1fr auto auto" : "1fr auto", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 10, background: r.bg, border: `1px solid ${r.border}` }}>
                   <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: r.color }}>{r.label}</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", textAlign: "right" }}>{r.score}</span>
-                  <span style={{ fontSize: 13, fontWeight: 900, textAlign: "right", minWidth: 38, color: r.payout === "—" ? "rgba(255,255,255,0.3)" : "#EAF0FF" }}>{r.payout}</span>
+                  {economyEnabled && <span style={{ fontSize: 13, fontWeight: 900, textAlign: "right", minWidth: 38, color: r.payout === "—" ? "rgba(255,255,255,0.3)" : "#EAF0FF" }}>{r.payout}</span>}
                 </div>
               ))}
               <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
@@ -1728,7 +1736,7 @@ export function GameBar({
     return (
       <>
         {showLegend && ReactDOM.createPortal(
-          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} />,
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} economyEnabled={economyEnabled} />,
           document.body
         )}
       </>
@@ -1739,7 +1747,7 @@ export function GameBar({
     return (
       <>
         {showLegend && ReactDOM.createPortal(
-          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} />,
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} economyEnabled={economyEnabled} />,
           document.body
         )}
         {ReactDOM.createPortal(
@@ -1754,7 +1762,7 @@ export function GameBar({
   return (
     <>
       {showLegend && ReactDOM.createPortal(
-        <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} />,
+        <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} economyEnabled={economyEnabled} />,
         document.body
       )}
 
