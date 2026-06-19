@@ -248,12 +248,17 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
 
 // ── BonusPoolPill — pool meter with drip + gold blink on bet ─────────────────
 
-function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competition }: {
+function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competition, economyEnabled = true }: {
   betAmount: number;
   betNonce: number;
   onAmountChange?: (v: number) => void;
   sportKey: string;
   competition?: string;
+  /** When false, the 5% rake accrual is paused — the contributeBet call (and its
+   *  local animation) are skipped. Decouples the rake from the Pill render: even
+   *  if the Pill is rendered, the rake stays off when the economy is off. Default
+   *  true ⇒ rake live (baseball/football). */
+  economyEnabled?: boolean;
 }) {
   const [amount, setAmount] = useState(1000);
   const [displayAmount, setDisplayAmount] = useState(1000);
@@ -282,8 +287,13 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competit
     if (!pulse) setDisplayAmount(amount);
   }, [amount, pulse]);
 
-  // 5% rake on every bet — push to server, animate locally for feedback
+  // 5% rake on every bet — push to server, animate locally for feedback.
+  // Decoupled from the Pill render: when the economy is off the rake never
+  // accrues (no contributeBet, no animation), regardless of whether the Pill is
+  // mounted. This is the call-site guard — the render gate at the call site only
+  // HIDES the surface; this is what stops the rake.
   useEffect(() => {
+    if (!economyEnabled) return;
     if (betNonce === prevNonceRef.current) return;
     prevNonceRef.current = betNonce;
     const rake = parseFloat((betAmount * 0.05).toFixed(2));
@@ -321,7 +331,7 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competit
     })();
 
     return () => cancelAnimationFrame(rafRef.current);
-  }, [betNonce]); // eslint-disable-line
+  }, [betNonce, economyEnabled]); // eslint-disable-line
 
   return (
     <div style={{
@@ -2540,6 +2550,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     betNonce={betNonce}
                     sportKey={sportKey}
                     competition={adapter.competition}
+                    economyEnabled={economyEnabled}
                     onAmountChange={(v) => { bonusPoolRef.current = v; }}
                   />
                 )}
