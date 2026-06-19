@@ -718,11 +718,17 @@ function LegendModal({
                   {economyEnabled && <span style={{ fontSize: 13, fontWeight: 900, textAlign: "right", minWidth: 38, color: r.payout === "—" ? "rgba(255,255,255,0.3)" : "#EAF0FF" }}>{r.payout}</span>}
                 </div>
               ))}
+              {/* Tier identity ladder STAYS. Only the money framing
+                  ("Payout = bet × multiplier") is gated on economyEnabled. */}
               <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-                Team FP = sum of all 6 players' fantasy points. Payout = bet × multiplier.
+                Team FP = sum of all 6 players' fantasy points.{economyEnabled ? " Payout = bet × multiplier." : ""}
               </div>
 
-              {legend.bonusRows && legend.bonusRows.length > 0 && (
+              {/* STREAK WINS / bonusRows is a money-framing block (1.2x/1.5x/2.0x
+                  payout multipliers + the bonus-pool rake note). Gated entirely on
+                  economyEnabled — hidden for the F2P layer, kept for live-economy
+                  sports. The bonusRows DATA on the adapter is untouched. */}
+              {economyEnabled && legend.bonusRows && legend.bonusRows.length > 0 && (
                 <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                   <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: "#FFD700", textTransform: "uppercase", marginBottom: 10 }}>
                     Streak Wins
@@ -738,13 +744,10 @@ function LegendModal({
                       </div>
                     ))}
                   </div>
-                  {/* Bonus-pool rake note hidden when the economy is off (pool
-                      paused — no rake accruing). */}
-                  {economyEnabled && (
-                    <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
-                      Bonus pool funded by 5% rake per hand. Resets after payout.
-                    </div>
-                  )}
+                  {/* Rake note — inside the economyEnabled-gated block, always shown here. */}
+                  <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
+                    Bonus pool funded by 5% rake per hand. Resets after payout.
+                  </div>
                 </div>
               )}
             </div>
