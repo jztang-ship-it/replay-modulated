@@ -61,8 +61,10 @@ function buildPayoutRows(): LegendData["payoutRows"] {
     { label: "MVP",      score: `${t.MVP.minFp}+`,                payout: "8x",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
     { label: "ALL-STAR", score: `${t.ALL_STAR.minFp}+`,           payout: "3x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
     { label: "STARTER",  score: `${t.STARTER.minFp}+`,            payout: "1.5x", color: "#3B82F6", bg: "rgba(59,130,246,0.08)",   border: "rgba(59,130,246,0.25)"   },
-    { label: "ROOKIE",   score: `${t.ROOKIE.minFp}+`,             payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
-    { label: "BUST",     score: `<${t.ROOKIE.minFp}`,             payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.08)",  border: "rgba(107,114,128,0.2)"   },
+    // ROOKIE is now the FLOOR (BUST removed from display — dormant in the shared
+    // type, never reached by basketball). It shows the sub-STARTER band BUST used
+    // to occupy rather than a nonsensical "0+".
+    { label: "ROOKIE",   score: `<${t.STARTER.minFp}`,            payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
   ];
 }
 
