@@ -9,6 +9,14 @@ football and the shared `WinTierKey` union are untouched (they still run the ful
 economy). The governing pattern is an **adapter flag read at a shared site with a
 `?? <today's-default>`** — basketball opts out; absent ⇒ unchanged.
 
+> **HEADLINE OPEN ITEM — the F2P layer is NOT actually free yet.** Tiers/streaks
+> are cosmetic, but the **money seam still moves real balance**: every locked hand
+> debits `BASE_BET` (=10) from the wallet, an affordability gate can block a deal,
+> wager/net math renders, and the balance persists to `localStorage`. Making the
+> game truly free is an unfinished task, not a done one — see **Economy surface
+> (live, pending F2P gating)** below for the five sub-surfaces and the
+> `ECONOMY_ENABLED` boundary flag that should gate them.
+
 ---
 
 ## Multiplier (bet multiplier 1/3/5/10×)
@@ -21,17 +29,53 @@ economy). The governing pattern is an **adapter flag read at a shared site with 
   (`basketball/src/views/GameView.tsx`). Read-site default is
   `adapter.multiplierEnabled ?? true`, so removing the flag also restores it.
 
-## Entry-fee / rake seam (lock-time economics)
-- **Was / is:** the once-per-hand charge + bonus rake + hand_log persist, run in
-  crash-boundary order at lineup-lock. **This seam is LIVE** — it still charges
-  `entryFee` (currently `BASE_BET`, since the multiplier is pinned to 1) and adds
-  the (now cosmetic) payout.
+## Entry-fee / rake seam — NOT free yet (the open item, not a paused one)
+- **Was / IS:** the once-per-hand charge + bonus rake + hand_log persist at
+  lineup-lock. **Unlike everything else in this doc, this is NOT paused — it is
+  fully live and moves real money.** A locked hand actually **debits the wallet**
+  by `BASE_BET` (=10): `charge` runs `setBalance(prev - fee)` **and** `saveBalance`,
+  there is a live **affordability gate** (`balance < currentBet → alert("Insufficient
+  balance!")`), wager/net math renders, and the balance **persists** to
+  `localStorage` (`replaymod_balance`, one wallet across sports). Coins/multipliers
+  being "gone" describes the *intent*; the spend path is still wired.
 - **Where:** `shared/views/_roundMachine.ts` lock path → `persistLock → charge →
-  rake` (controller UNTOUCHED all task); GameView wires the effects
-  (`charge: setBalance(prev - fee)`, `rake: setBetNonce`). `entryFee = currentBet =
-  BASE_BET * effectiveBetMultiplier`.
-- **Reactivate pricing:** restore the multiplier (above) and give the payout real
-  weight (below). The seam itself needs no structural change — it already runs.
+  rake` (controller UNTOUCHED all task); GameView wires the effects. See the
+  **Economy surface** section below for the five concrete sub-surfaces + lines.
+- **To make the F2P layer actually free — gate with `ECONOMY_ENABLED`, do NOT
+  zero `BASE_BET`.** A zeroed `BASE_BET` still executes the debit / persist /
+  affordability-gate code paths (a "spend $0" that re-saves the wallet and can
+  still gate at balance 0) — wrong mechanism. Introduce an `ECONOMY_ENABLED`
+  boundary flag (off for the F2P layer) that **bypasses** charge + gate + wager +
+  persist at their call sites; flip it on to restore real pricing (alongside the
+  multiplier above + real payout weight). It is the single on/off seam for the
+  whole money layer.
+
+## Economy surface (live, pending F2P gating)
+The five concrete sub-surfaces the `ECONOMY_ENABLED` flag must gate to make the
+game free. All currently live in `shared/views/GameView.tsx` unless noted.
+- **(a) Charge closure — `GameView:1903`:** `charge: (fee) => setBalance(prev => {
+  const next = prev - fee; saveBalance(next); return next; })`. The actual debit
+  + persist. Wired as the `_roundMachine` lock effect.
+- **(b) Affordability gate — `GameView:1711`:** `if (balance < currentBet) {
+  alert("Insufficient balance!"); return; }` in the IDLE/deal branch — can block a
+  deal at low balance.
+- **(c) Wager / net math — `GameView:2672`:** `amountWagered = BASE_BET *
+  effectiveBetMultiplier`; `net = winPayout - amountWagered` (drives the post-hand
+  net readout).
+- **(d) Persistence — `saveBalance` → `replaymod_balance`:** `setBalance` is
+  mirrored to `localStorage` via `saveBalance` (`_useSharedGameState.ts:91`;
+  `persistBalance: saveBalance` alias at `GameView:462`). One wallet across sports.
+- **(e) Coin / balance display:** GameBar wallet readout fed by `balance={balance}`
+  (`GameView:2977`) + `coins={coins}` (`:2909`); the `BASE_BET × {mult} = $X` wager
+  readout at `:2812` is already `multiplierEnabled`-gated (hidden for basketball).
+- **TEST CONSTRAINT — gate at call sites, do not rewrite the pinned lines.** The
+  protected money-path test `GameView.betOncePerHand.test.ts` asserts the **literal
+  text** of the charge closure (`:60`, matches `charge: (fee) => setBalance(prev =>
+  { const next = prev - fee …`) and the affordability gate (`:88`, matches `if
+  (balance < currentBet)`). `ECONOMY_ENABLED` must therefore wrap/bypass these at
+  their **call sites** — leave the closure body and the gate expression byte-for-byte
+  intact, or that test goes red (same collision that forced Step 3's streak pause to
+  be surfacing-only).
 
 ## Streaks (consecutive-win multiplier escalation)
 - **Was:** 3/5/10-win streak → 1.2/1.5/2.0× payout escalation, with a fire-row
