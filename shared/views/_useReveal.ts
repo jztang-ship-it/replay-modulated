@@ -95,6 +95,11 @@ export interface UseRevealArgs {
   currentBet: number;
   /** Bet multiplier (passed separately for engagement.recordMultiplierUsed). */
   betMultiplier: number;
+  /** F2P money seam. When false (basketball), the payout CREDIT to the wallet is
+   *  bypassed (the wallet never moves). The payout is still computed (cosmetic) and
+   *  the money_won leaderboard submit is untouched — only the balance write is
+   *  skipped. Absent ⇒ true ⇒ credit applied (today's flow). */
+  economyEnabled?: boolean;
 
   // ── Roster / FTUE refs ──────────────────────────────────────────────
   /** Mutable ref containing the live roster (resolved actualFp). */
@@ -178,6 +183,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     springTiers = DEFAULT_SPRING_TIERS,
     calculateWinTier, calculatePayoutWithStreak,
     currentBet, betMultiplier,
+    economyEnabled = true,
     rosterRef,
     isAnonymous, setBigWinFired, setOnBoardTick,
     recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
@@ -411,7 +417,9 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
         // first_share_invitation, etc.) silently broken.
         incrementHandCount();
         pendingBalanceUpdateRef.current = () => {
-          if (payout > 0) {
+          // F2P: bypass the payout credit when the economy is off — the wallet
+          // never moves (the debit is bypassed in GameView's charge effect too).
+          if (economyEnabled && payout > 0) {
             setBalance(prev => { const next = prev + payout; persistBalance(next); return next; });
           }
           const proof = buildScoreProof(rosterRef.current as any[], totalFp);
@@ -489,7 +497,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     });
   }, [
     adapter,
-    currentBet, betMultiplier, streak, handCount, isAnonymous,
+    currentBet, betMultiplier, economyEnabled, streak, handCount, isAnonymous,
     rosterRef,
     runSpring, calculateWinTier, calculatePayoutWithStreak,
     setWinTier, setWinPayout, setBalance, persistBalance, setGameState,

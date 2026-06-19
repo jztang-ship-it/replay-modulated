@@ -1051,6 +1051,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // the real `streak` state, its counting, or the streak_at_play column.
   const streaksEnabled = adapter.streaksEnabled ?? true;
   const effectiveStreak = streaksEnabled ? streak : 0;
+  // F2P money seam. Default true ⇒ economy LIVE (baseball/football unchanged).
+  // Basketball sets false: the wallet never moves — charge/gate/credit are
+  // bypassed at their call sites (closure body kept intact for the pinned tests).
+  const economyEnabled = adapter.economyEnabled ?? true;
   const effectiveBetMultiplier = (!multiplierEnabled || challengeCtx) ? 1 : betMultiplier;
   const currentBet = BASE_BET * effectiveBetMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
@@ -1075,6 +1079,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     ) => number,
     currentBet,
     betMultiplier: effectiveBetMultiplier,
+    economyEnabled,
     rosterRef,
     isAnonymous,
     setBigWinFired,
@@ -1708,7 +1713,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   async function onPrimaryAction() {
     if (gameState === "IDLE") {
-      if (balance < currentBet) { alert("Insufficient balance!"); return; }
+      // F2P: skip the affordability lockout when the economy is off (wallet never
+      // moves). Outer-wrapped so the inner `if (balance < currentBet)` line stays
+      // byte-identical for the pinned betOncePerHand assertion.
+      if (economyEnabled) {
+        if (balance < currentBet) { alert("Insufficient balance!"); return; }
+      }
       resetReveal();
       resetAllOverlays();
       setRoundsUsed(1); // new hand → the deal is round/lineup 1 (lock fires after 2 rerolls = 3 lineups at maxRounds 3; first reroll locks at maxRounds 1 = single-shot)
@@ -1900,7 +1910,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               handId,
             );
           },
-          charge: (fee) => setBalance(prev => { const next = prev - fee; saveBalance(next); return next; }),
+          charge: (fee) => setBalance(prev => { const next = prev - fee; if (!economyEnabled) return prev; saveBalance(next); return next; }),
           rake: () => setBetNonce(n => n + 1),
         },
       });

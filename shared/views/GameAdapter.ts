@@ -138,6 +138,14 @@ export interface GameAdapter {
    *  `adapter.streaksEnabled ?? true`; absent ⇒ true ⇒ streaks live (today's flow),
    *  so baseball/football are unchanged. */
   streaksEnabled?: boolean;
+  /** Build-phase F2P layer (basketball). When false, the money seam is bypassed:
+   *  no entry-fee debit, no affordability lockout, no payout credit — the wallet
+   *  never moves. The charge/gate/credit code stays intact (re-wireable for the
+   *  economy layer); only its effect is bypassed at the call sites. GameView/
+   *  _useReveal read `adapter.economyEnabled ?? true`; absent ⇒ true ⇒ economy
+   *  LIVE (today's flow), so baseball/football keep charging. Basketball sets
+   *  false. NOT a runtime toggle — a one-way dormant seam for this layer. */
+  economyEnabled?: boolean;
   /** Optional hand-status classifier (basketball). Maps a hand's total FP to a
    *  sparse, ABSOLUTE, tier-orthogonal flag (🔥 HEATER / ❄️ COLD_NIGHT) or null.
    *  Display-only flavor that sits on top of any win tier. Absent ⇒ no status for
