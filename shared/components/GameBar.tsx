@@ -19,6 +19,7 @@ import { track } from "@shared/analytics/analytics";
 import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
 import { isSlateV2Enabled } from "@shared/featureFlags";
 import type { StreakTier } from "@shared/utils/payoutLogic";
+import type { HandStatus } from "@shared/utils/handStatus";
 
 /** Live countdown string to next UTC midnight (daily bonus rotation). */
 function formatBonusCountdownLocal(): string {
@@ -80,6 +81,9 @@ export interface CelebrationData {
   isLoss: boolean;         // true for ROOKIE (partial loss) and BUST (full loss)
   lossAmount: number;      // amount lost (0 for wins, baseBet*betMultiplier for bust, half for rookie)
   streakMultiplier?: number;    // streak-based multiplier (1.0 / 1.3 / 1.7 / 2.5)
+  /** Tier-orthogonal flavor flag (🔥 HEATER / ❄️ COLD_NIGHT) or null. Display
+   *  only — Cold Night also drives the loss-coloring hook (isLoss) BUST vacated. */
+  handStatus?: HandStatus | null;
 }
 
 type Props = {
@@ -1059,6 +1063,16 @@ function CelebrationBottom({ celebration, onDismiss }: { celebration: Celebratio
   const pipColor = celebration.isBust ? "#FF3B30" : "#FF8C00";
   const pipGlow = celebration.isBust ? "#FF3B3055" : "#FF8C0055";
 
+  // B2a status flag — sparse, tier-orthogonal flavor badge. Heater = gold/flame
+  // viral-flex; Cold Night = cold/dim (pairs with the loss-coloring hook on
+  // isLoss). Sits above the (paused-for-basketball) streak row. Absent on most
+  // hands. Visual only — device-glass before trusting the look.
+  const statusBadge = celebration.handStatus === "HEATER"
+    ? { label: "🔥 HEATER", color: "#FFD54A", bg: "rgba(255,196,0,0.12)", border: "rgba(255,196,0,0.45)" }
+    : celebration.handStatus === "COLD_NIGHT"
+    ? { label: "❄️ COLD NIGHT", color: "#7FB6FF", bg: "rgba(96,140,200,0.12)", border: "rgba(96,140,200,0.4)" }
+    : null;
+
   return (
     <div
       onClick={onDismiss}
@@ -1071,6 +1085,19 @@ function CelebrationBottom({ celebration, onDismiss }: { celebration: Celebratio
         transition: "opacity 0.42s ease, transform 0.42s ease",
       }}
     >
+      {statusBadge && (
+        <div style={{
+          alignSelf: "center",
+          display: "inline-flex", alignItems: "center",
+          fontSize: 13, fontWeight: 800, letterSpacing: "0.08em",
+          fontFamily: FF, color: statusBadge.color,
+          background: statusBadge.bg, border: `1px solid ${statusBadge.border}`,
+          borderRadius: 999, padding: "4px 12px",
+          textShadow: `0 0 10px ${statusBadge.color}66`,
+        }}>
+          {statusBadge.label}
+        </div>
+      )}
       <div style={{
         display: "flex", alignItems: "center", gap: 10,
         background: celebration.isBust ? "rgba(255,59,48,0.07)" : "rgba(255,140,0,0.08)",

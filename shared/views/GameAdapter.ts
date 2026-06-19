@@ -24,6 +24,7 @@ import type {
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { DailyBonusPlayer } from "@shared/utils/dailyBonus";
+import type { HandStatus } from "@shared/utils/handStatus";
 
 export interface GameAdapter {
   // ── Identity ───────────────────────────────────────────────────────
@@ -137,6 +138,11 @@ export interface GameAdapter {
    *  `adapter.streaksEnabled ?? true`; absent ⇒ true ⇒ streaks live (today's flow),
    *  so baseball/football are unchanged. */
   streaksEnabled?: boolean;
+  /** Optional hand-status classifier (basketball). Maps a hand's total FP to a
+   *  sparse, ABSOLUTE, tier-orthogonal flag (🔥 HEATER / ❄️ COLD_NIGHT) or null.
+   *  Display-only flavor that sits on top of any win tier. Absent ⇒ no status for
+   *  that sport. Bands live on the sport (basketball: getBasketballHandStatus). */
+  getHandStatus?: (totalFp: number) => HandStatus | null;
   /** Optional per-slot label badge (e.g. football's FLEX slot showing
    *  "ANY OUTFIELD" with a tooltip explaining the rule). Keyed by slot
    *  index. Basketball/baseball omit. */

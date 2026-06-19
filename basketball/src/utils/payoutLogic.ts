@@ -22,7 +22,22 @@ import {
 } from "@shared/utils/payoutLogic";
 import type { WinTierKey, WinTierMap, StreakTier } from "@shared/utils/payoutLogic";
 import { getActiveSeason } from "@shared/engines/dataEngine";
+import { getHandStatus, type HandStatus } from "@shared/utils/handStatus";
 import perSeasonThresholds from "../data/winThresholds.json";
+
+// ── Hand-status bands (ABSOLUTE — fixed, do NOT move per season) ─────────────
+// Sparse flavor flags orthogonal to win tier: a 🔥 Heater or ❄️ Cold Night can
+// sit on top of any tier. Derived from the real 829-hand distribution — Heater
+// is the ~top viral-flex band, Cold Night the rueful-low band. Most hands land
+// between and return null.
+export const HEATER_MIN = 255;
+export const COLD_NIGHT_MAX = 120;
+export type { HandStatus };
+
+/** Basketball hand-status — sport-bound wrapper over the shared mechanism. */
+export function getBasketballHandStatus(totalFp: number): HandStatus | null {
+  return getHandStatus(totalFp, HEATER_MIN, COLD_NIGHT_MAX);
+}
 
 // Basketball streak schedule.
 // Rebalanced from 1.3/1.7/2.5 → 1.2/1.5/2.0 alongside LEGEND 50× → 20× to

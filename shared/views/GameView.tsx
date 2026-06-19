@@ -1216,7 +1216,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
     const tierMult = winTiersMap[winTier]?.multiplier ?? 0;
-    const isLoss = winTier === "BUST";
+    // B2a status flags: sparse, absolute, tier-orthogonal. Cold Night inherits the
+    // visual loss-coloring hook BUST vacated (Step 2) so a cold hand looks distinct
+    // from a neutral ROOKIE; Heater gets its own gold/flame treatment in the bottom.
+    const handStatus = adapter.getHandStatus?.(lockedGaugeFpRef.current ?? 0) ?? null;
+    const isLoss = winTier === "BUST" || handStatus === "COLD_NIGHT";
     const lossAmount = winTier === "BUST" ? BASE_BET * effectiveBetMultiplier : 0;
     const streakMult = getStreakMultiplier(effectiveStreak);
     return {
@@ -1232,6 +1236,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       baseBet: BASE_BET,
       isLoss,
       lossAmount,
+      handStatus,
     };
   }, [gameState, winTier, winPayout, streak, effectiveBetMultiplier]); // eslint-disable-line
 
