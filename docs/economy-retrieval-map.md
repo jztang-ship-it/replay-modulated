@@ -151,11 +151,20 @@ are the durable anchors. All in `shared/views/GameView.tsx` unless noted.
   `coins={coins}` display on `CollectScreen` (and any coin UI) still shows. Whether
   the F2P layer keeps, hides, or reworks `coins` is an **engagement-economy
   decision**, owned by the leaderboard/engagement-revamp task — not papered over here.
-- **`money_won` leaderboard submit — deferred, still live.** `_useReveal` still runs
-  `submitToLeaderboard("money_won", payout)` (pinned `betOncePerHand:94`). It's a
-  leaderboard stat (not a wallet write), and `economyEnabled` does not gate it.
-  Logged as the leaderboard-revamp task's first item: F2P ranks on FP/session_score,
-  not money_won; pause money_won + audit all economy-signal surfaces there.
+- **`money_won` phantom write — PARKED (write live, surfaces gated).** `_useReveal`
+  still runs `submitToLeaderboard("money_won", payout)` on every completed hand
+  (line ~433), **pinned verbatim by `betOncePerHand:94`** — a TESTED CONTRACT we do
+  not loosen. It is now a *phantom* write: nothing surfaces it.
+  - The leaderboard component never ranked on money (`Leaderboard.tsx` METRICS =
+    `streak | wins | fp`).
+  - Its only visible end, the "Most Won" profile rank, is now gated off for
+    basketball via `economyEnabled` (ProfileScreen `visibleRankMetrics`; the
+    write and its rank are one coupled surface — the rank is hidden, the write
+    parked).
+  - **Removal deferred to the future economy-layer decision**, which will suppress
+    the write as a *deliberate behavior change that updates the pinned
+    `betOncePerHand:94` assertion in the same commit* — surfaced first, never a
+    silent loosen. Until then: write fires, no surface shows it.
 - **`economyEnabled` display hide is NOT device-glassed.** The hidden wallet chip /
   payout `$` display (Step 2) are wired but unverified in a real browser — glass the
   free experience: no wallet, no charge, no insufficient-balance lockout, free
