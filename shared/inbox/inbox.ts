@@ -135,10 +135,17 @@ export async function addBigWinMessage(
 
 export async function addBonusPoolMessage(
   userId: string,
-  args: { amount_won: number }
+  args: { amount_won: number },
+  // ECONOMY-GATED — this writes a bonus-pool/coins message. The bonus pool is
+  // paused while the economy is gated (F2P layer; see docs/economy-retrieval-map.md).
+  // This util has no adapter/economyEnabled context, so the gate is an EXPLICIT,
+  // required param: a future caller (bonus-pool distribution is post-beta — still
+  // no call site) MUST pass the sport's economyEnabled, and the function no-ops when
+  // false. Re-wiring is therefore a deliberate decision, not a silent default.
+  // DO NOT WIRE WHILE ECONOMY GATED. Hide-don't-delete: the function stays intact.
+  economyEnabled: boolean,
 ): Promise<void> {
-  // No call site exists yet (bonus-pool distribution is post-beta). Function is here
-  // so the wiring is ready when the distribution event lands.
+  if (!economyEnabled) return;
   const payload: Payload = {
     title: 'You got a piece of the pool',
     body: `+${args.amount_won.toLocaleString()} coins from the bonus pool. Nice run.`,
