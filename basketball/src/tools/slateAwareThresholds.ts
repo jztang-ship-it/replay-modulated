@@ -8,8 +8,10 @@
  * rotated per hand to capture the cross-day aggregate. Eligibility filter:
  * ≥30 games played (mirrors production's getEligiblePool).
  *
- * Cumulative percentile cuts at 35 / 72.5 / 94 / 98 / 99.8. Rounded to
- * integer. Re-applied to verify tier shares hit the target bands.
+ * ROOKIE is the floor (minFp 0 — no BUST cut, so BUST falls out of the derived
+ * data automatically). The four upper tiers use cumulative percentile cuts at
+ * 40 / 70 / 90 / 98 (STARTER 40–70, ALL-STAR 70–90, MVP 90–98, LEGEND 98–100).
+ * Rounded to integer. Re-applied to verify tier shares hit the target bands.
  *
  * Run from basketball/:
  *   npx tsx src/tools/slateAwareThresholds.ts
@@ -62,7 +64,8 @@ const SLATE_COMPOSITION = {
   protectedTier: "PURPLE", absorbTiers: ["BLUE", "GREEN"],
 };
 
-const CUM_PCT = { ROOKIE: 35.0, STARTER: 72.5, ALL_STAR: 94.0, MVP: 98.0, LEGEND: 99.8 };
+// ROOKIE is the floor (0); the four upper tiers cut at these cumulative pctiles.
+const CUM_PCT = { STARTER: 40.0, ALL_STAR: 70.0, MVP: 90.0, LEGEND: 98.0 };
 const TARGET: Record<string, [number, number]> = {
   BUST:     [0.30,  0.40],   ROOKIE:   [0.35,  0.40],
   STARTER:  [0.18,  0.25],   ALL_STAR: [0.03,  0.05],
@@ -291,7 +294,7 @@ function runSeason(season: string): SeasonResult | null {
   fps.sort((a, b) => a - b);
 
   const rawCuts = {
-    ROOKIE:   pctileAt(fps, CUM_PCT.ROOKIE),
+    ROOKIE:   0, // floor — no BUST cut; ROOKIE captures the bottom 40%
     STARTER:  pctileAt(fps, CUM_PCT.STARTER),
     ALL_STAR: pctileAt(fps, CUM_PCT.ALL_STAR),
     MVP:      pctileAt(fps, CUM_PCT.MVP),

@@ -55,10 +55,13 @@ const MULTIPLIERS: Record<WinTierKey, number> = {
 };
 
 // Fallback thresholds — used when active season is unset (e.g. unit tests, or
-// before the reel resolves a season). Match the pre-per-season static design so
-// existing tests don't shift behavior unexpectedly.
+// before the reel resolves a season). Absolute set derived from the real
+// 829-hand hand_log distribution (median ~191, p98 ~246). ROOKIE is the FLOOR
+// at 0 — no BUST cut, so calculateWinTier never returns the shared "BUST"
+// fallback for basketball (BUST stays a dormant shared-type member for the
+// economy layer; basketball just stops reaching it).
 const FALLBACK_MIN_FP: Record<Exclude<WinTierKey, "BUST">, number> = {
-  LEGEND: 255, MVP: 235, ALL_STAR: 225, STARTER: 205, ROOKIE: 185,
+  LEGEND: 246, MVP: 224, ALL_STAR: 207, STARTER: 185, ROOKIE: 0,
 };
 
 type SeasonThresholds = Record<Exclude<WinTierKey, "BUST">, number>;
