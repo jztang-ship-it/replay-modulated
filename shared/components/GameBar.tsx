@@ -158,6 +158,11 @@ type Props = {
    *  layer). Default true ⇒ shown (today's flow). Mirrors showBetMultiplier; the
    *  streak prop/state is still passed and preserved, just not surfaced. */
   showStreak?: boolean;
+  /** When false, the balance/wallet readout is hidden (F2P money seam off — the
+   *  wallet never moves). Default true ⇒ shown. Hide-don't-delete: the balance
+   *  prop is still passed; only the readout is suppressed. (Does NOT affect the
+   *  separate `coins` engagement currency.) */
+  economyEnabled?: boolean;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
    *  multipliers). Drives the fire-row label text. Optional for back-compat;
    *  when omitted, labels show "1x" fallbacks. */
@@ -1373,6 +1378,7 @@ export function GameBar({
   onBurstEnd,
   streak = 0,
   showStreak = true,
+  economyEnabled = true,
   streakTiers,
   onLegendOpened,
   onTrophyOpened,
@@ -1619,8 +1625,9 @@ export function GameBar({
 
           {/* Action row — 👛 wallet left, button center, legend+trophy right */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
-            {/* Wallet chip — left. Hidden in challenge mode (no wager). */}
-            {!challengeMode && (
+            {/* Wallet chip — left. Hidden in challenge mode (no wager) and when the
+                economy is off (F2P money seam — wallet never moves). */}
+            {!challengeMode && economyEnabled && (
               <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: 1, transition: "opacity 0.3s ease" }}>
                 <span style={{
                   fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
@@ -1812,18 +1819,22 @@ export function GameBar({
 
             <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: challengeMode ? 0 : 1, pointerEvents: challengeMode ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
               {/* Balance — left */}
+              {/* walletRef node stays mounted (coin-fly anchor); the visible
+                  Balance readout is hidden when the economy is off. */}
               <div ref={walletRef} style={{ flexShrink: 0 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                  <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
-                  <span style={{
-                  fontSize: 17, fontWeight: 900, lineHeight: 1,
-                  color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
-                  filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
-                  transition: "color 300ms ease, filter 300ms ease",
-                }}>
-                    $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
-                  </span>
-                </div>
+                {economyEnabled && (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1.2, color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Balance</span>
+                    <span style={{
+                    fontSize: 17, fontWeight: 900, lineHeight: 1,
+                    color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
+                    filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
+                    transition: "color 300ms ease, filter 300ms ease",
+                  }}>
+                      $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Wage — true center */}

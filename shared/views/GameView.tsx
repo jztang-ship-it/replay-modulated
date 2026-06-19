@@ -2738,7 +2738,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                             {ceilingPct}% ceiling
                           </span>
                         )}
-                        {!challengeCtx && (
+                        {/* F2P: the wager net / payout $ display is hidden when the
+                            economy is off (the wallet never moves). FP + ceiling
+                            still show. */}
+                        {!challengeCtx && economyEnabled && (
                           winTier === "BUST" ? (
                             <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                               {netLabel}
@@ -3028,6 +3031,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         trophyBurst={trophyBurst}
         streak={streak}
         showStreak={streaksEnabled}
+        economyEnabled={economyEnabled}
         streakTiers={streakTiers}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
