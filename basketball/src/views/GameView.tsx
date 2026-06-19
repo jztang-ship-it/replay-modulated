@@ -229,6 +229,9 @@ export default function GameView({
     // Build-phase: single entryFee (multiplier dormant — state/selector intact but
     // hidden + disconnected from the bet) + up to 3 hold/reroll rounds per hand.
     multiplierEnabled: false,
+    // Streaks paused (hide-don't-delete): no multiplier escalation in the F2P
+    // social layer. State/columns/counting preserved; only surfacing + effect off.
+    streaksEnabled: false,
     maxRounds: 3,
     // 5-card layout: row 1 = 2 cards centered (slots 0-1), row 2 = 3 cards
     // (slots 2-4). Mirror image of baseball's "dice 5" (bb-dice5) — same

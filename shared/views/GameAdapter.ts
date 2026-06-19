@@ -128,6 +128,15 @@ export interface GameAdapter {
    *  flow). The `?? true` / `?? 1` defaults live at the shared read site so a
    *  sport that doesn't set these fields keeps current behavior. */
   multiplierEnabled?: boolean;
+  /** Build-phase v1 (basketball). When false, win streaks are PAUSED: the streak
+   *  fire-row display is hidden, the streak multiplier is neutralized (no effect on
+   *  the cosmetic payout / celebration), and no streak-driven surfacing fires. The
+   *  streak STATE, counting logic (incrementStreak/resetStreak), and the
+   *  streak_at_play column stay intact and re-wireable for the economy layer —
+   *  same hide-don't-delete pattern as the dormant multiplier. GameView reads
+   *  `adapter.streaksEnabled ?? true`; absent ⇒ true ⇒ streaks live (today's flow),
+   *  so baseball/football are unchanged. */
+  streaksEnabled?: boolean;
   /** Optional per-slot label badge (e.g. football's FLEX slot showing
    *  "ANY OUTFIELD" with a tooltip explaining the rule). Keyed by slot
    *  index. Basketball/baseball omit. */

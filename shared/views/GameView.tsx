@@ -1045,6 +1045,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Build-phase round cap. Default 1 ⇒ single-shot (today's flow) for any sport
   // that doesn't opt in. Basketball sets 3. Read site owns the default.
   const maxRounds = adapter.maxRounds ?? 1;
+  // Streaks paused for sports that opt out (basketball). Default true ⇒ live.
+  // effectiveStreak collapses the streak to 0 at every DISPLAY/MULTIPLIER read
+  // site (getStreakMultiplier(0) = 1.0), neutralizing the effect without touching
+  // the real `streak` state, its counting, or the streak_at_play column.
+  const streaksEnabled = adapter.streaksEnabled ?? true;
+  const effectiveStreak = streaksEnabled ? streak : 0;
   const effectiveBetMultiplier = (!multiplierEnabled || challengeCtx) ? 1 : betMultiplier;
   const currentBet = BASE_BET * effectiveBetMultiplier;
   const gameAnalytics = useGameAnalytics(sportKey);
@@ -1212,13 +1218,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     const tierMult = winTiersMap[winTier]?.multiplier ?? 0;
     const isLoss = winTier === "BUST";
     const lossAmount = winTier === "BUST" ? BASE_BET * effectiveBetMultiplier : 0;
-    const streakMult = getStreakMultiplier(streak);
+    const streakMult = getStreakMultiplier(effectiveStreak);
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
       tierGlow: tc.glow,
       payout: winPayout,
-      streak,
+      streak: effectiveStreak,
       isBust: winTier === "BUST",
       betMultiplier: effectiveBetMultiplier,
       tierMultiplier: tierMult,
@@ -2665,7 +2671,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
                   const tierMult = winTiersMap[winTier as WinTierKey]?.multiplier ?? 0;
-                  const streakMult = getStreakMultiplier(streak);
+                  const streakMult = getStreakMultiplier(effectiveStreak);
                   const showStreakFactor = streakMult > 1;
                   // Phase 1 trigger split (2026-06-03): renamed bad_beat
                   // → choke. challengeTrigger.trigger now emits "choke"
@@ -3006,6 +3012,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         trophyPulsing={trophyPulsing}
         trophyBurst={trophyBurst}
         streak={streak}
+        showStreak={streaksEnabled}
         streakTiers={streakTiers}
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);

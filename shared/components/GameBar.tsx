@@ -150,6 +150,10 @@ type Props = {
   onBurstEnd?: () => void;
   /** Current win streak for fire emoji display under balance */
   streak?: number;
+  /** When false, the streak fire-row is hidden (streaks paused — basketball F2P
+   *  layer). Default true ⇒ shown (today's flow). Mirrors showBetMultiplier; the
+   *  streak prop/state is still passed and preserved, just not surfaced. */
+  showStreak?: boolean;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
    *  multipliers). Drives the fire-row label text. Optional for back-compat;
    *  when omitted, labels show "1x" fallbacks. */
@@ -1341,6 +1345,7 @@ export function GameBar({
   trophyBurst = false,
   onBurstEnd,
   streak = 0,
+  showStreak = true,
   streakTiers,
   onLegendOpened,
   onTrophyOpened,
@@ -1577,8 +1582,9 @@ export function GameBar({
             }
           `}</style>
 
-          {/* Streak row — stretched across line, tiers unlock progressively */}
-          {streak != null && (
+          {/* Streak row — stretched across line, tiers unlock progressively.
+              Hidden when showStreak is false (streaks paused — basketball). */}
+          {showStreak && streak != null && (
             <div style={{ display: "flex", alignItems: "center", paddingBottom: 4 }}>
               <StreakFireRow streak={streak} prevStreak={prevStreakRef.current} streakTiers={streakTiers} />
             </div>
