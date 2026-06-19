@@ -3102,6 +3102,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           <ProfileScreen
             currentUid={getPlayerUid()}
             sport={leaderboardScope}
+            economyEnabled={economyEnabled}
             onClose={() => setShowProfile(false)}
             isAnonymous={isAnonymous}
             onSaveAccount={() => {

@@ -29,9 +29,16 @@ interface Props {
   isAnonymous?: boolean;
   onSaveAccount?: () => void;
   onOpenFeedback: () => void;
+  /** When false (F2P layer — basketball), the "Most Won" (money_won) rank is
+   *  hidden — both its fetch and its display. Default true ⇒ shown (live-economy
+   *  sports). RANK_METRICS itself is untouched (hide-don't-delete). */
+  economyEnabled?: boolean;
 }
 
-export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveAccount, onOpenFeedback }: Props) {
+export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveAccount, onOpenFeedback, economyEnabled = true }: Props) {
+  // money_won is a wager-economy rank; hide it when the economy is off. RANK_METRICS
+  // stays intact — we just stop fetching/rendering the money rank for this sport.
+  const visibleRankMetrics = economyEnabled ? RANK_METRICS : RANK_METRICS.filter(m => m.id !== "money_won");
   const { user, signOut } = useAuth();
   const [nickname, setNick] = useState(() => getNickname());
   const [editing, setEditing] = useState(false);
@@ -52,7 +59,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
 
   // Fetch ranks for all three metrics
   useEffect(() => {
-    for (const m of RANK_METRICS) {
+    for (const m of visibleRankMetrics) {
       fetch(`/api/leaderboard?sport=${sport}&metric=${m.id}&scope=daily&limit=50`)
         .then(r => r.json())
         .then(data => {
@@ -67,7 +74,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
           setRanks(prev => ({ ...prev, [m.id]: { rank: null, score: null } }));
         });
     }
-  }, [currentUid, sport]);
+  }, [currentUid, sport, economyEnabled]);
 
   function handleSave() {
     const trimmed = editValue.trim();
@@ -339,7 +346,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
             TODAY'S STANDING
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            {RANK_METRICS.map(m => {
+            {visibleRankMetrics.map(m => {
               const r = ranks[m.id];
               return (
                 <div key={m.id} style={cardStyle}>

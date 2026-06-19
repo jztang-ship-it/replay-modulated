@@ -407,6 +407,7 @@ function AppInner() {
         <ProfileScreen
           currentUid={uid || getPlayerUid()}
           sport={SPORT}
+          economyEnabled={false} // basketball F2P layer: economy off (matches the adapter); hides the money_won rank
           onClose={() => setShowProfile(false)}
           isAnonymous={isAnonymous}
           onSaveAccount={() => { setShowProfile(false); setShowSignIn(true); }}
