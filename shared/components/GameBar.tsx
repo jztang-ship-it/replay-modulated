@@ -163,6 +163,11 @@ type Props = {
    *  prop is still passed; only the readout is suppressed. (Does NOT affect the
    *  separate `coins` engagement currency.) */
   economyEnabled?: boolean;
+  /** When true, the primary action button (DEAL/DRAW/REPLAY) does NOT render —
+   *  the result-screen bottom slot is owned by the challenge prompt instead
+   *  (one-CTA sequential ownership). Default false ⇒ button renders (today's
+   *  flow), so baseball/football/worldcup are unaffected unless they opt in. */
+  suppressPrimaryAction?: boolean;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
    *  multipliers). Drives the fire-row label text. Optional for back-compat;
    *  when omitted, labels show "1x" fallbacks. */
@@ -1394,6 +1399,7 @@ export function GameBar({
   streak = 0,
   showStreak = true,
   economyEnabled = true,
+  suppressPrimaryAction = false,
   streakTiers,
   onLegendOpened,
   onTrophyOpened,
@@ -1655,6 +1661,10 @@ export function GameBar({
               </div>
             )}
 
+            {/* Primary action button (DEAL/DRAW/REPLAY). Suppressed at the
+                result screen when the challenge prompt owns the bottom slot
+                (one-CTA sequential ownership). Default false → renders as today. */}
+            {!suppressPrimaryAction && (
             <button
               onClick={onAction}
               disabled={isDisabled(gameState)}
@@ -1676,6 +1686,7 @@ export function GameBar({
               {replayPulse && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState)}
             </button>
+            )}
 
             {/* Legend + trophy — right (both hidden during FTUE) */}
             <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
@@ -1881,6 +1892,10 @@ export function GameBar({
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
+              {/* Non-split layout's primary button — same suppress gate as the
+                  split/controlsFooter button above, so suppressPrimaryAction
+                  un-renders REPLAY in either layout. */}
+              {!suppressPrimaryAction && (
               <button
                 onClick={onAction}
                 disabled={isDisabled(gameState)}
@@ -1900,6 +1915,7 @@ export function GameBar({
                 }}>
                 {actionLabel(gameState)}
               </button>
+              )}
               {TrophyButton}
             </div>
           </div>

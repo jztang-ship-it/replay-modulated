@@ -3037,6 +3037,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
+        // One-CTA ownership: at the result screen in sender mode, when a story
+        // trigger exists the challenge prompt owns the bottom slot — suppress
+        // REPLAY beneath it. Recipient mode (challengeCtx) keeps its own slot
+        // owners (h2h surfaces), so this is gated on !challengeCtx.
+        suppressPrimaryAction={!challengeCtx && !!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
         onWageAnimationComplete={() => {
