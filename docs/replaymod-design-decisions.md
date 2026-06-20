@@ -3082,6 +3082,34 @@ reusing the mapped open path (URL regex → `ChallengeLandingScreen` →
 `sender_kind:"boss"` branch). Readiness: `gameState` ∈ {RESULTS, WIN_CELEBRATION}
 && `springSettled`.
 
+### Step 5 surface correction (Gate A/B, 2026-06-21) — boss result routing
+**The earlier "a boss target renders through `ChallengeComparisonScreen`
+unchanged" line was aspirational, not descriptive.** Map-first (Gate A) found the
+real prior routing: `onAccept` set `h2hPlayingMode = true` **unconditionally**
+(`App.tsx:439`), and App renders `{h2hPlayingMode && challengeCtx ?
+<H2HRecipientPlay> : <GameView>}` with no `resolvedSenderHand` gate. So an
+accepted boss ran in **`H2HRecipientPlay`** (which reads
+`resolvedSenderHand?.cards ?? []` → an **empty H2H battlefield** for a boss) and
+terminated in `H2HResultsOverlay` — `ChallengeComparisonScreen` (GameView-only)
+was never reached on the accept path.
+
+**Fix (the senderKind routing gate):** `onAccept` now gates
+`h2hPlayingMode = (ctx.senderKind !== "boss")`. A boss skips the meaningless H2H
+battlefield and falls to GameView's **live legacy challenge path** — auto-deals
+`challengeCtx.initialRoster` (the boss's five), bet forced to ×1, challenge
+intro, and at RESULTS `showChallengeComparison` → `ChallengeComparisonScreen`
+(gated `!resolvedSenderHand`). This is the comparison surface the design always
+intended; the boss plays the same five and races the target, coherently.
+- **Human path byte-unchanged:** every human challenge carries
+  `senderKind: "player"` (`normalizeSenderKind`), so the gate is `true` and the
+  existing accept → H2H path is untouched. `App.tsx:439` is the only accept site
+  that sets `h2hPlayingMode(true)`.
+- **Scope note:** Step 5 is therefore **not purely presentational** — it includes
+  this one-line routing change in `onAccept` (boss-only redirect). Glass: the new
+  boss surface is GameView/`ChallengeComparisonScreen` (boss CTA region) + the
+  `BossLandingView` revisit; confirm the human comparison + H2H paths are visually
+  unchanged.
+
 ### Build-time flags (NOT blockers — resolve during build)
 1. **Result-view owns the orientation, not the transition.** Ensure the outward
    ending reconstructs on every view of the result (reopen / return / deep-link),
