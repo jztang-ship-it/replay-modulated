@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "verify:visual": "node scripts/verify-h2h-play-layout.mjs",
+    "build:boss-bank": "node --import tsx scripts/build-boss-bank.mjs",
     "digest": "node scripts/buildDigest.mjs",
     "smoke:headline": "node --import tsx --env-file=.env.local scripts/smoke-headline.mjs"
   },
