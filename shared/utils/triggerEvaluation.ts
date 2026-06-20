@@ -70,14 +70,13 @@ export interface TriggerResult {
   topGameAllReasons?: TopGameReason[] | null;
 }
 
-// Phase 1 trigger split (2026-06-03, lock: docs/challenge-landing-v2-phase1-
-// trigger-split-lock.md). The miss window is now 5% of the next tier's minFp
-// — tier-aware so near-LEGEND misses (LEGEND minFp 235 → 11.75 FP band) and
-// near-ALL-STAR misses (ALL-STAR minFp 155 → 7.75 FP band) both feel like
-// "finish the job" instead of one band feeling generous and the other tight.
-// STARTER+ floor and gap>0 guard unchanged. Note the deliberate divergence
-// from TierGauge's NEAR_MISS_PTS (flat 8 FP) — see TierGauge.tsx:111.
-const MISS_PCT_OF_NEXT_MIN = 0.05;
+// The `miss` (tier near-miss) challenge trigger was REMOVED (2026-06-20): an
+// ordinary near-miss no longer initiates a challenge. The near-miss SIGNAL still
+// lives — the solo reveal stamp ("ALL STAR MISS") now rides the gauge's standalone
+// 5% band (computeGaugeState + NEAR_MISS_BAND in GameView), decoupled from challenge
+// creation. The TriggerResult `miss` union member + nearMissGap/nearMissNextTier
+// fields + their near_miss_* DB columns are PRESERVED (hide-don't-delete) for
+// persisted rows and downstream consumers; the classifier just never emits them now.
 
 // ── Anchor selection helpers (Phase 5c Path A, 2026-06-01) ─────────────────
 //
@@ -143,10 +142,13 @@ function selectBigScoreAnchor(roster: GeneratedCard[]): string | null {
 
 export function evaluateTrigger(input: TriggerInput): TriggerResult {
   const {
-    roster, totalFp, winTier, badges, winTiersMap,
+    roster, totalFp, winTier, badges,
     topGameTier, starBasePlayerId,
     topGamePrimaryReason, topGameAllReasons,
   } = input;
+  // winTiersMap is still accepted on TriggerInput (callers pass it; preserved for
+  // the future economy/trigger work) but no longer read — the only consumer was
+  // the removed miss branch.
   const fp = Math.round(totalFp * 10) / 10;
 
   // 1. rare_pull — star card pulled a record / career-high / season top-10
@@ -233,31 +235,12 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
     }
   }
 
-  // 4. miss — within 5% of next tier's minFp AND current tier is STARTER+.
-  //    We don't fire miss on BUST→ROOKIE transitions — a BUST hand isn't
-  //    share-worthy just because it almost cleared ROOKIE. The 5% rule
-  //    replaces the old flat 5 FP MISS_WINDOW: near LEGEND (235) that's
-  //    ~12 FP, near ALL-STAR (155) that's ~7.75 FP — both feel like
-  //    "finish the job" instead of one band feeling generous and the
-  //    other tight.
-  const tierOrder: WinTierKey[] = ["BUST", "ROOKIE", "STARTER", "ALL_STAR", "MVP", "LEGEND"];
-  const STARTER_IDX = tierOrder.indexOf("STARTER");
-  const currentIdx = tierOrder.indexOf(winTier as WinTierKey);
-  if (currentIdx >= STARTER_IDX && currentIdx < tierOrder.length - 1) {
-    const nextTier = tierOrder[currentIdx + 1];
-    const nextMin = winTiersMap[nextTier]?.minFp;
-    if (nextMin !== undefined) {
-      const gap = Math.round((nextMin - fp) * 10) / 10;
-      if (gap > 0 && gap <= nextMin * MISS_PCT_OF_NEXT_MIN) {
-        return {
-          trigger: "miss",
-          headline: `You missed ${nextTier.replace("_", "-")} by ${gap} FP. See if they finish the job.`,
-          nearMissGap: gap,
-          nearMissNextTier: nextTier,
-        };
-      }
-    }
-  }
+  // 4. miss — REMOVED (2026-06-20). A tier near-miss no longer initiates a
+  //    challenge. See the note above the helpers: the near-miss reveal stamp now
+  //    rides the gauge's standalone 5% band (GameView), and the `miss` union
+  //    member + nearMissGap/nearMissNextTier fields + near_miss_* columns are
+  //    preserved for persisted rows. A former-miss hand now falls through to
+  //    default below (and to no challenge once default is removed).
 
   // 5. default — always fires
   return {

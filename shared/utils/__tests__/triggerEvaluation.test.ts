@@ -49,43 +49,33 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("big_score");
   });
 
-  // ── miss — 5% of next tier's minFp window ──────────────────────────────
-  // Phase 1 trigger split (2026-06-03): MISS_WINDOW flat 5 FP →
-  // gap <= nextMin * 0.05. Tier-aware so near-LEGEND misses (LEGEND
-  // 255 minFp → 12.75 FP band) and near-ALL-STAR misses (ALL-STAR
-  // 225 minFp → 11.25 FP band) both feel like "finish the job."
+  // ── miss trigger REMOVED (2026-06-20) ──────────────────────────────────
+  // A tier near-miss no longer initiates a challenge: former-miss hands now
+  // fall through to default (and to no challenge once default is removed). The
+  // near-miss reveal STAMP still fires — it rides the gauge's standalone 5%
+  // band (computeGaugeState + NEAR_MISS_BAND), covered by
+  // shared/components/__tests__/TierGauge.nearMiss.test.ts. These cases pin the
+  // classifier no longer emitting `miss` and emitting no near-miss fields.
 
-  it("returns miss when STARTER 3 FP shy of ALL_STAR (well inside 5%-of-225 = 11.25 FP)", () => {
-    // 222 FP — STARTER (needs 225 for ALL_STAR) — gap = 3, threshold = 11.25
+  it("former near-miss (STARTER 3 FP shy of ALL_STAR) now falls through to default, no near-miss fields", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.4 }));
     const result = evaluateTrigger({ roster, totalFp: 222, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("miss");
-    expect(result.nearMissGap).toBeCloseTo(3, 0);
-    expect(result.nearMissNextTier).toBe("ALL_STAR");
+    expect(result.trigger).toBe("default");
+    expect(result.nearMissGap).toBeUndefined();
+    expect(result.nearMissNextTier).toBeUndefined();
   });
 
-  it("Phase 1 5%-vs-flat-5: STARTER 10 FP shy of ALL_STAR fires miss under 5% — would NOT have fired under flat-5", () => {
-    // The lock's contradiction-guard case. Under flat-5, gap=10 would
-    // miss the miss trigger (10 > 5). Under 5% of nextMin (ALL_STAR
-    // minFp 225 × 0.05 = 11.25), gap=10 fires miss. This is the high-
-    // tier case that motivates the change: the band widens proportionally
-    // with the next tier's minFp. The post-reveal "missed ALL-STAR by
-    // 10 FP" copy in GameView reads off the same 5% rule (NEAR_MISS_BAND
-    // at GameView:170) — the same threshold drives both the stamp and
-    // the copy, no "stamp fired but copy didn't" contradiction.
+  it("former high-tier near-miss (STARTER 10 FP shy of ALL_STAR) now falls through to default", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43 }));
     const result = evaluateTrigger({ roster, totalFp: 215, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("miss");
-    expect(result.nearMissGap).toBeCloseTo(10, 0);
-    expect(result.nearMissNextTier).toBe("ALL_STAR");
+    expect(result.trigger).toBe("default");
+    expect(result.nearMissGap).toBeUndefined();
   });
 
-  it("Phase 1 5%-vs-flat-5: STARTER 4.9 FP shy of ALL_STAR fires miss under flat-5 AND under 5% (control)", () => {
-    // Under both rules, a 4.9 FP gap from ALL_STAR (225) fires miss.
-    // Flat 5: 4.9 ≤ 5. 5% of 225 = 11.25: 4.9 ≤ 11.25. Both fire.
+  it("former tight near-miss (STARTER 4.9 FP shy of ALL_STAR) now falls through to default", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.02 }));
     const result = evaluateTrigger({ roster, totalFp: 220.1, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("miss");
+    expect(result.trigger).toBe("default");
   });
 
   it("does NOT fire miss for BUST→ROOKIE transitions", () => {

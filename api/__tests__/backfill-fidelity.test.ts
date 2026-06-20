@@ -99,59 +99,44 @@ function backfillRecompute(input: {
 
 // ── miss: uncovered columns ──────────────────────────────────────────────
 
-describe("backfill fidelity — miss (uncovered columns)", () => {
-  it("STARTER 3 FP shy of ALL_STAR → near_miss_gap=3, near_miss_next_tier=ALL_STAR", () => {
-    // STARTER threshold 205, ALL_STAR 225. 222 FP → gap 3 → fires miss.
+describe("backfill fidelity — miss trigger REMOVED (2026-06-20)", () => {
+  // The miss trigger no longer exists: the backfill recomputes via the live
+  // evaluateTrigger, so former-miss STARTER hands now classify as `default` with
+  // NULL near_miss columns. In production the script's faithful-recompute gate
+  // (recompute.trigger === stored) makes a row stored as 'miss' a MISMATCH →
+  // SKIPPED, so stored near-miss data is preserved-by-skip, never clobbered.
+  // These cases pin the recompute output (default + null) at varied former-miss gaps.
+
+  it("former miss (STARTER 3 FP shy of ALL_STAR) → default, null near_miss columns", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.4 }));
     const out = backfillRecompute({ roster, totalFp: 222, winTier: "STARTER" });
-    expect(out.trigger).toBe("miss");
-    expect(out.near_miss_gap).toBe(3);
-    expect(out.near_miss_next_tier).toBe("ALL_STAR");
+    expect(out.trigger).toBe("default");
+    expect(out.near_miss_gap).toBeNull();
+    expect(out.near_miss_next_tier).toBeNull();
     expect(out.anchor_base_player_id).toBeNull();
     expect(out.top_game_tier).toBeNull();
   });
 
-  // Miss is only reachable from STARTER in practice: evaluateTrigger checks
-  // the big_score branch (ALL_STAR/MVP/LEGEND) BEFORE the miss branch, so
-  // an ALL_STAR-235-shy-of-MVP hand returns big_score, not miss. All
-  // production miss rows are STARTER→ALL_STAR — the single miss row in the
-  // dry-run (b2e24a47, totalFp=224, gap=1) matches this shape exactly.
-  // Remaining tests stick to STARTER cases at varied gaps.
-
-  it("STARTER 0.5 FP shy of ALL_STAR → near_miss_gap=0.5, near_miss_next_tier=ALL_STAR", () => {
+  it("former miss (STARTER 0.5 FP shy of ALL_STAR) → default, null near_miss columns", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.9 }));
     const out = backfillRecompute({ roster, totalFp: 224.5, winTier: "STARTER" });
-    expect(out.trigger).toBe("miss");
-    expect(out.near_miss_gap).toBe(0.5);
-    expect(out.near_miss_next_tier).toBe("ALL_STAR");
+    expect(out.trigger).toBe("default");
+    expect(out.near_miss_gap).toBeNull();
+    expect(out.near_miss_next_tier).toBeNull();
   });
 
-  it("STARTER 5 FP shy of ALL_STAR (old flat-5 edge; well inside new 5%-of-225 = 11.25) → near_miss_gap=5", () => {
-    // Phase 1 trigger split (2026-06-03): the old flat-5 MISS_WINDOW is
-    // now 5% of next tier's minFp. 5%-of-225 = 11.25, so gap=5 fires
-    // miss under both rules — control case.
-    const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44 }));
-    const out = backfillRecompute({ roster, totalFp: 220, winTier: "STARTER" });
-    expect(out.trigger).toBe("miss");
-    expect(out.near_miss_gap).toBe(5);
-    expect(out.near_miss_next_tier).toBe("ALL_STAR");
-  });
-
-  it("STARTER 10 FP shy of ALL_STAR (NEW under 5%, would NOT have fired under flat-5) → trigger=miss", () => {
-    // Phase 1 trigger split — the contradiction-guard high-tier case:
-    // 5%-of-225 = 11.25, so gap=10 fires miss now (didn't before).
+  it("former high-tier miss (STARTER 10 FP shy of ALL_STAR) → default, null near_miss columns", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43 }));
     const out = backfillRecompute({ roster, totalFp: 215, winTier: "STARTER" });
-    expect(out.trigger).toBe("miss");
-    expect(out.near_miss_gap).toBe(10);
-    expect(out.near_miss_next_tier).toBe("ALL_STAR");
+    expect(out.trigger).toBe("default");
+    expect(out.near_miss_gap).toBeNull();
+    expect(out.near_miss_next_tier).toBeNull();
   });
 
-  it("STARTER 12 FP shy of ALL_STAR (just past 5%-of-225 = 11.25) → trigger NOT miss", () => {
-    // 213 FP → gap 12 → outside new 5% window → falls through to default.
+  it("STARTER 12 FP shy of ALL_STAR (was already outside the old window) → default, null", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 42.6 }));
     const out = backfillRecompute({ roster, totalFp: 213, winTier: "STARTER" });
-    expect(out.trigger).not.toBe("miss");
+    expect(out.trigger).toBe("default");
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
   });
