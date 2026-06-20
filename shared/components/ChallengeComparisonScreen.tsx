@@ -31,6 +31,7 @@ import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
 import { chadTrashTalk, trashTalkBucket, selectChallengeResolution } from "@shared/commentary/chadChallenge";
 import { useChallengeAttempt, type ChallengeAttemptState } from "@shared/hooks/useChallengeAttempt";
+import { BossOutwardEnding } from "./BossOutwardEnding";
 
 // Re-exported under the original name so existing call sites that
 // import ComparisonState continue to compile. Phase 5a commit 1
@@ -62,6 +63,10 @@ interface Props {
   /** Fired from loss-window-open primary CTA. Caller re-deals the
    *  challenge snapshot (challengeCtx stays set). */
   onTryAgain: () => void;
+  /** Phase 2-mount Step 5 — "Play Again" for the boss outward ending: clears
+   *  challengeCtx + deals a fresh normal hand (GameView.handlePlayOwnHand).
+   *  Boss path only; human states never read it. Falls back to onCollapse. */
+  onPlayAgain?: () => void;
   /** Emitted exactly once when the attempt POST resolves. Lets
    *  GameView mirror state (trash-talk text for the chip, comparison
    *  state for the action bar, etc.) onto its surface. */
@@ -75,7 +80,7 @@ interface Props {
 export function ChallengeComparisonScreen({
   challengeCtx, myScore, myRoster, myWinTier, sport,
   collapsed = false,
-  onCollapse, onSendItBack, onTryAgain, onResolved,
+  onCollapse, onSendItBack, onTryAgain, onPlayAgain, onResolved,
 }: Props) {
   void myWinTier;
 
@@ -268,6 +273,36 @@ export function ChallengeComparisonScreen({
     }
     setDragDeltaPx(0);
   };
+
+  // Phase 2-mount Step 5 — boss results terminate OUTWARD, not through the human
+  // rivalry sheet. Early fork AFTER all hooks (the attempt POST above already
+  // fired → the boss attempt + KV count are recorded); the human
+  // WIN/LOSS_OPEN/LOSS_CLOSED render below is PROVABLY UNENTERED for a boss.
+  // BossOutwardEnding records the result and renders from getBossResult — the
+  // same single source the BossLandingView revisit reads, so fresh and revisited
+  // are byte-identical.
+  if (challengeCtx.senderKind === "boss") {
+    const won = myScore >= challengeCtx.targetScore;
+    return (
+      <div
+        data-testid="boss-result-sheet"
+        style={{
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60,
+          background: "linear-gradient(180deg, #0D1628 0%, #070A12 100%)",
+          borderTop: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: "18px 18px 0 0", padding: "24px 20px 32px",
+          boxShadow: "0 -8px 30px rgba(0,0,0,0.5)",
+        }}
+      >
+        <BossOutwardEnding
+          sport={sport}
+          bossChallengeId={challengeCtx.challengeId}
+          freshResult={{ score: myScore, won }}
+          onPlayAgain={onPlayAgain ?? onCollapse}
+        />
+      </div>
+    );
+  }
 
   return (
     <>

@@ -3290,6 +3290,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             onCollapse={handleChallengeCollapse}
             onSendItBack={handleSendItBack}
             onTryAgain={handleTryAgain}
+            onPlayAgain={handlePlayOwnHand}
             onResolved={({ state, trashTalk }) => {
               setPostResultState(state);
               setPostResultTrashTalk(trashTalk);

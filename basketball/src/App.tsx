@@ -436,7 +436,15 @@ function AppInner() {
             // directly, not the normal game UI. setView("game") stays
             // above so the post-H2H flow (Send It Back / Play Own Hand
             // / Dismiss) drops back into GameView without re-routing.
-            setH2hPlayingMode(true);
+            //
+            // Phase 2-mount Step 5 (routing gate): a BOSS has no sender hand,
+            // so the H2H battlefield (which renders the opponent's cards) is
+            // empty/meaningless for it. Route bosses OUT of H2H → they fall to
+            // GameView's legacy challenge path → ChallengeComparisonScreen (the
+            // comparison surface the design intends), where the boss result
+            // terminates outward (BossOutwardEnding). Human challenges carry
+            // senderKind "player" → gate true → existing H2H path byte-unchanged.
+            setH2hPlayingMode(ctx.senderKind !== "boss");
             setH2hPlayKey(k => k + 1);
 
             // Dev affordance — phase 5a commit 3 (2026-05-27).

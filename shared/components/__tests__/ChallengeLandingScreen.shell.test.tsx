@@ -88,6 +88,9 @@ beforeEach(() => {
   // Reset fetch between tests.
   // @ts-expect-error global fetch stub
   globalThis.fetch = vi.fn();
+  // Clear boss-result memory so a seeded revisit (ch_shell_1) doesn't leak into
+  // the accept-path tests (all use the same makeApiResponse challenge_id).
+  try { localStorage.clear(); } catch { /* jsdom */ }
 });
 
 describe("ChallengeLandingScreen shell — neighbors intact (loading / error / self-match)", () => {
@@ -228,6 +231,32 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
     expect(screen.getByTestId("boss-flavor").textContent).toBe("Tatum and Brown finish it");
     // The player take-card hierarchy is NOT mounted for a boss.
     expect(screen.queryByTestId("challenge-take-card-landing")).toBeNull();
+  });
+
+  it("boss REVISIT (already played today) reconstructs the outward ending, not the accept CTA", async () => {
+    const { recordBossResult } = await import("@shared/utils/bossResultMemory");
+    recordBossResult("ch_shell_1", { score: 215.0, won: false });
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({
+        sender_kind: "boss", created_by: null, challenger_name: "Banner 18", trigger_type: "boss",
+      })),
+    }));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_boss_revisit"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={() => {}}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
+    // Outward ending reconstructed from memory; no re-accept CTA.
+    expect(screen.getByText(/TODAY'S BOSS GOT YOU/)).toBeTruthy();
+    expect(screen.queryByTestId("boss-accept-cta")).toBeNull();
   });
 
   it("boss accept threads senderKind:'boss' through onAccept", async () => {

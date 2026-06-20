@@ -20,7 +20,15 @@ export interface BossResult {
 export function recordBossResult(bossChallengeId: string | null | undefined, r: BossResult): void {
   if (!bossChallengeId) return;
   try {
-    localStorage.setItem(KEY(bossChallengeId), JSON.stringify({ score: r.score, won: r.won }));
+    // Records DISTINCT-player-attempted, not per-play: merge with any existing
+    // result, keeping the best score and sticky-win. A second play of the same
+    // boss never regresses the remembered score and never double-counts (this
+    // is local memory; the players-not-attempts KV count is server-side and
+    // first-attempt-gated). Presence === attempted.
+    const prior = getBossResult(bossChallengeId);
+    const score = prior ? Math.max(prior.score, r.score) : r.score;
+    const won = (prior?.won ?? false) || r.won;
+    localStorage.setItem(KEY(bossChallengeId), JSON.stringify({ score, won }));
   } catch {
     /* non-fatal — CTA just stays in the unattempted state */
   }

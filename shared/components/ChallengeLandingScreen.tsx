@@ -16,6 +16,8 @@ import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
 //  a hint label for the CTA, never as a block.)
 import { isRealName } from "@shared/utils/isRealName";
 import { ChallengeTakeCardLanding } from "./ChallengeTakeCardLanding";
+import { getBossResult } from "@shared/utils/bossResultMemory";
+import { BossOutwardEnding } from "./BossOutwardEnding";
 
 interface ChallengeData {
   challenge_id: string;
@@ -217,6 +219,8 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
               statsLine={statsLine}
               alreadyAttempted={alreadyAttempted}
               onAccept={handleAccept}
+              sport={sport}
+              onClose={onClose}
             />
           );
         }
@@ -381,9 +385,19 @@ interface BossLandingProps {
   statsLine: string | null;
   alreadyAttempted: boolean;
   onAccept: () => void;
+  sport: string;
+  onClose: () => void;
 }
 
-function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept }: BossLandingProps) {
+function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept, sport, onClose }: BossLandingProps) {
+  // Phase 2-mount Step 5 — REVISIT reconstruction (build-flag 1: the outward
+  // ending is owned by the result view, so it must rebuild whenever the result
+  // is viewed, not only at resolution). When the user already has a boss result
+  // for today (getBossResult — the SAME single source the post-play
+  // ChallengeComparisonScreen boss branch reads), the landing reconstructs the
+  // outward ending instead of re-offering the accept CTA. Fresh and revisited
+  // are byte-identical (both render BossOutwardEnding from getBossResult).
+  const priorResult = getBossResult(data.challenge_id);
   return (
     <div data-testid="boss-landing">
       {/* Eyebrow — marks the surface as the daily boss. */}
@@ -423,23 +437,36 @@ function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept }:
         ))}
       </div>
 
-      {/* Target line — the score to beat. */}
-      <div style={{
-        fontSize: 14, fontWeight: 700, color: "rgba(234,240,255,0.85)",
-        letterSpacing: 0.6, textAlign: "center", textTransform: "uppercase", marginBottom: 12,
-      }}>Target to beat: {data.target_score.toFixed(1)} FP</div>
+      {priorResult ? (
+        /* REVISIT — already played today: reconstruct the outward ending
+           (terminates outward; no re-accept CTA). Same single source as the
+           post-play sheet. */
+        <BossOutwardEnding
+          sport={sport}
+          bossChallengeId={data.challenge_id}
+          onPlayAgain={onClose}
+        />
+      ) : (
+        <>
+          {/* Target line — the score to beat. */}
+          <div style={{
+            fontSize: 14, fontWeight: 700, color: "rgba(234,240,255,0.85)",
+            letterSpacing: 0.6, textAlign: "center", textTransform: "uppercase", marginBottom: 12,
+          }}>Target to beat: {data.target_score.toFixed(1)} FP</div>
 
-      {/* Accept CTA. */}
-      <button
-        data-testid="boss-accept-cta"
-        onClick={onAccept}
-        style={{
-          width: "100%", padding: "16px", borderRadius: 14,
-          background: "#FFB14A", border: "none",
-          color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
-          textTransform: "uppercase", letterSpacing: 0.5,
-        }}
-      >{alreadyAttempted ? "Play Again" : "Take the Boss"}</button>
+          {/* Accept CTA. */}
+          <button
+            data-testid="boss-accept-cta"
+            onClick={onAccept}
+            style={{
+              width: "100%", padding: "16px", borderRadius: 14,
+              background: "#FFB14A", border: "none",
+              color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
+              textTransform: "uppercase", letterSpacing: 0.5,
+            }}
+          >{alreadyAttempted ? "Play Again" : "Take the Boss"}</button>
+        </>
+      )}
     </div>
   );
 }
