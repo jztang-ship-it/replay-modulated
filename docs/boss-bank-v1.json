@@ -1,5 +1,6 @@
 {
   "_meta": {
+    "version": "v1",
     "purpose": "Step-1 join artifact. Curation seed for the boss generator. Curated by accolade/recognizability, NOT by FP rank.",
     "scope": "v1 = champions + iconic non-champions. Tier B deferred (flag).",
     "join": "Join to the computed 30x29 table on (season_code, team_code). team_code uses common abbreviations — CC must map to the repo's players.json `team` convention (one-time 30-team lookup).",
