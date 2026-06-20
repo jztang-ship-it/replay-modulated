@@ -26,19 +26,22 @@ import {
   dailyInstanceSeed,
   projectSenderFacing,
   toSharedChallengeRow,
-  loadBankVersion,
   type BossIdentity,
   type BossDailyInstanceSeed,
 } from "../../../basketball/src/tools/bossContract.js";
 import {
-  loadBankBosses,
   scheduleHeadline,
-  P_LO,
-  P_HI,
   SCHEDULE_EPOCH,
   type Boss,
 } from "../../../basketball/src/tools/bossGenerator.js";
-import { loadBand } from "../../../basketball/src/tools/bossData.js";
+// Phase 2-fix: the PRECOMPUTED static boss bank. NFT traces this static JSON
+// import into the function bundle, so the request path imports the ~84 KB bank
+// instead of reading docs/boss-bank-v1.json + the 213 MB seasons dir off disk
+// (the old fs-join ENOENT'd in /var/task). That join is now BUILD-ONLY —
+// scripts/build-boss-bank.mjs — and the result is committed + drift-guarded.
+// scheduleHeadline / rollBoss / projectSenderFacing / toSharedChallengeRow are
+// UNCHANGED; only the data SOURCE swapped (fs → static import).
+import bossBankArtifact from "./bossBank.generated.json";
 
 // SCHEDULE_EPOCH is the SINGLE SOURCE OF TRUTH for the daily-rotation epoch
 // (design-decisions §4). It is DEFINED in bossGenerator (the scheduling layer
@@ -59,18 +62,37 @@ export type ResolvedBoss = {
   seed: BossDailyInstanceSeed;
 };
 
+// Typed view over the committed artifact. Only the request-path fields are
+// present (Q1 trimmed shape); cast through unknown because BankBoss is a
+// structural subset of Boss — the analytics fields Boss carries (gp/avgMin/
+// meanFp/expected/floor/ceiling/rollDepth/flags) are never read by
+// scheduleHeadline / rollBoss / projectSenderFacing / materializeIdentity.
+type BankStarter = { name: string; pos: string; gamePool: number[] };
+type BankBoss = {
+  key: string; season: string; team: string; era_id: string;
+  tier: string; display: string; flavor: string; starters: BankStarter[];
+};
+type BossBankArtifact = {
+  _meta: { version: string; p_lo: number; p_hi: number };
+  band: { lo: number; hi: number };
+  bosses: BankBoss[];
+};
+const BANK = bossBankArtifact as BossBankArtifact;
+
 /**
  * Resolve the canonical boss identity + daily seed for (date, slot) by REUSING
- * scheduleHeadline from the fixed epoch. Heavy (reads the bank + season data +
- * band off disk); injected/mocked in tests via EnsureDeps.resolve so the unit
- * test stays hermetic.
+ * scheduleHeadline from the fixed epoch, fed by the PRECOMPUTED static bank —
+ * NO request-time fs. Byte-identical to the old fs-join path (pinned by the
+ * artifact-vs-fs equivalence test in boss-ensure-daily-instance.test.ts).
  */
 export function resolveBossForDate(date: string, slot: number): ResolvedBoss {
-  const bankVersion = loadBankVersion();
-  // Same pool the generator schedules over: champ + iconic.
-  const pool = loadBankBosses().filter(b => b.tier === "champ" || b.tier === "iconic");
-  const band = loadBand(P_LO, P_HI);
-  const BAND: [number, number] = [band.lo, band.hi];
+  const bankVersion = BANK._meta.version;
+  // Same pool + order the generator scheduled over: champ + iconic, in bank
+  // order. The artifact preserves loadBankBosses()'s order; the filter is a
+  // no-op today (every active identity is champ|iconic) but kept for exact
+  // equivalence with the prior fs path.
+  const pool = BANK.bosses.filter(b => b.tier === "champ" || b.tier === "iconic") as unknown as Boss[];
+  const BAND: [number, number] = [BANK.band.lo, BANK.band.hi];
 
   // Run the schedule from the epoch through the requested day so the era
   // anti-repeat cooldown matches the canonical rotation. A date before the
