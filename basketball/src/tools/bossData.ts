@@ -83,7 +83,12 @@ export function listSeasons(): string[] {
   return fs.readdirSync(SEASONS_DIR).filter(s => /^\d{4}$/.test(s)).sort();
 }
 
-export function buildSeason(season: string): TeamSeason[] {
+// Manual curated-starter override (curation layer, NOT the selection rule). Applied
+// as a deterministic POST-selection substitution, gated to (season|team) keys.
+export type FiveOverride = { out: string; in: string }; // player names
+export type OverrideMap = Map<string, FiveOverride[]>;   // key `${season}|${team}`
+
+export function buildSeason(season: string, overrides?: OverrideMap): TeamSeason[] {
   const dir = path.join(SEASONS_DIR, season);
   const players: any[] = JSON.parse(fs.readFileSync(path.join(dir, "players.json"), "utf8"));
   const logs: any[] = JSON.parse(fs.readFileSync(path.join(dir, "gamelogs.json"), "utf8"));
@@ -131,6 +136,18 @@ export function buildSeason(season: string): TeamSeason[] {
     for (const t of teams) { if (t) (teamCandidates.get(t) ?? teamCandidates.set(t, new Set()).get(t)!).add(id); }
   }
 
+  // Name → basePlayerId for the season (override `in` players are named).
+  const nameToId = new Map<string, string>();
+  for (const [id, p] of playerById) { const n = String(p.name ?? "").trim().toLowerCase(); if (n && !nameToId.has(n)) nameToId.set(n, id); }
+  const starterFromId = (id: string): BossStarter => {
+    const p = playerById.get(id); const st = stat.get(id)!;
+    return {
+      name: String(p.name ?? ""), pos: String(p.position ?? "").toUpperCase(),
+      gamePool: st.pool, gp: st.gp, avgMin: st.avgMin, meanFp: st.meanFp,
+      traded: Array.isArray(p.teams) && p.teams.length > 1,
+    };
+  };
+
   const out: TeamSeason[] = [];
   for (const [team, candIds] of teamCandidates) {
     // Method A: top-5 by avg minutes/game, above the games-played floor; tiebreak more games.
@@ -140,14 +157,21 @@ export function buildSeason(season: string): TeamSeason[] {
       .slice(0, 5);
     if (!ranked.length) continue;
 
-    const starters: BossStarter[] = ranked.map(id => {
-      const p = playerById.get(id); const st = stat.get(id)!;
-      return {
-        name: String(p.name ?? ""), pos: String(p.position ?? "").toUpperCase(),
-        gamePool: st.pool, gp: st.gp, avgMin: st.avgMin, meanFp: st.meanFp,
-        traded: Array.isArray(p.teams) && p.teams.length > 1,
-      };
-    });
+    const starters: BossStarter[] = ranked.map(starterFromId);
+
+    // Deterministic post-selection substitution — gated to override keys only.
+    // Replaces the named `out` auto-starter (in place, preserving slot order) with
+    // the named `in` player built from the SAME stat map (canonical FP path). Throws
+    // on a missing/non-qualifying override player or an `out` not in the auto-five —
+    // a bad override must fail loudly, not silently no-op.
+    const ovs = overrides?.get(`${season}|${team}`);
+    if (ovs) for (const ov of ovs) {
+      const inId = nameToId.get(ov.in.trim().toLowerCase());
+      if (!inId || !stat.has(inId)) throw new Error(`[five-override] "${ov.in}" not found/qualifying (min≥10) in ${season}|${team}`);
+      const outIdx = starters.findIndex(s => s.name.trim().toLowerCase() === ov.out.trim().toLowerCase());
+      if (outIdx < 0) throw new Error(`[five-override] out player "${ov.out}" not in the auto-five of ${season}|${team}`);
+      starters[outIdx] = starterFromId(inId);
+    }
 
     const expectedRaw = starters.reduce((a, s) => a + s.meanFp, 0);
     out.push({
@@ -165,8 +189,8 @@ export function buildSeason(season: string): TeamSeason[] {
   return out;
 }
 
-export function buildAll(): TeamSeason[] {
-  return listSeasons().flatMap(buildSeason);
+export function buildAll(overrides?: OverrideMap): TeamSeason[] {
+  return listSeasons().flatMap(s => buildSeason(s, overrides));
 }
 
 // ── Band (P60–P85 of the strong-capped player-lineup allFps dump) ──────────────

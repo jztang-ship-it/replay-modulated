@@ -24,7 +24,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import { buildAll, loadBand, REPO, type TeamSeason } from "./bossData";
+import { buildAll, loadBand, REPO, type TeamSeason, type OverrideMap } from "./bossData";
 
 export const K = 15;
 export const COOLDOWN = 5;
@@ -110,8 +110,14 @@ export function scheduleHeadline(pool: Boss[], startISO: string, days: number, c
 // Build the 38 bank bosses (bank ⨝ bossData).
 export function loadBankBosses(): Boss[] {
   const bank = JSON.parse(fs.readFileSync(path.resolve(REPO, "docs/boss-bank-v1.json"), "utf8"));
+  // Curated five-overrides → applied at this bank⨝bossData join (identity layer).
+  // bossTable.buildAll() runs WITHOUT this map, so the Step-1 selection table is
+  // unaffected; only the curated boss identities use the override.
+  const overrides: OverrideMap = new Map();
+  for (const b of bank.bosses) if (Array.isArray(b.fiveOverride) && b.fiveOverride.length)
+    overrides.set(`${b.season_code}|${b.team_code}`, b.fiveOverride);
   const allTs = new Map<string, TeamSeason>();
-  for (const ts of buildAll()) allTs.set(`${ts.season}|${ts.team}`, ts);
+  for (const ts of buildAll(overrides)) allTs.set(`${ts.season}|${ts.team}`, ts);
   const out: Boss[] = [];
   for (const b of bank.bosses) {
     const ts = allTs.get(`${b.season_code}|${b.team_code}`);

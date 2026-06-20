@@ -28,12 +28,12 @@ determinism: CHI-9697 132.4 == 132.4 → PASS
     GSW-1617  daily-hit  18.6% → tough-day 4.6%  "The Super-Team"
     DEN-2223  daily-hit  21.6% → tough-day 2.6%  "Jokic's Crown"
     MIL-2021  daily-hit    23% → tough-day 2%  "Giannis"
-    GSW-1718  daily-hit  25.4% → tough-day 1.2%  "The KD Repeat"
+    PHX-0607  daily-hit  25.5% → tough-day 1.2%  "Seven Seconds or Less"
     scheduled 30-day tough-days: 0/30 (0%)
 
 (d) per-day win-rate under the 1-hour multi-attempt window (1−(1−p)^N):
     attempt model: 1-hour replay window (api/challenge/[id]/attempt.ts ONE_HOUR_MS; is_window_open) — multi-attempt, not a fixed count
-    N=1 25.5%  N=3 57.4%  N=5 74.9%  N=10 92.5%  N=20 99.1%
+    N=1 25.5%  N=3 57.5%  N=5 75%  N=10 92.5%  N=20 99.1%
     (N=1 is the old single-roll 27% — wrong denominator. Multi-attempt → high per-day WR.)
 
 30-day schedule: cooldown PASS  | tough-days 0/30

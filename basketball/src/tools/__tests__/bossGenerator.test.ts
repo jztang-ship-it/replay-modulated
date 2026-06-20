@@ -11,7 +11,7 @@ import {
   seededRng, rollBoss, rollGames, scheduleHeadline, rollDistribution,
   loadBankBosses, K, COOLDOWN, type Boss,
 } from "../bossGenerator";
-import { buildSeason, loadBand, canonicalFp } from "../bossData";
+import { buildSeason, buildAll, loadBand, canonicalFp } from "../bossData";
 import { computeBasketballFp } from "../../adapters/fantasyPoints";
 import { computeBasketballBadges } from "../../adapters/badges";
 import { BasketballSportConfig } from "../../adapters/basketballConfig";
@@ -128,6 +128,28 @@ describe("Step 3 #7 — FP IDENTITY (boss FP and player FP are one code path)", 
     const s = { pts: 10, reb: 5, ast: 5, stl: 1, blk: 1, turnovers: 1, min: 30 };
     expect(computeBasketballBadges({ ...s, _position: "SF" }, (BasketballSportConfig as any).badges ?? [])).toHaveLength(0);
     expect(canonicalFp(s, "SF")).toBe(computeBasketballFp({ ...s, _position: "SF" }, BasketballSportConfig.projectionWeights));
+  });
+});
+
+describe("five-override — applied to listed identities, gated off everywhere else", () => {
+  it("GSW-1718 boss five has Iguodala (override in), not Quinn Cook (auto out)", () => {
+    const names = bank.find(b => b.key === "GSW-1718")!.starters.map(s => s.name);
+    expect(names).toContain("Andre Iguodala");
+    expect(names).not.toContain("Quinn Cook");
+  });
+  it("DAL-1011 boss five has Chandler (override in) and retains Marion, not Caron Butler", () => {
+    const names = bank.find(b => b.key === "DAL-1011")!.starters.map(s => s.name);
+    expect(names).toContain("Tyson Chandler");
+    expect(names).toContain("Shawn Marion");
+    expect(names).not.toContain("Caron Butler");
+  });
+  it("a non-overridden identity (DEN-2223) is unchanged", () => {
+    const names = bank.find(b => b.key === "DEN-2223")!.starters.map(s => s.name);
+    expect(names).toContain("Nikola Jokić");
+  });
+  it("gating: buildAll() WITHOUT overrides keeps the auto five (Quinn Cook in GSW-1718) — Step-1 table / selection rule unaffected", () => {
+    const gsw = buildAll().find(t => t.season === "1718" && t.team === "GSW")!;
+    expect(gsw.starters.map(s => s.name)).toContain("Quinn Cook");
   });
 });
 
