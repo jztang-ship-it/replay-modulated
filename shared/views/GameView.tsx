@@ -3040,6 +3040,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
+        // Two-button result row: when a story trigger exists in sender mode, show a
+        // compact "Challenge" button beside REPLAY (REPLAY stays permanent). Default
+        // off ⇒ non-challenge sports/states keep the single-REPLAY row unchanged.
+        // onChallenge starts the send via the invisible prompt's startSend() handle.
+        challengeAvailable={!challengeCtx && !!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+        onChallenge={() => challengeSendRef.current?.startSend()}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
         onWageAnimationComplete={() => {

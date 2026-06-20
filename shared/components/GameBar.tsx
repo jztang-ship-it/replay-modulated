@@ -163,6 +163,14 @@ type Props = {
    *  prop is still passed; only the readout is suppressed. (Does NOT affect the
    *  separate `coins` engagement currency.) */
   economyEnabled?: boolean;
+  /** When true, a compact secondary "Challenge" button renders between REPLAY and
+   *  the i/🏆 icons (result-screen story state), and the action row switches to an
+   *  in-flow two-button layout (shortened REPLAY + Challenge, icons marginLeft:auto).
+   *  Default false ⇒ NOT rendered and the row keeps its exact current layout (REPLAY
+   *  centered, icons absolute-right) — so non-challenge sports are pixel-unaffected.
+   *  onChallenge starts the send (GameView wires it to the prompt's startSend()). */
+  challengeAvailable?: boolean;
+  onChallenge?: () => void;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
    *  multipliers). Drives the fire-row label text. Optional for back-compat;
    *  when omitted, labels show "1x" fallbacks. */
@@ -1394,6 +1402,8 @@ export function GameBar({
   streak = 0,
   showStreak = true,
   economyEnabled = true,
+  challengeAvailable = false,
+  onChallenge,
   streakTiers,
   onLegendOpened,
   onTrophyOpened,
@@ -1420,6 +1430,31 @@ export function GameBar({
         && localStorage.getItem("rm_board_ack") !== "1";
     } catch { return false; }
   })();
+  // Compact secondary "Challenge" button — rendered as a real in-flow flex sibling
+  // between REPLAY and the icons (result-screen story state). Subdued vs the primary
+  // REPLAY so REPLAY stays dominant. Null when no challenge is available (default),
+  // so the row keeps its current single-REPLAY layout for all other sports/states.
+  const ChallengeButton = (challengeAvailable && onChallenge) ? (
+    <button
+      type="button"
+      onClick={onChallenge}
+      data-action="challenge"
+      style={{
+        flexShrink: 0,
+        padding: "10px 14px",
+        borderRadius: THEME.button.action.borderRadius,
+        border: "1px solid rgba(255,177,74,0.55)",
+        background: "rgba(255,177,74,0.14)",
+        color: "#FFB14A",
+        fontWeight: 900, fontSize: 13, letterSpacing: 1, textTransform: "uppercase",
+        cursor: "pointer", lineHeight: 1, whiteSpace: "nowrap",
+        pointerEvents: "auto" as const,
+      }}
+    >
+      Challenge
+    </button>
+  ) : null;
+
   const TrophyButton = onViewLeaderboard ? (
     <button
       type="button"
@@ -1638,8 +1673,12 @@ export function GameBar({
             </div>
           )}
 
-          {/* Action row — 👛 wallet left, button center, legend+trophy right */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: 2, minHeight: 44 }}>
+          {/* Action row — 👛 wallet left, button center, legend+trophy right.
+              When challengeAvailable, switches to an in-flow two-button layout
+              (REPLAY + Challenge, icons pushed right via marginLeft:auto); else
+              the original centered-REPLAY + absolute-right-icons layout (so
+              non-challenge sports/states are pixel-unchanged). */}
+          <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: 44, ...(challengeAvailable ? { gap: 8 } : { justifyContent: "center" as const }) }}>
             {/* Wallet chip — left. Hidden in challenge mode (no wager) and when the
                 economy is off (F2P money seam — wallet never moves). */}
             {!challengeMode && economyEnabled && (
@@ -1660,7 +1699,7 @@ export function GameBar({
               disabled={isDisabled(gameState)}
               data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
               style={{
-                width: "min(168px, 50%)",
+                width: challengeAvailable ? 120 : "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",
                 padding: "11px 0",
                 fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
@@ -1677,8 +1716,14 @@ export function GameBar({
               {actionLabel(gameState)}
             </button>
 
-            {/* Legend + trophy — right (both hidden during FTUE) */}
-            <div style={{ position: "absolute", right: 0, display: "flex", alignItems: "center", gap: 6 }}>
+            {/* Compact secondary Challenge button — in-flow flex sibling between
+                REPLAY and the icons (story state only; null otherwise). */}
+            {ChallengeButton}
+
+            {/* Legend + trophy — right (both hidden during FTUE). In story state
+                pushed right via marginLeft:auto (in-flow); otherwise absolute-right
+                exactly as before so non-challenge rows are pixel-identical. */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, ...(challengeAvailable ? { marginLeft: "auto" as const } : { position: "absolute" as const, right: 0 }) }}>
               <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
                 width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
                 background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
@@ -1886,7 +1931,7 @@ export function GameBar({
                 disabled={isDisabled(gameState)}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
                 style={{
-                  width: "min(168px, 50%)",
+                  width: challengeAvailable ? 120 : "min(168px, 50%)",
                   borderRadius: THEME.button.action.borderRadius, border: "none",
                   padding: "11px 0",
                   fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
@@ -1900,6 +1945,9 @@ export function GameBar({
                 }}>
                 {actionLabel(gameState)}
               </button>
+              {/* Parity with the split path: Challenge button as an in-flow sibling
+                  (null unless challengeAvailable). */}
+              {ChallengeButton}
               {TrophyButton}
             </div>
           </div>
