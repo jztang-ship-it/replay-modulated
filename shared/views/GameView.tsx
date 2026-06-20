@@ -3218,7 +3218,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           share prompt regardless of whether anything share-worthy
           happened, including plain STARTER hands with no pulls. Challenge
           mode guard (challengeCtx) added in Task 10. */}
-      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && challengeTrigger.trigger !== "default" && (
+      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
             sport={sportKey}
@@ -3246,6 +3246,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               // Rivalry continuation ends when the user dismisses the
               // back-share prompt — they're returning to normal play
               // without lingering rivalry context.
+              if (challengeBackCtx) clearChallengeBackCtx?.();
+            }}
+            // One-CTA terminal SEND: when the post-send delivery modal is
+            // dismissed (its only route is the ✕), clear the trigger so the
+            // prompt unmounts and REPLAY returns — no lingering prompt, one exit.
+            // Cleared AFTER send success only (createChallenge's `if (!cid) return`
+            // keeps a failed write from ever reaching the modal or this clear).
+            onConsumed={() => {
+              setChallengeTrigger(null);
               if (challengeBackCtx) clearChallengeBackCtx?.();
             }}
           />

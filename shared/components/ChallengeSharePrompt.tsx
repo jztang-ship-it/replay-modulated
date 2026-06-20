@@ -62,12 +62,18 @@ interface Props {
    *  legacy fallback). */
   handId?: string;
   onDismiss?: () => void;
+  /** One-CTA ownership: fired when the post-send delivery modal
+   *  (ChallengeSentConfirmation) is dismissed — its ONLY dismiss route is the ✕
+   *  (no backdrop/escape). The caller clears challengeTrigger here so the prompt
+   *  unmounts and REPLAY returns (terminal SEND, one exit). Distinct from
+   *  onDismiss (the prompt-strip ✕ when the user never sent). */
+  onConsumed?: () => void;
 }
 
 export function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
   badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
-  rivalryTargetName, handId, onDismiss,
+  rivalryTargetName, handId, onDismiss, onConsumed,
 }: Props) {
   // Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
   // 2caa7a3). Anonymous users see the share surface (R1) but tapping
@@ -445,7 +451,7 @@ export function ChallengeSharePrompt({
             shareUrl={sentModal.shareUrl}
             sport={sport}
             shareHeadline={sentModal.shareHeadline}
-            onDismiss={() => setSentModal(null)}
+            onDismiss={() => { setSentModal(null); onConsumed?.(); }}
           />
         )}
         <button
@@ -481,7 +487,7 @@ export function ChallengeSharePrompt({
         shareUrl={sentModal.shareUrl}
         sport={sport}
         shareHeadline={sentModal.shareHeadline}
-        onDismiss={() => setSentModal(null)}
+        onDismiss={() => { setSentModal(null); onConsumed?.(); }}
       />
     )}
     <div style={{
