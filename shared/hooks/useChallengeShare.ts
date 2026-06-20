@@ -69,12 +69,13 @@ export function useChallengeShare(sportKey: string) {
     winTier: string,
     badges: Array<{ id: string; icon: string; label: string; fp: number }>,
     winTiersMap: WinTierMap,
-  ): TriggerResult => {
+  ): TriggerResult | null => {
+    // evaluateTrigger now returns null for ordinary hands (no challenge trigger).
     const result = evaluateTrigger({ roster, totalFp, winTier: winTier as any, badges, winTiersMap });
     setState(s => ({ ...s, triggerResult: result }));
     track("challenges", "share_trigger_fired", {
-      trigger: result.trigger, sport: sportKey,
-      near_miss_gap: result.nearMissGap ?? 0,
+      trigger: result?.trigger ?? "none", sport: sportKey,
+      near_miss_gap: result?.nearMissGap ?? 0,
     });
     return result;
   }, [sportKey]);

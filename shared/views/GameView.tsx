@@ -2140,8 +2140,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           wasHeld: c.wasHeld === true,
           badge_ids: (c.achievements ?? []).map((a: any) => a.id),
         })),
-        trigger: result.trigger,
-        headline: result.headline,
+        trigger: result?.trigger ?? null,   // null = no challenge trigger (ordinary hand)
+        headline: result?.headline ?? null,
       });
 
       if (challengeBackCtx) {

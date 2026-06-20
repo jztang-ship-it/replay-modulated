@@ -88,55 +88,58 @@ function backfillRecompute(input: {
     topGameTier: input.topGameTier,
     starBasePlayerId: input.starBasePlayerId,
   });
+  // evaluateTrigger now returns null for ordinary/former-miss/former-default hands
+  // (miss + default removed). Mirror the script's null-handling: a null recompute
+  // maps to a null trigger + all-null columns (the script's gate then drift-skips it).
   return {
-    trigger: result.trigger,
-    near_miss_gap:         result.nearMissGap         ?? null,
-    near_miss_next_tier:   result.nearMissNextTier    ?? null,
-    anchor_base_player_id: result.anchorBasePlayerId  ?? null,
-    top_game_tier:         result.topGameTier         ?? null,
+    trigger: result?.trigger ?? null,
+    near_miss_gap:         result?.nearMissGap         ?? null,
+    near_miss_next_tier:   result?.nearMissNextTier    ?? null,
+    anchor_base_player_id: result?.anchorBasePlayerId  ?? null,
+    top_game_tier:         result?.topGameTier         ?? null,
   };
 }
 
 // ── miss: uncovered columns ──────────────────────────────────────────────
 
 describe("backfill fidelity — miss trigger REMOVED (2026-06-20)", () => {
-  // The miss trigger no longer exists: the backfill recomputes via the live
-  // evaluateTrigger, so former-miss STARTER hands now classify as `default` with
-  // NULL near_miss columns. In production the script's faithful-recompute gate
-  // (recompute.trigger === stored) makes a row stored as 'miss' a MISMATCH →
-  // SKIPPED, so stored near-miss data is preserved-by-skip, never clobbered.
-  // These cases pin the recompute output (default + null) at varied former-miss gaps.
+  // The miss AND default triggers no longer exist: the backfill recomputes via the
+  // live evaluateTrigger, so former-miss STARTER hands now classify as NULL (no
+  // trigger) with NULL near_miss columns. In production the script's
+  // faithful-recompute gate (recompute.trigger === stored) makes a row stored as
+  // 'miss' a MISMATCH → SKIPPED, so stored near-miss data is preserved-by-skip,
+  // never clobbered. These cases pin the recompute output (null) at varied gaps.
 
-  it("former miss (STARTER 3 FP shy of ALL_STAR) → default, null near_miss columns", () => {
+  it("former miss (STARTER 3 FP shy of ALL_STAR) → null trigger + null columns", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.4 }));
     const out = backfillRecompute({ roster, totalFp: 222, winTier: "STARTER" });
-    expect(out.trigger).toBe("default");
+    expect(out.trigger).toBeNull();
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
     expect(out.anchor_base_player_id).toBeNull();
     expect(out.top_game_tier).toBeNull();
   });
 
-  it("former miss (STARTER 0.5 FP shy of ALL_STAR) → default, null near_miss columns", () => {
+  it("former miss (STARTER 0.5 FP shy of ALL_STAR) → null trigger + null columns", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.9 }));
     const out = backfillRecompute({ roster, totalFp: 224.5, winTier: "STARTER" });
-    expect(out.trigger).toBe("default");
+    expect(out.trigger).toBeNull();
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
   });
 
-  it("former high-tier miss (STARTER 10 FP shy of ALL_STAR) → default, null near_miss columns", () => {
+  it("former high-tier miss (STARTER 10 FP shy of ALL_STAR) → null trigger + null columns", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43 }));
     const out = backfillRecompute({ roster, totalFp: 215, winTier: "STARTER" });
-    expect(out.trigger).toBe("default");
+    expect(out.trigger).toBeNull();
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
   });
 
-  it("STARTER 12 FP shy of ALL_STAR (was already outside the old window) → default, null", () => {
+  it("STARTER 12 FP shy of ALL_STAR (was already outside the old window) → null", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 42.6 }));
     const out = backfillRecompute({ roster, totalFp: 213, winTier: "STARTER" });
-    expect(out.trigger).toBe("default");
+    expect(out.trigger).toBeNull();
     expect(out.near_miss_gap).toBeNull();
     expect(out.near_miss_next_tier).toBeNull();
   });

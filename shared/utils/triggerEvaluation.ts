@@ -140,16 +140,15 @@ function selectBigScoreAnchor(roster: GeneratedCard[]): string | null {
   return best.basePlayerId ?? null;
 }
 
-export function evaluateTrigger(input: TriggerInput): TriggerResult {
+export function evaluateTrigger(input: TriggerInput): TriggerResult | null {
   const {
-    roster, totalFp, winTier, badges,
+    roster, winTier, badges,
     topGameTier, starBasePlayerId,
     topGamePrimaryReason, topGameAllReasons,
   } = input;
-  // winTiersMap is still accepted on TriggerInput (callers pass it; preserved for
-  // the future economy/trigger work) but no longer read — the only consumer was
-  // the removed miss branch.
-  const fp = Math.round(totalFp * 10) / 10;
+  // totalFp + winTiersMap are still accepted on TriggerInput (callers pass them;
+  // preserved for future economy/trigger work) but no longer read — their only
+  // consumers were the removed miss/default branches.
 
   // 1. rare_pull — star card pulled a record / career-high / season top-10
   //    game. Two paths into this branch:
@@ -242,9 +241,11 @@ export function evaluateTrigger(input: TriggerInput): TriggerResult {
   //    preserved for persisted rows. A former-miss hand now falls through to
   //    default below (and to no challenge once default is removed).
 
-  // 5. default — always fires
-  return {
-    trigger: "default",
-    headline: `${fp} FP on the board. Same slate. Beat them.`,
-  };
+  // 5. default — REMOVED (2026-06-20). An ordinary hand no longer initiates a
+  //    challenge: evaluateTrigger returns null and consumers gate on a non-null
+  //    trigger (the prompt mount already required trigger !== "default", so null is
+  //    behaviorally equivalent — no prompt). The `default` member of
+  //    TriggerResult.trigger is PRESERVED (persisted rows + consumer branches that
+  //    read trigger === "default"); the classifier just never emits it now.
+  return null;
 }

@@ -30,11 +30,10 @@ const TIERS: WinTierMap = {
 };
 
 describe("evaluateTrigger", () => {
-  it("returns default trigger for normal hand", () => {
+  it("returns null for a normal hand — default trigger removed (no challenge initiated)", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 36 }));
     const result = evaluateTrigger({ roster, totalFp: 180, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
-    expect(result.headline).toContain("180");
+    expect(result).toBeNull();
   });
 
   it("returns big_score for MVP tier", () => {
@@ -49,47 +48,43 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("big_score");
   });
 
-  // ── miss trigger REMOVED (2026-06-20) ──────────────────────────────────
-  // A tier near-miss no longer initiates a challenge: former-miss hands now
-  // fall through to default (and to no challenge once default is removed). The
-  // near-miss reveal STAMP still fires — it rides the gauge's standalone 5%
-  // band (computeGaugeState + NEAR_MISS_BAND), covered by
-  // shared/components/__tests__/TierGauge.nearMiss.test.ts. These cases pin the
-  // classifier no longer emitting `miss` and emitting no near-miss fields.
+  // ── miss + default triggers REMOVED (2026-06-20) ────────────────────────
+  // A tier near-miss and an ordinary hand no longer initiate a challenge:
+  // evaluateTrigger returns null. The near-miss reveal STAMP still fires — it
+  // rides the gauge's standalone 5% band (computeGaugeState + NEAR_MISS_BAND),
+  // covered by shared/components/__tests__/TierGauge.nearMiss.test.ts. These
+  // cases pin that former-miss / non-special hands now classify as null.
 
-  it("former near-miss (STARTER 3 FP shy of ALL_STAR) now falls through to default, no near-miss fields", () => {
+  it("former near-miss (STARTER 3 FP shy of ALL_STAR) now returns null", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.4 }));
     const result = evaluateTrigger({ roster, totalFp: 222, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
-    expect(result.nearMissGap).toBeUndefined();
-    expect(result.nearMissNextTier).toBeUndefined();
+    expect(result).toBeNull();
   });
 
-  it("former high-tier near-miss (STARTER 10 FP shy of ALL_STAR) now falls through to default", () => {
+  it("former high-tier near-miss (STARTER 10 FP shy of ALL_STAR) now returns null", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 43 }));
     const result = evaluateTrigger({ roster, totalFp: 215, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
-    expect(result.nearMissGap).toBeUndefined();
+    expect(result).toBeNull();
   });
 
-  it("former tight near-miss (STARTER 4.9 FP shy of ALL_STAR) now falls through to default", () => {
+  it("former tight near-miss (STARTER 4.9 FP shy of ALL_STAR) now returns null", () => {
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 44.02 }));
     const result = evaluateTrigger({ roster, totalFp: 220.1, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
+    expect(result).toBeNull();
   });
 
-  it("does NOT fire miss for BUST→ROOKIE transitions", () => {
-    // 184 FP — BUST 1 FP below ROOKIE threshold. STARTER+ floor.
+  it("BUST→ROOKIE (no choke) returns null — neither miss nor default fires", () => {
+    // 184 FP — BUST 1 FP below ROOKIE threshold, no held high-tier cards.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 36.8 }));
     const result = evaluateTrigger({ roster, totalFp: 184, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).not.toBe("miss");
+    expect(result).toBeNull();
   });
 
-  it("does NOT fire miss for ROOKIE→STARTER transitions", () => {
-    // 202 FP — ROOKIE 3 FP below STARTER. Same STARTER+ floor.
+  it("ROOKIE→STARTER (no choke) returns null — neither miss nor default fires", () => {
+    // 202 FP — ROOKIE 3 FP below STARTER, no held high-tier cards.
     const roster = Array(5).fill(null).map((_, i) => card({ slotIndex: i, actualFp: 40.4 }));
     const result = evaluateTrigger({ roster, totalFp: 202, winTier: "ROOKIE", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).not.toBe("miss");
+    expect(result).toBeNull();
   });
 
   // ── choke — Phase 1 trigger split (renamed from bad_beat, tightened ≥1 → ≥2) ──
@@ -109,7 +104,7 @@ describe("evaluateTrigger", () => {
     expect(result.trigger).toBe("choke");
   });
 
-  it("does NOT fire choke at 1 held RED card on BUST (Phase 1 boundary — drops to default)", () => {
+  it("does NOT fire choke at 1 held RED card on BUST (Phase 1 boundary — now returns null)", () => {
     // Phase 1 trigger split: the 1-held case used to fire bad_beat
     // (broadened threshold in May 2026); now it drops to default to
     // reserve the choke stamp for the truly stacked-and-bricked case.
@@ -121,10 +116,10 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
+    expect(result).toBeNull();
   });
 
-  it("does NOT fire choke at 1 held ORANGE card on ROOKIE (Phase 1 boundary — drops to default)", () => {
+  it("does NOT fire choke at 1 held ORANGE card on ROOKIE (Phase 1 boundary — now returns null)", () => {
     const roster = [
       card({ slotIndex: 0, tier: "ORANGE", actualFp: 30, wasHeld: true }),
       card({ slotIndex: 1, tier: "WHITE", actualFp: 35 }),
@@ -133,7 +128,7 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 35 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 200, winTier: "ROOKIE", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
+    expect(result).toBeNull();
   });
 
   it("does NOT fire choke for BUST with 0 held RED/ORANGE cards", () => {
@@ -146,7 +141,7 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
+    expect(result).toBeNull();
   });
 
   it("does NOT fire choke when 2+ RED/ORANGE cards are NOT held", () => {
@@ -158,7 +153,7 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, tier: "WHITE", actualFp: 8 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 40, winTier: "BUST", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
+    expect(result).toBeNull();
   });
 
   // ── precedence — choke before miss ──────────────────────────────────────
@@ -289,7 +284,7 @@ describe("evaluateTrigger", () => {
     expect(result.anchorBasePlayerId).toBe("hot-replacement");
   });
 
-  it("default trigger continues to emit no anchor (no per-trigger anchor for default)", () => {
+  it("an ordinary hand (formerly default) now returns null — no trigger, no anchor", () => {
     const roster = [
       card({ slotIndex: 0, basePlayerId: "leader", actualFp: 50 }),
       card({ slotIndex: 1, basePlayerId: "two",    actualFp: 35 }),
@@ -298,7 +293,6 @@ describe("evaluateTrigger", () => {
       card({ slotIndex: 4, basePlayerId: "five",   actualFp: 35 }),
     ];
     const result = evaluateTrigger({ roster, totalFp: 180, winTier: "STARTER", badges: [], winTiersMap: TIERS });
-    expect(result.trigger).toBe("default");
-    expect(result.anchorBasePlayerId).toBeUndefined();
+    expect(result).toBeNull();
   });
 });

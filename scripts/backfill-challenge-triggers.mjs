@@ -340,13 +340,16 @@ for (const c of challenges) {
   });
 
   // ── faithful-recompute gate ──────────────────────────────────────────
-  if (recompute.trigger !== c.trigger_type) {
+  // evaluateTrigger now returns null for ordinary/former-miss/former-default hands
+  // (miss + default triggers removed 2026-06-20). A null recompute matches no
+  // stored trigger_type → drift-skip (never write), preserving stored data.
+  if ((recompute?.trigger ?? null) !== c.trigger_type) {
     summary.drift_skip++;
     summary.drift_skip_by_trigger_stored[c.trigger_type] =
       (summary.drift_skip_by_trigger_stored[c.trigger_type] ?? 0) + 1;
     logRow({
       kind: "drift-skip", challenge_id: c.challenge_id,
-      trigger_type_stored: c.trigger_type, trigger_type_recompute: recompute.trigger,
+      trigger_type_stored: c.trigger_type, trigger_type_recompute: recompute?.trigger ?? null,
       hand: { total_fp: totalFp, tier: winTier },
     });
     continue;
