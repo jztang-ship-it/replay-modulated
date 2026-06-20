@@ -31,11 +31,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({
     challenge_id: data.challenge_id,
     // created_by is the challenger's auth user_id (uuid) or null for
-    // legacy/anonymous-created rows. Used by the landing screen to detect
-    // self-match — when the current viewer is the original challenger,
-    // we render a "This is your challenge" surface instead of the accept
-    // flow.
+    // legacy/anonymous-created rows AND for boss instances (ownerless,
+    // migration 014). Used by the landing screen to detect self-match —
+    // when the current viewer is the original challenger, we render a
+    // "This is your challenge" surface instead of the accept flow.
     created_by: data.created_by ?? null,
+    // Phase 2 boss delivery (2026-06-21): the non-human sender marker.
+    // 'player' for every human challenge (column default, migration 014);
+    // 'boss' for the daily boss instance. The landing branches on this to
+    // present the authored boss identity, bypassing the player real-name
+    // framing. NULL-safe default keeps legacy responses 'player'.
+    sender_kind: data.sender_kind ?? "player",
+    // Boss "tough day" flag (the headliner couldn't hit band this day).
+    // Sender-facing flavor only; null on every human row. NOT a generator
+    // internal — band/K/route/attempts/picks are NOT on the row and so
+    // never reach this whitelist.
+    tough_day: data.tough_day ?? null,
     challenger_name: data.challenger_name ?? "Anonymous",
     target_score: Number(data.target_fp),
     sport: data.sport,

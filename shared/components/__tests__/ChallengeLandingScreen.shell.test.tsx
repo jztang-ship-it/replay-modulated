@@ -199,6 +199,87 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
     expect(ctx.triggerType).toBe("choke");
   });
 
+  it("boss row renders the BossLandingView (authored identity), NOT the player take-card", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({
+        sender_kind: "boss",
+        created_by: null,
+        challenger_name: "Banner 18",
+        share_headline: "Tatum and Brown finish it",
+        trigger_type: "boss",
+        tough_day: true,
+      })),
+    }));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_boss"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={() => {}}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-landing")).toBeTruthy());
+    // Authored boss identity shown verbatim (no real-name "your friend" downgrade).
+    expect(screen.getByTestId("boss-name").textContent).toBe("Banner 18");
+    expect(screen.getByTestId("boss-flavor").textContent).toBe("Tatum and Brown finish it");
+    // The player take-card hierarchy is NOT mounted for a boss.
+    expect(screen.queryByTestId("challenge-take-card-landing")).toBeNull();
+  });
+
+  it("boss accept threads senderKind:'boss' through onAccept", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({
+        sender_kind: "boss", created_by: null, challenger_name: "Banner 18", trigger_type: "boss",
+      })),
+    }));
+    const onAccept = vi.fn();
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_boss_accept"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={onAccept}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-accept-cta")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("boss-accept-cta"));
+    await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
+    const ctx = onAccept.mock.calls[0][0];
+    expect(ctx.senderKind).toBe("boss");
+    expect(ctx.challengerName).toBe("Banner 18");
+  });
+
+  it("player row threads senderKind:'player' (unchanged path)", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse()),
+    }));
+    const onAccept = vi.fn();
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_player_kind"
+        sport="basketball"
+        currentUserId={null}
+        deserializeRoster={stubDeserialize}
+        validateRosterSnapshot={stubValidate}
+        onAccept={onAccept}
+        onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("accept-cta")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("accept-cta"));
+    await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
+    expect(onAccept.mock.calls[0][0].senderKind).toBe("player");
+  });
+
   it("legacy 'bad_beat' row routes through normalizeTriggerType → ctx.triggerType === 'choke'", async () => {
     // @ts-expect-error global fetch stub
     globalThis.fetch = vi.fn(() => Promise.resolve({

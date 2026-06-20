@@ -7,7 +7,7 @@
 // V2 hierarchy here.
 
 import { useEffect, useState } from "react";
-import { type ChallengeCtx, normalizeTriggerType } from "@shared/adapters/challengeTypes";
+import { type ChallengeCtx, normalizeTriggerType, normalizeSenderKind } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types/index";
 import { track } from "@shared/analytics/analytics";
 import { chDebug } from "@shared/lib/chDebug";
@@ -23,6 +23,13 @@ interface ChallengeData {
    *  current viewer is the original challenger, we render an alternate
    *  surface instead of the accept flow. */
   created_by: string | null;
+  /** Phase 2 boss delivery (2026-06-21): "player" for human challenges
+   *  (default), "boss" for the daily boss instance. Optional on the wire
+   *  for backward compat; the GET handler defaults it to "player".
+   *  Normalized via normalizeSenderKind at the render boundary. */
+  sender_kind?: string;
+  /** Boss "tough day" flag (sender-facing flavor); null on human rows. */
+  tough_day?: boolean | null;
   challenger_name: string;
   target_score: number;
   sport: string;
@@ -143,6 +150,10 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
       nearMissNextTier: data.near_miss_next_tier ?? null,
       anchorBasePlayerId: data.anchor_base_player_id ?? null,
       topGameTier: data.top_game_tier ?? null,
+      // Phase 2 boss delivery (2026-06-21): thread the sender marker through
+      // so the play/comparison flow knows this is a boss target. Normalized
+      // at this single read boundary, same pattern as triggerType.
+      senderKind: normalizeSenderKind(data.sender_kind),
     });
   }
 
@@ -186,6 +197,26 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
               challengeId={challengeId}
               sport={sport}
               onBack={onClose}
+            />
+          );
+        }
+
+        // Phase 2 boss delivery (2026-06-21): a boss is an ownerless
+        // challenge presented with an AUTHORED identity (name + flavor),
+        // not a human take. Branch here on the normalized sender_kind and
+        // render the dedicated boss surface — the player take-card
+        // hierarchy (trigger banks, isRealName "your friend" downgrade,
+        // pickHeadlineAndCta) stays UNTOUCHED below for sender_kind
+        // "player". A boss has created_by null, so isSelfMatch above is
+        // always false for it.
+        if (normalizeSenderKind(data.sender_kind) === "boss") {
+          return (
+            <BossLandingView
+              data={data}
+              cards={cards}
+              statsLine={statsLine}
+              alreadyAttempted={alreadyAttempted}
+              onAccept={handleAccept}
             />
           );
         }
@@ -325,5 +356,90 @@ function SelfMatchView({ data, cards, statsLine, challengeId, sport, onBack }: S
         }}
       >Back to game</button>
     </>
+  );
+}
+
+// ── Boss landing surface ───────────────────────────────────────────────────
+//
+// Phase 2 boss delivery (2026-06-21). A boss is an ownerless challenge with an
+// AUTHORED identity: challenger_name carries the boss display ("Banner 18"),
+// share_headline carries the authored flavor ("Tatum and Brown finish it").
+// This surface presents that identity directly — it does NOT route through the
+// player take-card hierarchy (no isRealName "your friend" downgrade, no
+// trigger banks, no pickHeadlineAndCta). isRealName is deliberately untouched:
+// it remains the player-name gate; the boss name is distinguished only by
+// sender_kind === "boss".
+//
+// Layout reuses the SelfMatchView card-spread scaffold verbatim (plain
+// flex-wrap flow, no transforms / scale / absolute positioning) per the
+// reuse-working-scaffolds rule. Real-browser bounding-box verification is
+// pending device glass at review (this is a hold-for-review build).
+
+interface BossLandingProps {
+  data: ChallengeData;
+  cards: any[];
+  statsLine: string | null;
+  alreadyAttempted: boolean;
+  onAccept: () => void;
+}
+
+function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept }: BossLandingProps) {
+  return (
+    <div data-testid="boss-landing">
+      {/* Eyebrow — marks the surface as the daily boss. */}
+      <div style={{
+        fontSize: 14, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
+        color: "rgba(255,177,74,0.85)", marginBottom: 8,
+      }}>Daily Boss{data.tough_day ? " · Tough Day" : ""}</div>
+
+      {/* Boss name — the authored identity, verbatim (no real-name gate). */}
+      <div data-testid="boss-name" style={{
+        fontSize: 30, fontWeight: 900, color: "#EAF0FF", marginBottom: 6, lineHeight: 1.2,
+      }}>{data.challenger_name}</div>
+
+      {/* Flavor — the authored one-liner, as the take. Omitted when empty. */}
+      {data.share_headline && (
+        <div data-testid="boss-flavor" style={{
+          fontSize: 15, color: "rgba(234,240,255,0.8)", fontStyle: "italic",
+          marginBottom: 16, lineHeight: 1.4, maxWidth: 560,
+        }}>{data.share_headline}</div>
+      )}
+
+      {statsLine && (
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 18 }}>{statsLine}</div>
+      )}
+
+      {/* Card spread — same visual scaffold as SelfMatchView. */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24, justifyContent: "center" }}>
+        {cards.map((card: any, i: number) => (
+          <div key={i} style={{
+            background: "rgba(255,255,255,0.04)", border: `1.5px solid ${TIER_ACCENT[card.tier] ?? "#9CA3AF"}`,
+            borderRadius: 10, padding: "10px 14px", minWidth: 120, textAlign: "center",
+          }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: TIER_ACCENT[card.tier] ?? "#9CA3AF", textTransform: "uppercase", marginBottom: 4 }}>{card.tier}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>{card.name}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{card.team}{card.salary != null ? ` · $${card.salary}` : ""}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Target line — the score to beat. */}
+      <div style={{
+        fontSize: 14, fontWeight: 700, color: "rgba(234,240,255,0.85)",
+        letterSpacing: 0.6, textAlign: "center", textTransform: "uppercase", marginBottom: 12,
+      }}>Target to beat: {data.target_score.toFixed(1)} FP</div>
+
+      {/* Accept CTA. */}
+      <button
+        data-testid="boss-accept-cta"
+        onClick={onAccept}
+        style={{
+          width: "100%", padding: "16px", borderRadius: 14,
+          background: "#FFB14A", border: "none",
+          color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
+          textTransform: "uppercase", letterSpacing: 0.5,
+        }}
+      >{alreadyAttempted ? "Play Again" : "Take the Boss"}</button>
+    </div>
   );
 }

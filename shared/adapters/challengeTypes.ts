@@ -61,6 +61,14 @@ export interface ChallengeCtx {
   nearMissNextTier?: string | null;
   anchorBasePlayerId?: string | null;
   topGameTier?: "record" | "career" | "season" | null;
+  /** Phase 2 boss delivery (2026-06-21): "player" for human challenges
+   *  (the default), "boss" for the daily boss instance. Threaded from the
+   *  GET response's sender_kind via normalizeSenderKind at the read
+   *  boundary, exactly like triggerType/normalizeTriggerType. Optional —
+   *  the player path and legacy rows default to "player". The boss name
+   *  flows through challengerName distinguished ONLY by this marker;
+   *  isRealName stays the untouched player-name gate. */
+  senderKind?: "player" | "boss";
 }
 
 /**
@@ -112,4 +120,18 @@ export function normalizeTriggerType(
 ): ChallengeCtx["triggerType"] {
   if (stored === "bad_beat") return "choke";
   return (stored ?? undefined) as ChallengeCtx["triggerType"];
+}
+
+/**
+ * Phase 2 boss delivery (2026-06-21): normalize the stored sender_kind at the
+ * read boundary, same single-place pattern as normalizeTriggerType. A boss
+ * instance row marks sender_kind="boss"; everything else — human challenges,
+ * legacy rows where the column defaults to 'player' or is absent — is
+ * "player". Called once in ChallengeLandingScreen so every downstream branch
+ * reads the normalized marker.
+ */
+export function normalizeSenderKind(
+  stored: string | null | undefined,
+): "player" | "boss" {
+  return stored === "boss" ? "boss" : "player";
 }
