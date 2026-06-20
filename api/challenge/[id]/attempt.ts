@@ -20,7 +20,10 @@
 // can't error — those skip the defended-counter bump.
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { kv } from "@vercel/kv";
 import { supabaseAdmin } from "../../hand/_lib/supabaseServer.js";
+
+const BOSS_COUNT_TTL_48H = 172800;
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -63,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { data: challenge, error: fetchErr } = await supabaseAdmin
     .from("shared_challenges")
-    .select("challenge_id, created_by, sender_kind, target_fp, attempt_count, winner_count, best_score, best_user_name")
+    .select("challenge_id, created_by, sender_kind, instance_key, target_fp, attempt_count, winner_count, best_score, best_user_name")
     .eq("challenge_id", challengeId)
     .single();
 
@@ -264,6 +267,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .update(updates)
       .eq("challenge_id", challengeId);
     if (upErr) console.error("[attempt] self-farm challenge update failed:", upErr);
+  }
+
+  // Phase 2-mount Step 2: boss participation counter (KV-only). Increment ONCE
+  // per DISTINCT player's first attempt against the boss — gated on
+  // attemptCountBumped (= treatAsFirstAttempt), the same signal that drives
+  // shared_challenges.attempt_count. The count is PLAYERS, not attempts
+  // (replay-proof; surfaced as "N players tried" per the locked COPY
+  // CONSTRAINT). Keyed by the boss's OWN date (instance_key = "date|slot|id"),
+  // not "today", so replaying an old boss link never inflates today's count;
+  // this matches the date the leaderboard GET reads. KV-only, never Postgres;
+  // wrapped so a counter failure never affects the attempt result.
+  if (isBossChallenge && attemptCountBumped && typeof challenge.instance_key === "string") {
+    const bossDate = challenge.instance_key.split("|")[0];
+    if (bossDate) {
+      try {
+        const countKey = `boss:basketball:attempts:${bossDate}`;
+        await kv.incr(countKey);
+        await kv.expire(countKey, BOSS_COUNT_TTL_48H);
+      } catch (e) {
+        console.error("[attempt] boss count incr failed (non-fatal):", e);
+      }
+    }
   }
 
   // In-app notification for the challenger. Fires only when this attempt

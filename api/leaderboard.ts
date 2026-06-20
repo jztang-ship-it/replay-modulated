@@ -106,16 +106,24 @@ const TTL_48H = 172800;
 // breaks the leaderboard response: the field is an Upgrade, not Required. The
 // date is taken from getRotationDateKey() — the SAME source the resolver uses —
 // so the cache key and the resolved instance always name the same day.
-async function resolveBossChallengeId(sport: string): Promise<string | null> {
+type BossField = { bossChallengeId: string; bossPlayerCount: number | null };
+
+async function resolveBoss(sport: string): Promise<BossField | null> {
   if (sport !== "basketball") return null;
   try {
     const date = getRotationDateKey();
     const cacheKey = `boss:basketball:today:${date}`;
-    const cached = await kv.get<string>(cacheKey);
-    if (cached) return cached;
-    const id = await getTodaysBossChallengeId({ date });
-    await kv.set(cacheKey, id, { ex: TTL_48H });
-    return id;
+    let id = await kv.get<string>(cacheKey);
+    if (!id) {
+      id = await getTodaysBossChallengeId({ date });
+      await kv.set(cacheKey, id, { ex: TTL_48H });
+    }
+    // Step 2: read the distinct-player participation counter alongside the id
+    // (KV-only — written at boss-attempt time in api/challenge/[id]/attempt.ts).
+    // Null when nobody has attempted yet; the CTA degrades (count is Upgrade).
+    const countRaw = await kv.get<number>(`boss:basketball:attempts:${date}`);
+    const bossPlayerCount = countRaw == null ? null : Number(countRaw);
+    return { bossChallengeId: id, bossPlayerCount };
   } catch (err) {
     console.error("[leaderboard] boss resolve failed (non-fatal):", err);
     return null;
@@ -342,16 +350,19 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  // Host route A′: fold the boss instance id in (basketball-only, KV-cached).
-  // Additive sibling field — all six GET consumers read only .entries/metric/
-  // scope, and non-basketball sports get null (field omitted) so football's
-  // competition-keyed shape is untouched.
-  const bossChallengeId = await resolveBossChallengeId(sport);
+  // Host route A′: fold the boss instance id + participation count in
+  // (basketball-only, KV-cached). Additive sibling fields — all six GET
+  // consumers read only .entries/metric/scope, and non-basketball sports get
+  // null (fields omitted) so football's competition-keyed shape is untouched.
+  // bossPlayerCount is "players" (distinct first-time attempters), per the
+  // locked COPY CONSTRAINT — never "attempts".
+  const boss = await resolveBoss(sport);
 
   return json(res, 200, {
     entries,
     metric,
     scope,
-    ...(bossChallengeId ? { bossChallengeId } : {}),
+    ...(boss?.bossChallengeId ? { bossChallengeId: boss.bossChallengeId } : {}),
+    ...(boss?.bossPlayerCount != null ? { bossPlayerCount: boss.bossPlayerCount } : {}),
   });
 }
