@@ -1,6 +1,6 @@
 # ReplayMod — Design Decisions & Session State
 
-**Last updated:** 2026-06-18
+**Last updated:** 2026-06-21
 **Status:** **5-card basketball + recalibrated win-tier balance shipped to `origin/main` at `f2f06f7` (2026-06-18; rollback `ebe20b2`)** — Slice A (UI + deal) and Slice B (threshold recalibration at 5 slots) merged together; watched prod deploy succeeded. Prior: #7 (results hero-slot flip) shipped to `origin/main` at `8d3d7d9` (fast-forward from `08b95c8`); challenge-redesign roadmap **RD0–RD5** sequenced for the investor build (objective + non-goals locked below; build sequence revised 2026-06-08 supersedes the 2026-05-23 sender/stamps sequence, which is deferred behind the investor build). Prior: stamps feature shipped 2026-05-22 (merge `ce9c277`); position-data fix shipped 2026-05-22 (`87742bb`).
 **Purpose:** home-base document for the ReplayMod project. Every chat in this project should start with this in context. Update at the end of each session — *and during the session, whenever a decision is locked.*
 
@@ -2782,3 +2782,79 @@ hold.
 - CLARITY CREATES EMOTION — intensity does not. Six iterations proved: if the user doesn't understand what's happening, no particles save it; if they do, a modest animation works. The bar for a viral social game: "Can a first-time user explain what happened after watching it once?"
 - Dopamine lives in the UNCERTAINTY before the reveal, not the celebration. A celebration that decorates a KNOWN result feels flat. The result must be hidden until the reveal moment (the spoiler — final score shown on the reveal screen before the celebration — was the root cause of the "flat" celebration across RD7.6-7.8).
 - Humility governs CAUSALITY, not DESCRIPTION. The Cause clause stays humble; the FLAVOR slot carries commentary-grade specificity drawn from the actual logs (event-richness is pure scoreboard talk — honest, never an agency claim). A humble cause does NOT license a bland line. Benchmark: the in-game commentary's voice. (Source: RD7.x prod glass, img-4 "too thin / less fun than commentary".)
+
+---
+
+## § Phase 2 — Boss Delivery Consumer (LOCKED — shipped to feat/build-phase 2026-06-21)
+
+Make a daily "boss" playable as a challenge through the EXISTING receive path
+(`shared_challenges` → `/api/challenge/[id]` → `ChallengeLandingScreen`) with a
+non-human sender. No parallel path, no new endpoint, no FP fork — boss FP comes
+only via the bank + `projectSenderFacing`. Brief: `docs/cc-brief-boss-delivery-consumer.md`.
+Contract (pre-existing, definition-only): `docs/boss-contract-v1.md`.
+
+### 1. Ownerless boss challenges — nullable owner + re-tightened RLS (commit `4c30d01`)
+`shared_challenges.created_by` relaxed to **nullable**; the human insert policy
+re-tightened to `WITH CHECK (created_by = auth.uid() AND auth.uid() IS NOT NULL)`
+in the **same migration** (`014_boss_sender.sql`). Rationale: a boss has no human
+creator and **no house/service auth user exists** in the repo (verified — no seed
+migration, no constant); boss writes go through the **service role** (`supabaseAdmin`),
+which **bypasses RLS**, so the tightened human policy doesn't touch them; and the
+attempt path's existing `&& challenge.created_by` guards make boss rows safe with
+**zero added guards** (null owner ⇒ notification + defended-bump skip for free).
+The `DROP NOT NULL` is only safe *because* the policy is tightened together — they
+are one decision, asserted as a unit.
+
+### 2. `instance_key` shared-uuid model (commit `2af4af7`)
+A boss daily instance keys on **`instance_key = "date|slot|identityId"`** (a partial
+unique index, `WHERE instance_key IS NOT NULL`, so human rows stay null/exempt). The
+**uuid PK auto-generates**; the natural key `instanceId` is **NEVER written into the
+PK**. One day ⇒ one shared row ⇒ **one uuid for everyone** (first writer creates it,
+later callers resolve the same uuid). Rationale: bosses get an added natural key, not
+a new id type — the whole receive path keeps operating on the uuid unchanged, and the
+shared row is what makes cross-player comparison (Phase 2.5) possible.
+
+### 3. `sender_kind` marker (commit `bb403be`)
+One column: `sender_kind text NOT NULL DEFAULT 'player'`; `'boss'` for house
+challenges. It is the **only added discriminator** — the boss name flows through the
+existing `challenger_name` column, distinguished solely by `sender_kind`.
+**`isRealName` semantics are untouched** — it remains the *player*-name gate; the
+boss landing branch bypasses it by presenting the authored identity directly
+(`BossLandingView`), never by changing `isRealName`. Normalized once at the read
+boundary via `normalizeSenderKind` (same pattern as `normalizeTriggerType`).
+
+### 4. `SCHEDULE_EPOCH = "2026-06-22"` — SINGLE SOURCE OF TRUTH (commit `2af4af7`)
+The daily rotation schedule is computed from a fixed epoch so the era anti-repeat
+cooldown is deterministic. **The generator (`bossGenerator`) and the consumer
+(`ensureDailyInstance`) MUST read the SAME epoch constant.** If they ever diverge,
+the schedule rotates differently on each seam and **cross-seam comparison breaks**
+(everyone is supposed to face the identical roll for a given day; two epochs ⇒ two
+different "today's bosses"). Locked value: `"2026-06-22"`.
+**Known divergence to repair (code follow-up, out of scope for this doc):** the
+consumer exports `SCHEDULE_EPOCH`, but the generator still **inlines the literal
+`"2026-06-22"`** in `bossGenerator.main()` and its tests. They match today but are
+two literals, not one shared constant — unify them (generator imports the constant)
+before either seam's epoch is ever changed.
+
+### 5. Synthetic NOT-NULL fills on boss rows (commit `2af4af7`)
+`shared_challenges.hand_id` and `slate_seed` are `NOT NULL` with no default
+(migration 005) and the contract doesn't emit them. The boss writer fills
+**placeholder values it does not semantically use**: `hand_id = instanceId`
+(no FK on the column, so a synthetic value is safe) and `slate_seed = ""`
+(mirrors `create.ts`). **Flag:** any future join/filter on
+`shared_challenges.hand_id` (e.g. against `hand_log.hand_id`) **must exclude or
+special-case boss rows** — their `hand_id` is a synthetic key, not a real hand.
+
+### 6. Commit-5 mount deferral — engineering-complete, NOT user-complete (commit `5a25521`)
+`getTodaysBossChallengeId` (the today's-boss entry point) is **built and
+idempotency-locked** (same `(date, slot)` ⇒ same `challenge_id`), but it is **NOT
+wired to any UI or HTTP surface.** Blockers (both verified at Step 0): no
+"today's challenge for a returning user" component exists in the tree, and **`api/`
+is at the Vercel Hobby 12/12 function cap**, so the HTTP trigger can't be a new
+route (it must fold into an existing route or a cron — a follow-on decision; a
+parallel daily route is forbidden). **Therefore Phase 2 is engineering-complete,
+NOT user-complete: a user cannot reach a boss until the mount lands.**
+
+**Lock:** this section (decisions 1–6). Build brief: `docs/cc-brief-boss-delivery-consumer.md`.
+Shipped per-commit to `origin/feat/build-phase` (`4c30d01` … `5a25521`); branch is
+hold-for-review (not merged to main). `BossLandingView` device-glass check pending.
