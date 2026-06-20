@@ -95,7 +95,7 @@ type Starter = { name: string; pos: string; meanFp: number; gp: number; avgMin: 
 type Row = {
   season: string; team: string; tier: string | null; era_id: string | null;
   display: string | null; flavor: string | null;
-  expected: number; route: "daily" | "handicap" | "raid";
+  expected: number; route: "daily" | "raid";
   rollDepth: number; startersComplete: boolean; tradedStarter: boolean;
   thin: string | null; starters: Starter[];
 };
@@ -183,7 +183,13 @@ for (const season of seasons) {
 
     const expected = starters.reduce((a, s) => a + s.meanFp, 0);
     const rollDepth = Math.min(...starters.map(s => s.gp));
-    const route: Row["route"] = expected < BAND[0] ? "handicap" : expected > BAND[1] ? "raid" : "daily";
+    // Two routes (handicap deleted 2026-06-20: real data falsified defensive-low-FP
+    // — DET-0304=152.6, MEM-1213=151.7 land mid-band because FP rewards reb/stocks).
+    // Below-band teams (incl. SAS-1314 128.9) are daily; only above-P85 is raid.
+    // NOTE: this is the INTERIM expected-vs-band route. Step 2 re-routes by the
+    // rejection-sampled roll (high-expected teams roll weaker games into band →
+    // daily; only floor-above-P85 are true raids).
+    const route: Row["route"] = expected > BAND[1] ? "raid" : "daily";
     const bk = bankByKey.get(`${season}|${team}`) ?? null;
     rows.push({
       season, team,
@@ -207,9 +213,16 @@ const bankKeysSeen = new Set(bankRows.map(r => `${r.season}|${r.team}`));
 const bankMisses = bank.bosses.filter((b: any) => !bankKeysSeen.has(`${b.season_code}|${b.team_code}`));
 const routeCounts = (sub: Row[]) => ({
   daily: sub.filter(r => r.route === "daily").length,
-  handicap: sub.filter(r => r.route === "handicap").length,
   raid: sub.filter(r => r.route === "raid").length,
 });
+
+// Trivial-boss floor — general/Tier-B pool ONLY (Tier-B off in v1). Set below the
+// bank minimum so all 38 bank rows are daily-eligible; non-bank teams under it are
+// "trivial" (excluded from the general daily pool, not a route). Annotation here;
+// pool gating is Step 2.
+const bankMinExpected = bankRows.length ? Math.min(...bankRows.map(r => r.expected)) : 0;
+const trivialFloor = Math.floor(bankMinExpected); // < every bank expected
+const trivialNonBank = rows.filter(r => !r.tier && r.expected < trivialFloor).length;
 
 // Sanity: where do the bank's defensive_low hints actually route? (Brief expects
 // handicap; with real FP they may land at the low end of daily — recorded here.)
@@ -230,9 +243,11 @@ const summary = {
   bankRowsPresent: bankRows.length,
   bankEntries: bank.bosses.length,
   bankMisses: bankMisses.map((b: any) => b.id),
+  routes: "daily | raid (handicap deleted 2026-06-20). INTERIM expected-vs-band; Step 2 re-routes by rejection-sampled roll.",
   routeAll: routeCounts(rows),
   routeBank: routeCounts(bankRows),
-  defensiveLow,
+  trivialFloor: { value: trivialFloor, note: "general/Tier-B pool only; bank min expected = " + Math.round(bankMinExpected * 10) / 10 + " (all 38 bank ≥ floor)", trivialNonBankCount: trivialNonBank },
+  defensiveLow: { note: "annotation only, no routing effect", rows: defensiveLow },
   thinSeasonsPresent: seasons.filter(s => THIN_SEASONS[s]),
 };
 
@@ -249,8 +264,8 @@ lines.push("BOSS TABLE v1 — Step 1 (30×29 validation)");
 lines.push("=".repeat(78));
 lines.push(`band P${P_LO}-P${P_HI} = [${summary.band.lo}, ${summary.band.hi}] FP   (${summary.band.source})`);
 lines.push(`team-seasons: ${summary.teamSeasons} over ${summary.seasons} seasons   |   bank rows present: ${summary.bankRowsPresent}/${summary.bankEntries} (champ ${summary.champRowsPresent})`);
-lines.push(`route (all): daily ${summary.routeAll.daily} / handicap ${summary.routeAll.handicap} / raid ${summary.routeAll.raid}`);
-lines.push(`route (bank): daily ${summary.routeBank.daily} / handicap ${summary.routeBank.handicap} / raid ${summary.routeBank.raid}`);
+lines.push(`route (all): daily ${summary.routeAll.daily} / raid ${summary.routeAll.raid}   [INTERIM expected-vs-band; Step 2 re-routes by roll]`);
+lines.push(`route (bank): daily ${summary.routeBank.daily} / raid ${summary.routeBank.raid}`);
 if (bankMisses.length) lines.push(`bank MISSES (no computed row): ${summary.bankMisses.join(", ")}`);
 lines.push("");
 lines.push("── CURATED BANK ROWS (by expected FP) ──");
