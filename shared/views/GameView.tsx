@@ -66,6 +66,8 @@ import {
 } from "@shared/components/RosterGrid";
 import { AppHeader } from "@shared/components/AppHeader";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
+import { useBossEntry } from "@shared/hooks/useBossEntry";
+import { BossEntryCta } from "@shared/components/BossEntryCta";
 import {
   useEmotionalReveal,
   DRAWING_DWELL_MS,
@@ -456,6 +458,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     leaderboardScope,
   }), [sportKey, adapter.localStorageNamespace, leaderboardScope]);
   const shared = useSharedGameState(sharedAdapter, { rosterSize: ROSTER_SIZE });
+  // Phase 2-mount Step 3/4: today's boss for the post-results entry CTA.
+  // Basketball-only inside the hook; null elsewhere → CTA never renders.
+  const bossEntry = useBossEntry(sportKey);
   const {
     gameState, setGameState,
     roundsUsed, setRoundsUsed,
@@ -3221,6 +3226,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           mode has its own h2h slot owners). Mount location is presentation-neutral
           (the component renders nothing in-flow; its modals are fixed/inset:0).
           Send machinery byte-identical; onConsumed/onDismiss clear the trigger. */}
+      {/* Phase 2-mount Step 4: boss entry CTA — sibling on the post-results
+          strip. Gated on basketball + a resolved boss id (NOT challengeTrigger,
+          so it shows on EVERY basketball result, not just special hands). Hidden
+          while playing a received challenge (challengeCtx). Conditional
+          unattempted/attempted lives in BossEntryCta. */}
+      {!challengeCtx && sportKey === "basketball" && bossEntry.bossChallengeId
+        && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled && (
+        <BossEntryCta
+          sport={sportKey}
+          bossChallengeId={bossEntry.bossChallengeId}
+          bossPlayerCount={bossEntry.bossPlayerCount}
+        />
+      )}
+
       {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
