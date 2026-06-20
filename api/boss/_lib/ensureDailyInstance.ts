@@ -35,18 +35,21 @@ import {
   scheduleHeadline,
   P_LO,
   P_HI,
+  SCHEDULE_EPOCH,
   type Boss,
 } from "../../../basketball/src/tools/bossGenerator.js";
 import { loadBand } from "../../../basketball/src/tools/bossData.js";
 
-// Inherited from the generator convention (bossGenerator.main() + the whole
-// bossGenerator test suite all schedule from "2026-06-22"). The schedule's
-// era anti-repeat cooldown means the canonical pick for a given day depends on
-// the run from a FIXED start, so the epoch must be a stable constant — it is
-// NOT a free per-call input. NOTE: this is a de-facto convention, not a
-// design-doc lock; if a different production launch epoch is wanted it should
-// be locked in docs/replaymod-design-decisions.md, not changed here silently.
-export const SCHEDULE_EPOCH = "2026-06-22";
+// SCHEDULE_EPOCH is the SINGLE SOURCE OF TRUTH for the daily-rotation epoch
+// (design-decisions §4). It is DEFINED in bossGenerator (the scheduling layer
+// this consumer already imports) and re-exported here so the consumer's public
+// surface keeps it available — the generator's main()/tests and this consumer
+// all read the one constant. Defining it here instead would invert the layering
+// (api → tools) and create an import cycle, so the home is the generator.
+// The schedule's era anti-repeat cooldown means the canonical pick for a day
+// depends on the run from this FIXED start; if the two seams ever diverge the
+// schedule rotates differently and cross-seam comparison breaks.
+export { SCHEDULE_EPOCH };
 
 const DAY_MS = 86_400_000;
 

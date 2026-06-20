@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import {
   seededRng, rollBoss, rollGames, scheduleHeadline, rollDistribution,
-  loadBankBosses, K, COOLDOWN, type Boss,
+  loadBankBosses, K, COOLDOWN, SCHEDULE_EPOCH, type Boss,
 } from "../bossGenerator";
 import { buildSeason, buildAll, loadBand, canonicalFp } from "../bossData";
 import { computeBasketballFp } from "../../adapters/fantasyPoints";
@@ -82,7 +82,7 @@ describe("Step 3 #2 — band-membership", () => {
 describe("Step 3 #3 — schedule cooldown (no identity-era within COOLDOWN days)", () => {
   it("60-day real-bank schedule has zero era repeats within cooldown", () => {
     const pool = bank.filter(b => b.tier === "champ" || b.tier === "iconic");
-    const sched = scheduleHeadline(pool, "2026-06-22", 60);
+    const sched = scheduleHeadline(pool, SCHEDULE_EPOCH, 60);
     const eras = sched.map(s => s.boss.era_id);
     const violations = eras
       .map((e, i) => eras.slice(Math.max(0, i - COOLDOWN), i).includes(e) ? i : -1)
@@ -106,7 +106,7 @@ describe("Step 3 #5 — '17 Warriors route to raid (raid-capable), out of forced
 describe("Step 3 #6 — authored naming (not Mad-Libs)", () => {
   it("the first 10 scheduled headliners all carry a non-empty authored bank name", () => {
     const pool = bank.filter(b => b.tier === "champ" || b.tier === "iconic");
-    const sched = scheduleHeadline(pool, "2026-06-22", 10);
+    const sched = scheduleHeadline(pool, SCHEDULE_EPOCH, 10);
     for (const { boss } of sched) {
       expect(boss.display.trim().length).toBeGreaterThan(0);
       expect(boss.display).not.toMatch(/\bundefined\b|\{.*\}/); // no template placeholder leaked
@@ -185,7 +185,7 @@ describe("Step 3 #new — headliner in-band ≥95% of days (tough-day ≤5%) at 
   it("K constant is 15", () => { expect(K).toBe(15); });
   it("over a 120-day real schedule, ≥95% of headline days land in-band", () => {
     const pool = bank.filter(b => b.tier === "champ" || b.tier === "iconic");
-    const sched = scheduleHeadline(pool, "2026-06-22", 120);
+    const sched = scheduleHeadline(pool, SCHEDULE_EPOCH, 120);
     const days = sched.map(({ day, boss }) => rollBoss(boss, day, 0, "daily", band));
     const toughDays = days.filter(r => r.status === "tough_day").length;
     const inBandFrac = 1 - toughDays / days.length;

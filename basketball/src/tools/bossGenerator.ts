@@ -29,6 +29,13 @@ import { buildAll, loadBand, REPO, type TeamSeason, type OverrideMap } from "./b
 export const K = 15;
 export const COOLDOWN = 5;
 export const P_LO = 60, P_HI = 85;
+// SINGLE SOURCE OF TRUTH for the daily-rotation epoch (design-decisions §4).
+// scheduleHeadline's era anti-repeat cooldown makes the canonical pick for a
+// day depend on the run from a FIXED start, so this must be one constant the
+// generator AND the consumer (api/boss/_lib/ensureDailyInstance.ts, which
+// imports it from here) both read. If the two seams ever diverge, the schedule
+// rotates differently and cross-seam comparison breaks.
+export const SCHEDULE_EPOCH = "2026-06-22";
 
 export type Boss = TeamSeason & { key: string; tier: string; era_id: string; display: string; flavor: string };
 export type RollMode = "daily" | "raid";
@@ -186,7 +193,7 @@ function main() {
   };
 
   const dcheck = (() => { const b = bosses[0]; const a = rollBoss(b, "2026-07-01", 0, "daily", BAND).total; const c = rollBoss(b, "2026-07-01", 0, "daily", BAND).total; return { boss: b.key, a, c, pass: a === c }; })();
-  const sched = scheduleHeadline(bosses.filter(b => b.tier === "champ" || b.tier === "iconic"), "2026-06-22", 30);
+  const sched = scheduleHeadline(bosses.filter(b => b.tier === "champ" || b.tier === "iconic"), SCHEDULE_EPOCH, 30);
   const schedRows = sched.map(({ day, boss }) => { const r = rollBoss(boss, day, 0, "daily", BAND); return { day, key: boss.key, era_id: boss.era_id, total: Math.round(r.total * 10) / 10, status: r.status, attempts: r.attempts }; });
   const eras = schedRows.map(r => r.era_id);
   const cooldownViolations = eras.map((e, i) => eras.slice(Math.max(0, i - COOLDOWN), i).includes(e) ? i : -1).filter(i => i >= 0);
