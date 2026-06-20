@@ -23,6 +23,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kv } from "@vercel/kv";
 import { createClient } from "@supabase/supabase-js";
+// Phase 2-mount Host route A′: the daily boss instance id, folded into the GET
+// response for the post-results CTA. Basketball-only, KV-cached, lazy upsert.
+import { getTodaysBossChallengeId } from "./boss/_lib/todaysBoss.js";
+import { getRotationDateKey } from "../shared/utils/dailyRotation.js";
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
@@ -93,6 +97,30 @@ const FP_CEILING_BY_SPORT: Record<Sport, number> = {
   football: 600,
 };
 const TTL_48H = 172800;
+
+// Phase 2-mount Host route A′. Resolve today's boss challenge_id for the
+// post-results CTA. Basketball-only; KV-cached at boss:basketball:today:{date}
+// so the Supabase upsert (getTodaysBossChallengeId → ensureDailyInstance) runs
+// ~once/day and every later GET is a KV read — Postgres stays off the
+// sport-agnostic hot path. Wrapped so a boss failure (KV/bank/supabase) NEVER
+// breaks the leaderboard response: the field is an Upgrade, not Required. The
+// date is taken from getRotationDateKey() — the SAME source the resolver uses —
+// so the cache key and the resolved instance always name the same day.
+async function resolveBossChallengeId(sport: string): Promise<string | null> {
+  if (sport !== "basketball") return null;
+  try {
+    const date = getRotationDateKey();
+    const cacheKey = `boss:basketball:today:${date}`;
+    const cached = await kv.get<string>(cacheKey);
+    if (cached) return cached;
+    const id = await getTodaysBossChallengeId({ date });
+    await kv.set(cacheKey, id, { ex: TTL_48H });
+    return id;
+  } catch (err) {
+    console.error("[leaderboard] boss resolve failed (non-fatal):", err);
+    return null;
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS preflight
@@ -314,5 +342,16 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  return json(res, 200, { entries, metric, scope });
+  // Host route A′: fold the boss instance id in (basketball-only, KV-cached).
+  // Additive sibling field — all six GET consumers read only .entries/metric/
+  // scope, and non-basketball sports get null (field omitted) so football's
+  // competition-keyed shape is untouched.
+  const bossChallengeId = await resolveBossChallengeId(sport);
+
+  return json(res, 200, {
+    entries,
+    metric,
+    scope,
+    ...(bossChallengeId ? { bossChallengeId } : {}),
+  });
 }
