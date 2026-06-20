@@ -1,9 +1,9 @@
 BOSS GENERATOR — Step 2 core CHECKPOINT (K=15)
 ==========================================================================
-band P60-P85 = [132, 159.6]  | K=15 | cooldown=5d | bank=38
+band P60-P85 = [132, 159.6]  | K=15 | cooldown=5d | bank=36
 determinism: CHI-9697 132.4 == 132.4 → PASS
 
-(a) split: daily-capable 38/38  raid-capable 38/38  both 38  neither 0
+(a) split: daily-capable 36/36  raid-capable 36/36  both 36  neither 0
 
 (b) iconic super-teams (daily% / raid% / tough-day% @K=15):
     GSW-1516  daily  35.4% raid  55.2% tough  0.1%  BOTH ✓  "73-9"
@@ -11,10 +11,16 @@ determinism: CHI-9697 132.4 == 132.4 → PASS
     PHX-0607  daily  25.5% raid  67.4% tough  1.2%  BOTH ✓  "Seven Seconds or Less"
     SAC-0102  daily  30.2% raid  62.6% tough  0.5%  BOTH ✓  "The Greatest Show on Court"
     PHI-0001  daily  31.5% raid  56.6% tough  0.3%  BOTH ✓  "Iverson's Finals"
-    OKC-1112  daily  40.4% raid  42.1% tough    0%  BOTH ✓  "The Young Thunder"
-    CLE-0809  daily  42.2% raid  40.6% tough    0%  BOTH ✓  "LeBron's 66"
-    HOU-1718  daily  39.9% raid    43% tough    0%  BOTH ✓  "Switch Everything"
-    MEM-1213  daily  45.9% raid  35.5% tough    0%  BOTH ✓  "Grit-n-Grind"
+    LAC-1314  daily  19.4% raid  78.5% tough    4%  BOTH ✓  "Lob City"
+    BKN-2021  daily   5.4% raid  94.4% tough 43.8%  BOTH ✓  "The Brooklyn Superteam"
+    PHI-1819  daily   8.4% raid    91% tough   27%  BOTH ✓  "The Process"
+    HOU-1920  daily  24.3% raid  69.2% tough  1.5%  BOTH ✓  "Microball"
+    DEN-0607  daily  19.4% raid  76.1% tough    4%  BOTH ✓  "Iverson & Melo"
+    HOU-9697  daily  24.3% raid  69.2% tough  1.5%  BOTH ✓  "The Last Ride"
+    OKC-1516  daily  32.2% raid  59.9% tough  0.3%  BOTH ✓  "Up 3-1"
+    ORL-0809  daily  34.8% raid  57.1% tough  0.2%  BOTH ✓  "Superman"
+    TOR-0001  daily  35.1% raid  49.2% tough  0.2%  BOTH ✓  "Vinsanity"
+    GSW-0607  daily  36.9% raid  38.4% tough  0.1%  BOTH ✓  "We Believe"
     marquee champs:
     CHI-9798  daily  34.1% raid  54.7% tough  0.2%  BOTH ✓  "The Last Dance"
     LAL-0001  daily  32.5% raid  57.4% tough  0.3%  BOTH ✓  "Shaq & Kobe, Ring Two"
@@ -24,16 +30,16 @@ determinism: CHI-9697 132.4 == 132.4 → PASS
     GSW-1516  daily  35.4% raid  55.2% tough  0.1%  BOTH ✓  "73-9"
 
 (c) tough-day: structural floor>band = none  | worst K-miss rarity @K=15:
+    BKN-2021  daily-hit   5.4% → tough-day 43.8%  "The Brooklyn Superteam"
+    PHI-1819  daily-hit   8.4% → tough-day 27%  "The Process"
     BOS-2324  daily-hit  17.1% → tough-day 6%  "Banner 18"
     GSW-1617  daily-hit  18.6% → tough-day 4.6%  "The Super-Team"
-    DEN-2223  daily-hit  21.6% → tough-day 2.6%  "Jokic's Crown"
-    MIL-2021  daily-hit    23% → tough-day 2%  "Giannis"
-    PHX-0607  daily-hit  25.5% → tough-day 1.2%  "Seven Seconds or Less"
-    scheduled 30-day tough-days: 0/30 (0%)
+    LAC-1314  daily-hit  19.4% → tough-day 4%  "Lob City"
+    scheduled 30-day tough-days: 1/30 (3.3%)
 
 (d) per-day win-rate under the 1-hour multi-attempt window (1−(1−p)^N):
     attempt model: 1-hour replay window (api/challenge/[id]/attempt.ts ONE_HOUR_MS; is_window_open) — multi-attempt, not a fixed count
-    N=1 25.5%  N=3 57.5%  N=5 75%  N=10 92.5%  N=20 99.1%
+    N=1 25%  N=3 56.6%  N=5 74.1%  N=10 92.1%  N=20 99%
     (N=1 is the old single-roll 27% — wrong denominator. Multi-attempt → high per-day WR.)
 
-30-day schedule: cooldown PASS  | tough-days 0/30
+30-day schedule: cooldown PASS  | tough-days 1/30

@@ -113,13 +113,16 @@ export function loadBankBosses(): Boss[] {
   // Curated five-overrides → applied at this bank⨝bossData join (identity layer).
   // bossTable.buildAll() runs WITHOUT this map, so the Step-1 selection table is
   // unaffected; only the curated boss identities use the override.
+  // ACTIVE bank only (hide-don't-delete: cut identities carry active:false and are
+  // excluded here). The 36-identity locked set.
+  const active = bank.bosses.filter((b: any) => b.active !== false);
   const overrides: OverrideMap = new Map();
-  for (const b of bank.bosses) if (Array.isArray(b.fiveOverride) && b.fiveOverride.length)
+  for (const b of active) if (Array.isArray(b.fiveOverride) && b.fiveOverride.length)
     overrides.set(`${b.season_code}|${b.team_code}`, b.fiveOverride);
   const allTs = new Map<string, TeamSeason>();
   for (const ts of buildAll(overrides)) allTs.set(`${ts.season}|${ts.team}`, ts);
   const out: Boss[] = [];
-  for (const b of bank.bosses) {
+  for (const b of active) {
     const ts = allTs.get(`${b.season_code}|${b.team_code}`);
     if (!ts) continue;
     out.push({ ...ts, key: b.id, tier: b.tier, era_id: b.era_id, display: b.display, flavor: b.flavor });

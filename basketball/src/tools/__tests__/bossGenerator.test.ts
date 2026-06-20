@@ -131,6 +131,31 @@ describe("Step 3 #7 — FP IDENTITY (boss FP and player FP are one code path)", 
   });
 });
 
+describe("locked-36 — active bank set after cuts + promotions", () => {
+  it("loadBankBosses returns exactly 36 active identities", () => {
+    expect(bank.length).toBe(36);
+  });
+  it("cut identities are excluded (active:false): MIA-1112, OKC-1112, MEM-1213", () => {
+    const keys = new Set(bank.map(b => b.key));
+    for (const cut of ["MIA-1112", "OKC-1112", "MEM-1213", "GSW-2122"]) expect(keys.has(cut)).toBe(false);
+  });
+  it("promotions are present and iconic: LAC-1314, PHI-1819, HOU-1920, GSW-0607", () => {
+    for (const id of ["LAC-1314", "PHI-1819", "HOU-1920", "GSW-0607", "TOR-0001"]) {
+      const b = bank.find(x => x.key === id);
+      expect(b, id).toBeDefined();
+      expect(b!.tier).toBe("iconic");
+    }
+  });
+  it("promotion overrides applied: PHI-1819 has JJ Redick (not Covington); HOU-1920 has Danuel House (not Capela)", () => {
+    const phi = bank.find(b => b.key === "PHI-1819")!.starters.map(s => s.name);
+    expect(phi).toContain("JJ Redick");
+    expect(phi).not.toContain("Robert Covington");
+    const hou = bank.find(b => b.key === "HOU-1920")!.starters.map(s => s.name);
+    expect(hou).toContain("Danuel House Jr.");
+    expect(hou).not.toContain("Clint Capela");
+  });
+});
+
 describe("five-override — applied to listed identities, gated off everywhere else", () => {
   it("GSW-1718 boss five has Iguodala (override in), not Quinn Cook (auto out)", () => {
     const names = bank.find(b => b.key === "GSW-1718")!.starters.map(s => s.name);

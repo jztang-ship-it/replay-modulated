@@ -8,8 +8,8 @@
  *  - the TEAM ROLL-TOTAL distribution and where it sits vs band [132.0,159.6]:
  *    mean, std-dev, IQR, and the below/in/above-band fractions.
  *
- * Count: 38 bank bosses = 36 unchanged + 2 override-applied (GSW-1718, DAL-1011),
- * flagged. Reviewable dump → boss_gen/variance_cert_v1.{json,txt}.
+ * Count: 36 active bank bosses = 32 unchanged + 4 override-applied (GSW-1718, DAL-1011,
+ * PHI-1819, HOU-1920), flagged. Reviewable dump → boss_gen/variance_cert_v2.{json,txt}.
  *
  * Run:  npx tsx basketball/src/tools/bossVarianceCert.ts
  */
@@ -18,7 +18,7 @@ import * as path from "node:path";
 import { loadBankBosses, rollDistribution, P_LO, P_HI } from "./bossGenerator";
 import { loadBand, REPO } from "./bossData";
 
-const OVERRIDDEN = new Set(["GSW-1718", "DAL-1011"]);
+const OVERRIDDEN = new Set(["GSW-1718", "DAL-1011", "PHI-1819", "HOU-1920"]);
 const r1 = (x: number) => Math.round(x * 10) / 10;
 
 function stats(xs: number[]) {
@@ -59,12 +59,12 @@ const summary = {
   fpPath: "canonicalFp (computeBasketballFp + computeBasketballBadges, _position) — one path",
 };
 
-const OUT_JSON = path.resolve(REPO, "boss_gen/variance_cert_v1.json");
-const OUT_TXT = path.resolve(REPO, "boss_gen/variance_cert_v1.txt");
+const OUT_JSON = path.resolve(REPO, "boss_gen/variance_cert_v2.json");
+const OUT_TXT = path.resolve(REPO, "boss_gen/variance_cert_v2.txt");
 fs.writeFileSync(OUT_JSON, JSON.stringify({ summary, rows }, null, 2));
 
 const L: string[] = [];
-L.push("BOSS VARIANCE CERT v1");
+L.push("BOSS VARIANCE CERT v2");
 L.push("=".repeat(96));
 L.push(`bank ${summary.bankVersion} | band [${summary.band.lo},${summary.band.hi}] | ${summary.count.total} bosses = ${summary.count.unchanged} unchanged + ${summary.count.overridden} override-applied | FP: one canonical path`);
 L.push("");

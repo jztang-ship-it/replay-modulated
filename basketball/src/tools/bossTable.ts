@@ -29,7 +29,7 @@ for (const b of bank.bosses) bankByKey.set(`${b.season_code}|${b.team_code}`, b)
 type Starter = { name: string; pos: string; meanFp: number; gp: number; avgMin: number; traded: boolean };
 type Row = {
   season: string; team: string; tier: string | null; era_id: string | null;
-  display: string | null; flavor: string | null;
+  display: string | null; flavor: string | null; active: boolean | null;
   expected: number; route: "daily" | "raid";
   rollDepth: number; startersComplete: boolean; tradedStarter: boolean;
   thin: string | null; starters: Starter[];
@@ -44,6 +44,7 @@ const rows: Row[] = buildAll().map(ts => {
     season: ts.season, team: ts.team,
     tier: bk?.tier ?? null, era_id: bk?.era_id ?? null,
     display: bk?.display ?? null, flavor: bk?.flavor ?? null,
+    active: bk ? (bk.active !== false) : null,  // bank-row active flag (null = not in bank)
     expected: ts.expected, route, rollDepth: ts.rollDepth,
     startersComplete: ts.startersComplete, tradedStarter: ts.tradedStarter, thin: ts.thin,
     starters: ts.starters.map(s => ({ name: s.name, pos: s.pos, meanFp: s.meanFp, gp: s.gp, avgMin: s.avgMin, traded: s.traded })),
@@ -78,6 +79,7 @@ const summary = {
   teamSeasons: rows.length,
   champRowsPresent: champRows.length,
   bankRowsPresent: bankRows.length,
+  activeBankRowsPresent: rows.filter(r => r.active === true).length,
   bankEntries: bank.bosses.length,
   bankMisses: bankMisses.map((b: any) => b.id),
   routes: "daily | raid (handicap deleted 2026-06-20). INTERIM expected-vs-band; Step 2 re-routes by rejection-sampled roll.",

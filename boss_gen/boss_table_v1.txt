@@ -1,15 +1,21 @@
 BOSS TABLE v1 — Step 1 (30×29 validation)
 ==============================================================================
 band P60-P85 = [132, 159.6] FP   (runSimulator allFps (strong-capped, min≥10, seed 42))
-team-seasons: 862 over 29 seasons   |   bank rows present: 38/38 (champ 29)
+team-seasons: 862 over 29 seasons   |   bank rows present: 48/48 (champ 29)
 route (all): daily 659 / raid 203   [INTERIM expected-vs-band; Step 2 re-routes by roll]
-route (bank): daily 20 / raid 18
+route (bank): daily 21 / raid 27
 
 ── CURATED BANK ROWS (by expected FP) ──
 szn   tm   tier         exp  route    depth
+2021  BKN  iconic     207.4  raid     depth=34 [traded] [thin:compressed (72g)]  "The Brooklyn Superteam"
+1819  PHI  iconic     199.8  raid     depth=35 [traded]  "The Process"
+1920  HOU  iconic     195.9  raid     depth=39 [traded] [thin:bubble/suspended]  "Microball"
 2324  BOS  champ      182.5  raid     depth=56  "Banner 18"
+0607  DEN  iconic     181.3  raid     depth=65 [traded]  "Iverson & Melo"
 1617  GSW  champ      181.1  raid     depth=61  "The Super-Team"
+1314  LAC  iconic     180.3  raid     depth=35  "Lob City"
 2223  DEN  champ      177.7  raid     depth=62  "Jokic's Crown"
+9697  HOU  iconic       177  raid     depth=52  "The Last Ride"
 2021  MIL  champ      175.8  raid     depth=59 [thin:compressed (72g)]  "Giannis"
 1718  GSW  champ      174.6  raid     depth=25  "The KD Repeat"
 0607  PHX  iconic     171.8  raid     depth=76  "Seven Seconds or Less"
@@ -19,12 +25,15 @@ szn   tm   tier         exp  route    depth
 0304  LAL  iconic     168.7  raid     depth=41  "The Superteam"
 1819  TOR  champ      166.6  raid     depth=60 [traded]  "We The North"
 0102  SAC  iconic     166.2  raid     depth=54  "The Greatest Show on Court"
+1516  OKC  iconic     165.9  raid     depth=72  "Up 3-1"
+0809  ORL  iconic     165.1  raid     depth=42 [traded]  "Superman"
 0001  PHI  iconic       165  raid     depth=50 [traded]  "Iverson's Finals"
 0001  LAL  champ      164.7  raid     depth=47  "Shaq & Kobe, Ring Two"
 1516  GSW  iconic     164.5  raid     depth=65  "73-9"
 0809  LAL  champ      163.5  raid     depth=49  "Kobe & Gasol, Ring One"
 9798  CHI  champ        163  raid     depth=44  "The Last Dance"
 9900  LAL  champ      161.4  raid     depth=66  "Shaq & Kobe, Ring One"
+0001  TOR  iconic     160.3  raid     depth=73 [traded]  "Vinsanity"
 2122  GSW  champ        159  daily    depth=32  "The Dynasty Returns"
 1112  MIA  champ      158.8  daily    depth=48 [thin:lockout (66g)]  "The Heatles, Ring One"
 1920  LAL  champ      158.8  daily    depth=60 [thin:bubble/suspended]  "The Bubble Title"
@@ -35,6 +44,7 @@ szn   tm   tier         exp  route    depth
 0809  CLE  iconic     155.3  daily    depth=64  "LeBron's 66"
 0102  LAL  champ      155.1  daily    depth=67  "The Three-Peat"
 0304  DET  champ      152.6  daily    depth=68 [traded]  "Goin' to Work"
+0607  GSW  iconic       152  daily    depth=50 [traded]  "We Believe"
 1213  MEM  iconic     151.7  daily    depth=75 [traded]  "Grit-n-Grind"
 9899  SAS  champ      149.9  daily    depth=46 [thin:lockout (50g)]  "Twin Towers"
 0708  BOS  champ      148.6  daily    depth=50 [traded]  "The New Big Three"
@@ -49,13 +59,13 @@ szn   tm   tier         exp  route    depth
 ── ALL TEAM-SEASONS (862, by expected FP) ──
 szn   tm   tier         exp  route    depth
 2425  LAL  —          216.1  raid     depth=50 [traded]
-2021  BKN  —          207.4  raid     depth=34 [traded] [thin:compressed (72g)]
-1819  PHI  —          199.8  raid     depth=35 [traded]
+2021  BKN  iconic     207.4  raid     depth=34 [traded] [thin:compressed (72g)]  "The Brooklyn Superteam"
+1819  PHI  iconic     199.8  raid     depth=35 [traded]  "The Process"
 1718  NOP  —          198.1  raid     depth=48 [traded]
 2425  DAL  —            198  raid     depth=49 [traded]
 2425  DEN  —          197.7  raid     depth=49
 2223  PHX  —          197.1  raid     depth=47 [traded]
-1920  HOU  —          195.9  raid     depth=39 [traded] [thin:bubble/suspended]
+1920  HOU  iconic     195.9  raid     depth=39 [traded] [thin:bubble/suspended]  "Microball"
 2223  LAL  —          195.7  raid     depth=55 [traded]
 1819  OKC  —          194.8  raid     depth=73
 2021  HOU  —          194.2  raid     depth=26 [traded] [thin:compressed (72g)]
@@ -75,10 +85,10 @@ szn   tm   tier         exp  route    depth
 2324  BOS  champ      182.5  raid     depth=56  "Banner 18"
 2324  DEN  —          182.3  raid     depth=59
 1819  HOU  —          181.8  raid     depth=58
-0607  DEN  —          181.3  raid     depth=65 [traded]
+0607  DEN  iconic     181.3  raid     depth=65 [traded]  "Iverson & Melo"
 2425  ATL  —          181.3  raid     depth=36 [traded]
 1617  GSW  champ      181.1  raid     depth=61  "The Super-Team"
-1314  LAC  —          180.3  raid     depth=35
+1314  LAC  iconic     180.3  raid     depth=35  "Lob City"
 2122  MIL  —          179.7  raid     depth=66
 2223  MIL  —          179.5  raid     depth=61
 2223  BKN  —          179.4  raid     depth=47 [traded]
@@ -90,7 +100,7 @@ szn   tm   tier         exp  route    depth
 2324  MIL  —          177.5  raid     depth=54
 2324  ATL  —          177.5  raid     depth=54
 2425  BOS  —          177.4  raid     depth=42
-9697  HOU  —            177  raid     depth=52
+9697  HOU  iconic       177  raid     depth=52  "The Last Ride"
 2021  MIL  champ      175.8  raid     depth=59 [thin:compressed (72g)]  "Giannis"
 0405  SAC  —          175.5  raid     depth=56 [traded]
 1819  MIL  —          175.4  raid     depth=63
@@ -168,11 +178,11 @@ szn   tm   tier         exp  route    depth
 1920  BOS  —          166.1  raid     depth=52 [thin:bubble/suspended]
 0001  SAC  —          165.9  raid     depth=69
 1314  MIN  —          165.9  raid     depth=52
-1516  OKC  —          165.9  raid     depth=72
+1516  OKC  iconic     165.9  raid     depth=72  "Up 3-1"
 2122  CHA  —          165.5  raid     depth=48
 2223  CHA  —          165.4  raid     depth=36
 1617  WAS  —          165.3  raid     depth=75
-0809  ORL  —          165.1  raid     depth=42 [traded]
+0809  ORL  iconic     165.1  raid     depth=42 [traded]  "Superman"
 0001  PHI  iconic       165  raid     depth=50 [traded]  "Iverson's Finals"
 2324  PHX  —            165  raid     depth=51
 2324  MIN  —            165  raid     depth=62
@@ -241,7 +251,7 @@ szn   tm   tier         exp  route    depth
 0203  SEA  —          160.8  raid     depth=75 [traded]
 1516  NOP  —          160.6  raid     depth=45 [traded]
 0910  POR  —          160.5  raid     depth=44 [traded]
-0001  TOR  —          160.3  raid     depth=73 [traded]
+0001  TOR  iconic     160.3  raid     depth=73 [traded]  "Vinsanity"
 1920  IND  —          160.3  raid     depth=45 [thin:bubble/suspended]
 2122  WAS  —          160.2  raid     depth=40 [traded]
 0203  MIL  —          160.1  raid     depth=65 [traded]
@@ -372,7 +382,7 @@ szn   tm   tier         exp  route    depth
 0809  BOS  —          152.3  daily    depth=57
 9697  MIA  —          152.2  daily    depth=34 [traded]
 0203  ORL  —            152  daily    depth=27 [traded]
-0607  GSW  —            152  daily    depth=50 [traded]
+0607  GSW  iconic       152  daily    depth=50 [traded]  "We Believe"
 1011  BOS  —            152  daily    depth=68 [traded]
 1213  ATL  —            152  daily    depth=39
 2425  ORL  —            152  daily    depth=34
