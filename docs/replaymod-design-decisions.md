@@ -2947,3 +2947,171 @@ next phase.
 **Lock:** this section. Build brief: `docs/cc-brief-boss-delivery-consumer.md`
 (Phase 2-fix). Commits `c64029e` (artifact) · `60f4cd4` (swap) · this doc (verification),
 on `origin/feat/build-phase` (hold-for-review).
+
+---
+
+## § Phase 2-mount — Boss Entry Point + Outward Termination (LOCKED — build authorized 2026-06-21)
+
+*Promoted from the standalone draft `docs/phase-2-mount-decision-record.md` (now
+removed) at John's review-at-fork; the Phase 2-mount build brief is the greenlight.
+Status flipped DESIGN → LOCKED. This section is the source of truth; log any
+build-time decision here.*
+
+**Framing (the sentence the rest derives from):** the viral object is the
+**shared comparison**, not the link. Layers stack: *shared boss → comparison →
+link (transport) → card (packaging) → rivalry (memory).* Everything below is a
+consequence of putting the comparison, not the button, at the center.
+
+**Problem (recorded):** Phase 2 left the boss engine engineering-complete but
+user-unreachable (no mount). The naïve mount — surface a CTA, fight the boss,
+exit to **`Play Again`** — wires the entry but inherits the *solo game's ending*
+by default. That ending is a category error: the boss is not a harder hand, it
+is a **comparison object** (same boss-per-day for everyone). A comparison object
+that terminates inward is a dead loop. The mount is cheap; **the ending is the
+product.**
+
+**Decision:** ship the entry CTA now (near-free per the CC trace) AND ship a
+boss-result ending that **points outward** from day one — raw, not beautiful.
+No rendered card, no friend graph, no image gen. Just an outward invitation +
+a copy-link. The viral object is the **shared boss**; the artifact only packages
+an object that is already comparable (Wordle shared as pasted text before the
+green squares existed).
+
+### Invariant (load-bearing — the rule that outranks everything in this phase)
+**Every VIEW of a boss result terminates outward. No boss result exits to a bare
+`Play Again`.**
+
+Note the seat of the invariant: it is owned by the **result view**, not by the
+completion event. A boss result is a Wordle square — shareable forever — so the
+outward orientation is a property of the *artifact*, not a residue of the
+transition that produced it. **Build consequence:** the outward ending must
+reconstruct whenever the result is viewed (reopened, returned-to tonight,
+deep-linked), NOT only in the post-resolution render path. The natural
+implementation hangs it off the resolution moment and silently fails the revisit
+case — flag explicitly.
+
+It holds across all three symmetries:
+- **Win AND loss.** Loss is ~the majority of completions and spreads *better*
+  than wins (cf. Wordle `X/6`). A win-only outward ending discards most of the
+  viral surface.
+- **Sender AND recipient.** A link recipient who lands on today's boss, plays,
+  and hits the inward ending leaks the loop at the exact handoff that matters.
+- **Fresh AND revisited.** Reopening tonight's result must terminate outward
+  again — same as an old Wordle.
+
+The phases are escalating **quality of an ending that exists day one**, never the
+arrival of the ending itself:
+- **Phase 2 (this):** outward invitation + raw copy-link. Ugly, complete.
+- **Phase 2.5:** You/Mike/Bulls comparison card. Outward, beautiful. (Read-only
+  GROUP BY over `challenge_attempts`; schema already supports it, no migration.)
+- **Phase 3:** rivalry scars/belts. Outward, personal.
+
+### Required vs Upgrade (the architectural firewall)
+The invariant must NOT be coupled to breakable plumbing. An invariant that can
+fail because a KV read was slow is not an invariant.
+
+**Required (the invariant depends on these):** outward ending · challenge/copy-link ·
+the boss link itself · sender/recipient symmetry · win/loss symmetry ·
+fresh/revisited symmetry.
+
+**Upgrade (degrade elegance, never kill the phase):**
+- participation count (`14,318 players tried`) — **day-one** (KV counter)
+- rank (`#1427`) — **Phase 2.5** (needs its own ordered tally)
+
+A missing/stale/slow count degrades the screen; it does NOT violate the rule:
+
+```
+YOU LOST TO TODAY'S BULLS
+
+Think you can do better?
+
+[Copy Link]
+
+────────────
+
+Play Again
+```
+
+still satisfies the invariant with zero leaderboard data.
+
+### Decisions locked
+1. **The comparison is the object; rank/count are its best expression, not its
+   prerequisite.** Phase 2 is NOT hostage to them.
+2. **Framing: shared-global-daily.** "TODAY'S BULLS — 14,318 players tried — can
+   you top them?" The only frame with zero dependency (PvE needs the player to
+   care about the opponent; social needs a relationship graph that doesn't exist).
+3. **Loss copy is a Phase 2 LOCK, and points at the enemy, not the self.** The
+   failure mode is self-referential copy ("I lost" / "beat my score") — socially
+   expensive, rarely sent. Enemy-referential copy invites fighting the same thing.
+   - **Win:** "I beat today's Bulls."
+   - **Loss:** "The Bulls got me. Think you survive them?"
+4. **`Play Again` is never alone — never deleted.** Rule is *never leave replay
+   alone*, NOT *never show replay*. Challenge-above-the-line, replay-below:
+   ```
+   Challenge Someone   /  Copy Link
+   ────────────
+   Play Again
+   ```
+5. **CTA is conditional, not always-on (banner-blindness).**
+   - Boss **unattempted** today → large CTA on the results strip.
+   - Boss **attempted** today → progress-memory state
+     (`TODAY'S BULLS ✓ — You scored 228 — [View Boss]`; rank line joins in Phase 2.5)
+     — NOT a second invitation, and `View Boss` still lands on a result that
+     terminates outward.
+6. **Home surface deferred.** The natural daily entry already exists: play a
+   normal hand → see boss → fight → share. Home boss tile is post-proof spend.
+
+### Host route — A′ (confirmed by CC discovery, 2026-06-21)
+Fold an optional `bossChallengeId` into `GET /api/leaderboard`, gated to
+`sport === "basketball"`, KV-cached at `boss:basketball:today:{date}` with a lazy
+upsert via `getTodaysBossChallengeId` on cache miss.
+- **Zero blast radius:** all six GET consumers read only `.entries`/`metric`/
+  `scope`; the added field is purely additive. Football's competition-keyed shape
+  is untouched (boss logic never touches `validateCompetition`/`lbKeyBase`).
+- **Postgres off the hot path:** route is already KV-connected; first basketball
+  GET of the day does the upsert + KV write, every later GET is a KV read.
+- **No cron, no 13th function.** `api/` is 12/12; `todaysBoss.ts` is `_lib`
+  (unrouted). A dedicated boss route is **rejected** (breaches cap, redundant).
+
+### CTA mount (confirmed by CC discovery)
+Mount a boss-entry sibling at the existing RESULTS/`WIN_CELEBRATION` challenge-strip
+branch (`GameView.tsx:3224`), gated on
+`!challengeCtx && sport === "basketball" && bossChallengeId` (drop the
+`challengeTrigger` gate). Tap → navigate to `/basketball/challenge/{bossChallengeId}`,
+reusing the mapped open path (URL regex → `ChallengeLandingScreen` →
+`sender_kind:"boss"` branch). Readiness: `gameState` ∈ {RESULTS, WIN_CELEBRATION}
+&& `springSettled`.
+
+### Build-time flags (NOT blockers — resolve during build)
+1. **Result-view owns the orientation, not the transition.** Ensure the outward
+   ending reconstructs on every view of the result (reopen / return / deep-link),
+   not only on the resolution render.
+2. **Surface `bossChallengeId` into React state.** The leaderboard GETs are
+   fire-and-forget into localStorage today; the CTA needs the id in state.
+3. **Count + rank split (settled by CC discovery 2026-06-21).**
+   - **Count → day-one Upgrade.** Surface via `kv.incr`/`kv.get(
+     'boss:basketball:attempts:{date}')` alongside `boss:basketball:today:{date}` —
+     KV-only, basketball-gated, no new route. Do NOT read `attempt_count` via the
+     leaderboard GET (adds a 1-row Postgres SELECT to the sport-agnostic hot path).
+   - **COPY CONSTRAINT (load-bearing):** the count is **players**, not attempts.
+     "14,318 players tried" is correct; "14,318 attempts" is wrong AND gameable.
+   - **Rank → Phase 2.5.** Player-specific; cannot ride the player-agnostic A′
+     leaderboard GET. Needs its own ordered tally. Defer; do NOT write copy that
+     depends on "you're #N" until 2.5.
+4. **Loss copy (LOCK):** enemy-referential, never self-referential (decision 3).
+
+### Gate
+First preview deploy must confirm the bundled bank artifact **physically reads at
+runtime** (carried from Phase 2-fix — the metafile proved static reachability; a
+deploy proves the last sliver). Then glass `BossLandingView` as a render/layout
+check once a device surfaces it via the real mount (a green glass on localhost is
+not prod evidence — local still has the fs seasons dir).
+
+**Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
+Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
+per-step commits, green before each, push to origin; one canonical FP path;
+hide-don't-delete; don't touch `_roundMachine.ts`, money-path pinned tests,
+chad/paused voice, challenge-resolution logic, `isRealName` semantics.
+Audience/difficulty lever stays deferred and banned on comparison-bearing daily
+instances. Do NOT build rank / the You-Mike-Bulls comparison card / any per-player
+ordered tally (all Phase 2.5).
