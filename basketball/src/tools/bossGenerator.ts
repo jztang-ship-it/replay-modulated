@@ -1,39 +1,44 @@
 #!/usr/bin/env node
 /**
- * bossGenerator.ts — Step 2: generator core (real data), mirrors the prototype.
+ * bossGenerator.ts — Step 2 generator core (real data), mirrors the prototype.
+ *
+ * Pure, testable exports (seededRng / rollBoss / scheduleHeadline / rollDistribution)
+ * + a guarded main() that builds the bank bosses from bossData and writes the
+ * Step-2 checkpoint. Tests import the pure functions with synthetic bosses; main()
+ * wires the live substrate.
  *
  *   - deterministic seed: sha256(date+slot+team+attempt) → mulberry32 stream
- *   - game-roll: one random qualifying (min≥10) game per starter, from that
- *     starter's pool, RS-only
- *   - ROLL-TARGET PER SLOT (the locked Step-2 routing — supersedes Step-1's
- *     expected-vs-band):
- *       daily slot → rejection-sample toward [P60,P85] (bias weaker games in-band)
- *       raid  slot → rejection-sample toward total ≥ P85 (upper tail), capped by
- *                    the team ceiling (computeRosterCeiling). Ceiling is the
- *                    eligibility test + physical cap, NEVER the target.
- *     daily/raid CAPABILITY is emergent from the sampler (no separate rule):
- *       daily-capable ⇔ rolls land in band; raid-capable ⇔ rolls reach ≥P85.
- *   - rejection sampling: up to K=8 re-rolls of the GAMES (advance PRNG), then
- *     best-effort. HEADLINE slots NEVER silently swap teams — a scheduled headliner
- *     that can't hit its target is presented at its easiest roll with a tough-day flag.
- *   - schedule: headline from {champ,iconic}, weighted champ 1.0 / iconic 0.6,
- *     no identity-era within cooldown=5 days (era_id is the anti-repeat unit)
- *   - naming: authored display/flavor from the bank
+ *   - game-roll: one random qualifying (min≥10) game per starter, RS-only
+ *   - ROLL-TARGET PER SLOT: daily → reject toward [P60,P85]; raid → toward ≥P85,
+ *     capped by team ceiling (computeRosterCeiling = eligibility + physical cap,
+ *     NEVER the target). daily/raid capability is emergent from the sampler.
+ *   - rejection sampling K=15 (advance PRNG). HEADLINE NEVER SWAPS: a daily slot
+ *     that can't hit band within K → easiest roll + TOUGH-DAY flag. (1−daily_hit)^15
+ *     makes even an 18%-daily-hit elite a ~5% tough-day rarity.
+ *   - schedule: {champ,iconic}, weighted champ 1.0/iconic 0.6, era_id anti-repeat
+ *     cooldown=5d. naming from the bank.
  *
  * Run:  npx tsx basketball/src/tools/bossGenerator.ts   (writes the checkpoint)
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
 import { buildAll, loadBand, REPO, type TeamSeason } from "./bossData";
 
-const K = 8, COOLDOWN = 5, P_LO = 60, P_HI = 85;
-const BANK_FILE = path.resolve(REPO, "docs/boss-bank-v1.json");
-const OUT_JSON = path.resolve(REPO, "boss_gen/step2_checkpoint.json");
-const OUT_TXT = path.resolve(REPO, "boss_gen/step2_checkpoint.txt");
+export const K = 15;
+export const COOLDOWN = 5;
+export const P_LO = 60, P_HI = 85;
+
+export type Boss = TeamSeason & { key: string; tier: string; era_id: string; display: string; flavor: string };
+export type RollMode = "daily" | "raid";
+export type Roll = {
+  status: "in_band" | "raid" | "tough_day" | "out_of_band";
+  total: number; picks: { name: string; pos: string; gi: number; fp: number }[]; attempts: number;
+};
 
 // ── Deterministic PRNG: same key string → same stream, everywhere. ─────────────
-function seededRng(...parts: (string | number)[]): () => number {
+export function seededRng(...parts: (string | number)[]): () => number {
   const h = createHash("sha256").update(parts.map(String).join("|")).digest("hex");
   let a = parseInt(h.slice(0, 8), 16) >>> 0;
   return () => {
@@ -44,31 +49,8 @@ function seededRng(...parts: (string | number)[]): () => number {
   };
 }
 
-// ── Boss model: a bank TeamSeason + curation. ─────────────────────────────────
-type Boss = TeamSeason & { key: string; tier: string; era_id: string; display: string; flavor: string };
-
-const bank = JSON.parse(fs.readFileSync(BANK_FILE, "utf8"));
-const bankByKey = new Map<string, any>();
-for (const b of bank.bosses) bankByKey.set(`${b.season_code}|${b.team_code}`, b);
-
-const allTs = new Map<string, TeamSeason>();
-for (const ts of buildAll()) allTs.set(`${ts.season}|${ts.team}`, ts);
-
-const bosses: Boss[] = [];
-for (const b of bank.bosses) {
-  const ts = allTs.get(`${b.season_code}|${b.team_code}`);
-  if (!ts) continue; // (none — bank 38/38 present)
-  bosses.push({ ...ts, key: b.id, tier: b.tier, era_id: b.era_id, display: b.display, flavor: b.flavor });
-}
-
-const band = loadBand(P_LO, P_HI);
-const BAND: [number, number] = [band.lo, band.hi];
-
-// ── Roll one boss with deterministic rejection sampling toward a slot target. ──
-type RollMode = "daily" | "raid";
-type Roll = { status: "in_band" | "raid" | "tough_day" | "out_of_band"; total: number; picks: { name: string; pos: string; gi: number; fp: number }[]; attempts: number };
-
-function rollGames(b: Boss, day: string, slot: number, attempt: number) {
+// One random qualifying game per starter (deterministic by day+slot+team+attempt).
+export function rollGames(b: Boss, day: string, slot: number, attempt: number) {
   const rng = seededRng("roll", day, slot, b.key, attempt);
   const picks = b.starters.map(s => {
     const gi = Math.floor(rng() * s.gamePool.length);
@@ -77,29 +59,36 @@ function rollGames(b: Boss, day: string, slot: number, attempt: number) {
   return { picks, total: picks.reduce((a, p) => a + p.fp, 0) };
 }
 
-function rollBoss(b: Boss, day: string, slot: number, mode: RollMode): Roll {
-  const accept = (t: number) => mode === "daily" ? (t >= BAND[0] && t <= BAND[1]) : t >= BAND[1];
-  const all: { picks: any[]; total: number }[] = [];
-  for (let attempt = 0; attempt < K; attempt++) {
+// Deterministic rejection sampling toward the slot's roll-target.
+export function rollBoss(b: Boss, day: string, slot: number, mode: RollMode, band: [number, number], k = K): Roll {
+  const accept = (t: number) => mode === "daily" ? (t >= band[0] && t <= band[1]) : t >= band[1];
+  const all: { picks: Roll["picks"]; total: number }[] = [];
+  for (let attempt = 0; attempt < k; attempt++) {
     const r = rollGames(b, day, slot, attempt);
     all.push(r);
     if (accept(r.total)) return { status: mode === "daily" ? "in_band" : "raid", total: r.total, picks: r.picks, attempts: attempt + 1 };
   }
-  // Best-effort. HEADLINE NEVER SWAPS: a daily slot that can't land in band within
-  // K rolls — whether structurally (floor > band) or stochastically (a low-daily-hit
-  // team that missed all K this day) — is presented at its EASIEST roll (min total)
-  // and flagged TOUGH DAY. One unified rule, matching "easiest roll + tough-day flag."
+  // HEADLINE NEVER SWAPS. Daily best-effort: easiest roll (min total) + tough-day
+  // flag — whether structural (floor>band) or stochastic (low-daily-hit, missed K).
   if (mode === "daily") {
     const easiest = all.reduce((m, r) => r.total < m.total ? r : m);
-    return { status: "tough_day", total: easiest.total, picks: easiest.picks, attempts: K };
+    return { status: "tough_day", total: easiest.total, picks: easiest.picks, attempts: k };
   }
   const top = all.reduce((m, r) => r.total > m.total ? r : m); // raid: closest to clearing P85
-  return { status: "out_of_band", total: top.total, picks: top.picks, attempts: K };
+  return { status: "out_of_band", total: top.total, picks: top.picks, attempts: k };
 }
 
-// ── Headline schedule: weighted, era anti-repeat (cooldown days). ─────────────
-function scheduleHeadline(startISO: string, days: number, cooldown = COOLDOWN): { day: string; boss: Boss }[] {
-  const pool = bosses.filter(b => b.tier === "champ" || b.tier === "iconic");
+// Empirical roll distribution (uniform one-game-per-starter).
+export function rollDistribution(b: Boss, band: [number, number], M = 4000) {
+  const totals: number[] = [];
+  for (let i = 0; i < M; i++) totals.push(rollGames(b, "dist", 0, i).total);
+  const dailyHit = totals.filter(t => t >= band[0] && t <= band[1]).length / M;
+  const raidHit = totals.filter(t => t >= band[1]).length / M;
+  return { totals, dailyHit, raidHit, min: Math.min(...totals), max: Math.max(...totals), mean: totals.reduce((a, b) => a + b, 0) / M };
+}
+
+// Headline schedule: weighted, era anti-repeat (cooldown days). Pure over a pool.
+export function scheduleHeadline(pool: Boss[], startISO: string, days: number, cooldown = COOLDOWN): { day: string; boss: Boss }[] {
   const out: { day: string; boss: Boss }[] = [];
   const recent: string[] = [];
   const start = new Date(startISO + "T00:00:00Z");
@@ -108,7 +97,6 @@ function scheduleHeadline(startISO: string, days: number, cooldown = COOLDOWN): 
     const eligible = pool.filter(b => !recent.includes(b.era_id));
     const weights = eligible.map(b => b.tier === "champ" ? 1.0 : 0.6);
     const rng = seededRng("sched", day);
-    // weighted pick
     const total = weights.reduce((a, w) => a + w, 0);
     let x = rng() * total, pick = eligible[0];
     for (let i = 0; i < eligible.length; i++) { x -= weights[i]; if (x <= 0) { pick = eligible[i]; break; } }
@@ -119,130 +107,122 @@ function scheduleHeadline(startISO: string, days: number, cooldown = COOLDOWN): 
   return out;
 }
 
-// ── Empirical per-boss roll distribution (uniform one-game-per-starter). ───────
-function rollDistribution(b: Boss, M = 4000): { totals: number[]; dailyHit: number; raidHit: number; min: number; max: number; mean: number } {
-  const totals: number[] = [];
-  for (let i = 0; i < M; i++) totals.push(rollGames(b, "dist", 0, i).total);
-  const dailyHit = totals.filter(t => t >= BAND[0] && t <= BAND[1]).length / M;
-  const raidHit = totals.filter(t => t >= BAND[1]).length / M;
-  return { totals, dailyHit, raidHit, min: Math.min(...totals), max: Math.max(...totals), mean: totals.reduce((a, b) => a + b, 0) / M };
-}
-
-// ── Checkpoint analysis (a)–(d). ──────────────────────────────────────────────
-const playerFps = band.allFps; // strong-capped player-lineup totals (the field)
-const winRateVs = (bossTotal: number) => playerFps.filter(f => f > bossTotal).length / playerFps.length;
-
-const perBoss = bosses.map(b => {
-  const d = rollDistribution(b);
-  return {
-    key: b.key, display: b.display, tier: b.tier, era_id: b.era_id,
-    expected: b.expected, floor: b.floor, ceiling: b.ceiling, rollDepth: b.rollDepth,
-    dailyCapable: d.dailyHit > 0, raidCapable: d.raidHit > 0,
-    dailyHitPct: Math.round(d.dailyHit * 1000) / 10, raidHitPct: Math.round(d.raidHit * 1000) / 10,
-    min: Math.round(d.min * 10) / 10, max: Math.round(d.max * 10) / 10, mean: Math.round(d.mean * 10) / 10,
-    toughDay: b.floor > BAND[1], traded: b.tradedStarter, complete5: b.startersComplete, thin: b.thin,
-  };
-});
-
-// (a) corrected daily/raid split from real roll distributions
-const split = {
-  dailyCapable: perBoss.filter(b => b.dailyCapable).length,
-  raidCapable: perBoss.filter(b => b.raidCapable).length,
-  both: perBoss.filter(b => b.dailyCapable && b.raidCapable).length,
-  dailyOnly: perBoss.filter(b => b.dailyCapable && !b.raidCapable).length,
-  raidOnly: perBoss.filter(b => !b.dailyCapable && b.raidCapable).length,
-  neither: perBoss.filter(b => !b.dailyCapable && !b.raidCapable).length,
-};
-
-// (b) iconic super-teams both daily- AND raid-capable
-const iconicBoth = perBoss.filter(b => b.tier === "iconic").map(b => ({ key: b.key, display: b.display, dailyHitPct: b.dailyHitPct, raidHitPct: b.raidHitPct, both: b.dailyCapable && b.raidCapable }));
-const marqueeChamps = perBoss.filter(b => ["GSW-1617", "GSW-1516", "CHI-9798", "LAL-0001", "BOS-2324", "DEN-2223"].includes(b.key))
-  .map(b => ({ key: b.key, display: b.display, dailyHitPct: b.dailyHitPct, raidHitPct: b.raidHitPct, both: b.dailyCapable && b.raidCapable }));
-
-// (c) floor exceeds band → tough-day-flag case
-const toughDay = perBoss.filter(b => b.toughDay).map(b => ({ key: b.key, display: b.display, floor: b.floor, bandHi: Math.round(BAND[1] * 10) / 10 }));
-
-// (d) rough daily win-rate at one roll vs a few (boss restock over N days)
-const dailyTeams = perBoss.filter(b => b.dailyCapable);
-const oneRollWR: number[] = [], fewRollWR: number[] = [];
-for (const pb of dailyTeams) {
-  const b = bosses.find(x => x.key === pb.key)!;
-  const dayRolls: number[] = [];
-  for (let dnum = 0; dnum < 7; dnum++) {
-    const r = rollBoss(b, `2026-07-${String(dnum + 1).padStart(2, "0")}`, 0, "daily");
-    dayRolls.push(r.total);
+// Build the 38 bank bosses (bank ⨝ bossData).
+export function loadBankBosses(): Boss[] {
+  const bank = JSON.parse(fs.readFileSync(path.resolve(REPO, "docs/boss-bank-v1.json"), "utf8"));
+  const allTs = new Map<string, TeamSeason>();
+  for (const ts of buildAll()) allTs.set(`${ts.season}|${ts.team}`, ts);
+  const out: Boss[] = [];
+  for (const b of bank.bosses) {
+    const ts = allTs.get(`${b.season_code}|${b.team_code}`);
+    if (!ts) continue;
+    out.push({ ...ts, key: b.id, tier: b.tier, era_id: b.era_id, display: b.display, flavor: b.flavor });
   }
-  oneRollWR.push(winRateVs(dayRolls[0]));                                  // single day
-  fewRollWR.push(dayRolls.reduce((a, t) => a + winRateVs(t), 0) / dayRolls.length); // 7-day mean
+  return out;
 }
-const mean = (a: number[]) => a.reduce((x, y) => x + y, 0) / a.length;
-const winRate = {
-  note: "player win-rate = frac of strong-capped player lineups exceeding the boss daily roll. Rough — for later band tuning, NOT a target.",
-  oneRoll_meanWinPct: Math.round(mean(oneRollWR) * 1000) / 10,
-  fewRoll7d_meanWinPct: Math.round(mean(fewRollWR) * 1000) / 10,
-};
 
-// determinism self-check
-const dcheck = (() => {
-  const b = bosses[0];
-  const a = rollBoss(b, "2026-07-01", 0, "daily").total;
-  const c = rollBoss(b, "2026-07-01", 0, "daily").total;
-  return { boss: b.key, a, c, pass: a === c };
-})();
+// ── Checkpoint (guarded main) ─────────────────────────────────────────────────
+function main() {
+  const OUT_JSON = path.resolve(REPO, "boss_gen/step2_checkpoint.json");
+  const OUT_TXT = path.resolve(REPO, "boss_gen/step2_checkpoint.txt");
+  const bosses = loadBankBosses();
+  const band = loadBand(P_LO, P_HI);
+  const BAND: [number, number] = [band.lo, band.hi];
+  const playerFps = band.allFps;
+  const pBeat = (t: number) => playerFps.filter(f => f > t).length / playerFps.length; // P(one player lineup > boss)
 
-// sample 14-day schedule + cooldown invariant + tough-day presentation
-const sched = scheduleHeadline("2026-06-22", 14);
-const schedRows = sched.map(({ day, boss }) => {
-  const r = rollBoss(boss, day, 0, "daily");
-  return { day, key: boss.key, display: boss.display, era_id: boss.era_id, total: Math.round(r.total * 10) / 10, status: r.status, attempts: r.attempts, toughDayFlag: r.status === "tough_day" };
-});
-const eras = schedRows.map(r => r.era_id);
-const cooldownViolations = eras.map((e, i) => eras.slice(Math.max(0, i - COOLDOWN), i).includes(e) ? i : -1).filter(i => i >= 0);
+  const perBoss = bosses.map(b => {
+    const d = rollDistribution(b, BAND);
+    return {
+      key: b.key, display: b.display, tier: b.tier, era_id: b.era_id,
+      expected: b.expected, floor: b.floor, ceiling: b.ceiling, rollDepth: b.rollDepth,
+      dailyCapable: d.dailyHit > 0, raidCapable: d.raidHit > 0,
+      dailyHitPct: Math.round(d.dailyHit * 1000) / 10, raidHitPct: Math.round(d.raidHit * 1000) / 10,
+      toughDayPct: Math.round(Math.pow(1 - d.dailyHit, K) * 1000) / 10, // analytic K-miss rarity
+      min: Math.round(d.min * 10) / 10, max: Math.round(d.max * 10) / 10, mean: Math.round(d.mean * 10) / 10,
+      toughDayStructural: b.floor > BAND[1], traded: b.tradedStarter, complete5: b.startersComplete, thin: b.thin,
+    };
+  });
 
-const checkpoint = {
-  band: { p_lo: P_LO, p_hi: P_HI, lo: Math.round(BAND[0] * 10) / 10, hi: Math.round(BAND[1] * 10) / 10 },
-  K, cooldown: COOLDOWN, bankBosses: bosses.length,
-  a_split: split,
-  b_iconicBoth: iconicBoth,
-  b_marqueeChamps: marqueeChamps,
-  c_toughDay: toughDay,
-  d_dailyWinRate: winRate,
-  determinism: dcheck,
-  schedule14d: { cooldownViolations, rows: schedRows },
-  perBoss,
-};
-fs.writeFileSync(OUT_JSON, JSON.stringify(checkpoint, null, 2));
+  // (a) split
+  const split = {
+    dailyCapable: perBoss.filter(b => b.dailyCapable).length,
+    raidCapable: perBoss.filter(b => b.raidCapable).length,
+    both: perBoss.filter(b => b.dailyCapable && b.raidCapable).length,
+    dailyOnly: perBoss.filter(b => b.dailyCapable && !b.raidCapable).length,
+    raidOnly: perBoss.filter(b => !b.dailyCapable && b.raidCapable).length,
+    neither: perBoss.filter(b => !b.dailyCapable && !b.raidCapable).length,
+  };
+  // (b) iconic + marquee both-capable
+  const both = (keys: string[]) => perBoss.filter(b => keys.length ? keys.includes(b.key) : b.tier === "iconic")
+    .map(b => ({ key: b.key, display: b.display, dailyHitPct: b.dailyHitPct, raidHitPct: b.raidHitPct, toughDayPct: b.toughDayPct, both: b.dailyCapable && b.raidCapable }));
+  // (c) tough-day: structural (floor>band) AND the K-miss rarity at K=15
+  const toughStructural = perBoss.filter(b => b.toughDayStructural).map(b => b.key);
+  const worstToughDay = [...perBoss].sort((a, b) => b.toughDayPct - a.toughDayPct).slice(0, 5)
+    .map(b => ({ key: b.key, display: b.display, dailyHitPct: b.dailyHitPct, toughDayPct: b.toughDayPct }));
+  // (d) per-day win-rate under the 1-hour multi-attempt window (1−(1−p)^N).
+  //     N is window-bounded (unlimited attempts within the hour), so report a curve.
+  //     The Step-1/early "27%" was N=1 — the wrong denominator (per single player roll).
+  const dailyBosses = bosses.filter((_, i) => perBoss[i].dailyCapable);
+  const dayTotals: number[] = [];
+  for (const b of dailyBosses) for (let dnum = 0; dnum < 14; dnum++) {
+    const r = rollBoss(b, `2026-08-${String(dnum + 1).padStart(2, "0")}`, 0, "daily", BAND);
+    if (r.status === "in_band") dayTotals.push(r.total);
+  }
+  const perDayWR = (N: number) => Math.round((dayTotals.reduce((a, t) => a + (1 - Math.pow(1 - pBeat(t), N)), 0) / dayTotals.length) * 1000) / 10;
+  const winRate = {
+    note: "per-day win = 1−(1−p)^N over the 1-hour replay window (multi-attempt, unlimited within the hour). p = P(one strong player lineup > boss daily roll). For band tuning, not a target.",
+    attemptModel: "1-hour replay window (api/challenge/[id]/attempt.ts ONE_HOUR_MS; is_window_open) — multi-attempt, not a fixed count",
+    perDayWinPct: { N1: perDayWR(1), N3: perDayWR(3), N5: perDayWR(5), N10: perDayWR(10), N20: perDayWR(20) },
+  };
 
-// ── Readable checkpoint ───────────────────────────────────────────────────────
-const L: string[] = [];
-L.push("BOSS GENERATOR — Step 2 core CHECKPOINT");
-L.push("=".repeat(74));
-L.push(`band P${P_LO}-P${P_HI} = [${checkpoint.band.lo}, ${checkpoint.band.hi}]  | K=${K} reject | cooldown=${COOLDOWN}d | bank bosses=${bosses.length}`);
-L.push(`determinism: ${dcheck.boss} ${dcheck.a} == ${dcheck.c} → ${dcheck.pass ? "PASS" : "FAIL"}`);
-L.push("");
-L.push("(a) DAILY/RAID SPLIT from real roll distributions:");
-L.push(`    daily-capable ${split.dailyCapable}/${bosses.length}   raid-capable ${split.raidCapable}/${bosses.length}   both ${split.both}   daily-only ${split.dailyOnly}   raid-only ${split.raidOnly}   neither ${split.neither}`);
-L.push("");
-L.push("(b) ICONIC super-teams — daily AND raid capable?");
-for (const x of iconicBoth) L.push(`    ${x.key.padEnd(9)} daily ${String(x.dailyHitPct).padStart(5)}% / raid ${String(x.raidHitPct).padStart(5)}%  ${x.both ? "BOTH ✓" : "NOT BOTH ✗"}  "${x.display}"`);
-L.push("    marquee champs:");
-for (const x of marqueeChamps) L.push(`    ${x.key.padEnd(9)} daily ${String(x.dailyHitPct).padStart(5)}% / raid ${String(x.raidHitPct).padStart(5)}%  ${x.both ? "BOTH ✓" : "NOT BOTH ✗"}  "${x.display}"`);
-L.push("");
-L.push(`(c) FLOOR > BAND (tough-day-flag case): ${toughDay.length === 0 ? "none" : ""}`);
-for (const x of toughDay) L.push(`    ${x.key} floor ${x.floor} > P85 ${x.bandHi}  "${x.display}"`);
-L.push("");
-L.push("(d) ROUGH daily win-rate (player beats boss daily roll):");
-L.push(`    one-roll mean ${winRate.oneRoll_meanWinPct}%   |   7-day-restock mean ${winRate.fewRoll7d_meanWinPct}%   (for band tuning, not a target)`);
-L.push("");
-L.push(`14-DAY HEADLINE SCHEDULE (cooldown invariant: ${cooldownViolations.length === 0 ? "PASS" : "FAIL " + cooldownViolations}):`);
-for (const r of schedRows) L.push(`    ${r.day}  ${r.key.padEnd(9)} total ${String(r.total).padStart(6)}  ${r.status.padEnd(11)} ${r.attempts} roll(s)${r.toughDayFlag ? "  ⚠ TOUGH DAY" : ""}  [${r.era_id}]`);
-L.push("");
-L.push("perBoss roll distribution (by expected):");
-L.push(`${"key".padEnd(9)} ${"tier".padEnd(7)} ${"exp".padStart(6)} ${"floor".padStart(6)} ${"ceil".padStart(6)}  ${"dailyHit".padStart(8)} ${"raidHit".padStart(7)}`);
-for (const b of [...perBoss].sort((a, b) => b.expected - a.expected)) {
-  L.push(`${b.key.padEnd(9)} ${b.tier.padEnd(7)} ${String(b.expected).padStart(6)} ${String(b.floor).padStart(6)} ${String(b.ceiling).padStart(6)}  ${String(b.dailyHitPct).padStart(7)}% ${String(b.raidHitPct).padStart(6)}%${b.toughDay ? " TOUGH" : ""}`);
+  const dcheck = (() => { const b = bosses[0]; const a = rollBoss(b, "2026-07-01", 0, "daily", BAND).total; const c = rollBoss(b, "2026-07-01", 0, "daily", BAND).total; return { boss: b.key, a, c, pass: a === c }; })();
+  const sched = scheduleHeadline(bosses.filter(b => b.tier === "champ" || b.tier === "iconic"), "2026-06-22", 30);
+  const schedRows = sched.map(({ day, boss }) => { const r = rollBoss(boss, day, 0, "daily", BAND); return { day, key: boss.key, era_id: boss.era_id, total: Math.round(r.total * 10) / 10, status: r.status, attempts: r.attempts }; });
+  const eras = schedRows.map(r => r.era_id);
+  const cooldownViolations = eras.map((e, i) => eras.slice(Math.max(0, i - COOLDOWN), i).includes(e) ? i : -1).filter(i => i >= 0);
+  const toughDaysInSched = schedRows.filter(r => r.status === "tough_day").length;
+
+  const checkpoint = {
+    band: { p_lo: P_LO, p_hi: P_HI, lo: Math.round(BAND[0] * 10) / 10, hi: Math.round(BAND[1] * 10) / 10 },
+    K, cooldown: COOLDOWN, bankBosses: bosses.length,
+    a_split: split,
+    b_iconicBoth: both([]),
+    b_marqueeChamps: both(["GSW-1617", "GSW-1516", "CHI-9798", "LAL-0001", "BOS-2324", "DEN-2223"]),
+    c_toughDay: { structuralFloorAboveBand: toughStructural, worstKMissRarity: worstToughDay, scheduled30dToughDays: toughDaysInSched },
+    d_dailyWinRate: winRate,
+    determinism: dcheck,
+    schedule30d: { cooldownViolations, toughDays: toughDaysInSched, rows: schedRows },
+    perBoss,
+  };
+  fs.writeFileSync(OUT_JSON, JSON.stringify(checkpoint, null, 2));
+
+  const L: string[] = [];
+  L.push("BOSS GENERATOR — Step 2 core CHECKPOINT (K=" + K + ")");
+  L.push("=".repeat(74));
+  L.push(`band P${P_LO}-P${P_HI} = [${checkpoint.band.lo}, ${checkpoint.band.hi}]  | K=${K} | cooldown=${COOLDOWN}d | bank=${bosses.length}`);
+  L.push(`determinism: ${dcheck.boss} ${dcheck.a} == ${dcheck.c} → ${dcheck.pass ? "PASS" : "FAIL"}`);
+  L.push("");
+  L.push(`(a) split: daily-capable ${split.dailyCapable}/${bosses.length}  raid-capable ${split.raidCapable}/${bosses.length}  both ${split.both}  neither ${split.neither}`);
+  L.push("");
+  L.push("(b) iconic super-teams (daily% / raid% / tough-day% @K=15):");
+  for (const x of checkpoint.b_iconicBoth) L.push(`    ${x.key.padEnd(9)} daily ${String(x.dailyHitPct).padStart(5)}% raid ${String(x.raidHitPct).padStart(5)}% tough ${String(x.toughDayPct).padStart(4)}%  ${x.both ? "BOTH ✓" : "✗"}  "${x.display}"`);
+  L.push("    marquee champs:");
+  for (const x of checkpoint.b_marqueeChamps) L.push(`    ${x.key.padEnd(9)} daily ${String(x.dailyHitPct).padStart(5)}% raid ${String(x.raidHitPct).padStart(5)}% tough ${String(x.toughDayPct).padStart(4)}%  ${x.both ? "BOTH ✓" : "✗"}  "${x.display}"`);
+  L.push("");
+  L.push(`(c) tough-day: structural floor>band = ${toughStructural.length === 0 ? "none" : toughStructural.join(",")}  | worst K-miss rarity @K=15:`);
+  for (const x of worstToughDay) L.push(`    ${x.key.padEnd(9)} daily-hit ${String(x.dailyHitPct).padStart(5)}% → tough-day ${x.toughDayPct}%  "${x.display}"`);
+  L.push(`    scheduled 30-day tough-days: ${toughDaysInSched}/30 (${Math.round(toughDaysInSched / 30 * 1000) / 10}%)`);
+  L.push("");
+  L.push("(d) per-day win-rate under the 1-hour multi-attempt window (1−(1−p)^N):");
+  L.push(`    attempt model: ${winRate.attemptModel}`);
+  L.push(`    N=1 ${winRate.perDayWinPct.N1}%  N=3 ${winRate.perDayWinPct.N3}%  N=5 ${winRate.perDayWinPct.N5}%  N=10 ${winRate.perDayWinPct.N10}%  N=20 ${winRate.perDayWinPct.N20}%`);
+  L.push(`    (N=1 is the old single-roll 27% — wrong denominator. Multi-attempt → high per-day WR.)`);
+  L.push("");
+  L.push(`30-day schedule: cooldown ${cooldownViolations.length === 0 ? "PASS" : "FAIL " + cooldownViolations}  | tough-days ${toughDaysInSched}/30`);
+  fs.writeFileSync(OUT_TXT, L.join("\n") + "\n");
+  console.log(L.join("\n"));
+  console.log(`\nwrote ${OUT_JSON}\nwrote ${OUT_TXT}`);
 }
-fs.writeFileSync(OUT_TXT, L.join("\n") + "\n");
 
-console.log(L.slice(0, 18).join("\n"));
-console.log(`\nwrote ${OUT_JSON}\nwrote ${OUT_TXT}`);
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

@@ -1,87 +1,39 @@
-BOSS GENERATOR — Step 2 core CHECKPOINT
+BOSS GENERATOR — Step 2 core CHECKPOINT (K=15)
 ==========================================================================
-band P60-P85 = [132, 159.6]  | K=8 reject | cooldown=5d | bank bosses=38
+band P60-P85 = [132, 159.6]  | K=15 | cooldown=5d | bank=38
 determinism: CHI-9697 132.4 == 132.4 → PASS
 
-(a) DAILY/RAID SPLIT from real roll distributions:
-    daily-capable 38/38   raid-capable 38/38   both 38   daily-only 0   raid-only 0   neither 0
+(a) split: daily-capable 38/38  raid-capable 38/38  both 38  neither 0
 
-(b) ICONIC super-teams — daily AND raid capable?
-    GSW-1516  daily  35.4% / raid  55.2%  BOTH ✓  "73-9"
-    LAL-0304  daily  29.6% / raid  61.6%  BOTH ✓  "The Superteam"
-    PHX-0607  daily  25.5% / raid  67.4%  BOTH ✓  "Seven Seconds or Less"
-    SAC-0102  daily  30.2% / raid  62.6%  BOTH ✓  "The Greatest Show on Court"
-    PHI-0001  daily  31.5% / raid  56.6%  BOTH ✓  "Iverson's Finals"
-    OKC-1112  daily  40.4% / raid  42.1%  BOTH ✓  "The Young Thunder"
-    CLE-0809  daily  42.2% / raid  40.6%  BOTH ✓  "LeBron's 66"
-    HOU-1718  daily  39.9% / raid    43%  BOTH ✓  "Switch Everything"
-    MEM-1213  daily  45.9% / raid  35.5%  BOTH ✓  "Grit-n-Grind"
+(b) iconic super-teams (daily% / raid% / tough-day% @K=15):
+    GSW-1516  daily  35.4% raid  55.2% tough  0.1%  BOTH ✓  "73-9"
+    LAL-0304  daily  29.6% raid  61.6% tough  0.5%  BOTH ✓  "The Superteam"
+    PHX-0607  daily  25.5% raid  67.4% tough  1.2%  BOTH ✓  "Seven Seconds or Less"
+    SAC-0102  daily  30.2% raid  62.6% tough  0.5%  BOTH ✓  "The Greatest Show on Court"
+    PHI-0001  daily  31.5% raid  56.6% tough  0.3%  BOTH ✓  "Iverson's Finals"
+    OKC-1112  daily  40.4% raid  42.1% tough    0%  BOTH ✓  "The Young Thunder"
+    CLE-0809  daily  42.2% raid  40.6% tough    0%  BOTH ✓  "LeBron's 66"
+    HOU-1718  daily  39.9% raid    43% tough    0%  BOTH ✓  "Switch Everything"
+    MEM-1213  daily  45.9% raid  35.5% tough    0%  BOTH ✓  "Grit-n-Grind"
     marquee champs:
-    CHI-9798  daily  34.1% / raid  54.7%  BOTH ✓  "The Last Dance"
-    LAL-0001  daily  32.5% / raid  57.4%  BOTH ✓  "Shaq & Kobe, Ring Two"
-    GSW-1617  daily  18.6% / raid  79.8%  BOTH ✓  "The Super-Team"
-    DEN-2223  daily  21.6% / raid  74.2%  BOTH ✓  "Jokic's Crown"
-    BOS-2324  daily  17.1% / raid  80.5%  BOTH ✓  "Banner 18"
-    GSW-1516  daily  35.4% / raid  55.2%  BOTH ✓  "73-9"
+    CHI-9798  daily  34.1% raid  54.7% tough  0.2%  BOTH ✓  "The Last Dance"
+    LAL-0001  daily  32.5% raid  57.4% tough  0.3%  BOTH ✓  "Shaq & Kobe, Ring Two"
+    GSW-1617  daily  18.6% raid  79.8% tough  4.6%  BOTH ✓  "The Super-Team"
+    DEN-2223  daily  21.6% raid  74.2% tough  2.6%  BOTH ✓  "Jokic's Crown"
+    BOS-2324  daily  17.1% raid  80.5% tough    6%  BOTH ✓  "Banner 18"
+    GSW-1516  daily  35.4% raid  55.2% tough  0.1%  BOTH ✓  "73-9"
 
-(c) FLOOR > BAND (tough-day-flag case): none
+(c) tough-day: structural floor>band = none  | worst K-miss rarity @K=15:
+    BOS-2324  daily-hit  17.1% → tough-day 6%  "Banner 18"
+    GSW-1617  daily-hit  18.6% → tough-day 4.6%  "The Super-Team"
+    DEN-2223  daily-hit  21.6% → tough-day 2.6%  "Jokic's Crown"
+    MIL-2021  daily-hit    23% → tough-day 2%  "Giannis"
+    GSW-1718  daily-hit  25.4% → tough-day 1.2%  "The KD Repeat"
+    scheduled 30-day tough-days: 0/30 (0%)
 
-(d) ROUGH daily win-rate (player beats boss daily roll):
-    one-roll mean 30.1%   |   7-day-restock mean 26.2%   (for band tuning, not a target)
+(d) per-day win-rate under the 1-hour multi-attempt window (1−(1−p)^N):
+    attempt model: 1-hour replay window (api/challenge/[id]/attempt.ts ONE_HOUR_MS; is_window_open) — multi-attempt, not a fixed count
+    N=1 25.5%  N=3 57.4%  N=5 74.9%  N=10 92.5%  N=20 99.1%
+    (N=1 is the old single-roll 27% — wrong denominator. Multi-attempt → high per-day WR.)
 
-14-DAY HEADLINE SCHEDULE (cooldown invariant: PASS):
-    2026-06-22  GSW-1415  total    138  in_band     2 roll(s)  [GSW_SPLASH]
-    2026-06-23  LAL-1920  total    145  in_band     1 roll(s)  [LAKERS_BUBBLE]
-    2026-06-24  LAL-0102  total  133.5  in_band     2 roll(s)  [LAKERS_SHAQKOBE]
-    2026-06-25  GSW-2122  total  145.3  in_band     1 roll(s)  [GSW_RETURN]
-    2026-06-26  TOR-1819  total    138  in_band     1 roll(s)  [RAPTORS_KAWHI]
-    2026-06-27  MIA-1112  total    152  in_band     1 roll(s)  [HEATLES]
-    2026-06-28  SAS-0203  total  155.9  in_band     3 roll(s)  [SPURS_DUNCAN]
-    2026-06-29  BOS-0708  total  144.5  in_band     1 roll(s)  [CELTICS_BIG3]
-    2026-06-30  LAL-0910  total  143.6  in_band     5 roll(s)  [LAKERS_KOBEGASOL]
-    2026-07-01  MIL-2021  total  145.8  in_band     4 roll(s)  [BUCKS_GIANNIS]
-    2026-07-02  DAL-1011  total  139.2  in_band     3 roll(s)  [MAVS_DIRK]
-    2026-07-03  GSW-1617  total  172.4  tough_day   8 roll(s)  ⚠ TOUGH DAY  [GSW_KD]
-    2026-07-04  BOS-2324  total  157.9  in_band     2 roll(s)  [CELTICS_BANNER18]
-    2026-07-05  SAS-9899  total  151.9  in_band     2 roll(s)  [SPURS_TWINTOWERS]
-
-perBoss roll distribution (by expected):
-key       tier       exp  floor   ceil  dailyHit raidHit
-BOS-2324  champ    182.5   54.7  347.5     17.1%   80.5%
-GSW-1617  champ    181.1   75.4  364.1     18.6%   79.8%
-DEN-2223  champ    177.7   63.5  324.6     21.6%   74.2%
-MIL-2021  champ    175.8   53.8  319.8       23%   72.4%
-GSW-1718  champ    174.6     57  309.9     25.4%   69.4%
-PHX-0607  iconic   171.8   32.2    342     25.5%   67.4%
-CHI-9697  champ    170.2     65  308.5     29.7%   65.9%
-LAL-0910  champ    170.2   45.8  319.4       27%   64.7%
-OKC-2425  champ    169.5     68  311.7     30.5%   63.2%
-LAL-0304  iconic   168.7   54.5  331.1     29.6%   61.6%
-TOR-1819  champ    166.6   58.6  353.5     32.3%   59.6%
-SAC-0102  iconic   166.2   44.8  292.7     30.2%   62.6%
-PHI-0001  iconic     165     29  326.5     31.5%   56.6%
-LAL-0001  champ    164.7   36.8  334.4     32.5%   57.4%
-GSW-1516  iconic   164.5   47.5    323     35.4%   55.2%
-LAL-0809  champ    163.5   42.4  334.8     35.6%   53.7%
-CHI-9798  champ      163   51.7    292     34.1%   54.7%
-LAL-9900  champ    161.4   36.7    297     36.5%   53.4%
-GSW-2122  champ      159   37.8  325.2     37.5%     49%
-MIA-1112  champ    158.8   57.5  301.5     39.2%   48.2%
-LAL-1920  champ    158.8   52.8  316.3     39.6%   46.1%
-MIA-1213  champ    158.7   53.6  300.2     40.7%   46.4%
-CLE-1516  champ    157.1   46.8  288.3     38.8%     46%
-HOU-1718  iconic   156.7   50.2  334.7     39.9%     43%
-OKC-1112  iconic   155.7   43.4  324.6     40.4%   42.1%
-CLE-0809  iconic   155.3     46  310.6     42.2%   40.6%
-LAL-0102  champ    155.1   31.3  317.3     42.3%   41.6%
-DET-0304  champ    152.6   35.9  309.1     41.6%   38.2%
-MEM-1213  iconic   151.7   27.9  291.1     45.9%   35.5%
-SAS-9899  champ    149.9   48.5  276.4     43.9%   33.8%
-BOS-0708  champ    148.6   27.1  294.9     42.6%   31.2%
-SAS-0405  champ    148.1     34  296.7     40.6%   31.5%
-GSW-1415  champ    148.1   43.1  307.5     43.9%     30%
-MIA-0506  champ    147.4   36.8  300.6     44.3%   29.7%
-SAS-0203  champ      141   18.2  283.3     42.9%   21.9%
-DAL-1011  champ    140.3   41.2  280.4       47%   18.2%
-SAS-0607  champ    132.6   45.5  267.6     38.9%   10.4%
-SAS-1314  champ    128.9   27.1  263.7     34.8%    9.3%
+30-day schedule: cooldown PASS  | tough-days 0/30

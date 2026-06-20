@@ -5,7 +5,7 @@
     "lo": 132,
     "hi": 159.6
   },
-  "K": 8,
+  "K": 15,
   "cooldown": 5,
   "bankBosses": 38,
   "a_split": {
@@ -22,6 +22,7 @@
       "display": "73-9",
       "dailyHitPct": 35.4,
       "raidHitPct": 55.2,
+      "toughDayPct": 0.1,
       "both": true
     },
     {
@@ -29,6 +30,7 @@
       "display": "The Superteam",
       "dailyHitPct": 29.6,
       "raidHitPct": 61.6,
+      "toughDayPct": 0.5,
       "both": true
     },
     {
@@ -36,6 +38,7 @@
       "display": "Seven Seconds or Less",
       "dailyHitPct": 25.5,
       "raidHitPct": 67.4,
+      "toughDayPct": 1.2,
       "both": true
     },
     {
@@ -43,6 +46,7 @@
       "display": "The Greatest Show on Court",
       "dailyHitPct": 30.2,
       "raidHitPct": 62.6,
+      "toughDayPct": 0.5,
       "both": true
     },
     {
@@ -50,6 +54,7 @@
       "display": "Iverson's Finals",
       "dailyHitPct": 31.5,
       "raidHitPct": 56.6,
+      "toughDayPct": 0.3,
       "both": true
     },
     {
@@ -57,6 +62,7 @@
       "display": "The Young Thunder",
       "dailyHitPct": 40.4,
       "raidHitPct": 42.1,
+      "toughDayPct": 0,
       "both": true
     },
     {
@@ -64,6 +70,7 @@
       "display": "LeBron's 66",
       "dailyHitPct": 42.2,
       "raidHitPct": 40.6,
+      "toughDayPct": 0,
       "both": true
     },
     {
@@ -71,6 +78,7 @@
       "display": "Switch Everything",
       "dailyHitPct": 39.9,
       "raidHitPct": 43,
+      "toughDayPct": 0,
       "both": true
     },
     {
@@ -78,6 +86,7 @@
       "display": "Grit-n-Grind",
       "dailyHitPct": 45.9,
       "raidHitPct": 35.5,
+      "toughDayPct": 0,
       "both": true
     }
   ],
@@ -87,6 +96,7 @@
       "display": "The Last Dance",
       "dailyHitPct": 34.1,
       "raidHitPct": 54.7,
+      "toughDayPct": 0.2,
       "both": true
     },
     {
@@ -94,6 +104,7 @@
       "display": "Shaq & Kobe, Ring Two",
       "dailyHitPct": 32.5,
       "raidHitPct": 57.4,
+      "toughDayPct": 0.3,
       "both": true
     },
     {
@@ -101,6 +112,7 @@
       "display": "The Super-Team",
       "dailyHitPct": 18.6,
       "raidHitPct": 79.8,
+      "toughDayPct": 4.6,
       "both": true
     },
     {
@@ -108,6 +120,7 @@
       "display": "Jokic's Crown",
       "dailyHitPct": 21.6,
       "raidHitPct": 74.2,
+      "toughDayPct": 2.6,
       "both": true
     },
     {
@@ -115,6 +128,7 @@
       "display": "Banner 18",
       "dailyHitPct": 17.1,
       "raidHitPct": 80.5,
+      "toughDayPct": 6,
       "both": true
     },
     {
@@ -122,14 +136,56 @@
       "display": "73-9",
       "dailyHitPct": 35.4,
       "raidHitPct": 55.2,
+      "toughDayPct": 0.1,
       "both": true
     }
   ],
-  "c_toughDay": [],
+  "c_toughDay": {
+    "structuralFloorAboveBand": [],
+    "worstKMissRarity": [
+      {
+        "key": "BOS-2324",
+        "display": "Banner 18",
+        "dailyHitPct": 17.1,
+        "toughDayPct": 6
+      },
+      {
+        "key": "GSW-1617",
+        "display": "The Super-Team",
+        "dailyHitPct": 18.6,
+        "toughDayPct": 4.6
+      },
+      {
+        "key": "DEN-2223",
+        "display": "Jokic's Crown",
+        "dailyHitPct": 21.6,
+        "toughDayPct": 2.6
+      },
+      {
+        "key": "MIL-2021",
+        "display": "Giannis",
+        "dailyHitPct": 23,
+        "toughDayPct": 2
+      },
+      {
+        "key": "GSW-1718",
+        "display": "The KD Repeat",
+        "dailyHitPct": 25.4,
+        "toughDayPct": 1.2
+      }
+    ],
+    "scheduled30dToughDays": 0
+  },
   "d_dailyWinRate": {
-    "note": "player win-rate = frac of strong-capped player lineups exceeding the boss daily roll. Rough — for later band tuning, NOT a target.",
-    "oneRoll_meanWinPct": 30.1,
-    "fewRoll7d_meanWinPct": 26.2
+    "note": "per-day win = 1−(1−p)^N over the 1-hour replay window (multi-attempt, unlimited within the hour). p = P(one strong player lineup > boss daily roll). For band tuning, not a target.",
+    "attemptModel": "1-hour replay window (api/challenge/[id]/attempt.ts ONE_HOUR_MS; is_window_open) — multi-attempt, not a fixed count",
+    "perDayWinPct": {
+      "N1": 25.5,
+      "N3": 57.4,
+      "N5": 74.9,
+      "N10": 92.5,
+      "N20": 99.1
+    }
   },
   "determinism": {
     "boss": "CHI-9697",
@@ -137,148 +193,249 @@
     "c": 132.4,
     "pass": true
   },
-  "schedule14d": {
+  "schedule30d": {
     "cooldownViolations": [],
+    "toughDays": 0,
     "rows": [
       {
         "day": "2026-06-22",
         "key": "GSW-1415",
-        "display": "Splash Brothers, Ring One",
         "era_id": "GSW_SPLASH",
         "total": 138,
         "status": "in_band",
-        "attempts": 2,
-        "toughDayFlag": false
+        "attempts": 2
       },
       {
         "day": "2026-06-23",
         "key": "LAL-1920",
-        "display": "The Bubble Title",
         "era_id": "LAKERS_BUBBLE",
         "total": 145,
         "status": "in_band",
-        "attempts": 1,
-        "toughDayFlag": false
+        "attempts": 1
       },
       {
         "day": "2026-06-24",
         "key": "LAL-0102",
-        "display": "The Three-Peat",
         "era_id": "LAKERS_SHAQKOBE",
         "total": 133.5,
         "status": "in_band",
-        "attempts": 2,
-        "toughDayFlag": false
+        "attempts": 2
       },
       {
         "day": "2026-06-25",
         "key": "GSW-2122",
-        "display": "The Dynasty Returns",
         "era_id": "GSW_RETURN",
         "total": 145.3,
         "status": "in_band",
-        "attempts": 1,
-        "toughDayFlag": false
+        "attempts": 1
       },
       {
         "day": "2026-06-26",
         "key": "TOR-1819",
-        "display": "We The North",
         "era_id": "RAPTORS_KAWHI",
         "total": 138,
         "status": "in_band",
-        "attempts": 1,
-        "toughDayFlag": false
+        "attempts": 1
       },
       {
         "day": "2026-06-27",
         "key": "MIA-1112",
-        "display": "The Heatles, Ring One",
         "era_id": "HEATLES",
         "total": 152,
         "status": "in_band",
-        "attempts": 1,
-        "toughDayFlag": false
+        "attempts": 1
       },
       {
         "day": "2026-06-28",
         "key": "SAS-0203",
-        "display": "Duncan's Second",
         "era_id": "SPURS_DUNCAN",
         "total": 155.9,
         "status": "in_band",
-        "attempts": 3,
-        "toughDayFlag": false
+        "attempts": 3
       },
       {
         "day": "2026-06-29",
         "key": "BOS-0708",
-        "display": "The New Big Three",
         "era_id": "CELTICS_BIG3",
         "total": 144.5,
         "status": "in_band",
-        "attempts": 1,
-        "toughDayFlag": false
+        "attempts": 1
       },
       {
         "day": "2026-06-30",
         "key": "LAL-0910",
-        "display": "The Repeat",
         "era_id": "LAKERS_KOBEGASOL",
         "total": 143.6,
         "status": "in_band",
-        "attempts": 5,
-        "toughDayFlag": false
+        "attempts": 5
       },
       {
         "day": "2026-07-01",
         "key": "MIL-2021",
-        "display": "Giannis",
         "era_id": "BUCKS_GIANNIS",
         "total": 145.8,
         "status": "in_band",
-        "attempts": 4,
-        "toughDayFlag": false
+        "attempts": 4
       },
       {
         "day": "2026-07-02",
         "key": "DAL-1011",
-        "display": "Dirk's Title",
         "era_id": "MAVS_DIRK",
         "total": 139.2,
         "status": "in_band",
-        "attempts": 3,
-        "toughDayFlag": false
+        "attempts": 3
       },
       {
         "day": "2026-07-03",
         "key": "GSW-1617",
-        "display": "The Super-Team",
         "era_id": "GSW_KD",
-        "total": 172.4,
-        "status": "tough_day",
-        "attempts": 8,
-        "toughDayFlag": true
+        "total": 153.5,
+        "status": "in_band",
+        "attempts": 10
       },
       {
         "day": "2026-07-04",
         "key": "BOS-2324",
-        "display": "Banner 18",
         "era_id": "CELTICS_BANNER18",
         "total": 157.9,
         "status": "in_band",
-        "attempts": 2,
-        "toughDayFlag": false
+        "attempts": 2
       },
       {
         "day": "2026-07-05",
         "key": "SAS-9899",
-        "display": "Twin Towers",
         "era_id": "SPURS_TWINTOWERS",
         "total": 151.9,
         "status": "in_band",
-        "attempts": 2,
-        "toughDayFlag": false
+        "attempts": 2
+      },
+      {
+        "day": "2026-07-06",
+        "key": "LAL-9900",
+        "era_id": "LAKERS_SHAQKOBE",
+        "total": 149,
+        "status": "in_band",
+        "attempts": 4
+      },
+      {
+        "day": "2026-07-07",
+        "key": "DEN-2223",
+        "era_id": "NUGGETS_JOKIC",
+        "total": 146.9,
+        "status": "in_band",
+        "attempts": 1
+      },
+      {
+        "day": "2026-07-08",
+        "key": "DET-0304",
+        "era_id": "PISTONS_WORK",
+        "total": 145,
+        "status": "in_band",
+        "attempts": 5
+      },
+      {
+        "day": "2026-07-09",
+        "key": "GSW-1516",
+        "era_id": "GSW_73",
+        "total": 153.7,
+        "status": "in_band",
+        "attempts": 1
+      },
+      {
+        "day": "2026-07-10",
+        "key": "CHI-9798",
+        "era_id": "BULLS_2PEAT",
+        "total": 153.9,
+        "status": "in_band",
+        "attempts": 3
+      },
+      {
+        "day": "2026-07-11",
+        "key": "SAS-1314",
+        "era_id": "SPURS_BEAUTIFUL",
+        "total": 149.9,
+        "status": "in_band",
+        "attempts": 1
+      },
+      {
+        "day": "2026-07-12",
+        "key": "MIL-2021",
+        "era_id": "BUCKS_GIANNIS",
+        "total": 133.7,
+        "status": "in_band",
+        "attempts": 3
+      },
+      {
+        "day": "2026-07-13",
+        "key": "CLE-1516",
+        "era_id": "CAVS_LBJ",
+        "total": 141.2,
+        "status": "in_band",
+        "attempts": 2
+      },
+      {
+        "day": "2026-07-14",
+        "key": "MIA-1112",
+        "era_id": "HEATLES",
+        "total": 155.3,
+        "status": "in_band",
+        "attempts": 2
+      },
+      {
+        "day": "2026-07-15",
+        "key": "OKC-2425",
+        "era_id": "THUNDER_SGA",
+        "total": 132.6,
+        "status": "in_band",
+        "attempts": 7
+      },
+      {
+        "day": "2026-07-16",
+        "key": "TOR-1819",
+        "era_id": "RAPTORS_KAWHI",
+        "total": 158.6,
+        "status": "in_band",
+        "attempts": 2
+      },
+      {
+        "day": "2026-07-17",
+        "key": "LAL-0910",
+        "era_id": "LAKERS_KOBEGASOL",
+        "total": 149.2,
+        "status": "in_band",
+        "attempts": 5
+      },
+      {
+        "day": "2026-07-18",
+        "key": "DEN-2223",
+        "era_id": "NUGGETS_JOKIC",
+        "total": 148.4,
+        "status": "in_band",
+        "attempts": 2
+      },
+      {
+        "day": "2026-07-19",
+        "key": "GSW-2122",
+        "era_id": "GSW_RETURN",
+        "total": 154.8,
+        "status": "in_band",
+        "attempts": 1
+      },
+      {
+        "day": "2026-07-20",
+        "key": "MIA-1213",
+        "era_id": "HEATLES",
+        "total": 159.1,
+        "status": "in_band",
+        "attempts": 1
+      },
+      {
+        "day": "2026-07-21",
+        "key": "BOS-0708",
+        "era_id": "CELTICS_BIG3",
+        "total": 135.8,
+        "status": "in_band",
+        "attempts": 2
       }
     ]
   },
@@ -296,10 +453,11 @@
       "raidCapable": true,
       "dailyHitPct": 29.7,
       "raidHitPct": 65.9,
+      "toughDayPct": 0.5,
       "min": 97.5,
       "max": 262.7,
       "mean": 170.4,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -317,10 +475,11 @@
       "raidCapable": true,
       "dailyHitPct": 34.1,
       "raidHitPct": 54.7,
+      "toughDayPct": 0.2,
       "min": 86.6,
       "max": 249.3,
       "mean": 162.1,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -338,10 +497,11 @@
       "raidCapable": true,
       "dailyHitPct": 43.9,
       "raidHitPct": 33.8,
+      "toughDayPct": 0,
       "min": 77.7,
       "max": 243,
       "mean": 150.1,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": "lockout (50g)"
@@ -359,10 +519,11 @@
       "raidCapable": true,
       "dailyHitPct": 36.5,
       "raidHitPct": 53.4,
+      "toughDayPct": 0.1,
       "min": 81.7,
       "max": 250,
       "mean": 161.5,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -380,10 +541,11 @@
       "raidCapable": true,
       "dailyHitPct": 32.5,
       "raidHitPct": 57.4,
+      "toughDayPct": 0.3,
       "min": 81.5,
       "max": 262.1,
       "mean": 164.6,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -401,10 +563,11 @@
       "raidCapable": true,
       "dailyHitPct": 42.3,
       "raidHitPct": 41.6,
+      "toughDayPct": 0,
       "min": 56.4,
       "max": 248,
       "mean": 155.4,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -422,10 +585,11 @@
       "raidCapable": true,
       "dailyHitPct": 42.9,
       "raidHitPct": 21.9,
+      "toughDayPct": 0,
       "min": 61.4,
       "max": 243,
       "mean": 141.1,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -443,10 +607,11 @@
       "raidCapable": true,
       "dailyHitPct": 41.6,
       "raidHitPct": 38.2,
+      "toughDayPct": 0,
       "min": 71.3,
       "max": 245.1,
       "mean": 152.5,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": true,
       "complete5": true,
       "thin": null
@@ -464,10 +629,11 @@
       "raidCapable": true,
       "dailyHitPct": 40.6,
       "raidHitPct": 31.5,
+      "toughDayPct": 0,
       "min": 72,
       "max": 241.3,
       "mean": 147.9,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": true,
       "complete5": true,
       "thin": null
@@ -485,10 +651,11 @@
       "raidCapable": true,
       "dailyHitPct": 44.3,
       "raidHitPct": 29.7,
+      "toughDayPct": 0,
       "min": 50.8,
       "max": 240.1,
       "mean": 147.6,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -506,10 +673,11 @@
       "raidCapable": true,
       "dailyHitPct": 38.9,
       "raidHitPct": 10.4,
+      "toughDayPct": 0.1,
       "min": 66.7,
       "max": 210.7,
       "mean": 132.7,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -527,10 +695,11 @@
       "raidCapable": true,
       "dailyHitPct": 42.6,
       "raidHitPct": 31.2,
+      "toughDayPct": 0,
       "min": 71.7,
       "max": 234.9,
       "mean": 148,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": true,
       "complete5": true,
       "thin": null
@@ -548,10 +717,11 @@
       "raidCapable": true,
       "dailyHitPct": 35.6,
       "raidHitPct": 53.7,
+      "toughDayPct": 0.1,
       "min": 80.7,
       "max": 277.6,
       "mean": 163.3,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -569,10 +739,11 @@
       "raidCapable": true,
       "dailyHitPct": 27,
       "raidHitPct": 64.7,
+      "toughDayPct": 0.9,
       "min": 82.9,
       "max": 274.2,
       "mean": 170.1,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -590,10 +761,11 @@
       "raidCapable": true,
       "dailyHitPct": 47,
       "raidHitPct": 18.2,
+      "toughDayPct": 0,
       "min": 61.1,
       "max": 245.1,
       "mean": 140.6,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -611,10 +783,11 @@
       "raidCapable": true,
       "dailyHitPct": 39.2,
       "raidHitPct": 48.2,
+      "toughDayPct": 0.1,
       "min": 87.2,
       "max": 250.8,
       "mean": 159,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": "lockout (66g)"
@@ -632,10 +805,11 @@
       "raidCapable": true,
       "dailyHitPct": 40.7,
       "raidHitPct": 46.4,
+      "toughDayPct": 0,
       "min": 92.4,
       "max": 238,
       "mean": 158.5,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -653,10 +827,11 @@
       "raidCapable": true,
       "dailyHitPct": 34.8,
       "raidHitPct": 9.3,
+      "toughDayPct": 0.2,
       "min": 65,
       "max": 203.7,
       "mean": 129.4,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -674,10 +849,11 @@
       "raidCapable": true,
       "dailyHitPct": 43.9,
       "raidHitPct": 30,
+      "toughDayPct": 0,
       "min": 79.5,
       "max": 235.5,
       "mean": 147.9,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -695,10 +871,11 @@
       "raidCapable": true,
       "dailyHitPct": 38.8,
       "raidHitPct": 46,
+      "toughDayPct": 0.1,
       "min": 83,
       "max": 244.6,
       "mean": 157.2,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -716,10 +893,11 @@
       "raidCapable": true,
       "dailyHitPct": 18.6,
       "raidHitPct": 79.8,
+      "toughDayPct": 4.6,
       "min": 102,
       "max": 286.2,
       "mean": 180.8,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -737,10 +915,11 @@
       "raidCapable": true,
       "dailyHitPct": 25.4,
       "raidHitPct": 69.4,
+      "toughDayPct": 1.2,
       "min": 80.4,
       "max": 272,
       "mean": 174.4,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -758,10 +937,11 @@
       "raidCapable": true,
       "dailyHitPct": 32.3,
       "raidHitPct": 59.6,
+      "toughDayPct": 0.3,
       "min": 91.9,
       "max": 259.7,
       "mean": 167,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": true,
       "complete5": true,
       "thin": null
@@ -779,10 +959,11 @@
       "raidCapable": true,
       "dailyHitPct": 39.6,
       "raidHitPct": 46.1,
+      "toughDayPct": 0.1,
       "min": 78.9,
       "max": 263,
       "mean": 158.8,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": "bubble/suspended"
@@ -800,10 +981,11 @@
       "raidCapable": true,
       "dailyHitPct": 23,
       "raidHitPct": 72.4,
+      "toughDayPct": 2,
       "min": 91.8,
       "max": 275.3,
       "mean": 176,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": "compressed (72g)"
@@ -821,10 +1003,11 @@
       "raidCapable": true,
       "dailyHitPct": 37.5,
       "raidHitPct": 49,
+      "toughDayPct": 0.1,
       "min": 68.6,
       "max": 264,
       "mean": 159.9,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -842,10 +1025,11 @@
       "raidCapable": true,
       "dailyHitPct": 21.6,
       "raidHitPct": 74.2,
+      "toughDayPct": 2.6,
       "min": 92.8,
       "max": 282.1,
       "mean": 177.9,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -863,10 +1047,11 @@
       "raidCapable": true,
       "dailyHitPct": 17.1,
       "raidHitPct": 80.5,
+      "toughDayPct": 6,
       "min": 77.6,
       "max": 289.2,
       "mean": 182.1,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -884,10 +1069,11 @@
       "raidCapable": true,
       "dailyHitPct": 30.5,
       "raidHitPct": 63.2,
+      "toughDayPct": 0.4,
       "min": 93.7,
       "max": 282.7,
       "mean": 169.5,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -905,10 +1091,11 @@
       "raidCapable": true,
       "dailyHitPct": 35.4,
       "raidHitPct": 55.2,
+      "toughDayPct": 0.1,
       "min": 85.2,
       "max": 265.4,
       "mean": 165.3,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -926,10 +1113,11 @@
       "raidCapable": true,
       "dailyHitPct": 29.6,
       "raidHitPct": 61.6,
+      "toughDayPct": 0.5,
       "min": 85.3,
       "max": 262.9,
       "mean": 168.9,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -947,10 +1135,11 @@
       "raidCapable": true,
       "dailyHitPct": 25.5,
       "raidHitPct": 67.4,
+      "toughDayPct": 1.2,
       "min": 76.1,
       "max": 283.3,
       "mean": 171.7,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -968,10 +1157,11 @@
       "raidCapable": true,
       "dailyHitPct": 30.2,
       "raidHitPct": 62.6,
+      "toughDayPct": 0.5,
       "min": 75.1,
       "max": 251.5,
       "mean": 167.3,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -989,10 +1179,11 @@
       "raidCapable": true,
       "dailyHitPct": 31.5,
       "raidHitPct": 56.6,
+      "toughDayPct": 0.3,
       "min": 79.4,
       "max": 265.2,
       "mean": 164.6,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": true,
       "complete5": true,
       "thin": null
@@ -1010,10 +1201,11 @@
       "raidCapable": true,
       "dailyHitPct": 40.4,
       "raidHitPct": 42.1,
+      "toughDayPct": 0,
       "min": 82.4,
       "max": 251.3,
       "mean": 155.6,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": "lockout (66g)"
@@ -1031,10 +1223,11 @@
       "raidCapable": true,
       "dailyHitPct": 42.2,
       "raidHitPct": 40.6,
+      "toughDayPct": 0,
       "min": 87.5,
       "max": 261.2,
       "mean": 155.2,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -1052,10 +1245,11 @@
       "raidCapable": true,
       "dailyHitPct": 39.9,
       "raidHitPct": 43,
+      "toughDayPct": 0,
       "min": 81.4,
       "max": 274.8,
       "mean": 156.7,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": false,
       "complete5": true,
       "thin": null
@@ -1073,10 +1267,11 @@
       "raidCapable": true,
       "dailyHitPct": 45.9,
       "raidHitPct": 35.5,
+      "toughDayPct": 0,
       "min": 74.6,
       "max": 246.4,
       "mean": 151.4,
-      "toughDay": false,
+      "toughDayStructural": false,
       "traded": true,
       "complete5": true,
       "thin": null
