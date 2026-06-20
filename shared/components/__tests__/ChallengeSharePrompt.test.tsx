@@ -9,8 +9,9 @@
  *   - U6: signed-in tap opens NameCaptureModal (unchanged).
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { ChallengeSharePrompt } from "../ChallengeSharePrompt";
+import { render, screen, act } from "@testing-library/react";
+import { createRef } from "react";
+import { ChallengeSharePrompt, type ChallengeSendHandle } from "../ChallengeSharePrompt";
 import { AuthContext } from "@shared/auth/AuthProvider";
 import type { GeneratedCard } from "@shared/types/index";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
@@ -71,12 +72,17 @@ beforeEach(() => {
 // pill, no in-prompt narrative copy. Story-narrative framing is deferred to the
 // commentary thread. The send-entry flow below still validates the capsule's tap.)
 
-describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", () => {
-  it("anonymous user taps Challenge a Friend → unified auth surface appears (Google + email; name field hidden pre-auth)", () => {
+// The send entry moved off a visible in-prompt button onto the imperative
+// startSend() handle (GameBar's "Challenge" button calls it via a ref). These
+// tests drive that handle directly — the auth/name-modal routing it triggers is
+// unchanged.
+describe("U1/U2/U4 — anonymous startSend opens RegisterModal in challenge context", () => {
+  it("anonymous startSend → unified auth surface appears (Google + email; name field hidden pre-auth)", () => {
+    const ref = createRef<ChallengeSendHandle>();
     render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
+      <ChallengeSharePrompt ref={ref} {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
-    fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
+    act(() => { ref.current?.startSend(); });
     // RegisterModal challenge-context pre-auth state per U4-a (2026-05-28
     // amendment): Google button, email/password inputs, NO name field.
     expect(screen.getByRole("button", { name: /continue with google/i })).toBeTruthy();
@@ -85,10 +91,11 @@ describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", 
   });
 
   it("does NOT open the legacy NameCaptureModal anon mode (gone post-unification)", () => {
+    const ref = createRef<ChallengeSendHandle>();
     render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
+      <ChallengeSharePrompt ref={ref} {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
-    fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
+    act(() => { ref.current?.startSend(); });
     // The babd079 anon-mode shape was a "Sign in to send" heading with
     // Sign up + Sign in buttons and no Google button. Verify those
     // anti-patterns are absent: there should be only ONE Sign up-related
@@ -99,12 +106,13 @@ describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", 
   });
 });
 
-describe("U6 — signed-in tap opens NameCaptureModal (unchanged)", () => {
-  it("signed-in user taps Challenge a Friend → modal opens in mode='fresh' (input visible, no Google button)", () => {
+describe("U6 — signed-in startSend opens NameCaptureModal (unchanged)", () => {
+  it("signed-in startSend → modal opens in mode='fresh' (input visible, no Google button)", () => {
+    const ref = createRef<ChallengeSendHandle>();
     render(withAuth(false, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
+      <ChallengeSharePrompt ref={ref} {...baseProps} triggerResult={makeTrigger("choke")} />
     )));
-    fireEvent.click(screen.getByRole("button", { name: /challenge a friend/i }));
+    act(() => { ref.current?.startSend(); });
     // NameCaptureModal fresh mode: input visible, no Google button (that
     // belongs to RegisterModal, which signed-in users skip).
     expect(screen.getByRole("textbox")).toBeTruthy();

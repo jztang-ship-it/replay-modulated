@@ -1,5 +1,5 @@
 // shared/components/ChallengeSharePrompt.tsx
-import { useContext, useMemo, useState } from "react";
+import { useContext, useMemo, useState, forwardRef, useImperativeHandle } from "react";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
@@ -70,11 +70,18 @@ interface Props {
   onConsumed?: () => void;
 }
 
-export function ChallengeSharePrompt({
+/** Imperative handle exposed to GameView so the GameBar "Challenge" button can
+ *  start a send. startSend() === the internal onCtaTap (the send entry) — the
+ *  send machinery is unchanged; this just lets an external button trigger it
+ *  while this component stays the mounted, invisible owner of the send flow +
+ *  its modals (name/auth/delivery). */
+export type ChallengeSendHandle = { startSend: () => void };
+
+export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
   badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
   rivalryTargetName, handId, onDismiss, onConsumed,
-}: Props) {
+}: Props, ref) {
   // Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
   // 2caa7a3). Anonymous users see the share surface (R1) but tapping
   // Challenge a Friend routes directly to RegisterModal in challenge
@@ -437,97 +444,28 @@ export function ChallengeSharePrompt({
     />
   );
 
-  // Default trigger: render a small corner icon only — discoverable for
-  // users who want to share a mid hand, but not pushed on them. Named
-  // triggers (rare_pull / big_score / miss / choke) keep the
-  // prominent share strip.
-  if (!isSpecial) {
-    return (
-      <>
-        {nameModal}
-        {authModal}
-        {sentModal && (
-          <ChallengeSentConfirmation
-            shareUrl={sentModal.shareUrl}
-            sport={sport}
-            shareHeadline={sentModal.shareHeadline}
-            onDismiss={() => { setSentModal(null); onConsumed?.(); }}
-          />
-        )}
-        <button
-          onClick={onCtaTap}
-          disabled={isCreating || isCraftingHeadline}
-          aria-label="Challenge a friend with this hand"
-          style={{
-            position: "fixed",
-            right: 14,
-            bottom: "calc(14px + env(safe-area-inset-bottom, 0px))",
-            zIndex: 9000,
-            width: 40, height: 40, borderRadius: 20,
-            background: "rgba(255,177,74,0.14)",
-            border: "1px solid rgba(255,177,74,0.4)",
-            color: "#FFB14A", fontSize: 18, fontWeight: 900,
-            cursor: (isCreating || isCraftingHeadline) ? "default" : "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            lineHeight: 1,
-          }}
-        >
-          {(isCraftingHeadline || isCreating) ? "…" : "↗"}
-        </button>
-      </>
-    );
-  }
+  // Invisible send-owner: this component renders ONLY its modals (name / auth /
+  // delivery-confirmation). The visible affordance is GameBar's "Challenge"
+  // button, which triggers the send flow through the startSend() handle below
+  // (= onCtaTap). The former capsule/strip presentation is gone — but ALL send
+  // machinery (onCtaTap → createChallenge → setSentModal → ChallengeSentConfirmation
+  // → onConsumed) is byte-identical; only the tap surface moved. isSpecial /
+  // corner-icon variant removed: post-trigger-cuts the only mount (GameView) is
+  // always a named/rivalry trigger.
+  useImperativeHandle(ref, () => ({ startSend: () => onCtaTap() }));
 
   return (
     <>
-    {nameModal}
-    {authModal}
-    {sentModal && (
-      <ChallengeSentConfirmation
-        shareUrl={sentModal.shareUrl}
-        sport={sport}
-        shareHeadline={sentModal.shareHeadline}
-        onDismiss={() => { setSentModal(null); onConsumed?.(); }}
-      />
-    )}
-    {/* Inline SEND capsule — a present-but-not-screaming pill in the result/
-        commentary region (GameView mounts this within the TierGauge column).
-        Replaces the former fixed bottom-sheet. Declining = tapping REPLAY (which
-        clears the trigger), so the capsule has no ✕. The story-narrative framing
-        lives in the commentary line above (paused-voice — unchanged here; the
-        deferred commentary thread owns the text-weave). All send machinery
-        (onCtaTap → createChallenge → setSentModal → ChallengeSentConfirmation →
-        onConsumed) is byte-identical — only what the user taps changed. */}
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "8px 12px" }}>
-      {error && (
-        <div style={{ fontSize: 12, color: "#EF4444" }}>
-          Failed to create challenge — make sure you're signed in.
-        </div>
+      {nameModal}
+      {authModal}
+      {sentModal && (
+        <ChallengeSentConfirmation
+          shareUrl={sentModal.shareUrl}
+          sport={sport}
+          shareHeadline={sentModal.shareHeadline}
+          onDismiss={() => { setSentModal(null); onConsumed?.(); }}
+        />
       )}
-      <button
-        onClick={onCtaTap}
-        disabled={isCreating || isCraftingHeadline}
-        data-h2h-send-capsule="1"
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          padding: "10px 20px", borderRadius: 999,
-          background: (isCreating || isCraftingHeadline) ? "rgba(255,177,74,0.35)" : "#FFB14A",
-          border: "none", color: "#070A12",
-          fontSize: 14, fontWeight: 900, letterSpacing: 0.5,
-          cursor: (isCreating || isCraftingHeadline) ? "default" : "pointer",
-          boxShadow: "0 4px 14px rgba(0,0,0,0.30)",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {isCraftingHeadline
-          ? "Crafting headline…"
-          : isCreating
-            ? "Creating..."
-            : isRivalryBack
-              ? `↩ Send to ${rivalryTargetName ?? "your friend"}`
-              : "🏆 Challenge a friend"}
-      </button>
-    </div>
     </>
   );
-}
+});

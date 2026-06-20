@@ -575,6 +575,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // in docs/open-followups.md as "Inferred dismissal cascade on panel
   // TeamStamp / missTier surfaces".
   const topSlotTriggerRef = useRef<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
+  // Imperative handle to the invisible sender ChallengeSharePrompt, so GameBar's
+  // "Challenge" button can start a send (challengeSendRef.current?.startSend()).
+  const challengeSendRef = useRef<import("@shared/components/ChallengeSharePrompt").ChallengeSendHandle | null>(null);
   const [showChallengeComparison, setShowChallengeComparison] = useState(false);
   // Sheet visibility split into "mounted" (showChallengeComparison) vs
   // "rendered on-screen" (!comparisonCollapsed). Dismiss gestures toggle
@@ -2896,48 +2899,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 setFtueCommentaryOverride(null);
               }}
             />
-            {/* Inline SEND capsule — challenge affordance in the result/commentary
-                region, beneath the TierGauge commentary (postRevealCopy). Relocated
-                here from the former fixed bottom-sheet. Sender mode only
-                (!challengeCtx — recipient mode has its own h2h slot owners). REPLAY
-                stays permanent in GameBar; declining = tapping REPLAY (clears the
-                trigger via the IDLE transition). Send machinery + delivery modal
-                (ChallengeSentConfirmation, fixed/inset:0 overlay) unchanged. */}
-            {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
-              <Suspense fallback={null}>
-                <ChallengeSharePrompt
-                  sport={sportKey}
-                  season={(rosterRef.current[0] as any)?.season ?? ""}
-                  totalFp={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
-                  winTier={winTier ?? "BUST"}
-                  roster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
-                  initialRoster={initialRosterRef.current}
-                  badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
-                  winTiersMap={adapter.winTiersMap}
-                  serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
-                  triggerResult={challengeTrigger}
-                  rivalryTargetName={challengeBackCtx?.challengerName ?? null}
-                  shareHeadline={computedShareHeadline}
-                  // handId — reuse the audit ID logHandToDb just persisted to
-                  // hand_log.hand_id so the resulting shared_challenges row's
-                  // hand_id matches (H2H sender-hand endpoint joins on it).
-                  handId={currentHandIdRef.current ?? undefined}
-                  onDismiss={() => {
-                    setChallengeTrigger(null);
-                    if (challengeBackCtx) clearChallengeBackCtx?.();
-                  }}
-                  // Terminal SEND: the post-send delivery modal's only dismiss
-                  // route (its ✕) clears the trigger so the capsule unmounts and
-                  // REPLAY (permanent) remains. Cleared AFTER send success only —
-                  // createChallenge's `if (!cid) return` keeps a failed write from
-                  // reaching the modal or this clear.
-                  onConsumed={() => {
-                    setChallengeTrigger(null);
-                    if (challengeBackCtx) clearChallengeBackCtx?.();
-                  }}
-                />
-              </Suspense>
-            )}
           </div>
 
           {/* Multiplier host */}
@@ -3247,8 +3208,45 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         );
       })()}
 
-      {/* (Sender ChallengeSharePrompt relocated into the TierGauge column above
-          as the inline SEND capsule — see "Inline SEND capsule" there.) */}
+      {/* Sender ChallengeSharePrompt — mounted as an INVISIBLE send-owner: it
+          renders only its modals (name/auth/delivery). The visible affordance is
+          GameBar's "Challenge" button, which calls challengeSendRef.startSend()
+          (= the prompt's onCtaTap). Sender mode only (!challengeCtx — recipient
+          mode has its own h2h slot owners). Mount location is presentation-neutral
+          (the component renders nothing in-flow; its modals are fixed/inset:0).
+          Send machinery byte-identical; onConsumed/onDismiss clear the trigger. */}
+      {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
+        <Suspense fallback={null}>
+          <ChallengeSharePrompt
+            ref={challengeSendRef}
+            sport={sportKey}
+            season={(rosterRef.current[0] as any)?.season ?? ""}
+            totalFp={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+            winTier={winTier ?? "BUST"}
+            roster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
+            initialRoster={initialRosterRef.current}
+            badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
+            winTiersMap={adapter.winTiersMap}
+            serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
+            triggerResult={challengeTrigger}
+            rivalryTargetName={challengeBackCtx?.challengerName ?? null}
+            shareHeadline={computedShareHeadline}
+            handId={currentHandIdRef.current ?? undefined}
+            onDismiss={() => {
+              setChallengeTrigger(null);
+              if (challengeBackCtx) clearChallengeBackCtx?.();
+            }}
+            // Terminal SEND: the delivery modal's only dismiss route (its ✕)
+            // clears the trigger → the invisible owner unmounts; REPLAY (permanent)
+            // remains. Cleared AFTER send success only — createChallenge's
+            // `if (!cid) return` keeps a failed write from reaching the modal/clear.
+            onConsumed={() => {
+              setChallengeTrigger(null);
+              if (challengeBackCtx) clearChallengeBackCtx?.();
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* ChallengeComparisonScreen — bottom sheet shown at RESULTS when
           the user is playing a received challenge (challengeCtx present).
