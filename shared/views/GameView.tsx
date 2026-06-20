@@ -2711,9 +2711,21 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   // → choke. challengeTrigger.trigger now emits "choke"
                   // (live evaluator post-rename); TeamStampKind union now
                   // accepts "choke" instead of "bad_beat".
+                  // Near-miss stamp rides the gauge's standalone 5% band
+                  // (computeGaugeState + NEAR_MISS_BAND) — the SAME signal the
+                  // post-reveal copy already uses (GameView ~3177) — instead of
+                  // the challenge trigger. This decouples the solo reveal stamp
+                  // from challenge creation so it survives the miss-trigger
+                  // removal. Behavior-neutral: the gauge's isNearMiss has no tier
+                  // floor, so we re-impose the trigger's STARTER+ floor here
+                  // (the miss trigger never fired on ROOKIE/BUST near-misses).
+                  // choke stays on the challenge trigger (not being removed).
+                  const nmSnap = computeGaugeState(displayFp, gaugeThresholds, winTier, NEAR_MISS_BAND);
+                  const isStarterPlusMiss = nmSnap.isNearMiss
+                    && (winTier === "STARTER" || winTier === "ALL_STAR" || winTier === "MVP");
                   const stampKind =
                     challengeTrigger?.trigger === "choke" ? "choke" :
-                    challengeTrigger?.trigger === "miss" ? "miss" :
+                    isStarterPlusMiss ? "miss" :
                     null;
                   return (
                     <>
@@ -2737,7 +2749,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           }}>
                             <TeamStamp
                               kind={stampKind}
-                              missTier={challengeTrigger?.nearMissNextTier}
+                              missTier={stampKind === "miss" ? (nmSnap.nextTier ?? undefined) : undefined}
                               delayMs={200}
                             />
                           </div>
