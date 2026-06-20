@@ -2896,6 +2896,48 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 setFtueCommentaryOverride(null);
               }}
             />
+            {/* Inline SEND capsule — challenge affordance in the result/commentary
+                region, beneath the TierGauge commentary (postRevealCopy). Relocated
+                here from the former fixed bottom-sheet. Sender mode only
+                (!challengeCtx — recipient mode has its own h2h slot owners). REPLAY
+                stays permanent in GameBar; declining = tapping REPLAY (clears the
+                trigger via the IDLE transition). Send machinery + delivery modal
+                (ChallengeSentConfirmation, fixed/inset:0 overlay) unchanged. */}
+            {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
+              <Suspense fallback={null}>
+                <ChallengeSharePrompt
+                  sport={sportKey}
+                  season={(rosterRef.current[0] as any)?.season ?? ""}
+                  totalFp={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
+                  winTier={winTier ?? "BUST"}
+                  roster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
+                  initialRoster={initialRosterRef.current}
+                  badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
+                  winTiersMap={adapter.winTiersMap}
+                  serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
+                  triggerResult={challengeTrigger}
+                  rivalryTargetName={challengeBackCtx?.challengerName ?? null}
+                  shareHeadline={computedShareHeadline}
+                  // handId — reuse the audit ID logHandToDb just persisted to
+                  // hand_log.hand_id so the resulting shared_challenges row's
+                  // hand_id matches (H2H sender-hand endpoint joins on it).
+                  handId={currentHandIdRef.current ?? undefined}
+                  onDismiss={() => {
+                    setChallengeTrigger(null);
+                    if (challengeBackCtx) clearChallengeBackCtx?.();
+                  }}
+                  // Terminal SEND: the post-send delivery modal's only dismiss
+                  // route (its ✕) clears the trigger so the capsule unmounts and
+                  // REPLAY (permanent) remains. Cleared AFTER send success only —
+                  // createChallenge's `if (!cid) return` keeps a failed write from
+                  // reaching the modal or this clear.
+                  onConsumed={() => {
+                    setChallengeTrigger(null);
+                    if (challengeBackCtx) clearChallengeBackCtx?.();
+                  }}
+                />
+              </Suspense>
+            )}
           </div>
 
           {/* Multiplier host */}
@@ -3205,56 +3247,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         );
       })()}
 
-      {/* ChallengeSharePrompt — fires at RESULTS/WIN_CELEBRATION when a
-          NAMED trigger is evaluated (rare_pull / big_score / miss /
-          choke / rivalry_back) and the user is not in FTUE. The
-          `trigger !== "default"` exclusion matches the commentary-
-          override gate at line 1261 — without it, every hand fires a
-          share prompt regardless of whether anything share-worthy
-          happened, including plain STARTER hands with no pulls. Challenge
-          mode guard (challengeCtx) added in Task 10. */}
-      {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && challengeTrigger && (
-        <Suspense fallback={null}>
-          <ChallengeSharePrompt
-            sport={sportKey}
-            season={(rosterRef.current[0] as any)?.season ?? ""}
-            totalFp={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
-            winTier={winTier ?? "BUST"}
-            roster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
-            initialRoster={initialRosterRef.current}
-            badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
-            winTiersMap={adapter.winTiersMap}
-            serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
-            triggerResult={challengeTrigger}
-            rivalryTargetName={challengeBackCtx?.challengerName ?? null}
-            shareHeadline={computedShareHeadline}
-            // handId — reuse the audit ID logHandToDb just persisted to
-            // hand_log.hand_id so the resulting shared_challenges row's
-            // hand_id matches. Required for the H2H sender-hand endpoint
-            // to find the corresponding hand_log row at recipient DEAL
-            // time. Pre-fix challenges minted a fresh UUID here and the
-            // link was broken on every challenge ever created. See
-            // docs/h2h-reveal-arc-design.md "handId threading fix".
-            handId={currentHandIdRef.current ?? undefined}
-            onDismiss={() => {
-              setChallengeTrigger(null);
-              // Rivalry continuation ends when the user dismisses the
-              // back-share prompt — they're returning to normal play
-              // without lingering rivalry context.
-              if (challengeBackCtx) clearChallengeBackCtx?.();
-            }}
-            // One-CTA terminal SEND: when the post-send delivery modal is
-            // dismissed (its only route is the ✕), clear the trigger so the
-            // prompt unmounts and REPLAY returns — no lingering prompt, one exit.
-            // Cleared AFTER send success only (createChallenge's `if (!cid) return`
-            // keeps a failed write from ever reaching the modal or this clear).
-            onConsumed={() => {
-              setChallengeTrigger(null);
-              if (challengeBackCtx) clearChallengeBackCtx?.();
-            }}
-          />
-        </Suspense>
-      )}
+      {/* (Sender ChallengeSharePrompt relocated into the TierGauge column above
+          as the inline SEND capsule — see "Inline SEND capsule" there.) */}
 
       {/* ChallengeComparisonScreen — bottom sheet shown at RESULTS when
           the user is playing a received challenge (challengeCtx present).

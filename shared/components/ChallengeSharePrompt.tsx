@@ -490,78 +490,33 @@ export function ChallengeSharePrompt({
         onDismiss={() => { setSentModal(null); onConsumed?.(); }}
       />
     )}
-    <div style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9000,
-      background: "linear-gradient(0deg, #0D1628 0%, rgba(13,22,40,0.97) 100%)",
-      borderTop: `1px solid rgba(255,177,74,0.3)`,
-      padding: "14px 20px max(24px, env(safe-area-inset-bottom, 20px))",
-    }}>
-      {/* Header row: label + dismiss */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: isSpecial ? "#FFB14A" : "rgba(255,255,255,0.4)", letterSpacing: 0.5 }}>
-          {isRivalryBack
-            ? `↩ CHALLENGE ${(rivalryTargetName ?? "Your Friend").toUpperCase()} BACK`
-            : isSpecial
-              ? (triggerResult.trigger === "miss"
-                  ? missChipLabel(triggerResult.nearMissNextTier)
-                  : TRIGGER_LABEL[triggerResult.trigger] ?? "CHALLENGE")
-              : "CHALLENGE A FRIEND"}
-        </span>
-        {onDismiss && (
-          <button
-            onClick={onDismiss}
-            style={{
-              background: "none", border: "none", padding: "2px 4px",
-              color: "rgba(255,255,255,0.35)", fontSize: 18, cursor: "pointer", lineHeight: 1,
-            }}
-            aria-label="Dismiss"
-          >✕</button>
-        )}
-      </div>
-      {isSpecial && (
-        <div style={{ fontSize: 14, color: "#EAF0FF", marginBottom: 12, lineHeight: 1.4 }}>
-          {isRivalryBack
-            ? `${totalFp.toFixed(1)} FP on a fresh slate. Send it to ${rivalryTargetName ?? "your friend"}.`
-            : headlineText}
-        </div>
-      )}
-      {/* Phase 5b piece 1 R1 (2026-05-28, doc lock 3da7f02): placeholder
-          commentary copy in the bottom-slot region. Hardcoded; phase 7
-          (commentary engine) replaces with engine-driven copy that
-          adapts per-challenge or per-context. Universal — renders for
-          anonymous and signed-in users alike, gated only by isSpecial
-          (the small corner-icon variant has no copy region to host it). */}
-      {isSpecial && (
-        <div
-          data-h2h-share-bottom-slot="placeholder"
-          style={{
-            fontSize: 12,
-            color: "rgba(234,240,255,0.65)",
-            lineHeight: 1.45,
-            marginBottom: 12,
-          }}
-        >
-          the best part of our game is you can compete with your friends to see who can pull the best games
-        </div>
-      )}
+    {/* Inline SEND capsule — a present-but-not-screaming pill in the result/
+        commentary region (GameView mounts this within the TierGauge column).
+        Replaces the former fixed bottom-sheet. Declining = tapping REPLAY (which
+        clears the trigger), so the capsule has no ✕. The story-narrative framing
+        lives in the commentary line above (paused-voice — unchanged here; the
+        deferred commentary thread owns the text-weave). All send machinery
+        (onCtaTap → createChallenge → setSentModal → ChallengeSentConfirmation →
+        onConsumed) is byte-identical — only what the user taps changed. */}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "8px 12px" }}>
       {error && (
-        <div style={{ fontSize: 12, color: "#EF4444", marginBottom: 8 }}>
+        <div style={{ fontSize: 12, color: "#EF4444" }}>
           Failed to create challenge — make sure you're signed in.
         </div>
       )}
       <button
         onClick={onCtaTap}
         disabled={isCreating || isCraftingHeadline}
+        data-h2h-send-capsule="1"
         style={{
-          width: "100%", padding: isSpecial ? "14px" : "10px", borderRadius: 12,
-          background: (isCreating || isCraftingHeadline)
-            ? "rgba(255,177,74,0.3)"
-            : isSpecial ? "#FFB14A" : "rgba(255,177,74,0.12)",
-          border: isSpecial ? "none" : "1px solid rgba(255,177,74,0.4)",
-          color: isSpecial ? "#070A12" : "#FFB14A",
-          fontSize: isSpecial ? 15 : 13, fontWeight: 900,
+          display: "inline-flex", alignItems: "center", gap: 6,
+          padding: "10px 20px", borderRadius: 999,
+          background: (isCreating || isCraftingHeadline) ? "rgba(255,177,74,0.35)" : "#FFB14A",
+          border: "none", color: "#070A12",
+          fontSize: 14, fontWeight: 900, letterSpacing: 0.5,
           cursor: (isCreating || isCraftingHeadline) ? "default" : "pointer",
-          letterSpacing: 0.5,
+          boxShadow: "0 4px 14px rgba(0,0,0,0.30)",
+          whiteSpace: "nowrap",
         }}
       >
         {isCraftingHeadline
@@ -569,8 +524,8 @@ export function ChallengeSharePrompt({
           : isCreating
             ? "Creating..."
             : isRivalryBack
-              ? `Send to ${rivalryTargetName ?? "your friend"}`
-              : "Challenge a Friend"}
+              ? `↩ Send to ${rivalryTargetName ?? "your friend"}`
+              : "🏆 Challenge a friend"}
       </button>
     </div>
     </>

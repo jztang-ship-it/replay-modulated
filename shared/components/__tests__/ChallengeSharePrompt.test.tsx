@@ -61,35 +61,15 @@ const baseProps = {
   shareHeadline: "Test headline",
 };
 
-const PLACEHOLDER_COPY = "the best part of our game is you can compete with your friends to see who can pull the best games";
-
 beforeEach(() => {
   try { window.localStorage.clear(); } catch { /* ignore */ }
   try { window.sessionStorage.clear(); } catch { /* ignore */ }
 });
 
-describe("R1 — placeholder commentary copy", () => {
-  it("appears in the DOM when the prominent strip renders (named trigger)", () => {
-    render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
-    )));
-    expect(screen.getByText(PLACEHOLDER_COPY)).toBeTruthy();
-  });
-
-  it("does not appear on the small corner-icon variant (default trigger)", () => {
-    render(withAuth(true, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("default")} />
-    )));
-    expect(screen.queryByText(PLACEHOLDER_COPY)).toBeNull();
-  });
-
-  it("renders for signed-in users too (universal)", () => {
-    render(withAuth(false, (
-      <ChallengeSharePrompt {...baseProps} triggerResult={makeTrigger("choke")} />
-    )));
-    expect(screen.getByText(PLACEHOLDER_COPY)).toBeTruthy();
-  });
-});
+// (Removed "R1 — placeholder commentary copy" tests: the fixed bottom-sheet's
+// placeholder/headline chrome was replaced by the inline SEND capsule — a bare
+// pill, no in-prompt narrative copy. Story-narrative framing is deferred to the
+// commentary thread. The send-entry flow below still validates the capsule's tap.)
 
 describe("U1/U2/U4 — anonymous tap opens RegisterModal in challenge context", () => {
   it("anonymous user taps Challenge a Friend → unified auth surface appears (Google + email; name field hidden pre-auth)", () => {
