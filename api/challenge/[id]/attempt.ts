@@ -63,13 +63,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { data: challenge, error: fetchErr } = await supabaseAdmin
     .from("shared_challenges")
-    .select("challenge_id, created_by, target_fp, attempt_count, winner_count, best_score, best_user_name")
+    .select("challenge_id, created_by, sender_kind, target_fp, attempt_count, winner_count, best_score, best_user_name")
     .eq("challenge_id", challengeId)
     .single();
 
   if (fetchErr || !challenge) return res.status(404).json({ error: "Challenge not found" });
 
   const isSelfFarm = safeUserId !== null && safeUserId === challenge.created_by;
+  // Phase 2 boss delivery (2026-06-21): a boss is an ownerless challenge. The
+  // owner-addressed user_notifications insert below must be skipped for it —
+  // there's no owner to notify. created_by is null for a boss, so the existing
+  // `&& challenge.created_by` guard already skips it; this explicit marker is
+  // belt-and-suspenders (and covers the hypothetical boss row with a non-null
+  // created_by). Everything else — attempt-row insert, window/self-farm logic,
+  // increment_challenge_counters / best_score — runs UNCHANGED; a boss has no
+  // owner to self-farm against or defend, so those guards pass naturally.
+  const isBossChallenge = challenge.sender_kind === "boss" || challenge.created_by == null;
   const targetFp = Number(challenge.target_fp ?? 0);
   const newScore = Number(score);
   const newIsWinner = Boolean(is_winner);
@@ -261,7 +270,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // counts (first non-self attempt with window-active math applied —
   // isCountedAttempt above). Wrapped in try/catch + caught Supabase
   // error so a missing migration 008 doesn't fail the API call.
-  if (isCountedAttempt && challenge.created_by) {
+  // Boss-safety (Phase 2): skipped for an ownerless boss — no owner to notify.
+  if (isCountedAttempt && challenge.created_by && !isBossChallenge) {
     try {
       const { error: notifErr } = await supabaseAdmin
         .from("user_notifications")
