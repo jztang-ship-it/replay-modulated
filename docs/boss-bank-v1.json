@@ -1,0 +1,56 @@
+{
+  "_meta": {
+    "purpose": "Step-1 join artifact. Curation seed for the boss generator. Curated by accolade/recognizability, NOT by FP rank.",
+    "scope": "v1 = champions + iconic non-champions. Tier B deferred (flag).",
+    "join": "Join to the computed 30x29 table on (season_code, team_code). team_code uses common abbreviations — CC must map to the repo's players.json `team` convention (one-time 30-team lookup).",
+    "axes": {
+      "tier": "champ | iconic  — recognizability/accolade axis. This is the eligibility gate.",
+      "route": "NOT stored. Computed by Step 1 from FP: below band -> handicap, above band -> raid, else daily.",
+      "defensive_low": "Hint only. Known low-FP defensive identity expected to route to HANDICAP. Curated IN, never dropped.",
+      "name_team_level": "Display names the team-season, not a literal five (used where nominal starters != the iconic lineup, e.g. '17 Warriors)."
+    },
+    "era_id": "Scheduling-weight unit. No identity-era recurs within cooldown days. Multi-season identities share one era_id so e.g. the three Shaq-Kobe titles don't headline in the same week."
+  },
+
+  "bosses": [
+    {"id":"CHI-9697","season_code":"9697","team_code":"CHI","era_id":"BULLS_2PEAT","tier":"champ","display":"The Title Defense","flavor":"69 wins, the dynasty resumes"},
+    {"id":"CHI-9798","season_code":"9798","team_code":"CHI","era_id":"BULLS_2PEAT","tier":"champ","display":"The Last Dance","flavor":"Jordan's final Bulls ring"},
+    {"id":"SAS-9899","season_code":"9899","team_code":"SAS","era_id":"SPURS_TWINTOWERS","tier":"champ","display":"Twin Towers","flavor":"Robinson and Duncan, lockout champs"},
+    {"id":"LAL-9900","season_code":"9900","team_code":"LAL","era_id":"LAKERS_SHAQKOBE","tier":"champ","display":"Shaq & Kobe, Ring One","flavor":"the three-peat begins"},
+    {"id":"LAL-0001","season_code":"0001","team_code":"LAL","era_id":"LAKERS_SHAQKOBE","tier":"champ","display":"Shaq & Kobe, Ring Two","flavor":"unguardable, again"},
+    {"id":"LAL-0102","season_code":"0102","team_code":"LAL","era_id":"LAKERS_SHAQKOBE","tier":"champ","display":"The Three-Peat","flavor":"three straight"},
+    {"id":"SAS-0203","season_code":"0203","team_code":"SAS","era_id":"SPURS_DUNCAN","tier":"champ","display":"Duncan's Second","flavor":"David Robinson's farewell ring"},
+    {"id":"DET-0304","season_code":"0304","team_code":"DET","era_id":"PISTONS_WORK","tier":"champ","display":"Goin' to Work","flavor":"five starters, no superstars, one ring","defensive_low":true},
+    {"id":"SAS-0405","season_code":"0405","team_code":"SAS","era_id":"SPURS_DUNCAN","tier":"champ","display":"The Big Three Spurs","flavor":"Duncan, Parker, Ginobili"},
+    {"id":"MIA-0506","season_code":"0506","team_code":"MIA","era_id":"HEAT_WADESHAQ","tier":"champ","display":"Wade & Shaq","flavor":"Flash takes over the Finals"},
+    {"id":"SAS-0607","season_code":"0607","team_code":"SAS","era_id":"SPURS_DUNCAN","tier":"champ","display":"The Sweep","flavor":"machine-like, methodical"},
+    {"id":"BOS-0708","season_code":"0708","team_code":"BOS","era_id":"CELTICS_BIG3","tier":"champ","display":"The New Big Three","flavor":"Ubuntu"},
+    {"id":"LAL-0809","season_code":"0809","team_code":"LAL","era_id":"LAKERS_KOBEGASOL","tier":"champ","display":"Kobe & Gasol, Ring One","flavor":"Kobe's first without Shaq"},
+    {"id":"LAL-0910","season_code":"0910","team_code":"LAL","era_id":"LAKERS_KOBEGASOL","tier":"champ","display":"The Repeat","flavor":"back-to-back"},
+    {"id":"DAL-1011","season_code":"1011","team_code":"DAL","era_id":"MAVS_DIRK","tier":"champ","display":"Dirk's Title","flavor":"the fadeaway that wouldn't miss"},
+    {"id":"MIA-1112","season_code":"1112","team_code":"MIA","era_id":"HEATLES","tier":"champ","display":"The Heatles, Ring One","flavor":"the Big Three deliver"},
+    {"id":"MIA-1213","season_code":"1213","team_code":"MIA","era_id":"HEATLES","tier":"champ","display":"The Heatles","flavor":"66 wins, 27 straight"},
+    {"id":"SAS-1314","season_code":"1314","team_code":"SAS","era_id":"SPURS_BEAUTIFUL","tier":"champ","display":"The Beautiful Game","flavor":"the tic-tac passing clinic"},
+    {"id":"GSW-1415","season_code":"1415","team_code":"GSW","era_id":"GSW_SPLASH","tier":"champ","display":"Splash Brothers, Ring One","flavor":"Curry's first crown"},
+    {"id":"CLE-1516","season_code":"1516","team_code":"CLE","era_id":"CAVS_LBJ","tier":"champ","display":"The Comeback","flavor":"down 3-1, came back anyway"},
+    {"id":"GSW-1617","season_code":"1617","team_code":"GSW","era_id":"GSW_KD","tier":"champ","display":"The Super-Team","flavor":"Durant joins 73 wins — the Death Lineup era","name_team_level":true},
+    {"id":"GSW-1718","season_code":"1718","team_code":"GSW","era_id":"GSW_KD","tier":"champ","display":"The KD Repeat","flavor":"back-to-back, swept the Cavs"},
+    {"id":"TOR-1819","season_code":"1819","team_code":"TOR","era_id":"RAPTORS_KAWHI","tier":"champ","display":"We The North","flavor":"Kawhi's one perfect season"},
+    {"id":"LAL-1920","season_code":"1920","team_code":"LAL","era_id":"LAKERS_BUBBLE","tier":"champ","display":"The Bubble Title","flavor":"LeBron and AD in Orlando"},
+    {"id":"MIL-2021","season_code":"2021","team_code":"MIL","era_id":"BUCKS_GIANNIS","tier":"champ","display":"Giannis","flavor":"the 50-point closeout"},
+    {"id":"GSW-2122","season_code":"2122","team_code":"GSW","era_id":"GSW_RETURN","tier":"champ","display":"The Dynasty Returns","flavor":"Curry, Finals MVP at last"},
+    {"id":"DEN-2223","season_code":"2223","team_code":"DEN","era_id":"NUGGETS_JOKIC","tier":"champ","display":"Jokic's Crown","flavor":"the big man who sees everything"},
+    {"id":"BOS-2324","season_code":"2324","team_code":"BOS","era_id":"CELTICS_BANNER18","tier":"champ","display":"Banner 18","flavor":"Tatum and Brown finish it"},
+    {"id":"OKC-2425","season_code":"2425","team_code":"OKC","era_id":"THUNDER_SGA","tier":"champ","display":"SGA's Crown","flavor":"the MVP gets his ring"},
+
+    {"id":"GSW-1516","season_code":"1516","team_code":"GSW","era_id":"GSW_73","tier":"iconic","display":"73-9","flavor":"the best regular season ever"},
+    {"id":"LAL-0304","season_code":"0304","team_code":"LAL","era_id":"LAKERS_SUPERTEAM_04","tier":"iconic","display":"The Superteam","flavor":"Shaq, Kobe, Malone, Payton — and no ring"},
+    {"id":"PHX-0607","season_code":"0607","team_code":"PHX","era_id":"SUNS_SSOL","tier":"iconic","display":"Seven Seconds or Less","flavor":"offense as performance art"},
+    {"id":"SAC-0102","season_code":"0102","team_code":"SAC","era_id":"KINGS_GSOC","tier":"iconic","display":"The Greatest Show on Court","flavor":"the passing that should've won a title"},
+    {"id":"PHI-0001","season_code":"0001","team_code":"PHI","era_id":"SIXERS_AI","tier":"iconic","display":"Iverson's Finals","flavor":"the MVP who stepped over them"},
+    {"id":"OKC-1112","season_code":"1112","team_code":"OKC","era_id":"THUNDER_KDWESTBROOK","tier":"iconic","display":"The Young Thunder","flavor":"Durant, Westbrook, Harden — too soon"},
+    {"id":"CLE-0809","season_code":"0809","team_code":"CLE","era_id":"CAVS_LBJ_FIRST","tier":"iconic","display":"LeBron's 66","flavor":"MVP, 66 wins, no ring yet"},
+    {"id":"HOU-1718","season_code":"1718","team_code":"HOU","era_id":"ROCKETS_HARDEN","tier":"iconic","display":"Switch Everything","flavor":"65 wins, one Game 7 from the Warriors"},
+    {"id":"MEM-1213","season_code":"1213","team_code":"MEM","era_id":"GRIZZ_GRIND","tier":"iconic","display":"Grit-n-Grind","flavor":"the floor was lava in Memphis","defensive_low":true}
+  ]
+}

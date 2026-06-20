@@ -224,16 +224,30 @@ async function main() {
     console.log("Loaded " + players.length + " players, " + rawLogs.length + " logs");
   }
 
+  // Opt-in min-minutes filter, gated on the boss-band dump run (DUMP_ALLFPS).
+  // The boss generator requires ONE filter across band / ceiling / boss-roll
+  // (all min≥10). Default runs (no DUMP_ALLFPS) keep the original hasScoringStats-
+  // only behavior byte-identical so RTP/calibration outputs are unchanged.
+  const bandMinMin = process.env.DUMP_ALLFPS ? 10 : 0;
+  const passesMin = (stats: Record<string, any>): boolean => {
+    if (bandMinMin <= 0) return true;
+    const mp = stats.mp ?? stats.minutes ?? stats.min ?? stats.MIN ?? stats.minutesPlayed;
+    if (mp === undefined || mp === null) return true;
+    const s = String(mp);
+    const mins = s.includes(":") ? parseFloat(s.split(":")[0]) : parseFloat(s);
+    return !Number.isFinite(mins) || mins >= bandMinMin;
+  };
   const logMap = new Map<string, any[]>();
   for (const log of rawLogs) {
     const key = String(log.basePlayerId ?? log.playerId ?? "").trim();
     if (!key) continue;
     const stats = log.stats ?? log;
     if (!hasScoringStats(stats)) continue;
+    if (!passesMin(stats)) continue;
     if (!logMap.has(key)) logMap.set(key, []);
     logMap.get(key)!.push(log);
   }
-  console.log("Scoring logs: " + logMap.size + " players\n");
+  console.log("Scoring logs: " + logMap.size + " players" + (bandMinMin ? `  (min≥${bandMinMin} filter ON for band dump)` : "") + "\n");
 
   const projById = new Map<string, number>();
   const posSums: Record<string,number> = {}, posCounts: Record<string,number> = {};
@@ -427,6 +441,24 @@ async function main() {
   const handAvg = avg(allFps);
   const avgBdg = totalBdg/N;
   console.log("Done " + N + " hands in " + ((Date.now()-start)/1000).toFixed(2) + "s\n");
+
+  // Opt-in allFps dump (additive; default off). When DUMP_ALLFPS=<path> is set,
+  // write the sorted strong-capped player-lineup FP distribution + percentiles to
+  // that path. Consumed by the boss generator's band derivation (P60-P85). The
+  // hand loop is seeded (makeRng(42)), so this dump is deterministic per (sport,N).
+  if (process.env.DUMP_ALLFPS) {
+    const pct = (p: number) => allFps[Math.min(allFps.length - 1, Math.max(0, Math.floor((p / 100) * allFps.length)))];
+    const percentiles: Record<string, number> = {};
+    for (let p = 5; p <= 95; p += 5) percentiles[`p${p}`] = pct(p);
+    const out = {
+      sport: sportName, hands: N, seed: 42,
+      n: allFps.length, mean: handAvg,
+      min: allFps[0], max: allFps[allFps.length - 1],
+      percentiles, allFps,
+    };
+    fs.writeFileSync(process.env.DUMP_ALLFPS, JSON.stringify(out));
+    console.log(`[DUMP_ALLFPS] wrote ${allFps.length} hand totals → ${process.env.DUMP_ALLFPS}\n`);
+  }
 
   console.log("=== PER-POSITION FP ===");
   for (const pos of config.positions) {
