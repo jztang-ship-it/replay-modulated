@@ -2835,6 +2835,13 @@ consumer exports `SCHEDULE_EPOCH`, but the generator still **inlines the literal
 `"2026-06-22"`** in `bossGenerator.main()` and its tests. They match today but are
 two literals, not one shared constant — unify them (generator imports the constant)
 before either seam's epoch is ever changed.
+**RESOLVED in `5da0be6`:** `SCHEDULE_EPOCH` now has exactly one definition (in
+`bossGenerator.ts`, alongside `K`/`COOLDOWN`/`P_LO`/`P_HI`); the generator's
+`main()` + its three test sites use the constant, and the consumer imports +
+re-exports it. Placed in the generator (not the consumer) because the consumer
+already imports from the generator — defining it consumer-side would invert the
+layering and create an `api → tools` import cycle. No behavior change (value
+identical); divergence closed.
 
 ### 5. Synthetic NOT-NULL fills on boss rows (commit `2af4af7`)
 `shared_challenges.hand_id` and `slate_seed` are `NOT NULL` with no default
@@ -2858,3 +2865,85 @@ NOT user-complete: a user cannot reach a boss until the mount lands.**
 **Lock:** this section (decisions 1–6). Build brief: `docs/cc-brief-boss-delivery-consumer.md`.
 Shipped per-commit to `origin/feat/build-phase` (`4c30d01` … `5a25521`); branch is
 hold-for-review (not merged to main). `BossLandingView` device-glass check pending.
+
+---
+
+## § Phase 2-fix — Precompute the boss bank (unblock prod) (LOCKED — feat/build-phase 2026-06-21)
+
+**Problem (recorded):** `getTodaysBossChallengeId` could not run in a deployed
+function. `resolveBossForDate` read the bank + the **213 MB seasons dir** via
+runtime-computed fs paths (`path.resolve(REPO, …)`, `readdirSync(SEASONS_DIR)`) —
+paths `@vercel/nft` cannot trace and that **ENOENT in `/var/task`** (verified
+statically: no `includeFiles`, computed paths untraceable, and `REPO` resolves to
+the bundle layout not the repo tree). Nothing was broken yet only because no route
+imported the boss path.
+
+**Fix:** precompute a small static bank artifact at build/dev time, **commit it**,
+and have the request path import it as a static (NFT-traceable) module — no
+request-time fs, never touching the seasons dir.
+
+### Decisions locked
+1. **Precompute the BANK, not the rolled instance (Q3).** The artifact is
+   identities + per-starter `gamePool` distributions + `band`. The date seed still
+   drives the pick (`scheduleHeadline`) + roll (`rollGames`) at request time, so
+   **daily variance stays live** (same boss-per-day for everyone, different across
+   days). A rolled-instance artifact would freeze a day's boss at build time and
+   require a build per day — rejected.
+2. **Strategy (A): commit the artifact (commit `c64029e`).** `scripts/build-boss-bank.mjs`
+   (npm `build:boss-bank`) reuses `loadBankBosses()` + `loadBand()` +
+   `loadBankVersion()` verbatim and writes `api/boss/_lib/bossBank.generated.json`.
+   The committed file is **byte-pinned by a drift-guard test** (`boss-bank-artifact-drift.test.ts`)
+   that re-runs the same builder and asserts equality — edit the bank/seasons/FP
+   code without rerunning the script and it goes red (one source of truth, pinned).
+   Chosen over **(B) emit-during-`build-vercel.sh`** because (B) depends on Vercel
+   tracing functions *after* `buildCommand` writes the file — unverified ordering;
+   (A) has zero build-ordering risk (NFT always sees a committed file).
+3. **Artifact shape (Q1):** 36 bosses, each `{ key, season, team, era_id, tier,
+   display, flavor, starters: [{ name, pos, gamePool: number[] }] }` + `band {lo,hi}`
+   + `_meta.version`. `K`/`COOLDOWN`/`SCHEDULE_EPOCH` stay code constants.
+   **~84 KB compact** (committed at 83 KB; pretty-printing tripled it to 265 KB for
+   no benefit on a generated, drift-guarded blob, so it's serialized compact).
+4. **Swap to static import (commit `60f4cd4`).** `resolveBossForDate` now feeds
+   `scheduleHeadline` from the imported artifact; dropped `loadBankBosses()` /
+   `loadBand()` / `loadBankVersion()` + the `bossData` import.
+   `scheduleHeadline` / `rollBoss` / `rollGames` / `projectSenderFacing` /
+   `toSharedChallengeRow` are **unchanged** — only the data source swapped. Proven
+   observably-identical by `boss-artifact-fs-equivalence.test.ts` (byte-identical
+   `projectSenderFacing` + identity + seed vs. the reconstructed fs path across 5
+   `(date,slot)` cases); the original byte-identical regen pin (`2af4af7`) stays green.
+
+### Invariant: the seasons dir is BUILD-ONLY
+No request-path code may read `SEASONS_DIR` or `REPO`-relative files. Audited
+(`ensureDailyInstance.ts` + `todaysBoss.ts`): zero `readdirSync` / `readFileSync` /
+`path.resolve(REPO` / `loadBankBosses` / `loadBand` / `buildAll` code hits. The 213 MB
+seasons dir is consumed only by `scripts/build-boss-bank.mjs` at build/dev time.
+
+### Bundle-trace verification (Commit 3)
+Traced the boss request path with **`esbuild`** (the compiler `@vercel/node` uses;
+`@vercel/nft` direct can't follow the NodeNext `.js`→`.ts` specifiers, so Vercel
+esbuild-compiles first then traces). Result on `api/boss/_lib/todaysBoss.ts`
+(12 reachable inputs):
+- ✅ `bossBank.generated.json` **reachable → true** (static import → bundled/traced)
+- ✅ seasons data files reachable: **0**
+- ✅ repo data files (`docs/boss-bank-v1.json`, `boss_gen/`, `players.json`,
+  `gamelogs.json`, `player_band_allfps`): **0**
+
+`bossData`/`bossGenerator` appear as **code** (the request path imports
+`scheduleHeadline`), but their fs-reading functions are dead at runtime and the data
+they would read is not bundled — the prod-safe state. **Deviation from brief:** used
+the esbuild metafile rather than `npx vercel build` + `.func` inspection, because
+nft-direct demonstrably can't follow the TS import graph and `vercel build` would run
+the full tri-sport build + need auth; the esbuild metafile is `@vercel/node`'s actual
+resolver and gives the authoritative static-reachability graph. Result is positive
+(artifact in, data dirs out) — no trace surprise.
+
+**Still OUT OF SCOPE / deferred:** the mount (a route folding in
+`getTodaysBossChallengeId` + a SPA surface) — see the prior map: the engagement
+panel is orphaned, `useEngagement` is localStorage-only, the SPA home
+(`DailySeasonReelGate → GameView`) makes no on-mount `api/` call, and `api/` is at
+12/12. The resolver now runs safely in prod; wiring a user-reachable entry is the
+next phase.
+
+**Lock:** this section. Build brief: `docs/cc-brief-boss-delivery-consumer.md`
+(Phase 2-fix). Commits `c64029e` (artifact) · `60f4cd4` (swap) · this doc (verification),
+on `origin/feat/build-phase` (hold-for-review).
