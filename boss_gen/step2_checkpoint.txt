@@ -15,7 +15,7 @@ determinism: CHI-9697 132.4 == 132.4 → PASS
     BKN-2021  daily   5.4% raid  94.4% tough 43.8%  BOTH ✓  "The Brooklyn Superteam"
     PHI-1819  daily   8.4% raid    91% tough   27%  BOTH ✓  "The Process"
     HOU-1920  daily  24.3% raid  69.2% tough  1.5%  BOTH ✓  "Microball"
-    DEN-0607  daily  19.4% raid  76.1% tough    4%  BOTH ✓  "Iverson & Melo"
+    DEN-0607  daily  28.8% raid  61.3% tough  0.6%  BOTH ✓  "Iverson & Melo"
     HOU-9697  daily  24.3% raid  69.2% tough  1.5%  BOTH ✓  "The Last Ride"
     OKC-1516  daily  32.2% raid  59.9% tough  0.3%  BOTH ✓  "Up 3-1"
     ORL-0809  daily  34.8% raid  57.1% tough  0.2%  BOTH ✓  "Superman"
@@ -39,7 +39,7 @@ determinism: CHI-9697 132.4 == 132.4 → PASS
 
 (d) per-day win-rate under the 1-hour multi-attempt window (1−(1−p)^N):
     attempt model: 1-hour replay window (api/challenge/[id]/attempt.ts ONE_HOUR_MS; is_window_open) — multi-attempt, not a fixed count
-    N=1 25%  N=3 56.6%  N=5 74.1%  N=10 92.1%  N=20 99%
+    N=1 25%  N=3 56.7%  N=5 74.2%  N=10 92.1%  N=20 99%
     (N=1 is the old single-roll 27% — wrong denominator. Multi-attempt → high per-day WR.)
 
 30-day schedule: cooldown PASS  | tough-days 1/30

@@ -58,7 +58,7 @@
     {"id":"BKN-2021","season_code":"2021","team_code":"BKN","era_id":"NETS_SUPERTEAM","tier":"iconic","display":"The Brooklyn Superteam","flavor":"Durant, Kyrie, Harden — for sixteen games","active":true},
     {"id":"PHI-1819","season_code":"1819","team_code":"PHI","era_id":"SIXERS_PROCESS","tier":"iconic","display":"The Process","flavor":"Embiid and Simmons, trust earned","active":true,"fiveOverride":[{"out":"Robert Covington","in":"JJ Redick"}]},
     {"id":"HOU-1920","season_code":"1920","team_code":"HOU","era_id":"ROCKETS_MICROBALL","tier":"iconic","display":"Microball","flavor":"no center, switch everything","active":true,"fiveOverride":[{"out":"Clint Capela","in":"Danuel House Jr."}]},
-    {"id":"DEN-0607","season_code":"0607","team_code":"DEN","era_id":"NUGGETS_IVERSONMELO","tier":"iconic","display":"Iverson & Melo","flavor":"two scorers, a mile high","active":true},
+    {"id":"DEN-0607","season_code":"0607","team_code":"DEN","era_id":"NUGGETS_IVERSONMELO","tier":"iconic","display":"Iverson & Melo","flavor":"two scorers, a mile high","active":true,"fiveOverride":[{"out":"Andre Miller","in":"JR Smith"}]},
     {"id":"HOU-9697","season_code":"9697","team_code":"HOU","era_id":"ROCKETS_LASTRIDE","tier":"iconic","display":"The Last Ride","flavor":"Hakeem, Drexler, and Barkley chase one more","active":true},
     {"id":"OKC-1516","season_code":"1516","team_code":"OKC","era_id":"THUNDER_KDWESTBROOK","tier":"iconic","display":"Up 3-1","flavor":"a win from the Finals on the 73-win Warriors","active":true},
     {"id":"ORL-0809","season_code":"0809","team_code":"ORL","era_id":"MAGIC_SUPERMAN","tier":"iconic","display":"Superman","flavor":"Dwight and the shooters reach the Finals","active":true},

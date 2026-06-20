@@ -146,13 +146,16 @@ describe("locked-36 — active bank set after cuts + promotions", () => {
       expect(b!.tier).toBe("iconic");
     }
   });
-  it("promotion overrides applied: PHI-1819 has JJ Redick (not Covington); HOU-1920 has Danuel House (not Capela)", () => {
+  it("promotion overrides applied: PHI-1819 Redick (not Covington); HOU-1920 House (not Capela); DEN-0607 JR Smith (not Andre Miller)", () => {
     const phi = bank.find(b => b.key === "PHI-1819")!.starters.map(s => s.name);
     expect(phi).toContain("JJ Redick");
     expect(phi).not.toContain("Robert Covington");
     const hou = bank.find(b => b.key === "HOU-1920")!.starters.map(s => s.name);
     expect(hou).toContain("Danuel House Jr.");
     expect(hou).not.toContain("Clint Capela");
+    const den = bank.find(b => b.key === "DEN-0607")!.starters.map(s => s.name);
+    expect(den).toContain("JR Smith");
+    expect(den).not.toContain("Andre Miller");
   });
 });
 

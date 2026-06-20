@@ -1,6 +1,6 @@
 {
   "summary": {
-    "bankVersion": "v1.1",
+    "bankVersion": "v1.2",
     "band": {
       "p_lo": 60,
       "p_hi": 85,
@@ -8,9 +8,9 @@
       "hi": 159.6
     },
     "count": {
-      "total": 38,
-      "overridden": 2,
-      "unchanged": 36
+      "total": 36,
+      "overridden": 5,
+      "unchanged": 31
     },
     "fpPath": "canonicalFp (computeBasketballFp + computeBasketballBadges, _position) — one path"
   },
@@ -188,92 +188,6 @@
       }
     },
     {
-      "key": "SAS-9899",
-      "display": "Twin Towers",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 149.9,
-      "starters": [
-        {
-          "name": "Tim Duncan",
-          "pos": "C",
-          "n": 50,
-          "mean": 47.2,
-          "std": 11.9,
-          "p25": 40.3,
-          "p75": 52,
-          "iqr": 11.7,
-          "min": 18.4,
-          "max": 74.6
-        },
-        {
-          "name": "Avery Johnson",
-          "pos": "PG",
-          "n": 50,
-          "mean": 24.9,
-          "std": 10.7,
-          "p25": 16.7,
-          "p75": 32,
-          "iqr": 15.3,
-          "min": 8.5,
-          "max": 53.7
-        },
-        {
-          "name": "David Robinson",
-          "pos": "C",
-          "n": 49,
-          "mean": 40.1,
-          "std": 12.8,
-          "p25": 31.5,
-          "p75": 47.1,
-          "iqr": 15.6,
-          "min": 14,
-          "max": 74.7
-        },
-        {
-          "name": "Sean Elliott",
-          "pos": "SF",
-          "n": 50,
-          "mean": 20.2,
-          "std": 8.1,
-          "p25": 14.2,
-          "p75": 26.4,
-          "iqr": 12.2,
-          "min": 5.4,
-          "max": 39.2
-        },
-        {
-          "name": "Mario Elie",
-          "pos": "SF",
-          "n": 46,
-          "mean": 17.4,
-          "std": 7.4,
-          "p25": 12.7,
-          "p75": 21.9,
-          "iqr": 9.2,
-          "min": 2.2,
-          "max": 34.2
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 149.8,
-        "std": 23.3,
-        "p25": 133.4,
-        "p75": 165.2,
-        "iqr": 31.8,
-        "min": 65.1,
-        "max": 243,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 23.1,
-        "inBandPct": 43.8,
-        "abovePct": 33.1
-      }
-    },
-    {
       "key": "LAL-9900",
       "display": "Shaq & Kobe, Ring One",
       "tier": "champ",
@@ -446,178 +360,6 @@
       }
     },
     {
-      "key": "LAL-0102",
-      "display": "The Three-Peat",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 155.1,
-      "starters": [
-        {
-          "name": "Kobe Bryant",
-          "pos": "SG",
-          "n": 80,
-          "mean": 42,
-          "std": 11.3,
-          "p25": 36.1,
-          "p75": 48.1,
-          "iqr": 12,
-          "min": 8.2,
-          "max": 80
-        },
-        {
-          "name": "Shaquille O'Neal",
-          "pos": "C",
-          "n": 67,
-          "mean": 51.8,
-          "std": 14,
-          "p25": 42.6,
-          "p75": 61.8,
-          "iqr": 19.2,
-          "min": 13.6,
-          "max": 83.7
-        },
-        {
-          "name": "Derek Fisher",
-          "pos": "PG",
-          "n": 70,
-          "mean": 19.1,
-          "std": 7.1,
-          "p25": 14.7,
-          "p75": 23.1,
-          "iqr": 8.4,
-          "min": 4.5,
-          "max": 52.1
-        },
-        {
-          "name": "Rick Fox",
-          "pos": "SF",
-          "n": 82,
-          "mean": 19.5,
-          "std": 8.6,
-          "p25": 12.8,
-          "p75": 25.4,
-          "iqr": 12.6,
-          "min": 1.9,
-          "max": 48.3
-        },
-        {
-          "name": "Robert Horry",
-          "pos": "PF",
-          "n": 79,
-          "mean": 22.8,
-          "std": 11.6,
-          "p25": 15,
-          "p75": 31.6,
-          "iqr": 16.6,
-          "min": 3.1,
-          "max": 53.2
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 155.4,
-        "std": 24.3,
-        "p25": 138.3,
-        "p75": 171.4,
-        "iqr": 33.1,
-        "min": 56.4,
-        "max": 248,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 16.2,
-        "inBandPct": 42.4,
-        "abovePct": 41.4
-      }
-    },
-    {
-      "key": "SAS-0203",
-      "display": "Duncan's Second",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 141,
-      "starters": [
-        {
-          "name": "Tim Duncan",
-          "pos": "C",
-          "n": 81,
-          "mean": 53.7,
-          "std": 15,
-          "p25": 43.8,
-          "p75": 61.8,
-          "iqr": 18,
-          "min": 8.2,
-          "max": 93.2
-        },
-        {
-          "name": "Tony Parker",
-          "pos": "PG",
-          "n": 82,
-          "mean": 25.8,
-          "std": 10.1,
-          "p25": 20.9,
-          "p75": 30.3,
-          "iqr": 9.4,
-          "min": 6.4,
-          "max": 57
-        },
-        {
-          "name": "Bruce Bowen",
-          "pos": "SF",
-          "n": 82,
-          "mean": 14.5,
-          "std": 6.6,
-          "p25": 9.7,
-          "p75": 18.6,
-          "iqr": 8.9,
-          "min": 4,
-          "max": 35.9
-        },
-        {
-          "name": "Stephen Jackson",
-          "pos": "SG",
-          "n": 78,
-          "mean": 21.8,
-          "std": 9.5,
-          "p25": 12,
-          "p75": 29.1,
-          "iqr": 17.1,
-          "min": 1.2,
-          "max": 40.8
-        },
-        {
-          "name": "David Robinson",
-          "pos": "C",
-          "n": 64,
-          "mean": 25.3,
-          "std": 11.6,
-          "p25": 17.5,
-          "p75": 31.7,
-          "iqr": 14.2,
-          "min": -1.6,
-          "max": 56.4
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 140.8,
-        "std": 24.5,
-        "p25": 124.5,
-        "p75": 156.7,
-        "iqr": 32.2,
-        "min": 49.6,
-        "max": 243,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 35.6,
-        "inBandPct": 43.3,
-        "abovePct": 21.1
-      }
-    },
-    {
       "key": "DET-0304",
       "display": "Goin' to Work",
       "tier": "champ",
@@ -701,264 +443,6 @@
         "belowPct": 20.3,
         "inBandPct": 41.6,
         "abovePct": 38.1
-      }
-    },
-    {
-      "key": "SAS-0405",
-      "display": "The Big Three Spurs",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 148.1,
-      "starters": [
-        {
-          "name": "Tony Parker",
-          "pos": "PG",
-          "n": 80,
-          "mean": 30.3,
-          "std": 11.2,
-          "p25": 23.7,
-          "p75": 37,
-          "iqr": 13.3,
-          "min": 3.6,
-          "max": 64.2
-        },
-        {
-          "name": "Tim Duncan",
-          "pos": "C",
-          "n": 65,
-          "mean": 48,
-          "std": 11.9,
-          "p25": 40.3,
-          "p75": 55.5,
-          "iqr": 15.2,
-          "min": 16.7,
-          "max": 74.1
-        },
-        {
-          "name": "Bruce Bowen",
-          "pos": "SF",
-          "n": 82,
-          "mean": 16.4,
-          "std": 6.5,
-          "p25": 12.4,
-          "p75": 20.9,
-          "iqr": 8.5,
-          "min": 0.7,
-          "max": 31.8
-        },
-        {
-          "name": "Manu Ginobili",
-          "pos": "PG",
-          "n": 74,
-          "mean": 29,
-          "std": 11.8,
-          "p25": 20.2,
-          "p75": 35.3,
-          "iqr": 15.1,
-          "min": 10.6,
-          "max": 67
-        },
-        {
-          "name": "Nazr Mohammed",
-          "pos": "C",
-          "n": 73,
-          "mean": 24.4,
-          "std": 14.5,
-          "p25": 14,
-          "p75": 37.6,
-          "iqr": 23.6,
-          "min": 2.4,
-          "max": 59.6
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 147.6,
-        "std": 25.6,
-        "p25": 129.7,
-        "p75": 164.7,
-        "iqr": 35,
-        "min": 70.3,
-        "max": 241.3,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 28,
-        "inBandPct": 41,
-        "abovePct": 31
-      }
-    },
-    {
-      "key": "MIA-0506",
-      "display": "Wade & Shaq",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 147.4,
-      "starters": [
-        {
-          "name": "Dwyane Wade",
-          "pos": "PG",
-          "n": 75,
-          "mean": 47.4,
-          "std": 12.5,
-          "p25": 40,
-          "p75": 54.9,
-          "iqr": 14.9,
-          "min": 12.8,
-          "max": 85
-        },
-        {
-          "name": "Jason Williams",
-          "pos": "PG",
-          "n": 59,
-          "mean": 22.9,
-          "std": 10.2,
-          "p25": 15.6,
-          "p75": 30.7,
-          "iqr": 15.1,
-          "min": 5.4,
-          "max": 52.7
-        },
-        {
-          "name": "Udonis Haslem",
-          "pos": "SF",
-          "n": 80,
-          "mean": 22.5,
-          "std": 9.5,
-          "p25": 17.2,
-          "p75": 27.1,
-          "iqr": 9.9,
-          "min": 6.2,
-          "max": 65.3
-        },
-        {
-          "name": "Shaquille O'Neal",
-          "pos": "C",
-          "n": 59,
-          "mean": 37.4,
-          "std": 11.8,
-          "p25": 28.7,
-          "p75": 47.9,
-          "iqr": 19.2,
-          "min": 9.4,
-          "max": 59.9
-        },
-        {
-          "name": "Gary Payton",
-          "pos": "PG",
-          "n": 79,
-          "mean": 17,
-          "std": 8.4,
-          "p25": 9.6,
-          "p75": 22.9,
-          "iqr": 13.3,
-          "min": 3,
-          "max": 37.7
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 147.3,
-        "std": 23.7,
-        "p25": 131.1,
-        "p75": 163.2,
-        "iqr": 32.1,
-        "min": 50.8,
-        "max": 240.1,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 26.1,
-        "inBandPct": 44.4,
-        "abovePct": 29.5
-      }
-    },
-    {
-      "key": "SAS-0607",
-      "display": "The Sweep",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 132.6,
-      "starters": [
-        {
-          "name": "Tim Duncan",
-          "pos": "C",
-          "n": 80,
-          "mean": 44.6,
-          "std": 11.1,
-          "p25": 36.5,
-          "p75": 52.1,
-          "iqr": 15.6,
-          "min": 25.3,
-          "max": 68.2
-        },
-        {
-          "name": "Tony Parker",
-          "pos": "PG",
-          "n": 76,
-          "mean": 30.8,
-          "std": 10.2,
-          "p25": 25.8,
-          "p75": 37.8,
-          "iqr": 12,
-          "min": 8.7,
-          "max": 64.3
-        },
-        {
-          "name": "Bruce Bowen",
-          "pos": "SF",
-          "n": 81,
-          "mean": 13.2,
-          "std": 6.4,
-          "p25": 8.7,
-          "p75": 16.7,
-          "iqr": 8,
-          "min": 1.2,
-          "max": 35.5
-        },
-        {
-          "name": "Manu Ginobili",
-          "pos": "PG",
-          "n": 75,
-          "mean": 28.9,
-          "std": 9.9,
-          "p25": 22.5,
-          "p75": 33.6,
-          "iqr": 11.1,
-          "min": 10.3,
-          "max": 61.6
-        },
-        {
-          "name": "Michael Finley",
-          "pos": "SF",
-          "n": 81,
-          "mean": 15.1,
-          "std": 8,
-          "p25": 9.9,
-          "p75": 20.9,
-          "iqr": 11,
-          "min": 0,
-          "max": 38
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 132.5,
-        "std": 20.8,
-        "p25": 118.2,
-        "p75": 146.2,
-        "iqr": 28,
-        "min": 66.7,
-        "max": 223.9,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 51.2,
-        "inBandPct": 38.8,
-        "abovePct": 10.1
       }
     },
     {
@@ -1303,92 +787,6 @@
         "belowPct": 32.4,
         "inBandPct": 45.6,
         "abovePct": 22
-      }
-    },
-    {
-      "key": "MIA-1112",
-      "display": "The Heatles, Ring One",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 158.8,
-      "starters": [
-        {
-          "name": "LeBron James",
-          "pos": "SF",
-          "n": 62,
-          "mean": 49.6,
-          "std": 12.6,
-          "p25": 41.2,
-          "p75": 56.4,
-          "iqr": 15.2,
-          "min": 27.5,
-          "max": 86.2
-        },
-        {
-          "name": "Chris Bosh",
-          "pos": "SF",
-          "n": 57,
-          "mean": 32.6,
-          "std": 11.9,
-          "p25": 24.3,
-          "p75": 41.3,
-          "iqr": 17,
-          "min": 10.1,
-          "max": 59.3
-        },
-        {
-          "name": "Dwyane Wade",
-          "pos": "PG",
-          "n": 48,
-          "mean": 39.7,
-          "std": 10.1,
-          "p25": 32.8,
-          "p75": 47.2,
-          "iqr": 14.4,
-          "min": 18.9,
-          "max": 66.8
-        },
-        {
-          "name": "Mario Chalmers",
-          "pos": "PG",
-          "n": 64,
-          "mean": 19.2,
-          "std": 8.8,
-          "p25": 13.7,
-          "p75": 25.3,
-          "iqr": 11.6,
-          "min": 0.6,
-          "max": 52.4
-        },
-        {
-          "name": "Udonis Haslem",
-          "pos": "SF",
-          "n": 64,
-          "mean": 17.8,
-          "std": 8.1,
-          "p25": 11.1,
-          "p75": 24,
-          "iqr": 12.9,
-          "min": 0.4,
-          "max": 36.8
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 158.7,
-        "std": 23.2,
-        "p25": 142.5,
-        "p75": 174,
-        "iqr": 31.5,
-        "min": 87.2,
-        "max": 250.8,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 12.6,
-        "inBandPct": 40,
-        "abovePct": 47.4
       }
     },
     {
@@ -2166,92 +1564,6 @@
       }
     },
     {
-      "key": "GSW-2122",
-      "display": "The Dynasty Returns",
-      "tier": "champ",
-      "overridden": false,
-      "expected": 159,
-      "starters": [
-        {
-          "name": "Stephen Curry",
-          "pos": "PG",
-          "n": 64,
-          "mean": 42.6,
-          "std": 16.3,
-          "p25": 31.3,
-          "p75": 54.8,
-          "iqr": 23.5,
-          "min": 0.2,
-          "max": 98.4
-        },
-        {
-          "name": "Andrew Wiggins",
-          "pos": "SF",
-          "n": 73,
-          "mean": 28,
-          "std": 7.8,
-          "p25": 21.8,
-          "p75": 33.4,
-          "iqr": 11.6,
-          "min": 13.8,
-          "max": 48.6
-        },
-        {
-          "name": "Jordan Poole",
-          "pos": "PG",
-          "n": 76,
-          "mean": 28,
-          "std": 11.2,
-          "p25": 21.1,
-          "p75": 35.5,
-          "iqr": 14.4,
-          "min": 3.4,
-          "max": 61.3
-        },
-        {
-          "name": "Draymond Green",
-          "pos": "SF",
-          "n": 45,
-          "mean": 30.1,
-          "std": 10.9,
-          "p25": 24,
-          "p75": 33.8,
-          "iqr": 9.8,
-          "min": 6.5,
-          "max": 60.2
-        },
-        {
-          "name": "Klay Thompson",
-          "pos": "PG",
-          "n": 32,
-          "mean": 30.3,
-          "std": 10.5,
-          "p25": 22.6,
-          "p75": 35.5,
-          "iqr": 12.9,
-          "min": 13.9,
-          "max": 56.7
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 159.8,
-        "std": 26,
-        "p25": 142,
-        "p75": 176.4,
-        "iqr": 34.4,
-        "min": 68.6,
-        "max": 264,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 13.8,
-        "inBandPct": 37.4,
-        "abovePct": 48.8
-      }
-    },
-    {
       "key": "DEN-2223",
       "display": "Jokic's Crown",
       "tier": "champ",
@@ -2940,347 +2252,863 @@
       }
     },
     {
-      "key": "OKC-1112",
-      "display": "The Young Thunder",
+      "key": "LAC-1314",
+      "display": "Lob City",
       "tier": "iconic",
       "overridden": false,
-      "expected": 155.7,
+      "expected": 180.3,
       "starters": [
         {
-          "name": "Kevin Durant",
+          "name": "Blake Griffin",
           "pos": "SF",
-          "n": 66,
-          "mean": 45.1,
-          "std": 12.7,
-          "p25": 35,
-          "p75": 52.9,
-          "iqr": 17.9,
-          "min": 20.2,
-          "max": 84.9
+          "n": 79,
+          "mean": 45.3,
+          "std": 12,
+          "p25": 35.5,
+          "p75": 53.2,
+          "iqr": 17.7,
+          "min": 17.5,
+          "max": 75
         },
         {
-          "name": "Russell Westbrook",
-          "pos": "PG",
-          "n": 66,
-          "mean": 37.7,
-          "std": 12.9,
-          "p25": 28.4,
+          "name": "DeAndre Jordan",
+          "pos": "C",
+          "n": 81,
+          "mean": 39.5,
+          "std": 11.4,
+          "p25": 31.6,
           "p75": 47.8,
-          "iqr": 19.4,
-          "min": 9.6,
-          "max": 68.7
-        },
-        {
-          "name": "James Harden",
-          "pos": "PG",
-          "n": 62,
-          "mean": 27.3,
-          "std": 9.6,
-          "p25": 22.1,
-          "p75": 32.4,
-          "iqr": 10.3,
-          "min": 8.2,
-          "max": 64.9
-        },
-        {
-          "name": "Serge Ibaka",
-          "pos": "SF",
-          "n": 66,
-          "mean": 29.2,
-          "std": 12.8,
-          "p25": 19,
-          "p75": 37.6,
-          "iqr": 18.6,
-          "min": 8,
-          "max": 74
-        },
-        {
-          "name": "Kendrick Perkins",
-          "pos": "C",
-          "n": 65,
-          "mean": 16.4,
-          "std": 7.6,
-          "p25": 10.9,
-          "p75": 22,
-          "iqr": 11.1,
-          "min": -2.6,
-          "max": 32.1
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 155.5,
-        "std": 25.2,
-        "p25": 137.8,
-        "p75": 172.1,
-        "iqr": 34.3,
-        "min": 75.2,
-        "max": 254.2,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 17.6,
-        "inBandPct": 39.9,
-        "abovePct": 42.5
-      }
-    },
-    {
-      "key": "CLE-0809",
-      "display": "LeBron's 66",
-      "tier": "iconic",
-      "overridden": false,
-      "expected": 155.3,
-      "starters": [
-        {
-          "name": "LeBron James",
-          "pos": "SF",
-          "n": 81,
-          "mean": 55.3,
-          "std": 15,
-          "p25": 45.9,
-          "p75": 64.3,
-          "iqr": 18.4,
-          "min": 25.2,
-          "max": 96.5
-        },
-        {
-          "name": "Mo Williams",
-          "pos": "PG",
-          "n": 81,
-          "mean": 27.5,
-          "std": 10.8,
-          "p25": 19.2,
-          "p75": 34.6,
-          "iqr": 15.4,
-          "min": 11.1,
-          "max": 73.1
-        },
-        {
-          "name": "Delonte West",
-          "pos": "PG",
-          "n": 64,
-          "mean": 23.4,
-          "std": 9.9,
-          "p25": 17.4,
-          "p75": 30.9,
-          "iqr": 13.5,
-          "min": -4,
-          "max": 43.2
-        },
-        {
-          "name": "Anderson Varejao",
-          "pos": "SF",
-          "n": 81,
-          "mean": 22.2,
-          "std": 8.6,
-          "p25": 16,
-          "p75": 28.2,
-          "iqr": 12.2,
-          "min": 6.1,
-          "max": 41.4
-        },
-        {
-          "name": "Zydrunas Ilgauskas",
-          "pos": "C",
-          "n": 65,
-          "mean": 26.9,
-          "std": 8.5,
-          "p25": 21.6,
-          "p75": 31.5,
-          "iqr": 9.9,
-          "min": 7.6,
-          "max": 56.4
-        }
-      ],
-      "teamTotalVsBand": {
-        "n": 6000,
-        "mean": 155,
-        "std": 24.1,
-        "p25": 138,
-        "p75": 170.7,
-        "iqr": 32.7,
-        "min": 85.9,
-        "max": 267.6,
-        "band": [
-          132,
-          159.6
-        ],
-        "belowPct": 17.3,
-        "inBandPct": 42.4,
-        "abovePct": 40.3
-      }
-    },
-    {
-      "key": "HOU-1718",
-      "display": "Switch Everything",
-      "tier": "iconic",
-      "overridden": false,
-      "expected": 156.7,
-      "starters": [
-        {
-          "name": "James Harden",
-          "pos": "PG",
-          "n": 72,
-          "mean": 52.7,
-          "std": 16.4,
-          "p25": 40.3,
-          "p75": 63.4,
-          "iqr": 23.1,
-          "min": 23.2,
-          "max": 118.5
-        },
-        {
-          "name": "Trevor Ariza",
-          "pos": "SF",
-          "n": 66,
-          "mean": 22.5,
-          "std": 7.9,
-          "p25": 18,
-          "p75": 25.4,
-          "iqr": 7.4,
-          "min": 7.4,
-          "max": 50.7
+          "iqr": 16.2,
+          "min": 13.4,
+          "max": 63.1
         },
         {
           "name": "Chris Paul",
           "pos": "PG",
-          "n": 58,
-          "mean": 40.9,
-          "std": 13.1,
-          "p25": 31.3,
-          "p75": 47.8,
-          "iqr": 16.5,
-          "min": 16.4,
-          "max": 74.9
+          "n": 62,
+          "mean": 47.6,
+          "std": 12.9,
+          "p25": 40,
+          "p75": 54.6,
+          "iqr": 14.6,
+          "min": 23.3,
+          "max": 85.6
         },
         {
-          "name": "Eric Gordon",
+          "name": "Jamal Crawford",
           "pos": "PG",
           "n": 69,
-          "mean": 24.2,
-          "std": 10.2,
-          "p25": 16.4,
-          "p75": 31.2,
+          "mean": 26.3,
+          "std": 11.1,
+          "p25": 19,
+          "p75": 30.5,
+          "iqr": 11.5,
+          "min": 6.5,
+          "max": 67.1
+        },
+        {
+          "name": "JJ Redick",
+          "pos": "PG",
+          "n": 35,
+          "mean": 21.6,
+          "std": 8.4,
+          "p25": 15.9,
+          "p75": 26.8,
+          "iqr": 10.9,
+          "min": 8.6,
+          "max": 49.1
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 180.5,
+        "std": 25.8,
+        "p25": 162.6,
+        "p75": 197.2,
+        "iqr": 34.6,
+        "min": 92.6,
+        "max": 297,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 2.2,
+        "inBandPct": 18.9,
+        "abovePct": 78.9
+      }
+    },
+    {
+      "key": "BKN-2021",
+      "display": "The Brooklyn Superteam",
+      "tier": "iconic",
+      "overridden": false,
+      "expected": 207.4,
+      "starters": [
+        {
+          "name": "James Harden",
+          "pos": "PG",
+          "n": 43,
+          "mean": 57.3,
+          "std": 18.8,
+          "p25": 41.8,
+          "p75": 72,
+          "iqr": 30.2,
+          "min": 30.5,
+          "max": 104.3
+        },
+        {
+          "name": "Kyrie Irving",
+          "pos": "PG",
+          "n": 54,
+          "mean": 45,
+          "std": 12.5,
+          "p25": 36,
+          "p75": 55.3,
+          "iqr": 19.3,
+          "min": 17.5,
+          "max": 75
+        },
+        {
+          "name": "Kevin Durant",
+          "pos": "SF",
+          "n": 34,
+          "mean": 46.5,
+          "std": 13.5,
+          "p25": 37.6,
+          "p75": 55.3,
+          "iqr": 17.7,
+          "min": 22.9,
+          "max": 81.4
+        },
+        {
+          "name": "Caris LeVert",
+          "pos": "PG",
+          "n": 47,
+          "mean": 36.1,
+          "std": 13.9,
+          "p25": 25.6,
+          "p75": 46.6,
+          "iqr": 21,
+          "min": 4.7,
+          "max": 66.8
+        },
+        {
+          "name": "Joe Harris",
+          "pos": "SF",
+          "n": 68,
+          "mean": 22.6,
+          "std": 7.3,
+          "p25": 17.9,
+          "p75": 28.4,
+          "iqr": 10.5,
+          "min": 9.7,
+          "max": 42.2
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 207.6,
+        "std": 30.5,
+        "p25": 186.4,
+        "p75": 228.3,
+        "iqr": 41.9,
+        "min": 113.2,
+        "max": 321.6,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 0.3,
+        "inBandPct": 5.1,
+        "abovePct": 94.5
+      }
+    },
+    {
+      "key": "PHI-1819",
+      "display": "The Process",
+      "tier": "iconic",
+      "overridden": true,
+      "expected": 196.3,
+      "starters": [
+        {
+          "name": "Tobias Harris",
+          "pos": "SF",
+          "n": 82,
+          "mean": 35,
+          "std": 10.1,
+          "p25": 28,
+          "p75": 39.9,
+          "iqr": 11.9,
+          "min": 14.1,
+          "max": 64.3
+        },
+        {
+          "name": "Ben Simmons",
+          "pos": "SF",
+          "n": 78,
+          "mean": 43.7,
+          "std": 14.6,
+          "p25": 32.9,
+          "p75": 53.1,
+          "iqr": 20.2,
+          "min": 10.8,
+          "max": 85.2
+        },
+        {
+          "name": "JJ Redick",
+          "pos": "PG",
+          "n": 76,
+          "mean": 25.2,
+          "std": 8.4,
+          "p25": 19.5,
+          "p75": 28.5,
+          "iqr": 9,
+          "min": 9,
+          "max": 55
+        },
+        {
+          "name": "Joel Embiid",
+          "pos": "C",
+          "n": 64,
+          "mean": 56.7,
+          "std": 14.8,
+          "p25": 45.4,
+          "p75": 65.9,
+          "iqr": 20.5,
+          "min": 23.2,
+          "max": 96.1
+        },
+        {
+          "name": "Jimmy Butler III",
+          "pos": "SF",
+          "n": 65,
+          "mean": 35.8,
+          "std": 12.7,
+          "p25": 28.4,
+          "p75": 43.2,
           "iqr": 14.8,
-          "min": 0,
-          "max": 55.1
+          "min": 4.7,
+          "max": 69.2
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 196.1,
+        "std": 27.4,
+        "p25": 177,
+        "p75": 214,
+        "iqr": 37,
+        "min": 100,
+        "max": 307.9,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 0.6,
+        "inBandPct": 8.2,
+        "abovePct": 91.2
+      }
+    },
+    {
+      "key": "HOU-1920",
+      "display": "Microball",
+      "tier": "iconic",
+      "overridden": true,
+      "expected": 175.1,
+      "starters": [
+        {
+          "name": "James Harden",
+          "pos": "PG",
+          "n": 68,
+          "mean": 57.2,
+          "std": 17.9,
+          "p25": 43.7,
+          "p75": 69.5,
+          "iqr": 25.8,
+          "min": 25.4,
+          "max": 91.8
+        },
+        {
+          "name": "Russell Westbrook",
+          "pos": "PG",
+          "n": 57,
+          "mean": 48.8,
+          "std": 15.6,
+          "p25": 37.1,
+          "p75": 59.5,
+          "iqr": 22.4,
+          "min": 14.8,
+          "max": 82.2
         },
         {
           "name": "P.J. Tucker",
           "pos": "SF",
-          "n": 82,
-          "mean": 16.4,
-          "std": 6.6,
-          "p25": 12.3,
-          "p75": 19.4,
-          "iqr": 7.1,
-          "min": 3.2,
-          "max": 35.5
+          "n": 71,
+          "mean": 20.7,
+          "std": 9.7,
+          "p25": 12.7,
+          "p75": 28.1,
+          "iqr": 15.4,
+          "min": 6.7,
+          "max": 45.2
+        },
+        {
+          "name": "Danuel House Jr.",
+          "pos": "SG",
+          "n": 63,
+          "mean": 20.3,
+          "std": 9.4,
+          "p25": 12.4,
+          "p75": 26.6,
+          "iqr": 14.2,
+          "min": 4.4,
+          "max": 48.2
+        },
+        {
+          "name": "Robert Covington",
+          "pos": "SF",
+          "n": 70,
+          "mean": 28,
+          "std": 10,
+          "p25": 21.3,
+          "p75": 34.6,
+          "iqr": 13.3,
+          "min": 5.4,
+          "max": 56.2
         }
       ],
       "teamTotalVsBand": {
         "n": 6000,
-        "mean": 156.6,
-        "std": 26.1,
-        "p25": 138.5,
-        "p75": 173,
-        "iqr": 34.5,
-        "min": 77.6,
-        "max": 288.5,
+        "mean": 175,
+        "std": 28.8,
+        "p25": 155.1,
+        "p75": 194,
+        "iqr": 38.9,
+        "min": 86.3,
+        "max": 277.8,
         "band": [
           132,
           159.6
         ],
-        "belowPct": 17,
-        "inBandPct": 40.1,
-        "abovePct": 42.9
+        "belowPct": 6.5,
+        "inBandPct": 24.2,
+        "abovePct": 69.3
       }
     },
     {
-      "key": "MEM-1213",
-      "display": "Grit-n-Grind",
+      "key": "DEN-0607",
+      "display": "Iverson & Melo",
       "tier": "iconic",
-      "overridden": false,
-      "expected": 151.7,
+      "overridden": true,
+      "expected": 169.5,
       "starters": [
         {
-          "name": "Rudy Gay",
-          "pos": "SG",
-          "n": 75,
-          "mean": 31.3,
-          "std": 10.1,
-          "p25": 23.8,
-          "p75": 38.5,
-          "iqr": 14.7,
-          "min": 9.8,
-          "max": 55.9
-        },
-        {
-          "name": "Marc Gasol",
-          "pos": "C",
-          "n": 80,
-          "mean": 34.9,
-          "std": 10.1,
-          "p25": 28.2,
-          "p75": 40.8,
-          "iqr": 12.6,
-          "min": 4.1,
-          "max": 59.7
-        },
-        {
-          "name": "Mike Conley",
+          "name": "Allen Iverson",
           "pos": "PG",
-          "n": 79,
-          "mean": 30.7,
-          "std": 9.8,
-          "p25": 24,
-          "p75": 37.6,
-          "iqr": 13.6,
-          "min": 7.5,
-          "max": 55.3
+          "n": 65,
+          "mean": 41.3,
+          "std": 15.1,
+          "p25": 31.3,
+          "p75": 47.6,
+          "iqr": 16.3,
+          "min": 16.7,
+          "max": 85.5
         },
         {
-          "name": "Zach Randolph",
+          "name": "Carmelo Anthony",
           "pos": "SF",
-          "n": 76,
-          "mean": 34.7,
-          "std": 11.7,
-          "p25": 26,
-          "p75": 42.2,
-          "iqr": 16.2,
-          "min": 4.3,
-          "max": 80.4
+          "n": 65,
+          "mean": 41.4,
+          "std": 12.8,
+          "p25": 34.5,
+          "p75": 49.5,
+          "iqr": 15,
+          "min": 12.4,
+          "max": 73
         },
         {
-          "name": "Tayshaun Prince",
-          "pos": "SF",
-          "n": 82,
-          "mean": 20.2,
-          "std": 6.6,
-          "p25": 15.4,
-          "p75": 23.4,
-          "iqr": 8,
-          "min": 2.2,
-          "max": 39.8
+          "name": "JR Smith",
+          "pos": "PG",
+          "n": 57,
+          "mean": 20,
+          "std": 11,
+          "p25": 11.8,
+          "p75": 26.5,
+          "iqr": 14.7,
+          "min": -0.8,
+          "max": 45.6
+        },
+        {
+          "name": "Marcus Camby",
+          "pos": "C",
+          "n": 70,
+          "mean": 42.6,
+          "std": 14,
+          "p25": 34.3,
+          "p75": 55.1,
+          "iqr": 20.8,
+          "min": 5.9,
+          "max": 75.9
+        },
+        {
+          "name": "Earl Boykins",
+          "pos": "PG",
+          "n": 65,
+          "mean": 24.2,
+          "std": 13.3,
+          "p25": 14.9,
+          "p75": 30.4,
+          "iqr": 15.5,
+          "min": 0,
+          "max": 60.9
         }
       ],
       "teamTotalVsBand": {
         "n": 6000,
-        "mean": 151.4,
-        "std": 21.9,
-        "p25": 136.8,
-        "p75": 166.2,
-        "iqr": 29.4,
-        "min": 74.6,
-        "max": 250.6,
+        "mean": 169.2,
+        "std": 29.6,
+        "p25": 148.8,
+        "p75": 188.8,
+        "iqr": 40,
+        "min": 72.3,
+        "max": 270.2,
         "band": [
           132,
           159.6
         ],
-        "belowPct": 18.7,
-        "inBandPct": 46.1,
-        "abovePct": 35.3
+        "belowPct": 9.9,
+        "inBandPct": 28.9,
+        "abovePct": 61.2
+      }
+    },
+    {
+      "key": "HOU-9697",
+      "display": "The Last Ride",
+      "tier": "iconic",
+      "overridden": false,
+      "expected": 177,
+      "starters": [
+        {
+          "name": "Charles Barkley",
+          "pos": "SF",
+          "n": 52,
+          "mean": 48.2,
+          "std": 13.7,
+          "p25": 36.9,
+          "p75": 57,
+          "iqr": 20.1,
+          "min": 20.9,
+          "max": 91.4
+        },
+        {
+          "name": "Clyde Drexler",
+          "pos": "PG",
+          "n": 62,
+          "mean": 37.6,
+          "std": 13.6,
+          "p25": 26.7,
+          "p75": 45.4,
+          "iqr": 18.7,
+          "min": 8.4,
+          "max": 74.5
+        },
+        {
+          "name": "Hakeem Olajuwon",
+          "pos": "C",
+          "n": 78,
+          "mean": 44.7,
+          "std": 16.7,
+          "p25": 31.9,
+          "p75": 52.7,
+          "iqr": 20.8,
+          "min": 16,
+          "max": 88.2
+        },
+        {
+          "name": "Mario Elie",
+          "pos": "SF",
+          "n": 77,
+          "mean": 22.5,
+          "std": 9.6,
+          "p25": 15.6,
+          "p75": 28.6,
+          "iqr": 13,
+          "min": 4.4,
+          "max": 51.9
+        },
+        {
+          "name": "Kevin Willis",
+          "pos": "C",
+          "n": 74,
+          "mean": 24,
+          "std": 13.2,
+          "p25": 13.2,
+          "p75": 32.9,
+          "iqr": 19.7,
+          "min": 0.5,
+          "max": 57.6
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 176.7,
+        "std": 30.7,
+        "p25": 155.3,
+        "p75": 197.2,
+        "iqr": 41.9,
+        "min": 76.8,
+        "max": 297.4,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 6.4,
+        "inBandPct": 23.8,
+        "abovePct": 69.8
+      }
+    },
+    {
+      "key": "OKC-1516",
+      "display": "Up 3-1",
+      "tier": "iconic",
+      "overridden": false,
+      "expected": 165.9,
+      "starters": [
+        {
+          "name": "Kevin Durant",
+          "pos": "SF",
+          "n": 72,
+          "mean": 48.1,
+          "std": 12.3,
+          "p25": 39.6,
+          "p75": 57.2,
+          "iqr": 17.6,
+          "min": 26.7,
+          "max": 74.6
+        },
+        {
+          "name": "Russell Westbrook",
+          "pos": "PG",
+          "n": 80,
+          "mean": 53.9,
+          "std": 14.4,
+          "p25": 45.1,
+          "p75": 63.9,
+          "iqr": 18.8,
+          "min": 9.8,
+          "max": 88
+        },
+        {
+          "name": "Serge Ibaka",
+          "pos": "SF",
+          "n": 78,
+          "mean": 26.9,
+          "std": 10.1,
+          "p25": 19.4,
+          "p75": 33.3,
+          "iqr": 13.9,
+          "min": 4.4,
+          "max": 52.5
+        },
+        {
+          "name": "Dion Waiters",
+          "pos": "PG",
+          "n": 78,
+          "mean": 16.9,
+          "std": 8.3,
+          "p25": 10.6,
+          "p75": 22.6,
+          "iqr": 12,
+          "min": -2,
+          "max": 39.7
+        },
+        {
+          "name": "Steven Adams",
+          "pos": "C",
+          "n": 80,
+          "mean": 20.2,
+          "std": 8,
+          "p25": 15.9,
+          "p75": 26,
+          "iqr": 10.1,
+          "min": 2.4,
+          "max": 47
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 165.8,
+        "std": 24.2,
+        "p25": 149.4,
+        "p75": 181.9,
+        "iqr": 32.5,
+        "min": 75.7,
+        "max": 275,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 8.1,
+        "inBandPct": 32.5,
+        "abovePct": 59.5
+      }
+    },
+    {
+      "key": "ORL-0809",
+      "display": "Superman",
+      "tier": "iconic",
+      "overridden": false,
+      "expected": 165.1,
+      "starters": [
+        {
+          "name": "Hedo Turkoglu",
+          "pos": "SF",
+          "n": 77,
+          "mean": 29.7,
+          "std": 8.6,
+          "p25": 24.8,
+          "p75": 34.8,
+          "iqr": 10,
+          "min": 6.6,
+          "max": 49.5
+        },
+        {
+          "name": "Rashard Lewis",
+          "pos": "SF",
+          "n": 79,
+          "mean": 29.9,
+          "std": 8.8,
+          "p25": 23.9,
+          "p75": 36,
+          "iqr": 12.1,
+          "min": 7.4,
+          "max": 50.4
+        },
+        {
+          "name": "Dwight Howard",
+          "pos": "C",
+          "n": 79,
+          "mean": 49.6,
+          "std": 15.7,
+          "p25": 37.3,
+          "p75": 59.8,
+          "iqr": 22.5,
+          "min": 24.1,
+          "max": 97.3
+        },
+        {
+          "name": "Rafer Alston",
+          "pos": "PG",
+          "n": 77,
+          "mean": 25.4,
+          "std": 10,
+          "p25": 18.2,
+          "p75": 30.9,
+          "iqr": 12.7,
+          "min": 7.6,
+          "max": 54.9
+        },
+        {
+          "name": "Jameer Nelson",
+          "pos": "PG",
+          "n": 42,
+          "mean": 30.5,
+          "std": 11.2,
+          "p25": 21.9,
+          "p75": 36.3,
+          "iqr": 14.4,
+          "min": 9.4,
+          "max": 71.9
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 165.6,
+        "std": 25.1,
+        "p25": 148,
+        "p75": 181.7,
+        "iqr": 33.7,
+        "min": 76.3,
+        "max": 276.9,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 8.2,
+        "inBandPct": 34.1,
+        "abovePct": 57.8
+      }
+    },
+    {
+      "key": "TOR-0001",
+      "display": "Vinsanity",
+      "tier": "iconic",
+      "overridden": false,
+      "expected": 160.3,
+      "starters": [
+        {
+          "name": "Vince Carter",
+          "pos": "SF",
+          "n": 73,
+          "mean": 46.1,
+          "std": 13.3,
+          "p25": 37.4,
+          "p75": 55,
+          "iqr": 17.6,
+          "min": 17.6,
+          "max": 86
+        },
+        {
+          "name": "Antonio Davis",
+          "pos": "PF",
+          "n": 76,
+          "mean": 34.6,
+          "std": 11.9,
+          "p25": 26.3,
+          "p75": 43.6,
+          "iqr": 17.3,
+          "min": 12.2,
+          "max": 66.1
+        },
+        {
+          "name": "Charles Oakley",
+          "pos": "SF",
+          "n": 78,
+          "mean": 30,
+          "std": 12,
+          "p25": 19.8,
+          "p75": 38.3,
+          "iqr": 18.5,
+          "min": 10.1,
+          "max": 70.2
+        },
+        {
+          "name": "Mark Jackson",
+          "pos": "PG",
+          "n": 83,
+          "mean": 25.2,
+          "std": 11.4,
+          "p25": 16.9,
+          "p75": 31.8,
+          "iqr": 14.9,
+          "min": 5.7,
+          "max": 59.7
+        },
+        {
+          "name": "Alvin Williams",
+          "pos": "PG",
+          "n": 82,
+          "mean": 24.3,
+          "std": 13.2,
+          "p25": 15.2,
+          "p75": 31.5,
+          "iqr": 16.3,
+          "min": 1,
+          "max": 69
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 159.9,
+        "std": 27.9,
+        "p25": 140.3,
+        "p75": 178.3,
+        "iqr": 38,
+        "min": 77,
+        "max": 269.8,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 16.1,
+        "inBandPct": 35.4,
+        "abovePct": 48.6
+      }
+    },
+    {
+      "key": "GSW-0607",
+      "display": "We Believe",
+      "tier": "iconic",
+      "overridden": false,
+      "expected": 152,
+      "starters": [
+        {
+          "name": "Baron Davis",
+          "pos": "PG",
+          "n": 63,
+          "mean": 41.4,
+          "std": 15.3,
+          "p25": 28.2,
+          "p75": 50.9,
+          "iqr": 22.7,
+          "min": 12.4,
+          "max": 83.3
+        },
+        {
+          "name": "Monta Ellis",
+          "pos": "PG",
+          "n": 76,
+          "mean": 27.6,
+          "std": 11,
+          "p25": 20.8,
+          "p75": 34.4,
+          "iqr": 13.6,
+          "min": 4.2,
+          "max": 57.9
+        },
+        {
+          "name": "Jason Richardson",
+          "pos": "PG",
+          "n": 50,
+          "mean": 30,
+          "std": 14.8,
+          "p25": 22,
+          "p75": 35.2,
+          "iqr": 13.2,
+          "min": -0.5,
+          "max": 72.9
+        },
+        {
+          "name": "Stephen Jackson",
+          "pos": "SG",
+          "n": 74,
+          "mean": 25.6,
+          "std": 12.1,
+          "p25": 17.4,
+          "p75": 32.6,
+          "iqr": 15.2,
+          "min": 3.7,
+          "max": 62.6
+        },
+        {
+          "name": "Al Harrington",
+          "pos": "SF",
+          "n": 78,
+          "mean": 27.4,
+          "std": 10.9,
+          "p25": 19.5,
+          "p75": 35.6,
+          "iqr": 16.1,
+          "min": 3.6,
+          "max": 51.5
+        }
+      ],
+      "teamTotalVsBand": {
+        "n": 6000,
+        "mean": 152.4,
+        "std": 28.8,
+        "p25": 132,
+        "p75": 172,
+        "iqr": 40,
+        "min": 59.6,
+        "max": 262.8,
+        "band": [
+          132,
+          159.6
+        ],
+        "belowPct": 25,
+        "inBandPct": 36.3,
+        "abovePct": 38.7
       }
     }
   ]

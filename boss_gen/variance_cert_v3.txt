@@ -1,6 +1,6 @@
-BOSS VARIANCE CERT v2
+BOSS VARIANCE CERT v3
 ================================================================================================
-bank v1.2 | band [132,159.6] | 36 bosses = 32 unchanged + 4 override-applied | FP: one canonical path
+bank v1.2 | band [132,159.6] | 36 bosses = 31 unchanged + 5 override-applied | FP: one canonical path
 
 BKN-2021  "The Brooklyn Superteam"  [iconic]  expected 207.4
    starter                 pos   n   mean   std    IQR   (p25–p75)     min/max
@@ -31,16 +31,6 @@ BOS-2324  "Banner 18"  [champ]  expected 182.5
    Kristaps Porziņģis     PF    56   38.1   11.8   18.4   (29–47.4)           16.4/68.4
    TEAM ROLL TOTAL: mean 182.1 std 25.8 IQR 35.2 (163.9–199.1) range 77.6/289.2
    vs band [132,159.6]: below 2.2% | in-band 17.4% | above 80.4%
-
-DEN-0607  "Iverson & Melo"  [iconic]  expected 181.3
-   starter                 pos   n   mean   std    IQR   (p25–p75)     min/max
-   Allen Iverson          PG    65   41.3   15.1   16.3   (31.3–47.6)         16.7/85.5
-   Carmelo Anthony        SF    65   41.4   12.8     15   (34.5–49.5)         12.4/73
-   Andre Miller           PG    80   31.8   11.2   13.9   (24.6–38.5)         7.4/65.6
-   Marcus Camby           C     70   42.6     14   20.8   (34.3–55.1)         5.9/75.9
-   Earl Boykins           PG    65   24.2   13.3   15.5   (14.9–30.4)         0/60.9
-   TEAM ROLL TOTAL: mean 180.7 std 29.6 IQR 39.8 (160.4–200.2) range 92.4/286.1
-   vs band [132,159.6]: below 4.6% | in-band 19.5% | above 75.9%
 
 GSW-1617  "The Super-Team"  [champ]  expected 181.1
    starter                 pos   n   mean   std    IQR   (p25–p75)     min/max
@@ -151,6 +141,16 @@ OKC-2425  "SGA's Crown"  [champ]  expected 169.5
    Cason Wallace          PG    67   20.9      8   12.7   (14.5–27.2)         8.2/38.6
    TEAM ROLL TOTAL: mean 169.7 std 25.8 IQR 35.1 (151.9–187) range 93.7/282.7
    vs band [132,159.6]: below 6.3% | in-band 30.5% | above 63.1%
+
+DEN-0607  "Iverson & Melo"  [iconic]  expected 169.5  ★OVERRIDE-APPLIED
+   starter                 pos   n   mean   std    IQR   (p25–p75)     min/max
+   Allen Iverson          PG    65   41.3   15.1   16.3   (31.3–47.6)         16.7/85.5
+   Carmelo Anthony        SF    65   41.4   12.8     15   (34.5–49.5)         12.4/73
+   JR Smith               PG    57     20     11   14.7   (11.8–26.5)         -0.8/45.6
+   Marcus Camby           C     70   42.6     14   20.8   (34.3–55.1)         5.9/75.9
+   Earl Boykins           PG    65   24.2   13.3   15.5   (14.9–30.4)         0/60.9
+   TEAM ROLL TOTAL: mean 169.2 std 29.6 IQR 40 (148.8–188.8) range 72.3/270.2
+   vs band [132,159.6]: below 9.9% | in-band 28.9% | above 61.2%
 
 LAL-0304  "The Superteam"  [iconic]  expected 168.7
    starter                 pos   n   mean   std    IQR   (p25–p75)     min/max
