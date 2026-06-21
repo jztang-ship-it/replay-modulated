@@ -3703,3 +3703,49 @@ hand → fresh seed → click-through "Round 2"/"Round 3" → round-3 auto-revea
 `targetScore`, arc never blank — with the terminal now being this one-sided surface (not the arc,
 not the panel). The error panel keeps its separate assertion on the `dataLoadError`/`engineError`
 deeper-break trigger.
+
+## Degraded trigger correction: senderHandFailed, not undefined-hand (amends all prior fail-open blocks) — 2026-06-22
+
+RATIFIED (John). Corrects a flaw in the trigger semantics that every prior fail-open block stated
+the same wrong way ("undefined `resolvedSenderHand` → degraded / floor"). The build exposed it.
+
+**The flaw.** `resolvedSenderHand` is undefined in TWO unrelated situations, and prior blocks
+conflated them:
+- PENDING — the sender-hand fetch is in flight. It fires at accept and resolves ~1-3s later, after
+  play begins, so `resolvedSenderHand` is undefined at round 1 for EVERY challenge, normal ones
+  included.
+- FAILED — definitive: legacy `sender_resolved:false` cohort, or transient-retry-exhausted.
+
+Gating the degraded click-through on `!resolvedSenderHand` therefore mis-routes EVERY normal
+recipient into the click-through at round 1, before their real opponent hand arrives. (This is the
+same surface symptom as the parked "drops to fresh deal" investigation — see note below. It also
+broke 33 existing tests, which were correctly reporting the conflation.)
+
+**The correction (ratified).** Two different predicates for two different decisions:
+- Degraded PLAY branch keys on a new explicit `challengeCtx.senderHandFailed` flag. App sets it
+  TRUE only on the definitive-failure paths (legacy `sender_resolved:false`,
+  transient-retry-exhausted). It is FALSE while pending.
+- Arc TERMINAL still keys on `resolvedSenderHand`: a late-arriving hand → battlefield reveal; a
+  never-arriving hand → one-sided reveal.
+
+So: pending → wait (normal path, battlefield when the hand lands). Failed → degraded click-through
+→ one-sided terminal. "Degraded = unavailable, not pending." This is the faithful realization of
+what every prior block INTENDED; those blocks lacked the vocabulary because undefined-vs-failed
+hadn't been distinguished until the build forced it.
+
+**Scope of the change.** Adds a `senderHandFailed` field to ChallengeCtx + App wiring to set it on
+the two definitive-failure paths. Reversible (one trigger line + the App signal) if ever respecced.
+The `_roundMachine.ts` / resolveRoster / seam are untouched by this.
+
+**Supersedes wording, not intent, in:** the fail-open floor corollary (9b31aef), the click-through
+choreography block (9f1d25d), and the one-sided reveal block (31e7d7e). Wherever those say
+"undefined hand → degraded/floor," read "senderHandFailed → degraded/floor." The undefined-hand
+predicate survives ONLY for the arc terminal's late-vs-never distinction.
+
+**Likely closes the parked "drops to fresh deal" investigation (to confirm, not assume).** The
+original seed hypothesized retry-then-fail-open might remove the premature fresh-deal as a
+byproduct. Stronger: the premature fresh-deal WAS the undefined-while-pending mis-route, and
+`senderHandFailed` gating is its direct fix — a normal recipient is `senderHandFailed:false` while
+pending, so they wait for the battlefield instead of dropping to click-through. NOT closed from
+here — that investigation has its own findings unread at this layer; confirm when that mission
+opens. The [ch-debug] instrumentation (f673bf54) is the tool to confirm it.
