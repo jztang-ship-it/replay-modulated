@@ -3222,6 +3222,44 @@ forbids. **Per the build gate, halted after step 1 — awaiting go on the
 per-season-band script scope before steps 2/3.** No difficulty tuning lever
 (banned); the fix is season-derived calibration only.
 
+### Two-tier bosses + per-season-band GO (2026-06-21, John)
+**Two tiers** (both terminate outward; invariant holds for every view):
+- **Beatable (daily):** you're meant to win. Loss copy enemy-referential
+  ("the Pistons got me, think you survive them?").
+- **Marquee/impossible:** brutal by design, the near-miss is the draw. Scope:
+  **(a) `tier:'marquee'` flag, (b) a "brutal by design" landing label, (c) a
+  margin-based loss-copy branch** ("I came within 9 of the 73-9 Warriors —
+  closer than you'll get"). NOTHING ELSE — no separate mode, no near-miss
+  leaderboard, no rewards (post-MVP).
+
+**Candidate seasons to band (15 only — do NOT band others):**
+- Beatable (13, FILTER to ~10): DET-0304, PHI-0001, SAC-0102, DAL-1011,
+  TOR-0001, BOS-0708, SAS-1314, PHX-0607, HOU-9697, DEN-2223, MIL-2021,
+  LAL-1920, OKC-2425.
+- Marquee (2, CALIBRATE — do not cut for being hard): CHI-9798 (Last Dance),
+  GSW-1516 (73-9).
+
+**FP parity — CONFIRMED (the step-1 gate).** The per-season band is computed with
+`bossData.canonicalFp` (= `computeBasketballFp(stats,+_position) + Σbadges`).
+That **equals** the play-path `resolveEngine` `actualFp` because: `fpScale=1`
+(gameAdapter), real gamelogs carry no stored `fp`/`total_points` (so
+`extractFpFromStats` computes, not reads), `_position` injected both sides, same
+badge functions+config, and `dailyBonus` excluded from the reference (the
+`playerPoolStats` calibration convention). Same FP as the boss roll
+(`rollGames` → `canonicalFp`). So band + boss target + recipient play are one
+scale by construction — a parity test pins it.
+
+**Per-season-band approach (built, NOT the modern simulator):** a new offline
+script `scripts/build-boss-bands.mjs` Monte-Carlos random legal lineups (5
+undifferentiated players under the $250 cap — basketball has no positional slots —
+each scoring a uniformly-random qualifying game via `canonicalFp`) per season,
+reading the per-season `seasons/<season>/` files; band = `[P60,P85]`. This mirrors
+the boss roll's own method (random qualifying game per starter) → apples-to-apples.
+Output committed as a byte-match drift-guarded artifact (same pattern as
+`bossBank.generated.json`); `rollBoss`/`build-boss-bank` wire each boss's target to
+its own-season band. **STOP after step 1** with the band table (per boss: season,
+tier, band, rolled target) for John before steps 2/3.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
