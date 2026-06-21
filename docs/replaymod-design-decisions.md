@@ -3663,3 +3663,43 @@ sequence + rename are added on top. The panel backstop gets its own separate ass
 degraded branch forced into `dataLoadError`/`engineError` during the fresh-seed run, the panel
 mounts (showing `targetScore`) and fires its single mount POST — and this trigger is distinct
 from plain undefined-hand, which must reach the click-through rounds, not the panel.
+
+## Degraded round-3 terminal: one-sided reveal surface (amends "Fail-open choreography: click-through rounds") — 2026-06-22
+
+Resolves the surface the prior block left unnamed ("auto-reveals scoring vs `targetScore`" without
+naming where). CC ground-truthed two candidates out: the arc hard-depends on a resolved opponent
+hand so it cannot render the degraded (fresh-seed, no-opponent) terminal; and the floor panel's
+"opponent hand unavailable / we couldn't load" copy is an error surface, wrong for a run that
+succeeded. So the degraded round-3 reveal gets its own surface.
+
+**New lean surface, not a mode on H2HRevealScreen.** The terminal is a NEW one-sided reveal
+component, not H2HRevealScreen flagged into a "one-sided mode." Rationale: H2HRevealScreen's layout
+is built around the two-hand battlefield; threading "if no opponent" conditionals through it
+re-creates the exact failure class that started this thread (a sub-element resolving to nothing →
+silent blank — the 5b black-out shape). A component that only ever knows one score + one target has
+no opponent-shaped hole to blank into. The degraded path's whole reason for existing is robustness
+against the missing hand, so its terminal must be the surface that structurally cannot depend on
+the missing thing.
+
+**Echo the chrome, don't reuse the component.** Visually it should read as the same game, not a
+stripped error state: pull the scoring typography/treatment tokens from H2HRevealScreen, render one
+column (your score) instead of two. Same family, one-sided layout.
+
+**Framing — expected outcome, NOT an error.** Copy is "you scored {resolvedScore} vs Target
+{targetScore}" (final wording John's to set), no opponent battlefield, NO "unavailable"/"couldn't
+load"/apology language. The user played a real 3-round run and got a real score; present it as a
+legitimate outcome against the target. "Unavailable" language lives ONLY on the deeper-break error
+panel — undefined-hand is expected (legacy cohort), not a failure.
+
+**Data + POST.** Both inputs exist at this point: `state.resolvedScore` (the fresh-seed run's real
+score) and `targetScore`. The single `useChallengeAttempt` POST fires HERE, at this one-sided
+reveal — unchanged from the prior block's "POST at the round-3 auto-reveal." Structural separation
+preserved: one-sided surface fires on reveal; error panel fires on mount; two distinct components,
+never the same code path. The "exactly one POST per attempt, mutually exclusive" guarantee is now
+enforced by construction (different components), not by runtime routing.
+
+**§8 unchanged in intent, sharpened in target.** The evolved §8 assertion still holds — undefined
+hand → fresh seed → click-through "Round 2"/"Round 3" → round-3 auto-reveal showing a score vs
+`targetScore`, arc never blank — with the terminal now being this one-sided surface (not the arc,
+not the panel). The error panel keeps its separate assertion on the `dataLoadError`/`engineError`
+deeper-break trigger.
