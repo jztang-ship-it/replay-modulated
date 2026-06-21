@@ -2062,3 +2062,51 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 });
+
+// ── 8. Fail-open floor — missing opponent hand (Task 4 / fail-open "A") ─────
+// Regression guard for the locked "Missing opponent hand: fail-open floor"
+// corollary (docs/replaymod-design-decisions.md). resolvedSenderHand undefined
+// (legacy sender_resolved:false OR transient-fetch-exhausted) must NEVER produce
+// the silent dead-end mapped in the black-out investigation:
+//   inner opacity 0  +  H2HRecipientReveal returns null  =  blank arc.
+// Instead the recipient must reach a VISIBLE outcome against the authoritative
+// targetScore, with the opponent reveal gracefully absent. This test is carried
+// forward as the invariant guard into the 3-round build.
+
+describe("H2HRecipientPlay — fail-open floor when resolvedSenderHand is undefined", () => {
+  it("at arc with NO opponent hand: renders a visible floor showing targetScore, never the opacity-0 + reveal-null blank", async () => {
+    // makeCtx() carries NO resolvedSenderHand — the failed/legacy sender-hand case.
+    const ctx = makeCtx({ targetScore: 175 });
+    expect(ctx.resolvedSenderHand).toBeUndefined();
+    const { container } = render(
+      <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
+    );
+    await waitFor(
+      () => {
+        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        expect(btn).not.toBeNull();
+        expect(btn?.disabled).toBe(false);
+      },
+      { timeout: 2000 },
+    );
+    fireEvent.click(screen.getByText("Draw"));
+
+    // Drive to arc.
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("arc"),
+      { timeout: 8000 },
+    );
+
+    // INVARIANT: the opponent reveal is (correctly) absent for a missing hand…
+    expect(container.querySelector("[data-h2h-recipient-reveal]")).toBeNull();
+    // …but the screen is NOT the silent dead-end: a visible fail-open floor renders.
+    const floor = container.querySelector("[data-h2h-no-opponent-floor]");
+    expect(floor).not.toBeNull();
+    // …and it surfaces the authoritative targetScore.
+    const targetNode = container.querySelector("[data-h2h-floor-target]");
+    expect(targetNode).not.toBeNull();
+    expect(targetNode?.textContent ?? "").toContain("175");
+  });
+});

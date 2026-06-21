@@ -115,6 +115,7 @@ import { ScoreCell } from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
+import { useChallengeAttempt } from "@shared/hooks/useChallengeAttempt";
 import {
   H2HBoardShell,
   HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
@@ -1533,21 +1534,41 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // board across the S3→S4 boundary; only the slot CONTENTS visibly
   // transition (playing-inner fades to 0; reveal arc fades in).
   const compositeOverlay = arcComposite && state.kind === "arc" ? (
-    <H2HRecipientReveal
-      challengeCtx={challengeCtx}
-      myScore={state.resolvedScore}
-      myRoster={state.resolvedRoster}
-      myWinTier={state.resolvedTier}
-      gameState={"REVEALING" as any}
-      bypassGameStateGate
-      sport={sport}
-      renderBattlefieldCard={renderBattlefieldCard}
-      renderOverlayCard={renderOverlayCard}
-      onSendItBack={onSendItBack}
-      onTryAgain={onTryAgain}
-      onPlayOwnHand={onPlayOwnHand}
-      onDismiss={onDismiss}
-    />
+    // Fail-open floor (docs: "Missing opponent hand: fail-open floor"). When
+    // resolvedSenderHand is undefined (legacy sender_resolved:false, or
+    // transient sender-hand fetch exhausted after retry), H2HRecipientReveal
+    // self-gates to null — and the play inner has already faded to opacity 0
+    // for the arc handoff, which produced the mapped silent black-out. Route a
+    // missing opponent to the visible outcome-vs-target floor instead; never a
+    // blank arc. The opponent reveal is gracefully absent, the authoritative
+    // targetScore is always shown.
+    challengeCtx.resolvedSenderHand ? (
+      <H2HRecipientReveal
+        challengeCtx={challengeCtx}
+        myScore={state.resolvedScore}
+        myRoster={state.resolvedRoster}
+        myWinTier={state.resolvedTier}
+        gameState={"REVEALING" as any}
+        bypassGameStateGate
+        sport={sport}
+        renderBattlefieldCard={renderBattlefieldCard}
+        renderOverlayCard={renderOverlayCard}
+        onSendItBack={onSendItBack}
+        onTryAgain={onTryAgain}
+        onPlayOwnHand={onPlayOwnHand}
+        onDismiss={onDismiss}
+      />
+    ) : (
+      <H2HRecipientNoOpponentFloor
+        challengeCtx={challengeCtx}
+        myScore={state.resolvedScore}
+        myRoster={state.resolvedRoster}
+        sport={sport}
+        onTryAgain={onTryAgain}
+        onPlayOwnHand={onPlayOwnHand}
+        onDismiss={onDismiss}
+      />
+    )
   ) : null;
 
   return (
@@ -2045,6 +2066,84 @@ function CardBack({ side: _side }: { side: "back" | "front-when-down" }) {
         boxShadow: "inset 0 0 8px rgba(0,0,0,0.4)",
       }}
     />
+  );
+}
+
+/** Fail-open floor for a missing opponent hand (docs/replaymod-design-
+ *  decisions.md → "Challenge model — Missing opponent hand: fail-open floor").
+ *
+ *  Rendered as the arc composite overlay when challengeCtx.resolvedSenderHand
+ *  is undefined — legacy challenges (sender_resolved:false, hand never stored)
+ *  and transient sender-hand-fetch failures that exhausted retry. The opponent
+ *  battlefield reveal is gracefully absent; the recipient still reaches a
+ *  VISIBLE, faithful outcome against the authoritative targetScore. This is the
+ *  floor that the pre-5b ChallengeComparisonScreen used to provide before the
+ *  surface migration dropped it (restoring the principle, not the form).
+ *
+ *  Records the attempt via the SAME useChallengeAttempt hook the full reveal
+ *  fires, so a legacy / unavailable-opponent play still counts (parity). The
+ *  hook swallows POST errors; the floor renders regardless. */
+function H2HRecipientNoOpponentFloor(props: {
+  challengeCtx: ChallengeCtx;
+  myScore: number;
+  myRoster: GeneratedCard[];
+  sport: string;
+  onTryAgain: () => void;
+  onPlayOwnHand: () => void;
+  onDismiss: () => void;
+}) {
+  const { challengeCtx, myScore, myRoster, sport, onTryAgain, onPlayOwnHand, onDismiss } = props;
+  useChallengeAttempt({
+    challengeId: challengeCtx.challengeId,
+    myScore,
+    targetScore: challengeCtx.targetScore,
+    sport,
+    enabled: true,
+    resolvedRoster: myRoster,
+  });
+  const target = challengeCtx.targetScore;
+  const won = myScore >= target;
+  const ACCENT = "#FFB14A";
+  const secondaryBtn: React.CSSProperties = {
+    padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)",
+    background: "transparent", color: "#EAF0FF", fontWeight: 800, fontSize: 13, cursor: "pointer",
+  };
+  return (
+    <div
+      data-h2h-no-opponent-floor="true"
+      style={{
+        position: "fixed", inset: 0, zIndex: 9000,
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        gap: 14, padding: 24, boxSizing: "border-box",
+        background: "#070A12", color: "#EAF0FF",
+        fontFamily: "'Inter', system-ui, sans-serif", textAlign: "center",
+      }}
+    >
+      <GlobalChallengeHeader />
+      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>
+        Opponent hand unavailable
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 900, color: won ? "#7CE38B" : "#EAF0FF" }}>
+        {won ? "You beat the target" : "You came up short"}
+      </div>
+      <div style={{ fontSize: 15, color: "rgba(234,240,255,0.85)" }}>
+        Your score: <b>{myScore.toFixed(1)} FP</b>
+      </div>
+      <div data-h2h-floor-target style={{ fontSize: 15, color: "rgba(234,240,255,0.85)" }}>
+        Target: <b>{target.toFixed(1)} FP</b>
+      </div>
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", maxWidth: 320, lineHeight: 1.4 }}>
+        We couldn’t load your opponent’s lineup, so the head-to-head can’t be shown — but your result against the target stands.
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, marginTop: 8 }}>
+        <button data-h2h-floor-cta="dismiss" onClick={onDismiss} style={{
+          padding: "14px", borderRadius: 12, border: "none", background: ACCENT,
+          color: "#070A12", fontWeight: 900, fontSize: 15, textTransform: "uppercase", letterSpacing: 0.5, cursor: "pointer",
+        }}>Continue</button>
+        <button data-h2h-floor-cta="try-again" onClick={onTryAgain} style={secondaryBtn}>Try Again</button>
+        <button data-h2h-floor-cta="play-own" onClick={onPlayOwnHand} style={secondaryBtn}>Play Your Own Hand</button>
+      </div>
+    </div>
   );
 }
 

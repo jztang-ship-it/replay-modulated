@@ -50,6 +50,7 @@ import { calculateWinTier } from "./utils/payoutLogic";
 // challenge landing, FTUE, game view.
 import { ChallengeDebugPanel } from "@shared/components/ChallengeDebugPanel";
 import { chDebug } from "@shared/lib/chDebug";
+import { retryWithBackoff } from "@shared/lib/retryWithBackoff";
 
 const SPORT = "basketball";
 const SKIP_LANDING_KEY = "replay_skip_landing_basketball";
@@ -516,16 +517,28 @@ function AppInner() {
             const __chDebugPrefetchUrl = `/api/challenge/${c.challengeId}/sender-hand`;
             const __chDebugPrefetchStart = Date.now();
             chDebug("senderHand:start", { url: __chDebugPrefetchUrl });
-            fetch(__chDebugPrefetchUrl)
-              .then(r => {
+            // Fail-open path-split (docs: "Missing opponent hand: fail-open
+            // floor"). TRANSIENT failures (network / 4xx / 5xx) throw → retry
+            // with bounded backoff, then degrade to the fail-open floor. LEGACY
+            // (sender_resolved:false, hand never stored) resolves WITHOUT
+            // throwing → no retry, immediate fail-open. Either way a missing
+            // resolvedSenderHand never blanks — H2HRecipientPlay routes the arc
+            // to the visible no-opponent floor.
+            retryWithBackoff(
+              async (attempt) => {
+                const r = await fetch(__chDebugPrefetchUrl);
                 chDebug("senderHand:response", {
                   url: __chDebugPrefetchUrl,
                   status: r.status,
                   ok: r.ok,
+                  attempt,
                   ms: Date.now() - __chDebugPrefetchStart,
                 });
-                return r.ok ? r.json() : Promise.reject(`http_${r.status}`);
-              })
+                if (!r.ok) throw new Error(`http_${r.status}`); // transient → retry
+                return r.json();
+              },
+              { attempts: 3, backoffMs: [400, 900] },
+            )
               .then((d) => {
                 if (d.sender_resolved === false) {
                   chDebug("senderHand:legacyFallback", {
@@ -556,6 +569,8 @@ function AppInner() {
                 });
               })
               .catch((err) => {
+                // TRANSIENT EXHAUSTED — retries failed. Fail open (leave
+                // resolvedSenderHand undefined → no-opponent floor).
                 chDebug("senderHand:catch", {
                   url: __chDebugPrefetchUrl,
                   error: String(err),
@@ -563,7 +578,7 @@ function AppInner() {
                   resolvedSenderHandUndefined: true,
                 });
                 // eslint-disable-next-line no-console
-                console.warn("[h2h] sender hand prefetch failed:", err);
+                console.warn("[h2h] sender hand prefetch failed after retries:", err);
               });
             };
 
