@@ -3175,6 +3175,53 @@ preview deploy of all three fixes confirmed: all sports 200, the boss chain load
 correctly degrades to no-boss-field. A real `bossChallengeId` in the GET response
 is gated on this DB action — the last step to user-reachable boss.
 
+### Play model — Interpretation 3 (season-locked from-scratch draft) — DECISION LOCKED; per-season band is the bottleneck (step-1 finding, 2026-06-21)
+**Decision (John, locked):** a boss is a sender; **equivalence holds at the
+bookends** (landing → reveal → result → share identical to a human challenge).
+What differs is the **starting-roster source**: the recipient does NOT inherit
+the boss's five (human shared-start) — instead they **start blank and run the
+normal 3-round draft pinned to the boss's locked season, excluding the boss's own
+five**. The boss's five is revealed + scored as the opponent. **Core principle:**
+a challenge locks a season and *everything* derives from it — draft pool, game
+logs, salary/tier constraints, **and the boss's target/band**. No
+modern-vs-historical; only "the challenge's season."
+
+**Mapped CHEAP (existing engine, one switch — not yet built):** start-mode as a
+parameter on the existing deal-source branch (`GameView.tsx:1767`: inherit vs
+`dealInitialRoster()`); season pin via `setActiveSeason`/`bypassSeasonKey`
+(covers pool + logs + salary/tier); boss-exclusion as an eval-pool filter
+(`!bossBasePlayerIds.has`); pools are deep (≥207 drawable per boss season) and
+the manifest covers all 23 boss seasons. Plus the cheap-A enrichment
+(basePlayerId retained, salary/tier from meanFp) + a `sender-hand.ts` boss branch
+so `resolvedSenderHand` is populated.
+
+**BOTTLENECK (step-1 finding — NOT cheap, blocks the build):** the principle's
+"target derives from the season" part is not satisfiable cheaply. The band is a
+**single global modern simulation** (`player_band_allfps.json`,
+`runSimulator.ts basketball 10000`). **The simulator's data source
+(`public/data/players.json` + `game-logs.json`) contains only 2 seasons
+(2324, 2425)** — the 23 historical boss seasons live only in the per-season
+`public/data/seasons/<season>/` files the sim does not read. So
+"run the existing sim pinned per season" (map #6 option a) is **not executable** —
+the historical data isn't in the sim's source, and the sim has its own `computeFp`
+distinct from the runtime's `computeBasketballFp` and bossData's `canonicalFp`
+(three FP impls; the band is only valid computed with the boss/play FP).
+
+Per-season banding therefore requires: a build script sourcing per-season data,
+**FP parity** (the rabbit hole), 23 offline Monte-Carlo runs, a committed
+per-season band artifact, and `rollBoss`/`build-boss-bank` wiring to each boss's
+own-season band. **Cheapest correct path: a NEW build script reusing
+`bossData.canonicalFp` + the economy cap to Monte-Carlo per-season lineup bands
+(parity-by-construction, reads the per-season files like bossData)** — sidesteps
+the modern-only sim + the 3-impl mismatch. Estimate **~1–2 days**, dominated by FP
+parity. **It gates the build:** step 3 (beatability launch-set) is defined as
+"clears the target rolled against the season's band," uncomputable until the
+per-season bands exist; building the engine (step 2) first would ship a
+modern-calibrated boss target — the unfair-by-construction state the principle
+forbids. **Per the build gate, halted after step 1 — awaiting go on the
+per-season-band script scope before steps 2/3.** No difficulty tuning lever
+(banned); the fix is season-derived calibration only.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
