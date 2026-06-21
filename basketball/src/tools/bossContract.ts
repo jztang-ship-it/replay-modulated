@@ -121,8 +121,12 @@ export function toSharedChallengeRow(
     sender_kind: "boss",                    // NEW marker (default 'player' for human challenges)
     challenger_name: proj.sender.name,      // existing column — boss display
     share_headline: proj.sender.flavor,     // existing column — boss flavor
-    target_fp: proj.totalToBeat,            // existing column — total to beat
-    initial_roster: { cards: proj.presentedFive }, // existing snapshot shape
+    target_fp: proj.totalToBeat,            // existing column — total to beat (OPAQUE; baked, not rolled here)
+    // Playable/revealable snapshot — {v:1, sport, cards} so the recipient
+    // landing's validateRosterSnapshot accepts it (the boss five carry
+    // basePlayerId/salary/tier via the cheap-A enrichment). holdsRecorded:false —
+    // the boss is the opponent; the recipient deals fresh (Interpretation 3).
+    initial_roster: { v: 1, sport, holdsRecorded: false, cards: proj.presentedFive },
     sport,
     season: identity.seasonCode,
     trigger_type: "boss",                   // existing column — boss vs player triggers

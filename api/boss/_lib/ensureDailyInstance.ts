@@ -24,7 +24,6 @@ import { supabaseAdmin } from "../../hand/_lib/supabaseServer.js";
 import {
   materializeIdentity,
   dailyInstanceSeed,
-  projectSenderFacing,
   toSharedChallengeRow,
   type BossIdentity,
   type BossDailyInstanceSeed,
@@ -60,21 +59,22 @@ export { SCHEDULE_EPOCH };
 
 const DAY_MS = 86_400_000;
 
-export type ResolvedBoss = {
-  boss: Boss;
-  identity: BossIdentity;
-  seed: BossDailyInstanceSeed;
-};
-
 // Typed view over the committed artifact. Only the request-path fields are
 // present (Q1 trimmed shape); cast through unknown because BankBoss is a
 // structural subset of Boss — the analytics fields Boss carries (gp/avgMin/
 // meanFp/expected/floor/ceiling/rollDepth/flags) are never read by
 // scheduleHeadline / rollBoss / projectSenderFacing / materializeIdentity.
 type BankStarter = { name: string; pos: string; gamePool: number[] };
+/** The baked playable/revealable five (cheap-A enrichment). */
+type RevealedCard = { basePlayerId: string | null; name: string; pos: string; salary: number; tier: string; fp: number };
 type BankBoss = {
   key: string; season: string; team: string; era_id: string;
   tier: string; display: string; flavor: string; starters: BankStarter[];
+  /** OPAQUE per-boss target + revealable five, baked at build time. null →
+   *  dormant (not serveable). The engine reads `target` and never derives it. */
+  marquee?: boolean;
+  target: number | null;
+  revealedFive: RevealedCard[] | null;
 };
 type BossBankArtifact = {
   _meta: { version: string; p_lo: number; p_hi: number };
@@ -83,40 +83,60 @@ type BossBankArtifact = {
 };
 const BANK = bossBankArtifact as BossBankArtifact;
 
+export type ResolvedBossBaked = {
+  boss: Boss;
+  identity: BossIdentity;
+  seed: BossDailyInstanceSeed;
+  /** Baked, opaque. Present on the real path; injected resolvers supply them too. */
+  target: number;
+  revealedFive: RevealedCard[];
+  marquee: boolean;
+};
+
 /**
  * Resolve the canonical boss identity + daily seed for (date, slot) by REUSING
  * scheduleHeadline from the fixed epoch, fed by the PRECOMPUTED static bank —
  * NO request-time fs. Byte-identical to the old fs-join path (pinned by the
  * artifact-vs-fs equivalence test in boss-ensure-daily-instance.test.ts).
  */
-export function resolveBossForDate(date: string, slot: number): ResolvedBoss {
+export function resolveBossForDate(date: string, slot: number): ResolvedBossBaked {
   const bankVersion = BANK._meta.version;
-  // Same pool + order the generator scheduled over: champ + iconic, in bank
-  // order. The artifact preserves loadBankBosses()'s order; the filter is a
-  // no-op today (every active identity is champ|iconic) but kept for exact
-  // equivalence with the prior fs path.
-  const pool = BANK.bosses.filter(b => b.tier === "champ" || b.tier === "iconic") as unknown as Boss[];
+  // SERVEABLE-ROTATION RULE: only bosses with a baked target enter the rotation.
+  // Dormant bosses (target null — banded-season-but-unvetted, or un-banded) are
+  // structurally excluded; a boss can never be served without a calibrated target
+  // (fail-closed). Scheduled over the serveable pool in bank order.
+  const serveable = BANK.bosses.filter(b => b.target != null);
+  const pool = serveable as unknown as Boss[];
   const BAND: [number, number] = [BANK.band.lo, BANK.band.hi];
 
   // Run the schedule from the epoch through the requested day so the era
   // anti-repeat cooldown matches the canonical rotation. A date before the
-  // epoch degrades to the epoch day's boss (days clamped to >= 1) — documented
-  // fallback; production days are >= epoch.
+  // epoch degrades to the epoch day's boss (days clamped to >= 1).
   const offsetDays = Math.floor(
     (Date.parse(date + "T00:00:00Z") - Date.parse(SCHEDULE_EPOCH + "T00:00:00Z")) / DAY_MS,
   );
   const days = Math.max(1, offsetDays + 1);
   const sched = scheduleHeadline(pool, SCHEDULE_EPOCH, days);
-  const boss = sched[days - 1].boss;
-
-  const identity = materializeIdentity(boss, bankVersion);
+  const picked = (sched[days - 1]?.boss as unknown as BankBoss) ?? null;
+  // Fail-closed: no serveable boss → throw (never serve a null/fallback target).
+  if (!picked || picked.target == null || !picked.revealedFive) {
+    throw new Error(`resolveBossForDate: no serveable boss for ${date} (pool ${serveable.length})`);
+  }
+  const identity = materializeIdentity(picked as unknown as Boss, bankVersion);
   const seed = dailyInstanceSeed(identity.identityId, date, slot, "daily", BAND, bankVersion, "daily");
-  return { boss, identity, seed };
+  return {
+    boss: picked as unknown as Boss,
+    identity,
+    seed,
+    target: picked.target,            // OPAQUE — read, never derived here
+    revealedFive: picked.revealedFive,
+    marquee: picked.marquee === true,
+  };
 }
 
 export type EnsureDeps = {
-  /** Identity/seed resolver. Defaults to resolveBossForDate; injected in tests. */
-  resolve?: (date: string, slot: number) => ResolvedBoss;
+  /** Identity/seed/target resolver. Defaults to resolveBossForDate; injected in tests. */
+  resolve?: (date: string, slot: number) => ResolvedBossBaked;
   /** Supabase client. Defaults to the service-role supabaseAdmin; mocked in tests. */
   client?: typeof supabaseAdmin;
   /** Sport key for the row. Defaults to basketball (the only boss sport today). */
@@ -137,9 +157,17 @@ export async function ensureDailyInstance(
   const client = deps.client ?? supabaseAdmin;
   const sport = deps.sport ?? "basketball";
 
-  const { boss, identity, seed } = resolve(date, slot);
-  const proj = projectSenderFacing(boss, seed);
-  const row = toSharedChallengeRow(proj, seed, identity, sport);
+  const { identity, seed, target, revealedFive } = resolve(date, slot);
+  // OPAQUE-TARGET SEAM (read half): consume the BAKED target + revealable five.
+  // The engine NEVER rolls here and is agnostic to how `target` was derived —
+  // recalibration is a build-artifact change with zero engine change.
+  const proj = {
+    sender: { kind: "boss" as const, name: identity.display, flavor: identity.flavor },
+    totalToBeat: target,
+    presentedFive: revealedFive,
+    toughDay: false,
+  };
+  const row = toSharedChallengeRow(proj as unknown as Parameters<typeof toSharedChallengeRow>[0], seed, identity, sport);
 
   // The contract puts instanceId into challenge_id (doc-shape); the uuid PK
   // stays auto-generated, so route the natural key to instance_key and DROP

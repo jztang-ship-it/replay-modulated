@@ -40,10 +40,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing or invalid id" });
   }
 
-  // 1. Resolve challenge → hand_id.
+  // 1. Resolve challenge → hand_id (+ boss fields).
   const { data: challenge, error: chErr } = await supabaseAdmin
     .from("shared_challenges")
-    .select("hand_id")
+    .select("hand_id, sender_kind, initial_roster, target_fp")
     .eq("challenge_id", challengeId)
     .single();
 
@@ -52,6 +52,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   res.setHeader("Cache-Control", "public, max-age=30");
+
+  // Phase 2-mount boss branch: a boss is a sender with NO hand_log — its resolved
+  // five IS the baked revealable five in initial_roster.cards (Interpretation 3:
+  // the boss is the revealed, scored opponent). Return it as resolvedSenderHand so
+  // H2H shows the boss as the opponent (never an empty battlefield). totalFp = the
+  // opaque baked target.
+  if (challenge.sender_kind === "boss") {
+    const cards = (challenge.initial_roster as { cards?: unknown[] } | null)?.cards ?? [];
+    return res.status(200).json({
+      challenge_id: challengeId,
+      sender_resolved: true,
+      sender: { handId: challengeId, totalFp: Number(challenge.target_fp ?? 0), tier: null, cards },
+    });
+  }
 
   // 2. hand_log lookup by hand_id. The hand_id column has a unique
   //    partial index (migration 002:20), so maybeSingle is safe.

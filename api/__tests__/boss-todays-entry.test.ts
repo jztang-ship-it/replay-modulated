@@ -14,7 +14,7 @@ import {
   materializeIdentity,
 } from "../../basketball/src/tools/bossContract.ts";
 import type { Boss } from "../../basketball/src/tools/bossGenerator.ts";
-import type { ResolvedBoss } from "../boss/_lib/ensureDailyInstance.ts";
+import type { ResolvedBossBaked } from "../boss/_lib/ensureDailyInstance.ts";
 import { getTodaysBossChallengeId, BOSS_SLOT } from "../boss/_lib/todaysBoss.ts";
 
 vi.mock("../hand/_lib/supabaseServer.js", () => ({ supabaseAdmin: {}, supabaseAuth: {} }));
@@ -34,12 +34,15 @@ function synthBoss(): Boss {
 }
 const BAND: [number, number] = [120, 150];
 
-function synthResolve(): (date: string, slot: number) => ResolvedBoss {
+function synthResolve(): (date: string, slot: number) => ResolvedBossBaked {
   return (date, slot) => {
     const boss = synthBoss();
     const identity = materializeIdentity(boss, "v1.2");
     const seed = dailyInstanceSeed(identity.identityId, date, slot, "daily", BAND, "v1.2", "daily");
-    return { boss, identity, seed };
+    const revealedFive = boss.starters.map((s, i) => ({
+      basePlayerId: `bp${i}`, name: s.name, pos: s.pos, salary: 50, tier: "PURPLE", fp: 28.5,
+    }));
+    return { boss, identity, seed, target: 142.5, revealedFive, marquee: false };
   };
 }
 

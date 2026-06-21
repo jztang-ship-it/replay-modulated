@@ -1,81 +1,55 @@
+// @vitest-environment node
 /**
  * api/__tests__/boss-artifact-fs-equivalence.test.ts
  *
- * Phase 2-fix, Commit 2 — proof the fs→static-import swap changed nothing
- * observable. resolveBossForDate now feeds scheduleHeadline from the committed
- * bossBank.generated.json instead of the fs join (loadBankBosses + loadBand +
- * loadBankVersion). This recomputes the OLD fs path inline and asserts, for
- * several fixed (date, slot), that the artifact-fed resolve yields a
- * byte-identical projectSenderFacing output, identity, and seed.
+ * Phase 2-mount step-2: the OPAQUE-TARGET SEAM + serveable-rotation rule, tested
+ * against the REAL committed artifact (bossBank.generated.json).
  *
- * This is the byte-identical regen guarantee (original Commit 2af4af7) extended
- * across the data-source swap: same (date, slot) → same boss roll, fs or bank.
+ * (Supersedes the Phase 2-fix fs-vs-artifact ROLL-equivalence test: the target is
+ * no longer rolled at request time — it's a baked opaque value read from the
+ * artifact, so the old roll-parity pin is obsolete. The byte-identical roll
+ * determinism it pinned still lives in boss-fp-parity + the contract's
+ * projectSenderFacing tests.)
  */
 import { describe, it, expect, vi } from "vitest";
 
-// Import guard: ensureDailyInstance imports supabaseAdmin (lazy proxy throws
-// without the service-role key). We only exercise resolveBossForDate here.
 vi.mock("../hand/_lib/supabaseServer.js", () => ({ supabaseAdmin: {}, supabaseAuth: {} }));
 
 import { resolveBossForDate } from "../boss/_lib/ensureDailyInstance.ts";
-import {
-  materializeIdentity,
-  dailyInstanceSeed,
-  projectSenderFacing,
-  loadBankVersion,
-} from "../../basketball/src/tools/bossContract.ts";
-import {
-  loadBankBosses,
-  scheduleHeadline,
-  SCHEDULE_EPOCH,
-  P_LO,
-  P_HI,
-} from "../../basketball/src/tools/bossGenerator.ts";
-import { loadBand } from "../../basketball/src/tools/bossData.ts";
 
-const DAY_MS = 86_400_000;
+const DATES = ["2026-06-22", "2026-08-01", "2026-09-15", "2026-12-25", "2027-03-10"];
 
-/** The OLD fs-join resolver, reconstructed verbatim — the baseline the swap
- *  must match byte-for-byte. */
-function fsResolveBossForDate(date: string, slot: number) {
-  const bankVersion = loadBankVersion();
-  const pool = loadBankBosses().filter(b => b.tier === "champ" || b.tier === "iconic");
-  const band = loadBand(P_LO, P_HI);
-  const BAND: [number, number] = [band.lo, band.hi];
-  const offsetDays = Math.floor(
-    (Date.parse(date + "T00:00:00Z") - Date.parse(SCHEDULE_EPOCH + "T00:00:00Z")) / DAY_MS,
-  );
-  const days = Math.max(1, offsetDays + 1);
-  const sched = scheduleHeadline(pool, SCHEDULE_EPOCH, days);
-  const boss = sched[days - 1].boss;
-  const identity = materializeIdentity(boss, bankVersion);
-  const seed = dailyInstanceSeed(identity.identityId, date, slot, "daily", BAND, bankVersion, "daily");
-  return { boss, identity, seed };
-}
+describe("opaque-target seam — resolveBossForDate reads baked, serveable bosses", () => {
+  it("only ever resolves SERVEABLE bosses (a baked opaque target + revealable five)", () => {
+    for (const date of DATES) {
+      const r = resolveBossForDate(date, 0);
+      // OPAQUE target: a number read from the artifact (not derived/rolled here).
+      expect(typeof r.target).toBe("number");
+      expect(r.target).toBeGreaterThan(0);
+      // Revealable five: 5 playable cards carrying basePlayerId/salary/tier.
+      expect(r.revealedFive).toHaveLength(5);
+      for (const c of r.revealedFive) {
+        expect(typeof c.basePlayerId).toBe("string");
+        expect(typeof c.salary).toBe("number");
+        expect(typeof c.tier).toBe("string");
+        expect(typeof c.fp).toBe("number");
+      }
+      expect(typeof r.marquee).toBe("boolean");
+    }
+  });
 
-const CASES: Array<[string, number]> = [
-  [SCHEDULE_EPOCH, 0], // the epoch day itself
-  ["2026-08-01", 0],
-  ["2026-09-15", 0],
-  ["2026-08-01", 1], // a different slot → different roll, must still match fs
-  ["2026-12-25", 0],
-];
-
-describe("Commit 2 — artifact-fed resolve is byte-identical to the fs path", () => {
-  for (const [date, slot] of CASES) {
-    it(`(${date}, slot ${slot}): projectSenderFacing + identity + seed match fs`, () => {
-      const fromArtifact = resolveBossForDate(date, slot);
-      const fromFs = fsResolveBossForDate(date, slot);
-
-      // Same identity picked (the scheduleHeadline output over the same pool/order).
-      expect(fromArtifact.identity).toEqual(fromFs.identity);
-      // Same seed.
-      expect(fromArtifact.seed).toEqual(fromFs.seed);
-
-      // The observable payload — byte-identical serialization.
-      const projArtifact = projectSenderFacing(fromArtifact.boss, fromArtifact.seed);
-      const projFs = projectSenderFacing(fromFs.boss, fromFs.seed);
-      expect(JSON.stringify(projArtifact)).toBe(JSON.stringify(projFs));
-    });
-  }
+  it("the rotation is restricted to serveable bosses (never a dormant/un-banded boss)", () => {
+    // Sweep a year of days; every resolved boss must be serveable (has a target).
+    const start = Date.parse("2026-06-22T00:00:00Z");
+    const keys = new Set<string>();
+    for (let d = 0; d < 365; d += 7) {
+      const date = new Date(start + d * 86400000).toISOString().slice(0, 10);
+      const r = resolveBossForDate(date, 0);
+      expect(typeof r.target).toBe("number"); // serveable by construction
+      keys.add(r.identity.identityId);
+    }
+    // Rotation only surfaces vetted serveable keys (the 15), never the 21 dormant.
+    expect(keys.size).toBeGreaterThan(1);
+    expect(keys.size).toBeLessThanOrEqual(15);
+  });
 });

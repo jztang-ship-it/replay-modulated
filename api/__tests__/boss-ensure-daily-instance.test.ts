@@ -24,7 +24,7 @@ import {
   materializeIdentity,
 } from "../../basketball/src/tools/bossContract.ts";
 import type { Boss } from "../../basketball/src/tools/bossGenerator.ts";
-import { ensureDailyInstance, type ResolvedBoss } from "../boss/_lib/ensureDailyInstance.ts";
+import { ensureDailyInstance, type ResolvedBossBaked } from "../boss/_lib/ensureDailyInstance.ts";
 
 // Mock the service-role client so importing ensureDailyInstance doesn't require
 // SUPABASE_SERVICE_ROLE_KEY (the lazy proxy throws on access without it). The
@@ -51,12 +51,16 @@ const BAND: [number, number] = [120, 150];
 const DATE = "2026-08-01";
 const SLOT = 0;
 
-function synthResolve(): (date: string, slot: number) => ResolvedBoss {
+const SYNTH_TARGET = 142.5; // an OPAQUE baked target the writer must read verbatim
+function synthResolve(): (date: string, slot: number) => ResolvedBossBaked {
   return (date, slot) => {
     const boss = synthBoss();
     const identity = materializeIdentity(boss, "v1.2");
     const seed = dailyInstanceSeed(identity.identityId, date, slot, "daily", BAND, "v1.2", "daily");
-    return { boss, identity, seed };
+    const revealedFive = boss.starters.map((s, i) => ({
+      basePlayerId: `bp${i}`, name: s.name, pos: s.pos, salary: 50, tier: "PURPLE", fp: 28.5,
+    }));
+    return { boss, identity, seed, target: SYNTH_TARGET, revealedFive, marquee: false };
   };
 }
 
@@ -158,7 +162,16 @@ describe("Commit 2 (B) — the writer maps only sender-facing fields, idempotent
     // NOT NULL columns with no default (migration 005) are satisfied.
     expect(payload.hand_id).toBe(`${DATE}|${SLOT}|BOS-2324`);
     expect(payload.slate_seed).toBe("");
-    expect(typeof payload.target_fp).toBe("number");
+
+    // OPAQUE-TARGET SEAM: target_fp is the BAKED target read verbatim — NOT rolled
+    // here. (Recalibration = change the artifact; this read is unchanged.)
+    expect(payload.target_fp).toBe(SYNTH_TARGET);
+    // Playable snapshot — {v:1, sport, cards} so the recipient landing's
+    // validateRosterSnapshot accepts it; cards are the revealable five.
+    expect((payload.initial_roster as any).v).toBe(1);
+    expect((payload.initial_roster as any).sport).toBe("basketball");
+    expect((payload.initial_roster as any).cards).toHaveLength(5);
+    expect((payload.initial_roster as any).cards[0]).toMatchObject({ basePlayerId: "bp0", salary: 50, tier: "PURPLE" });
 
     // Sender-facing only — NO rolled blob / generator internals anywhere.
     expect(JSON.stringify(payload)).not.toMatch(
