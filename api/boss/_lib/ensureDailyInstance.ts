@@ -41,7 +41,11 @@ import {
 // scripts/build-boss-bank.mjs — and the result is committed + drift-guarded.
 // scheduleHeadline / rollBoss / projectSenderFacing / toSharedChallengeRow are
 // UNCHANGED; only the data SOURCE swapped (fs → static import).
-import bossBankArtifact from "./bossBank.generated.json";
+// NodeNext ESM runtime (Vercel @vercel/node) requires the import attribute on
+// JSON imports — without it the function throws ERR_IMPORT_ATTRIBUTE_MISSING at
+// load (bundlers like esbuild/vite don't require it, so tests/SPA build never
+// catch it; the preview deploy is the only check that runs the real resolver).
+import bossBankArtifact from "./bossBank.generated.json" with { type: "json" };
 
 // SCHEDULE_EPOCH is the SINGLE SOURCE OF TRUTH for the daily-rotation epoch
 // (design-decisions §4). It is DEFINED in bossGenerator (the scheduling layer
