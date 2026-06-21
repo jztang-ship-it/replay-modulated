@@ -30,9 +30,18 @@ interface Props {
   freshResult?: BossResult;
   /** Play Again — clears the boss + deals a fresh normal hand. */
   onPlayAgain: () => void;
+  /** Phase 2-mount Step 4 — two-tier framing. These are boss-STATIC (same at
+   *  the post-play and revisit surfaces, so both pass them → byte-identical
+   *  render). marquee → the loss copy is margin-based ("came within N of the
+   *  X — the near-miss is the draw"); beatable (default) → enemy-referential.
+   *  Both WIN copies terminate outward unchanged. targetScore + bossName feed
+   *  the marquee margin line; absent (beatable / older callers) → generic. */
+  marquee?: boolean;
+  targetScore?: number;
+  bossName?: string;
 }
 
-export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain }: Props) {
+export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName }: Props) {
   const [result, setResult] = useState<BossResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -48,11 +57,26 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
   const shareUrl =
     typeof window !== "undefined" ? `${window.location.origin}/${sport}/challenge/${bossChallengeId}` : "";
   const headline = result.won ? "YOU BEAT TODAY'S BOSS" : "TODAY'S BOSS GOT YOU";
-  // Enemy-referential share text (locked copy).
+
+  // Phase 2-mount Step 4 — two-tier loss framing. MARQUEE losses are
+  // margin-based: the near-miss is the draw ("came within N of the X"). The
+  // margin reads from the boss-static targetScore + the result score (single
+  // source) so fresh === revisit. Beatable losses keep the locked enemy-
+  // referential line. Both WIN copies terminate outward unchanged.
+  const enemy = bossName ?? "the boss";
+  const marqueeLoss = marquee === true && !result.won && targetScore != null;
+  const margin = marqueeLoss ? Math.max(0, Math.round(targetScore - result.score)) : 0;
+  // Enemy-referential / margin-based share text (locked copy).
   const shareText = result.won
     ? "I beat today's boss."
-    : "The boss got me. Think you survive them?";
-  const sub = result.won ? "Can your friends?" : "Think you survive them?";
+    : marqueeLoss
+      ? `I came within ${margin} of ${enemy} — closer than you'll get.`
+      : "The boss got me. Think you survive them?";
+  const sub = result.won
+    ? "Can your friends?"
+    : marqueeLoss
+      ? `Came within ${margin} of ${enemy} — closer than most get.`
+      : "Think you survive them?";
 
   function challengeSomeone() {
     if (typeof navigator === "undefined") return;

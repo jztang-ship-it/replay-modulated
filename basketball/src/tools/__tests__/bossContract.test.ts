@@ -92,4 +92,15 @@ describe("boss contract (2) — maps onto the existing challenge receive path (n
     expect(row.trigger_type).toBe("boss");
     expect(row.boss_bank_version).toBe("v1");
   });
+
+  // Phase 2-mount Step 4 — surface the baked two-tier marquee flag into
+  // initial_roster (jsonb, no migration; the GET returns it for the
+  // "brutal by design" landing label + the margin-based loss copy).
+  it("bakes the marquee flag into initial_roster (default false; honors proj.marquee)", () => {
+    expect((row.initial_roster as any).marquee).toBe(false);
+    const marqueeRow = toSharedChallengeRow(
+      { ...projectSenderFacing(boss, s), marquee: true } as any, s, id, "basketball",
+    );
+    expect((marqueeRow.initial_roster as any).marquee).toBe(true);
+  });
 });

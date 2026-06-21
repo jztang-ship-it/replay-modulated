@@ -156,6 +156,10 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
       // so the play/comparison flow knows this is a boss target. Normalized
       // at this single read boundary, same pattern as triggerType.
       senderKind: normalizeSenderKind(data.sender_kind),
+      // Phase 2-mount Step 4: thread the baked two-tier marquee flag (jsonb,
+      // no migration) from initial_roster so the result flow can branch the
+      // loss copy. Boss-only in practice; humans carry no marquee.
+      marquee: (data.initial_roster as { marquee?: boolean } | null)?.marquee === true,
     });
   }
 
@@ -398,6 +402,11 @@ function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept, s
   // outward ending instead of re-offering the accept CTA. Fresh and revisited
   // are byte-identical (both render BossOutwardEnding from getBossResult).
   const priorResult = getBossResult(data.challenge_id);
+  // Phase 2-mount Step 4 — two-tier framing. The baked marquee flag rides on
+  // initial_roster (jsonb). marquee → a "brutal by design" label pre-play (the
+  // impossible tier; the near-miss is the draw) + margin-based loss copy in the
+  // outward ending. Beatable bosses carry neither.
+  const marquee = (data.initial_roster as { marquee?: boolean } | null)?.marquee === true;
   return (
     <div data-testid="boss-landing">
       {/* Eyebrow — marks the surface as the daily boss. */}
@@ -405,6 +414,17 @@ function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept, s
         fontSize: 14, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
         color: "rgba(255,177,74,0.85)", marginBottom: 8,
       }}>Daily Boss{data.tough_day ? " · Tough Day" : ""}</div>
+
+      {/* Marquee tier — "brutal by design" (Step 4). Shown pre-play so the
+          impossible boss is framed before the attempt. */}
+      {marquee && (
+        <div data-testid="boss-marquee-label" style={{
+          display: "inline-block", fontSize: 12, fontWeight: 900, letterSpacing: 1.2,
+          textTransform: "uppercase", color: "#FF5A5A",
+          border: "1px solid rgba(255,90,90,0.5)", borderRadius: 6,
+          padding: "3px 8px", marginBottom: 12,
+        }}>Brutal by Design</div>
+      )}
 
       {/* Boss name — the authored identity, verbatim (no real-name gate). */}
       <div data-testid="boss-name" style={{
@@ -444,6 +464,9 @@ function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept, s
         <BossOutwardEnding
           sport={sport}
           bossChallengeId={data.challenge_id}
+          marquee={marquee}
+          targetScore={data.target_score}
+          bossName={data.challenger_name}
           onPlayAgain={onClose}
         />
       ) : (

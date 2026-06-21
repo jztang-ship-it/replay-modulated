@@ -78,6 +78,11 @@ export interface ChallengeCtx {
    *  via resolvedSenderHand. Set only on the boss path; the human path never
    *  touches it. */
   startMode?: "inherit" | "draft-fresh";
+  /** Phase 2-mount Step 4 (2026-06-21): two-tier boss framing. Threaded from
+   *  the GET response's initial_roster.marquee at accept (boss only; default
+   *  false/undefined for humans). marquee → the result uses margin-based loss
+   *  copy and the landing shows a "brutal by design" label. */
+  marquee?: boolean;
 }
 
 /**

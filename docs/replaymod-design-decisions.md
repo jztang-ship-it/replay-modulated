@@ -3478,6 +3478,32 @@ tsc + build. One path remains; the dormant Step-3 code is now live.
   human board / no human CTAs" assertion now lives in `H2HResultsOverlay.test.tsx`
   (Step 3); the WIN/LOSS outward copy stays covered by `BossOutwardEnding.test.tsx`.
 
+### Step 4 BUILT (2026-06-21) — two-tier framing (consume the baked marquee flag)
+Green: nodenext guard (29 files, boss-chain api touched), basketball tsc, full
+suite 1397/1397 (+5 Step-4 tests), basketball build. Flag + label + loss-copy ONLY
+— no mode/leaderboard/rewards.
+- **Server bake (no migration):** `ensureDailyInstance` threads `marquee` (already
+  on `resolveBossForDate`) onto `proj`; `toSharedChallengeRow` writes
+  `initial_roster.marquee` (jsonb). The GET returns it. `projectSenderFacing`
+  UNTOUCHED (its 4-key contract test stays green; marquee defaults false there).
+- **Design realization — marquee/targetScore/bossName are boss-STATIC, not
+  result-state.** So they pass as PROPS to `BossOutwardEnding` at BOTH surfaces
+  (post-play + revisit) rather than persisting in `BossResult` — `bossResultMemory`
+  is UNTOUCHED (the `toEqual({score,won})` exact-equality tests stay green), and the
+  result (score/won) stays the single source. Same value at both surfaces → margin
+  copy is byte-identical fresh vs revisit.
+- **`ChallengeCtx.marquee`** threaded at `ChallengeLandingScreen.handleAccept` from
+  `initial_roster.marquee`; App spreads `...ctx` so it survives the boss draft-fresh
+  swap.
+- **Landing label (BossLandingView):** marquee → a "Brutal by Design" badge pre-play
+  (`data.initial_roster.marquee`); beatable → none. Revisit `BossOutwardEnding` now
+  gets marquee + `data.target_score` + `data.challenger_name`.
+- **Result copy (BossOutwardEnding):** new props `marquee`/`targetScore`/`bossName`.
+  marquee LOSS → margin-based ("Came within N of {boss} — closer than most get.",
+  N = round(target − score)); beatable LOSS → the locked enemy-referential line.
+  Both WIN copies terminate outward unchanged. H2HRecipientReveal passes the three
+  from challengeCtx post-play.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;

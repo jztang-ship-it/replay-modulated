@@ -286,6 +286,65 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
     expect(ctx.challengerName).toBe("Banner 18");
   });
 
+  it("MARQUEE boss shows the 'brutal by design' label pre-play; beatable does not (Step 4)", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({
+        sender_kind: "boss", created_by: null, challenger_name: "73-9 Warriors", trigger_type: "boss",
+        initial_roster: { ...makeApiResponse().initial_roster, marquee: true },
+      })),
+    }));
+    const { unmount } = render(
+      <ChallengeLandingScreen
+        challengeId="ch_boss_marquee" sport="basketball" currentUserId={null}
+        deserializeRoster={stubDeserialize} validateRosterSnapshot={stubValidate}
+        onAccept={() => {}} onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-landing")).toBeTruthy());
+    expect(screen.getByText(/brutal by design/i)).toBeTruthy();
+    unmount();
+
+    // Beatable boss (no marquee) → no label.
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({
+        sender_kind: "boss", created_by: null, challenger_name: "Banner 18", trigger_type: "boss",
+      })),
+    }));
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_boss_beatable" sport="basketball" currentUserId={null}
+        deserializeRoster={stubDeserialize} validateRosterSnapshot={stubValidate}
+        onAccept={() => {}} onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-landing")).toBeTruthy());
+    expect(screen.queryByText(/brutal by design/i)).toBeNull();
+  });
+
+  it("boss accept threads marquee through onAccept (Step 4)", async () => {
+    // @ts-expect-error global fetch stub
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true, json: () => Promise.resolve(makeApiResponse({
+        sender_kind: "boss", created_by: null, challenger_name: "73-9 Warriors", trigger_type: "boss",
+        initial_roster: { ...makeApiResponse().initial_roster, marquee: true },
+      })),
+    }));
+    const onAccept = vi.fn();
+    render(
+      <ChallengeLandingScreen
+        challengeId="ch_boss_marquee_accept" sport="basketball" currentUserId={null}
+        deserializeRoster={stubDeserialize} validateRosterSnapshot={stubValidate}
+        onAccept={onAccept} onClose={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-accept-cta")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("boss-accept-cta"));
+    await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
+    expect(onAccept.mock.calls[0][0].marquee).toBe(true);
+  });
+
   it("player row threads senderKind:'player' (unchanged path)", async () => {
     // @ts-expect-error global fetch stub
     globalThis.fetch = vi.fn(() => Promise.resolve({

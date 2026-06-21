@@ -157,15 +157,18 @@ export async function ensureDailyInstance(
   const client = deps.client ?? supabaseAdmin;
   const sport = deps.sport ?? "basketball";
 
-  const { identity, seed, target, revealedFive } = resolve(date, slot);
+  const { identity, seed, target, revealedFive, marquee } = resolve(date, slot);
   // OPAQUE-TARGET SEAM (read half): consume the BAKED target + revealable five.
   // The engine NEVER rolls here and is agnostic to how `target` was derived —
   // recalibration is a build-artifact change with zero engine change.
+  // Phase 2-mount Step 4: thread the baked marquee tier flag onto the proj so
+  // toSharedChallengeRow bakes it into initial_roster (two-tier framing).
   const proj = {
     sender: { kind: "boss" as const, name: identity.display, flavor: identity.flavor },
     totalToBeat: target,
     presentedFive: revealedFive,
     toughDay: false,
+    marquee,
   };
   const row = toSharedChallengeRow(proj as unknown as Parameters<typeof toSharedChallengeRow>[0], seed, identity, sport);
 

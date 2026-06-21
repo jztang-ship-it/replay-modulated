@@ -43,6 +43,46 @@ describe("BossOutwardEnding", () => {
     expect(screen.queryByText(/beat my score/i)).toBeNull();
   });
 
+  // Phase 2-mount Step 4 — two-tier framing. A MARQUEE boss loss uses
+  // margin-based copy (the near-miss is the draw), referencing the boss by
+  // name + the margin — NOT the generic beatable enemy line.
+  it("marquee LOSS: margin-based copy referencing the boss + the margin", async () => {
+    render(
+      <BossOutwardEnding
+        sport="basketball"
+        bossChallengeId={BOSS_ID}
+        freshResult={{ score: 182, won: false }}
+        marquee
+        targetScore={200}
+        bossName="the '15-16 Warriors"
+        onPlayAgain={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
+    // margin = round(200 - 182) = 18, boss referenced by name.
+    expect(screen.getByText(/within 18 of the '15-16 Warriors/)).toBeTruthy();
+    // NOT the generic beatable enemy line.
+    expect(screen.queryByText(/Think you survive them\?/)).toBeNull();
+  });
+
+  it("marquee WIN still terminates outward (outward branch + Play Again present)", async () => {
+    render(
+      <BossOutwardEnding
+        sport="basketball"
+        bossChallengeId={BOSS_ID}
+        freshResult={{ score: 210, won: true }}
+        marquee
+        targetScore={200}
+        bossName="the '15-16 Warriors"
+        onPlayAgain={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
+    expect(screen.getByTestId("boss-challenge-someone")).toBeTruthy();
+    expect(screen.getByTestId("boss-copy-link")).toBeTruthy();
+    expect(screen.getByTestId("boss-play-again")).toBeTruthy();
+  });
+
   it("revisit (no freshResult, memory seeded) renders identically from the same source", async () => {
     recordBossResult(BOSS_ID, { score: 233.5, won: true });
     render(<BossOutwardEnding sport="basketball" bossChallengeId={BOSS_ID} onPlayAgain={() => {}} />);

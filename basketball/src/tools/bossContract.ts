@@ -126,7 +126,11 @@ export function toSharedChallengeRow(
     // landing's validateRosterSnapshot accepts it (the boss five carry
     // basePlayerId/salary/tier via the cheap-A enrichment). holdsRecorded:false —
     // the boss is the opponent; the recipient deals fresh (Interpretation 3).
-    initial_roster: { v: 1, sport, holdsRecorded: false, cards: proj.presentedFive },
+    // Phase 2-mount Step 4 — surface the baked two-tier marquee flag (jsonb,
+    // no migration). The GET returns it so the landing shows "brutal by
+    // design" pre-play and the result uses margin-based loss copy. Default
+    // false when the projection carries none (legacy / projectSenderFacing).
+    initial_roster: { v: 1, sport, holdsRecorded: false, marquee: (proj as { marquee?: boolean }).marquee === true, cards: proj.presentedFive },
     sport,
     season: identity.seasonCode,
     trigger_type: "boss",                   // existing column — boss vs player triggers

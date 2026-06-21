@@ -341,6 +341,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
                 sport={sport}
                 bossChallengeId={challengeCtx.challengeId}
                 freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
+                marquee={challengeCtx.marquee === true}
+                targetScore={challengeCtx.targetScore}
+                bossName={challengeCtx.challengerName}
                 onPlayAgain={onTryAgain}
               />
             ) : undefined
