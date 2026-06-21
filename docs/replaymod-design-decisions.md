@@ -3135,6 +3135,46 @@ deploy proves the last sliver). Then glass `BossLandingView` as a render/layout
 check once a device surfaces it via the real mount (a green glass on localhost is
 not prod evidence — local still has the fs seasons dir).
 
+### HOTFIX (2026-06-21) — NodeNext runtime + the preview-deploy gate is now REQUIRED
+**Root cause.** The A′ fold-in (`c19cc57`) pulled the boss chain into the
+`/api/leaderboard` function's runtime graph for the first time. The Vercel
+`@vercel/node` runtime resolves per-file under **NodeNext ESM**, which bundlers
+(esbuild/vite/vitest) do NOT — so two violation classes that every test + the SPA
+build resolved cleanly threw at function load in prod:
+1. **Extensionless relative imports** (`./seededRng`, the boss tools' `./bossData`
+   etc.) → `ERR_MODULE_NOT_FOUND`. A static top-level import meant this hit at
+   MODULE LOAD → **500 on every leaderboard request, all sports** (uncatchable by
+   a handler try/catch). Fixed by adding `.js` throughout the chain (`f9bd453`).
+2. **JSON import without an attribute** (`bossBank.generated.json`) →
+   `ERR_IMPORT_ATTRIBUTE_MISSING`. Fixed with `with { type: "json" }` (`6eab24c`).
+   (Fixing class 1 surfaced class 2 — "fixing one surfaces the next hop.")
+
+**Firewall fix (Required-vs-Upgrade enforced at import time).** The boss chain is
+now loaded via **dynamic import inside `resolveBoss`'s try/catch** (`a6c5c92`), not
+a static top-level import. A boss-chain failure (module load, DB, KV) now degrades
+to "no boss field" and the leaderboard stays 200 — a load-time crash can never
+take the route down again. This is the only place the firewall can live for an
+Upgrade dependency (a static import's load failure is uncatchable).
+
+**The preview-deploy gate is now a REQUIRED step before any boss-touching route is
+marked green.** It is the ONLY check that runs the NodeNext runtime resolver — the
+test suite (esbuild/vitest) and the SPA build (vite) all mock/bundle it away. A
+green suite is necessary but NOT sufficient for a boss-touching route.
+
+**Guard (`npm run check:nodenext`, `scripts/check-nodenext-imports.mjs`).** Scans
+the api runtime graph (api/** + the explicit boss-chain non-api files; excludes
+SPA-bundled tools + `__tests__`) for both classes — extensionless relative imports
+and attribute-less JSON imports — and fails CI. Backstop for the gate.
+
+**OPEN — DB migration not applied (firewall-degraded, not a code bug).** The
+preview deploy of all three fixes confirmed: all sports 200, the boss chain loads
++ executes (resolves e.g. `2026-06-21|0|LAL-1920`), but the upsert fails —
+`Could not find the 'boss_bank_version' column of 'shared_challenges'`. **Migration
+`014_boss_sender.sql` has not been applied to the Supabase database.** Until it is
+(apply 014, then reload PostgREST: `NOTIFY pgrst, 'reload schema'`), the firewall
+correctly degrades to no-boss-field. A real `bossChallengeId` in the GET response
+is gated on this DB action — the last step to user-reachable boss.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
