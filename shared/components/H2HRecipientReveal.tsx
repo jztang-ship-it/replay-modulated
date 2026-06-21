@@ -48,6 +48,7 @@ import {
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
 import { isRealName } from "@shared/utils/isRealName";
+import { BossOutwardEnding } from "./BossOutwardEnding";
 import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
 import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
@@ -326,6 +327,24 @@ function H2HRecipientRevealInner(props: InnerProps) {
           onDismiss={onDismiss}
           senderRevealOrder={reveal?.senderRevealOrder}
           recipientRevealOrder={reveal?.recipientRevealOrder}
+          // Phase 2-mount Step 3 — boss results terminate OUTWARD. For a boss
+          // sender, supply the outward-ending slot; H2HResultsOverlay then
+          // renders it IN PLACE OF the human rivalry board. Win is racing the
+          // baked target (matches the removed ChallengeComparisonScreen fork);
+          // the boss five is the opponent shown in the battlefield reveal
+          // above. "Play Again" replays the same boss (onTryAgain) — replay-
+          // below-the-line per the outward-ending invariant. recordBossResult
+          // + getBossResult inside BossOutwardEnding make fresh === revisited.
+          bossOutwardEnding={
+            challengeCtx.senderKind === "boss" ? (
+              <BossOutwardEnding
+                sport={sport}
+                bossChallengeId={challengeCtx.challengeId}
+                freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
+                onPlayAgain={onTryAgain}
+              />
+            ) : undefined
+          }
         />
       )}
     </div>

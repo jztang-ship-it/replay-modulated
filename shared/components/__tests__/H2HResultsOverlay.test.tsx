@@ -105,6 +105,39 @@ describe("H2HResultsOverlay — state machine + CTAs", () => {
     expect(container.querySelector('[data-h2h-overlay-countdown="true"]')).toBeNull();
   });
 
+  it("boss outward-ending slot REPLACES the human board/CTAs (Phase 2-mount Step 3)", () => {
+    // A boss result terminates OUTWARD: when the recipient flow supplies the
+    // bossOutwardEnding slot, it stands in for the entire human rivalry board
+    // (a boss is a comparison object, not a rivalry). The human CTAs must NOT
+    // render.
+    render(
+      <H2HResultsOverlay
+        sender={makeHand("Boss", 200)}
+        recipient={makeHand("You", 150)}
+        renderCard={stubRender()}
+        state="LOSS_CLOSED"
+        bossOutwardEnding={<div data-testid="boss-stub">outward</div>}
+      />
+    );
+    expect(screen.getByTestId("boss-stub")).toBeTruthy();
+    // The human board's primary CTA for LOSS_CLOSED is "Play your own hand" —
+    // its absence proves the human render is unentered.
+    expect(screen.queryByRole("button", { name: "Play your own hand" })).toBeNull();
+  });
+
+  it("renders the human board (no boss slot) when bossOutwardEnding is absent", () => {
+    render(
+      <H2HResultsOverlay
+        sender={makeHand("Mike", 178.4)}
+        recipient={makeHand("You", 182.4)}
+        renderCard={stubRender()}
+        state="WIN"
+      />
+    );
+    expect(screen.getByRole("button", { name: "Send It Back" })).toBeTruthy();
+    expect(screen.queryByTestId("boss-stub")).toBeNull();
+  });
+
   it("× close fires onDismiss; no Dismiss CTA renders", () => {
     const onDismiss = vi.fn();
     const { container } = render(

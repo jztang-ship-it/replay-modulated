@@ -3432,6 +3432,33 @@ Green across all gates (new unit test 4/4, basketball tsc clean, full suite
   the boss now plays a fresh OWN draft vs the target in `ChallengeComparisonScreen`.
   Step 2 flips routing to H2H.
 
+### Step 3 BUILT FIRST (2026-06-21) — outward-ending relocation (additive/dormant)
+**Reorder (3-before-2, logged):** Steps 2 and 3 are test- AND behavior-coupled —
+flipping routing (Step 2) without the relocated ending leaves the boss terminating
+INWARD (invariant violation), and removing the `ChallengeComparisonScreen` boss fork
+breaks its test. To keep every commit green, Step 3 lands FIRST as additive/dormant
+code (boss doesn't route to H2H yet, so it's unreachable by a real boss but unit-
+tested directly), then Step 2 flips routing + removes the superseded fork, activating
+it. Same end-state as the map; commit order swapped to preserve green.
+- **`bossOutwardEnding?: React.ReactNode` slot on `H2HResultsOverlay`** (shared).
+  When supplied it REPLACES the human rivalry board+CTAs wholesale (early return
+  AFTER all hooks, mirroring the removed comparison fork). Overlay is agnostic to
+  the node — NO boss knowledge leaks into the shared component. Absent for humans
+  and all non-basketball sports → human board unchanged. Unit-locked directly
+  (H2HResultsOverlay.test.tsx, no reveal-arc timing): slot shows + human CTA absent;
+  absent-slot still renders the human board.
+- **`H2HRecipientReveal` passes the slot** for `senderKind === "boss"`:
+  `<BossOutwardEnding sport bossChallengeId=challengeId freshResult={{score: myScore,
+  won: myScore >= targetScore}} onPlayAgain={onTryAgain} />`. Win = racing the baked
+  target (matches the removed fork). BossOutwardEnding already records via
+  `recordBossResult` + renders from `getBossResult` → fresh === revisited (the single
+  read the invariant requires). The boss five is the opponent in the battlefield
+  reveal above.
+- **GLASS DECISION TO CONFIRM:** "Play Again" → `onTryAgain` (replay the SAME boss,
+  reusing the drafted hand — no re-draft on replay). If John wants Play Again to exit
+  to a fresh normal game instead, swap to `onPlayOwnHand`.
+- Green: H2HResultsOverlay.test +2, full suite 1394/1394, basketball tsc + build.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;

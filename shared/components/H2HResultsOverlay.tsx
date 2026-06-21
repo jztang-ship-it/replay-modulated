@@ -142,6 +142,14 @@ export interface H2HResultsOverlayProps {
    *  renders in the same resolution slot). Consumers that don't pass it
    *  (sender reveal / dev mock) fall back to the legacy line. */
   explanation?: string;
+  /** Phase 2-mount Step 3 (2026-06-21): boss outward-ending slot. When the
+   *  recipient flow (H2HRecipientReveal, boss branch) supplies this node, it
+   *  REPLACES the entire human rivalry board+CTAs — a boss result terminates
+   *  OUTWARD (the boss is a comparison object, not a rivalry). The overlay is
+   *  agnostic to its contents (it just renders the provided node), so no boss
+   *  knowledge leaks into this shared component. Absent for human challenges
+   *  and all non-basketball sports → the human board renders unchanged. */
+  bossOutwardEnding?: React.ReactNode;
 }
 
 /** Cross-fade duration. */
@@ -1067,6 +1075,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     primaryCtaOverride,
     globalHeader,
     explanation,
+    bossOutwardEnding,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -1290,6 +1299,35 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     if (state === "LOSS_OPEN") return { label: "Try Again", handler: onTryAgain };
     return { label: "Play your own hand", handler: onPlayOwnHand };
   })();
+
+  // Phase 2-mount Step 3 — boss results terminate OUTWARD. When the caller
+  // supplies the outward-ending slot, it REPLACES the human rivalry board +
+  // CTAs wholesale (the comparison visual already played via the
+  // H2HRevealScreen battlefield above). Early fork placed AFTER all hooks
+  // (rules-of-hooks); the human render below is provably unentered for a boss.
+  // Crossfade honored via the same `visible` opacity transition.
+  if (bossOutwardEnding) {
+    return (
+      <div
+        data-testid="h2h-boss-result"
+        data-h2h-boss-result="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 50,
+          opacity: visible ? 1 : 0,
+          transition: `opacity ${OVERLAY_CROSSFADE_MS}ms ease`,
+          pointerEvents: visible ? "auto" : "none",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+        }}
+      >
+        {globalHeader}
+        {bossOutwardEnding}
+      </div>
+    );
+  }
 
   return (
     <div
