@@ -3375,6 +3375,36 @@ draft vs boss five, no empty battlefield); loss/win outward endings; revisit
 reconstruct; marquee label + margin copy; NEGATIVE — human (non-boss) H2H/
 comparison byte-identical (the `senderKind` branch must not touch them).
 
+### STEP 0 spike result — GO (2026-06-21, glass cycle)
+**Question:** can `App.onAccept` build the boss-season eval pool, hold the economy
+config, exclude the boss five, and `generateRoster` a valid fresh roster — given
+App does NOT deal today (GameView's hook does)? **Answer: YES**, via the map's
+explicitly-anticipated "thread a deal capability" branch (NOT inline replication).
+- **Singleton season state.** `@shared/engines/dataEngine` is a module-level
+  singleton (`activeSeasonKey`/`_players`/`_logsByKey` are module vars;
+  `setActiveSeason`+`ensureLoaded` mutate them). An App-side load is visible to
+  `gameAdapter.getPlayers()`/`getLogsByKey()` — no prop threading needed.
+- **Per-season mode is live.** `basketball/src/engines/dataEngine.ts` runs
+  `configurePerSeason()` at module load, so `ensureLoaded` fetches
+  `seasons/<bossSeason>/{players,gamelogs}.json` for any of the 23 boss seasons.
+- **Premise correction (map anticipated it):** the deal builders
+  (`buildEvalPool`/`buildProjections`/`getEconomyConfig`/`mulberry32`/`randomSeed`)
+  are **module-private in `gameAdapter.ts`** — App cannot import them to "build the
+  eval pool + generateRoster" inline. So Step 1 takes the map's stated alternative:
+  add ONE exported `dealFreshRoster(season, excludeBaseIds)` helper in
+  `gameAdapter.ts` (recipe single-sourced beside `dealInitialRoster`, per the
+  adapter-discipline rule). App.onAccept calls it. Insertion point (App.onAccept)
+  unchanged.
+- **Exclusion key:** `PlayerEval.basePlayerId` (set by `toPlayerEval`) → filter
+  `evalPool.filter(e => !excludeBaseIds.has(e.basePlayerId))`. Boss five captured
+  from `ctx.initialRoster` BEFORE it is overwritten with the fresh draft.
+- **Two consequences (build-shaping, not blockers):** (1) `onAccept` becomes
+  **async** — `await` the season-load+deal before `setChallengeCtx`/`setView`;
+  (2) it mutates the app-global active season — **safe/convergent** because App
+  already pins GameView to the same season via `bypassSeasonKey={challengeCtx
+  .season}` (`App.tsx:377`) and a link recipient is committing to the challenge.
+  Deal-failure (network) must degrade gracefully (build concern).
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
