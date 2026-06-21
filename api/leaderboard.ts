@@ -25,8 +25,15 @@ import { kv } from "@vercel/kv";
 import { createClient } from "@supabase/supabase-js";
 // Phase 2-mount Host route A′: the daily boss instance id, folded into the GET
 // response for the post-results CTA. Basketball-only, KV-cached, lazy upsert.
-import { getTodaysBossChallengeId } from "./boss/_lib/todaysBoss.js";
-import { getRotationDateKey } from "../shared/utils/dailyRotation.js";
+//
+// HOTFIX (2026-06-21): the boss chain is loaded via DYNAMIC import inside
+// resolveBoss (not a static top-level import). A static import pulled the whole
+// boss/dailyRotation graph into this function's module-load path, and a single
+// NodeNext extensionless import deep in that graph (dailyRotation → seededRng)
+// threw ERR_MODULE_NOT_FOUND at LOAD time — 500ing EVERY leaderboard request
+// (all sports), which a handler try/catch cannot catch. Dynamic import moves the
+// failure inside the try/catch: a broken boss chain now degrades to "no boss
+// field" instead of crashing the route (the Required-vs-Upgrade firewall).
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
@@ -111,6 +118,13 @@ type BossField = { bossChallengeId: string; bossPlayerCount: number | null };
 async function resolveBoss(sport: string): Promise<BossField | null> {
   if (sport !== "basketball") return null;
   try {
+    // Dynamic import — see the HOTFIX note at the imports. Any module-load
+    // failure in the boss chain rejects here and is caught below → null → the
+    // leaderboard responds normally with no boss field.
+    const [{ getRotationDateKey }, { getTodaysBossChallengeId }] = await Promise.all([
+      import("../shared/utils/dailyRotation.js"),
+      import("./boss/_lib/todaysBoss.js"),
+    ]);
     const date = getRotationDateKey();
     const cacheKey = `boss:basketball:today:${date}`;
     let id = await kv.get<string>(cacheKey);
