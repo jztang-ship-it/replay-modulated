@@ -38,6 +38,11 @@ export const THIN_SEASONS: Record<string, string> = {
 
 export type BossStarter = {
   name: string; pos: string;
+  /** Phase 2-mount cheap-A enrichment: the season-substrate basePlayerId,
+   *  retained so the boss five can be made a playable/revealable card (game-log
+   *  key + salary/tier lookup). Optional only so synthetic test starters need
+   *  not supply it; buildSeason always populates it for real bosses. */
+  basePlayerId?: string;
   gamePool: number[];   // per-game canonical FP (min≥10 qualifying games) — the roll pool
   gp: number; avgMin: number; meanFp: number; traded: boolean;
 };
@@ -143,6 +148,7 @@ export function buildSeason(season: string, overrides?: OverrideMap): TeamSeason
     const p = playerById.get(id); const st = stat.get(id)!;
     return {
       name: String(p.name ?? ""), pos: String(p.position ?? "").toUpperCase(),
+      basePlayerId: id, // cheap-A enrichment: retain the substrate id
       gamePool: st.pool, gp: st.gp, avgMin: st.avgMin, meanFp: st.meanFp,
       traded: Array.isArray(p.teams) && p.teams.length > 1,
     };
