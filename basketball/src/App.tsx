@@ -436,7 +436,7 @@ function AppInner() {
             chDebug("setChallengeCtx", {
               from: "onAccept",
               prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
-              next: { challengeId: c.challengeId, h2hPlayingMode: c.senderKind !== "boss" },
+              next: { challengeId: c.challengeId, h2hPlayingMode: true },
             });
             setChallengeCtx(c);
             setShowChallengeLanding(false);
@@ -447,14 +447,16 @@ function AppInner() {
             // above so the post-H2H flow (Send It Back / Play Own Hand
             // / Dismiss) drops back into GameView without re-routing.
             //
-            // Phase 2-mount Step 5 (routing gate): a BOSS has no sender hand,
-            // so the H2H battlefield (which renders the opponent's cards) is
-            // empty/meaningless for it. Route bosses OUT of H2H → they fall to
-            // GameView's legacy challenge path → ChallengeComparisonScreen (the
-            // comparison surface the design intends), where the boss result
-            // terminates outward (BossOutwardEnding). Human challenges carry
-            // senderKind "player" → gate true → existing H2H path byte-unchanged.
-            setH2hPlayingMode(c.senderKind !== "boss");
+            // Phase 2-mount Step 2 (routing — supersedes Step 5): the boss now
+            // flows through H2HRecipientPlay like any sender. The empty-
+            // battlefield problem is gone: resolvedSenderHand carries the boss
+            // five (sender-hand boss branch) as the OPPONENT, and the
+            // recipient's own hand is the fresh draft (Step 1). At results,
+            // H2HRecipientReveal swaps in BossOutwardEnding (Step 3) so the boss
+            // terminates OUTWARD. So h2hPlayingMode is unconditionally true —
+            // human and boss share one path; the boss is separated at accept
+            // (fresh draft + outward ending), never branched inside the surface.
+            setH2hPlayingMode(true);
             setH2hPlayKey(k => k + 1);
 
             // Dev affordance — phase 5a commit 3 (2026-05-27).

@@ -31,7 +31,6 @@ import { track } from "@shared/analytics/analytics";
 import { isRealName } from "@shared/utils/isRealName";
 import { chadTrashTalk, trashTalkBucket, selectChallengeResolution } from "@shared/commentary/chadChallenge";
 import { useChallengeAttempt, type ChallengeAttemptState } from "@shared/hooks/useChallengeAttempt";
-import { BossOutwardEnding } from "./BossOutwardEnding";
 
 // Re-exported under the original name so existing call sites that
 // import ComparisonState continue to compile. Phase 5a commit 1
@@ -80,7 +79,9 @@ interface Props {
 export function ChallengeComparisonScreen({
   challengeCtx, myScore, myRoster, myWinTier, sport,
   collapsed = false,
-  onCollapse, onSendItBack, onTryAgain, onPlayAgain, onResolved,
+  // onPlayAgain retired with the Step-2 boss-fork removal (kept optional on
+  // Props so GameView's call site stays valid; no longer consumed here).
+  onCollapse, onSendItBack, onTryAgain, onResolved,
 }: Props) {
   void myWinTier;
 
@@ -274,35 +275,13 @@ export function ChallengeComparisonScreen({
     setDragDeltaPx(0);
   };
 
-  // Phase 2-mount Step 5 — boss results terminate OUTWARD, not through the human
-  // rivalry sheet. Early fork AFTER all hooks (the attempt POST above already
-  // fired → the boss attempt + KV count are recorded); the human
-  // WIN/LOSS_OPEN/LOSS_CLOSED render below is PROVABLY UNENTERED for a boss.
-  // BossOutwardEnding records the result and renders from getBossResult — the
-  // same single source the BossLandingView revisit reads, so fresh and revisited
-  // are byte-identical.
-  if (challengeCtx.senderKind === "boss") {
-    const won = myScore >= challengeCtx.targetScore;
-    return (
-      <div
-        data-testid="boss-result-sheet"
-        style={{
-          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 60,
-          background: "linear-gradient(180deg, #0D1628 0%, #070A12 100%)",
-          borderTop: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: "18px 18px 0 0", padding: "24px 20px 32px",
-          boxShadow: "0 -8px 30px rgba(0,0,0,0.5)",
-        }}
-      >
-        <BossOutwardEnding
-          sport={sport}
-          bossChallengeId={challengeCtx.challengeId}
-          freshResult={{ score: myScore, won }}
-          onPlayAgain={onPlayAgain ?? onCollapse}
-        />
-      </div>
-    );
-  }
+  // Phase 2-mount Step 2 (2026-06-21) — the boss outward-ending fork that lived
+  // here (Step 5) is REMOVED. Bosses no longer route to GameView →
+  // ChallengeComparisonScreen; they flow through H2HRecipientPlay and terminate
+  // outward via H2HResultsOverlay's bossOutwardEnding slot (Step 3). This
+  // surface is now human-only; no boss can reach it. BossOutwardEnding the
+  // component is unchanged and reused (hide-don't-delete) — only this render
+  // path was retired, removing the dangling fork.
 
   return (
     <>

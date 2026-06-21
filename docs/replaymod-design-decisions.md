@@ -3459,6 +3459,25 @@ it. Same end-state as the map; commit order swapped to preserve green.
   to a fresh normal game instead, swap to `onPlayOwnHand`.
 - Green: H2HResultsOverlay.test +2, full suite 1394/1394, basketball tsc + build.
 
+### Step 2 BUILT (2026-06-21) — gate deletion → H2H routing (activates Step 3)
+Green: full suite 1392/1392 (−2 from the deleted obsolete fork test), basketball
+tsc + build. One path remains; the dormant Step-3 code is now live.
+- **Routing flip (App.acceptProceed):** `setH2hPlayingMode(c.senderKind !== "boss")`
+  → `setH2hPlayingMode(true)`. Boss now flows through `H2HRecipientPlay` like any
+  sender — fresh draft (Step 1) as the recipient hand, boss five as the opponent
+  (`resolvedSenderHand`), BossOutwardEnding at results (Step 3). No empty
+  battlefield. Human path unchanged (was already `true`).
+- **`ChallengeComparisonScreen` boss fork REMOVED** (the Step-5 early return at
+  `:284`). Bosses no longer reach GameView → ChallengeComparisonScreen (h2hPlayingMode
+  always true for them), so the fork was dead. Removed the fork block + the now-unused
+  `BossOutwardEnding` import + `onPlayAgain` from the destructure (kept optional on
+  Props so GameView's call site stays valid). **BossOutwardEnding the component is
+  untouched + reused** (hide-don't-delete) — only this render path retired.
+- **Obsolete test deleted:** `ChallengeComparisonScreen.boss.test.tsx` covered only
+  the removed fork. Its behavioral coverage migrated: the "boss slot replaces the
+  human board / no human CTAs" assertion now lives in `H2HResultsOverlay.test.tsx`
+  (Step 3); the WIN/LOSS outward copy stays covered by `BossOutwardEnding.test.tsx`.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
