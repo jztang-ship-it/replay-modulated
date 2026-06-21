@@ -20,8 +20,8 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { rollBoss, K, P_LO, P_HI, type Boss, type RollMode } from "./bossGenerator";
-import { REPO } from "./bossData";
+import { rollBoss, K, P_LO, P_HI, type Boss, type RollMode } from "./bossGenerator.js";
+import { REPO } from "./bossData.js";
 
 export const BOSS_CONTRACT_VERSION = "boss-contract-v1";
 

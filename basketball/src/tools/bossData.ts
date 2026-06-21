@@ -17,9 +17,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { computeBasketballFp } from "../adapters/fantasyPoints";
-import { computeBasketballBadges } from "../adapters/badges";
-import { BasketballSportConfig } from "../adapters/basketballConfig";
+import { computeBasketballFp } from "../adapters/fantasyPoints.js";
+import { computeBasketballBadges } from "../adapters/badges.js";
+import { BasketballSportConfig } from "../adapters/basketballConfig.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const REPO = path.resolve(HERE, "../../..");

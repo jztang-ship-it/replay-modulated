@@ -24,7 +24,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import { buildAll, loadBand, REPO, type TeamSeason, type OverrideMap } from "./bossData";
+import { buildAll, loadBand, REPO, type TeamSeason, type OverrideMap } from "./bossData.js";
 
 export const K = 15;
 export const COOLDOWN = 5;

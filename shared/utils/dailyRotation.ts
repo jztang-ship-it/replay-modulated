@@ -9,7 +9,7 @@
  *   const filtered = evalPool.filter(p => p.tier !== "ORANGE" || activeIds.has(p.basePlayerId));
  */
 
-import { hashStr, mulberry32 as seededRng } from "./seededRng";
+import { hashStr, mulberry32 as seededRng } from "./seededRng.js";
 
 /** Returns today's date string (YYYY-MM-DD) in local time. */
 export function getRotationDateKey(date?: Date): string {
