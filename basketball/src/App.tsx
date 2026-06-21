@@ -292,6 +292,11 @@ function AppInner() {
           key={h2hPlayKey}
           challengeCtx={challengeCtx}
           sport={SPORT}
+          /* 4a SWAP: the recipient inherits the sender's five and runs the full
+             3 rounds (docs §"Score-Is-The-Object + 3-round universal"). Mirrors
+             the basketball GameAdapter's maxRounds:3 (basketball/src/views/
+             GameView.tsx:241); default in the component is 1 (single-shot). */
+          maxRounds={3}
           redrawRoster={redrawRoster}
           resolveRoster={resolveRoster}
           calculateWinTier={calculateWinTier as (totalFp: number) => string}

@@ -116,6 +116,7 @@ import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEng
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
 import { useChallengeAttempt } from "@shared/hooks/useChallengeAttempt";
+import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
   HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
@@ -295,6 +296,12 @@ type PlayingState =
 export interface H2HRecipientPlayProps {
   challengeCtx: ChallengeCtx;
   sport: string;
+  /** 4a SWAP — rounds of hold/redraw the recipient runs before resolve.
+   *  Defaults to 1 (single-shot, the pre-4a behavior — keeps existing single
+   *  Draw→arc tests valid). App passes the adapter's value (basketball = 3) so
+   *  the recipient inherits the sender's five and runs the full 3 rounds. Mirrors
+   *  GameView's `adapter.maxRounds ?? 1`. */
+  maxRounds?: number;
   /** Sport-specific atomic redraw. Held positions preserved; unheld
    *  refilled. Returns full roster in one call (path β requires
    *  surface-controlled reveal timing). */
@@ -400,10 +407,23 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // of-truth guarantee: the recipient never inherits hold flags.
   // lockedCardIds below builds off this array via cardId, so the zeroed
   // hand still resolves correctly to the engine's held-set logic.
-  const initialRoster = useMemo(
+  const inheritedRoster = useMemo(
     () => challengeCtx.initialRoster.map((c) => ({ ...c, wasHeld: false })),
     [challengeCtx.initialRoster],
   );
+  // 4a SWAP (3-round loop): the recipient inherits the sender's five as the
+  // ROUND-1 base, then holds/redraws on it across maxRounds. `redrawnBase`
+  // carries the prior round's redrawn roster forward (wasHeld zeroed — each round
+  // is a fresh hold selection per the no-held-state invariant). Every existing
+  // base read (deal / hold / redraw / strip) consumes `initialRoster`, which now
+  // resolves to the CURRENT round's base — no per-site rewiring needed.
+  const [redrawnBase, setRedrawnBase] = useState<GeneratedCard[] | null>(null);
+  const initialRoster = redrawnBase ?? inheritedRoster;
+  // The deal is lineup 1 (GameView convention); each redraw commits a round
+  // through commitRound. maxRounds=3 → 2 redraws → 3 lineups. Ref is read inside
+  // the async commit callback so it never sees a stale closure.
+  const maxRounds = props.maxRounds ?? 1;
+  const roundsUsedRef = useRef(1);
 
   // Roster size for this replay = the recipient's actual dealt hand. Drives
   // the deal-in / column-flip cascade counts, the fade-up window, and the
@@ -597,6 +617,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     if (state.kind !== "your_redraw_flip") return;
     if (state.revealedColumns !== 0) return;
     if (columnTimersRef.current.length > 0) return;
+    // Captured at schedule time (revealedColumns===0); finalRoster/held don't
+    // change during the flip. The async commit callback reads these, not `state`.
+    const flipFinalRoster = state.finalRoster;
+    const flipHeld = state.held;
     const timers: number[] = [];
     // Column N's flip kicks off when revealedColumns crosses N → N+1.
     // The first column fires at delay=0 (engine just returned; the
@@ -611,15 +635,51 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       timers.push(id);
     }
     const finalId = window.setTimeout(() => {
-      setState((s) =>
-        s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
-          ? {
-              kind: "ab_transition",
-              finalRoster: s.finalRoster,
-              held: s.held,
-            }
-          : s,
-      );
+      // 4a SWAP: route the round's loop/lock decision through commitRound as a
+      // BLACK BOX (entryFee:0, no-op economics; _roundMachine.ts untouched).
+      // commitRound's resolvedRoster is never economically read here (no-op
+      // resolveOutcome), so the single real resolveRoster stays in
+      // handoff_resolving — the finalRoster→resolveRoster→arc seam does NOT move.
+      void (async () => {
+        const decision = await commitRound({
+          roundsUsed: roundsUsedRef.current,
+          maxRounds,
+          userTappedReveal: false,
+          entryFee: 0,
+          streak: 0,
+          resolvedRoster: flipFinalRoster as any,
+          resolveOutcome: () => ({ totalFp: 0, tier: "", payout: 0 }),
+          effects: {
+            telemetry: () => {},
+            persistLock: async () => ({ ok: false, handId: "" }),
+            charge: () => {},
+            rake: () => {},
+          },
+        });
+        roundsUsedRef.current = decision.roundsUsed;
+        if (decision.next === "REVEALING") {
+          // Lock → the EXISTING ab_transition → handoff_resolving → arc seam.
+          setState((s) =>
+            s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
+              ? { kind: "ab_transition", finalRoster: flipFinalRoster, held: flipHeld }
+              : s,
+          );
+        } else {
+          // HOLD → another round. Carry the redrawn roster forward as the next
+          // base (wasHeld zeroed = fresh hold selection), clear holds, and reset
+          // the per-round timer/fire guards so redraw_running + your_redraw_flip
+          // re-arm for the next round.
+          redrawFiredRef.current = false;
+          columnTimersRef.current.forEach(clearTimeout);
+          columnTimersRef.current = [];
+          setRedrawnBase(flipFinalRoster.map((c) => ({ ...c, wasHeld: false })));
+          setState((s) =>
+            s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
+              ? { kind: "hold_select", held: new Set(), previewedSlotIndex: null }
+              : s,
+          );
+        }
+      })();
     }, rosterSize * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS));
     timers.push(finalId);
     columnTimersRef.current = timers;
