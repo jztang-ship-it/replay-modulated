@@ -2075,34 +2075,29 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
 // the rename (no "Auto"; the control names its destination). This is THE
 // crack-guard — the round loop lays over the exact spot the floor guards.
 //
-// Terminal surface: the round-3 auto-reveal reuses the score-vs-target floor
-// content (data-h2h-no-opponent-floor / data-h2h-floor-target) — the doc's
-// "auto-reveal scoring vs targetScore". The panel is NO LONGER the undefined
-// ENTRY (rounds are); it surfaces only as the round-3 terminal here and as the
-// deeper-break backstop (separate assertion, added with the relocation).
+// Terminal surface: the round-3 auto-reveal is the NEW one-sided reveal
+// component (data-h2h-oneside-reveal / data-h2h-oneside-target) — docs §"Degraded
+// round-3 terminal: one-sided reveal surface". NOT the arc (opponent-dependent)
+// and NOT the floor panel (error-framed, now the deeper-break backstop only).
 
 describe("H2HRecipientPlay §8 — degraded path: click-through rounds", () => {
-  // SKIPPED until increment 2/3: the degraded click-through + its one-sided
-  // reveal terminal (docs §"Degraded round-3 terminal: one-sided reveal surface")
-  // are not built yet. The terminal assertion below still targets the floor panel
-  // and must be repointed to the one-sided surface when unskipped. Increment 1
-  // (main-path loop) lands first; this is the next increment's RED guard.
-  it.skip("no opponent hand → Round 2 / Round 3 click-through → round-3 auto-reveal vs targetScore; panel is NOT the entry; never blank; exactly one attempt POST", async () => {
+  it("no opponent hand → Round 2 / Round 3 click-through → round-3 one-sided reveal vs targetScore; panel/battlefield absent; never blank; exactly one attempt POST", { timeout: 15000 }, async () => {
     (globalThis.fetch as any).mockClear?.();
     // makeCtx() carries NO resolvedSenderHand — the legacy / transient-exhausted case.
-    const ctx = makeCtx({ targetScore: 175 });
+    const ctx = makeCtx({ targetScore: 175, senderHandFailed: true });
     expect(ctx.resolvedSenderHand).toBeUndefined();
     const { container } = render(
-      <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
+      <H2HRecipientPlay {...baseProps()} maxRounds={3} challengeCtx={ctx} />
     );
 
     // Round 1 lineup — the advance control names its destination ("Round 2").
-    // The panel is NOT the entry (it was, pre-evolution).
+    // Neither the floor panel nor a Draw/hold control is the entry.
     await waitFor(
       () => expect(screen.queryByText("Round 2")).not.toBeNull(),
       { timeout: 3000 },
     );
     expect(container.querySelector("[data-h2h-no-opponent-floor]")).toBeNull();
+    expect(container.querySelector("[data-h2h-oneside-reveal]")).toBeNull();
     expect(screen.queryByText("Draw")).toBeNull(); // no hold/Draw control on this branch
 
     // Click 1→2: fresh draw, control relabels to "Round 3".
@@ -2112,22 +2107,58 @@ describe("H2HRecipientPlay §8 — degraded path: click-through rounds", () => {
       { timeout: 3000 },
     );
 
-    // Click 2→3: round-3 lineup pauses, then auto-reveals a score vs targetScore.
-    // No third button — round 3 self-resolves.
+    // Click 2→3: round-3 lineup pauses, then auto-reveals a score vs targetScore
+    // on the one-sided surface. No third button — round 3 self-resolves.
     fireEvent.click(screen.getByText("Round 3"));
     await waitFor(
       () => {
-        const target = container.querySelector("[data-h2h-floor-target]");
+        const target = container.querySelector("[data-h2h-oneside-target]");
         expect(target).not.toBeNull();
         expect(target?.textContent ?? "").toContain("175");
       },
       { timeout: 8000 },
     );
 
-    // Never blank, never the H2H battlefield (no opponent to reveal).
+    // The one-sided surface — NOT the floor panel, NOT the H2H battlefield.
+    expect(container.querySelector("[data-h2h-oneside-reveal]")).not.toBeNull();
+    expect(container.querySelector("[data-h2h-no-opponent-floor]")).toBeNull();
     expect(container.querySelector("[data-h2h-recipient-reveal]")).toBeNull();
 
-    // Data parity: exactly one useChallengeAttempt POST, at the round-3 reveal.
+    // Data parity: exactly one useChallengeAttempt POST, at the one-sided reveal.
+    const attemptPosts = (globalThis.fetch as any).mock.calls.filter(
+      (c: any[]) => String(c[0]).includes("/attempt"),
+    );
+    expect(attemptPosts.length).toBe(1);
+  });
+
+  // Panel backstop — the DEEPER break, distinct trigger from undefined-hand.
+  // docs: floor mounts on dataLoadError/engineError DURING the fresh-seed run,
+  // NOT on "resolvedSenderHand undefined" (that's the normal click-through entry).
+  // Two distinct components → POST exclusivity by construction.
+  it("degraded deeper break: an engine error during the fresh-seed run mounts the floor backstop (showing targetScore) + one mount POST; not the one-sided surface", async () => {
+    (globalThis.fetch as any).mockClear?.();
+    const props = { ...baseProps(), redrawRoster: vi.fn(async () => { throw new Error("engine down"); }) };
+    const ctx = makeCtx({ targetScore: 175, senderHandFailed: true });
+    const { container } = render(
+      <H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />
+    );
+    // Round-1 lineup reached — undefined-hand alone is NOT the floor trigger.
+    await waitFor(
+      () => expect(screen.queryByText("Round 2")).not.toBeNull(),
+      { timeout: 3000 },
+    );
+    expect(container.querySelector("[data-h2h-no-opponent-floor]")).toBeNull();
+    // Advance → the fresh-seed redraw throws → engineError → deeper-break floor.
+    fireEvent.click(screen.getByText("Round 2"));
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-no-opponent-floor]")).not.toBeNull(),
+      { timeout: 4000 },
+    );
+    const floorTarget = container.querySelector("[data-h2h-floor-target]");
+    expect(floorTarget?.textContent ?? "").toContain("175");
+    // Deeper break is the floor, NOT the success one-sided surface.
+    expect(container.querySelector("[data-h2h-oneside-reveal]")).toBeNull();
+    // Exactly one POST — the floor's mount POST.
     const attemptPosts = (globalThis.fetch as any).mock.calls.filter(
       (c: any[]) => String(c[0]).includes("/attempt"),
     );

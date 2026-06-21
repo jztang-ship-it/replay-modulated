@@ -552,6 +552,14 @@ function AppInner() {
                   });
                   // eslint-disable-next-line no-console
                   console.warn("[h2h] sender hand legacy fallback:", d.reason);
+                  // DEFINITIVE failure (hand never stored) → mark degraded so the
+                  // recipient gets the click-through. NOT keyed on the missing
+                  // hand alone (that's also the in-flight state). Re-nav guarded.
+                  setChallengeCtx((prev) =>
+                    prev && prev.challengeId === c.challengeId
+                      ? { ...prev, senderHandFailed: true }
+                      : prev,
+                  );
                   return;
                 }
                 // Functional setState guards against re-navigation
@@ -584,6 +592,12 @@ function AppInner() {
                 });
                 // eslint-disable-next-line no-console
                 console.warn("[h2h] sender hand prefetch failed after retries:", err);
+                // DEFINITIVE failure (retry exhausted) → mark degraded. Re-nav guarded.
+                setChallengeCtx((prev) =>
+                  prev && prev.challengeId === c.challengeId
+                    ? { ...prev, senderHandFailed: true }
+                    : prev,
+                );
               });
             };
 
