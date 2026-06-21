@@ -3279,6 +3279,36 @@ resolveRoster → arc seam does NOT move. commitRound's contract forces per-roun
 strong-draft (3-round optimal) score distribution, which the current simulator does not yet
 produce — see the simulator-fidelity correction (faithful-deal phase).
 
+### Challenge model — Missing opponent hand: fail-open floor (corollary of Score-Is-The-Object) — DECISION LOCKED (John, 2026-06-22)
+The challenge object is score + season pool (both required, loaded by the blocking GET before
+accept). The opponent's resolved hand (`resolvedSenderHand`) is optional, arrives via a separate
+non-blocking fetch, and is seed/visual material — not the object. Undefined on legacy challenges
+(`sender_resolved:false`) and on transient fetch failures.
+
+**Decision (fail-open / "A"):** a missing opponent hand never blocks or blanks. The recipient
+always reaches a visible, faithful outcome against the authoritative `targetScore`.
+
+**Floor invariant (universal, pre- and post-build):** `resolvedSenderHand` undefined must never
+produce the silent dead-end (inner opacity 0 + reveal null). Always a visible state showing the
+true `targetScore`. Guarded by a test carried into the 3-round build as its regression guard.
+
+**Path-split:** Legacy (hand never stored) → retry futile → fail-open immediately, reveal
+replaced by honest "unavailable" treatment. Transient (4xx/5xx/network/race) → retry with
+backoff, then degrade to the same fail-open. Ripe-transient-exhausted → fail-open per A;
+same-hand feel is seed not object, object fully presentable without it. (Fail-closed rejected:
+would block a playable object over a missing visual.)
+
+**Meaning across the build:** pre-build the recipient drafts their own roster, so the floor =
+outcome-vs-target with no reveal. Post-build (4a) the opponent hand is the inherited starting
+hand, so fail-open = fresh seed, run 3 rounds vs the same target. NOT struck-4b: 4b nullified the
+boss distinction as the grammar for all challenges; this is a degraded-seed fallback for one
+failure case, object identical — equivalent to the locked "shared-start redrawn to nothing."
+
+**History:** blank dates to the Phase 5b surface migration (2026-05-30), which routed humans onto
+`H2HRecipientPlay`→arc without carrying the pre-5b `ChallengeComparisonScreen` backstop that made
+the null-gate safe by design. This restores that principle on the current surface. Not a
+recent-work regression — boss/build-phase work left the human path byte-unchanged.
+
 ### Two-tier bosses + per-season-band GO (2026-06-21, John)
 **Two tiers** (both terminate outward; invariant holds for every view):
 - **Beatable (daily):** you're meant to win. Loss copy enemy-referential
