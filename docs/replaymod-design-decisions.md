@@ -3176,6 +3176,8 @@ correctly degrades to no-boss-field. A real `bossChallengeId` in the GET respons
 is gated on this DB action — the last step to user-reachable boss.
 
 ### Play model — Interpretation 3 (season-locked from-scratch draft) — DECISION LOCKED; per-season band is the bottleneck (step-1 finding, 2026-06-21)
+> **HUMAN SIDE SUPERSEDED (2026-06-21) — see "Challenge model — Score-Is-The-Object + 3-round universal" block immediately below.** The boss side of this block (draft-fresh, 3-round, season-pinned, boss-five excluded) is UNCHANGED. Only the human-shared-start mechanic referenced here is superseded.
+
 **Decision (John, locked):** a boss is a sender; **equivalence holds at the
 bookends** (landing → reveal → result → share identical to a human challenge).
 What differs is the **starting-roster source**: the recipient does NOT inherit
@@ -3221,6 +3223,61 @@ modern-calibrated boss target — the unfair-by-construction state the principle
 forbids. **Per the build gate, halted after step 1 — awaiting go on the
 per-season-band script scope before steps 2/3.** No difficulty tuning lever
 (banned); the fix is season-derived calibration only.
+
+### Challenge model — Score-Is-The-Object + 3-round universal — DECISION LOCKED (John, 2026-06-21)
+
+**Amends:** "Play model — Interpretation 3 ... DECISION LOCKED (2026-06-21)" — that block
+locked boss=draft-fresh / human=shared-start(inherit + 1 redraw). This supersedes the
+*human* side only. Boss side (draft-fresh, 3-round, season-pinned, boss-five excluded) is
+unchanged.
+
+**Decision (John, locked):** The object of a challenge is the SCORE, not the hand. Highest
+score wins — sole decider for boss AND friend challenges. A challenge is a **score + a season
+pool** ("scored 224 from the '98 pool — beat it"), structurally identical to a boss. 3-round
+hold/redraw construction is the single universal grammar across normal / boss / human H2H.
+One engine, one grammar.
+
+**Human H2H start-mode — 4a LOCKED:** the recipient INHERITS the sender's five as the
+**starting hand**, then runs the full **3 rounds** of hold/redraw on top (maxRounds=3 for the
+inherit start-mode, same as normal/boss). Shared-start survives as a *seed*, not a preserved
+hand — over 3 rounds the recipient can redraw the inherited five down to nothing, and that is
+the ownership mechanic working as intended ("I took their five and built my own team to beat
+them"), not a leak.
+
+- **4c (not taken):** inherit + 1 round while normal/boss get 3. Rejected — breaks the
+  universal-3 grammar. Reversible: 4a↔4c is a single maxRounds-per-start-mode parameter, so
+  4c remains a cheap dial later if the "same hand, light tweak" feel is wanted.
+- **4b (struck):** full draft-fresh for human H2H. Reverses the boss-vs-human distinction and
+  nullifies the boss's only distinguishing mechanic. Uniformity for its own sake.
+
+**Consequence — starting hand is seed material, not the sent object.** What gets sent and
+compared is the score. Accepted, not a regret: collapses boss and friend into one object,
+unifies screen + construction + onboarding ("build a team, beat the score" — self-explaining).
+
+**Loop fuel (don't re-litigate):** the old loop's beatable scores (busts/near-misses from
+1-redraw imperfection) relocate, not vanish — now from resolution roll-variance (a strong
+lineup still busts when the games roll cold; resolution is a random sample over real game
+logs), pool spread, and the rematch/rivalry ladder (the loop 3 rounds *improves*).
+
+**Stamps — UNCHANGED.** BAD BEAT / MISS / CAREER HI / RECORD / SEASON HI + all
+choke/near-miss/rare/season-high triggers stay. Trigger *contexts* may re-point from
+hand-relative to score-relative; the stamp *types* are untouched.
+
+**Commentary consequence (gate for the commentary-cleanup workstream):** inheritance /
+hand-as-object framing RETIRED; reactive (score/tier/stamp) + comparison (score-vs-score)
+framing canonical. Supersede h2h-relay-tension-design-lock.md; patch
+commentary-voice-system.md.
+
+**Build (the contained swap, not money-path surgery):** add a 3-round hold/redraw loop inside
+H2HRecipientPlay, driving the loop/lock decision through `commitRound` reused as a BLACK BOX
+(entryFee:0, no-op persist/charge/rake). Resolution already shared; the finalRoster →
+resolveRoster → arc seam does NOT move. commitRound's contract forces per-round resolveRoster
+(construction-timing change, not resolution-logic change). NOT an extract-shared-loop refactor
+— that would touch the money choreography + pinned tests and is explicitly out of scope.
+
+**Cross-ref:** boss target calibration (deferred gate) and this loop's health depend on the
+strong-draft (3-round optimal) score distribution, which the current simulator does not yet
+produce — see the simulator-fidelity correction (faithful-deal phase).
 
 ### Two-tier bosses + per-season-band GO (2026-06-21, John)
 **Two tiers** (both terminate outward; invariant holds for every view):
