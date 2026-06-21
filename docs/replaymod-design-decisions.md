@@ -3327,6 +3327,54 @@ targets to ≈P50–P70 and marquee to ≈P85–P95 of the strong-draft distribu
 cut (currently all 15 serveable). Handling rule for any boss that can't be made
 beatable/tunable: drop it (none triggers it today — all beatable clear 92–99%).
 
+### Glass-cycle MAP — corrected scope: Interpretation 3 needs a draft-fresh deal mechanic (2026-06-21)
+**Premise corrected (lock-protecting):** routing the boss through `H2HRecipientPlay`
+"like any sender" via gate deletion alone delivers **inherit-the-boss-five** (the
+recipient is dealt `challengeCtx.initialRoster`, which is the baked boss five —
+`H2HRecipientPlay.tsx:67,402`), redraws it, and faces the same five — i.e. the
+REJECTED Interpretation 1, not the locked Interpretation 3. The recipient
+**draft-fresh** mechanic (start blank, draft from the season excluding the boss
+five) is unbuilt. So the glass cycle is **FOUR steps**, not three. Gate deletion
+alone ≠ Interpretation 3.
+
+**Four-step build plan (next fresh session, device in hand):**
+1. **Draft-fresh deal mechanic (the new piece).** Inject the fresh draft at ACCEPT
+   (App.tsx onAccept, ~`:425`), keeping `H2HRecipientPlay` byte-identical: for
+   `senderKind==='boss'`, set `challengeCtx.startMode='draft-fresh'`; deserialize
+   `data.initial_roster` → bossFive (exclusion + opponent source); `setActiveSeason
+   (season)` + `ensureLoaded`; build the adapter eval pool MINUS bossFive
+   basePlayerIds; `rosterEngine.generateRoster(filteredPool, config, economyConfig,
+   rnd)` → fresh draft; set `challengeCtx.initialRoster = fresh draft`. The boss
+   five stays the opponent via `resolvedSenderHand` (sender-hand branch, built).
+   `startMode` field → `challengeTypes.ts`.
+   - **PREMISE TO VERIFY in build:** App must build the adapter eval pool +
+     `generateRoster` (App doesn't deal today — GameView's hook does). Confirm App
+     can reach `sportAdapter` eval pool + economyConfig, or thread a deal capability.
+   - **Collision check:** initialRoster (your fresh draft) MUST be distinct from
+     resolvedSenderHand (boss five). Today they're both the boss five — draft-fresh
+     separates them. Glass: your dealt hand ≠ the boss five.
+2. **Gate deletion → H2H routing.** `App.tsx:439` `h2hPlayingMode = senderKind!==
+   'boss'` → `true`. REMOVE the superseded `ChallengeComparisonScreen` boss fork
+   (`:284`, Step 5 Gate C) — boss no longer routes to the comparison sheet
+   (hide-don't-delete: `BossOutwardEnding` component stays, reused).
+3. **Outward-ending relocation.** Render `BossOutwardEnding` in `H2HResultsOverlay`
+   (post-play, gated `senderKind==='boss'`); `recordBossResult` fires there (moved
+   from the comparison fork). `BossLandingView` revisit (`ChallengeLandingScreen.tsx:400`)
+   STAYS. ONE READ: both H2HResultsOverlay (post-play) + BossLandingView (revisit)
+   render from `getBossResult` → fresh and revisited byte-identical.
+4. **Two-tier framing (consume baked `marquee`).** Surface marquee WITHOUT a
+   migration: `toSharedChallengeRow` → `initial_roster = {v:1, sport, marquee:
+   boss.marquee, holdsRecorded:false, cards}` (jsonb, GET returns it). Landing
+   (BossLandingView): marquee → "brutal by design" label pre-play. Result
+   (BossOutwardEnding): marquee → margin-based loss copy ("came within N of the X");
+   beatable → enemy-referential; both win copies terminate outward. Flag + label +
+   loss-copy branch ONLY (no mode/leaderboard/rewards).
+
+**Glass surfaces (John, device in hand, next cycle):** beatable full play (fresh
+draft vs boss five, no empty battlefield); loss/win outward endings; revisit
+reconstruct; marquee label + margin copy; NEGATIVE — human (non-boss) H2H/
+comparison byte-identical (the `senderKind` branch must not touch them).
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
