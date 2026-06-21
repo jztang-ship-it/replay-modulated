@@ -69,6 +69,15 @@ export interface ChallengeCtx {
    *  flows through challengerName distinguished ONLY by this marker;
    *  isRealName stays the untouched player-name gate. */
   senderKind?: "player" | "boss";
+  /** Phase 2-mount Step 1 (2026-06-21): the recipient's starting-roster
+   *  source. Undefined / "inherit" = the human shared-start (recipient is
+   *  dealt the sender's five — the default). "draft-fresh" = Interpretation 3
+   *  boss play: the recipient drafts a FRESH OWN roster from the boss's
+   *  season excluding the boss five, set at App.onAccept before the boss
+   *  five is overwritten on initialRoster. The boss five stays the opponent
+   *  via resolvedSenderHand. Set only on the boss path; the human path never
+   *  touches it. */
+  startMode?: "inherit" | "draft-fresh";
 }
 
 /**

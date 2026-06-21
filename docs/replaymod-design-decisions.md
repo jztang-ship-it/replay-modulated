@@ -3405,6 +3405,33 @@ explicitly-anticipated "thread a deal capability" branch (NOT inline replication
   .season}` (`App.tsx:377`) and a link recipient is committing to the challenge.
   Deal-failure (network) must degrade gracefully (build concern).
 
+### Step 1 BUILT (2026-06-21, glass cycle) — draft-fresh deal mechanic
+Green across all gates (new unit test 4/4, basketball tsc clean, full suite
+1392/1392, basketball build). NOT yet device-glassed.
+- **New `excludeBossFive(evalPool, excludeBaseIds)` (gameAdapter, pure+exported)**
+  — the boss-five exclusion, matched on `basePlayerId`. Unit-locked composed with
+  the REAL `generateRoster` over a directly-built `PlayerEval[]` (zero mocks):
+  `basketball/src/adapters/__tests__/dealFreshRoster.test.ts`. Asserts the fresh
+  draft can never contain a boss-five player (the no-collision invariant).
+- **New `dealFreshRoster(season, excludeBaseIds)` (gameAdapter)** — `dealInitialRoster`'s
+  recipe + the season pin (`setActiveSeason`+`ensureLoaded`, re-exported via the
+  basketball dataEngine wrapper) + `excludeBossFive`. Thin glue beside
+  `dealInitialRoster`; the fetch/season-coupled half matches that function's
+  glass-verified boundary.
+- **`startMode?: "inherit" | "draft-fresh"` added to `ChallengeCtx`** (challengeTypes.ts).
+- **App.onAccept**: the accept tail is extracted into a local `acceptProceed(c)`
+  closure (`ctx`→`c`; human path behaviorally byte-identical, called synchronously).
+  Boss branch: capture `bossFive = ctx.initialRoster`, derive `excludeBaseIds`,
+  `await dealFreshRoster(ctx.season, …)`, then `acceptProceed({...ctx, startMode:
+  'draft-fresh', initialRoster: freshDraft})`. The boss five stays the opponent via
+  the existing sender-hand prefetch → `resolvedSenderHand`. **Collision separated:**
+  initialRoster (fresh draft) ≠ resolvedSenderHand (boss five). Deal-failure
+  degrades to the inherited five (never blocks the user).
+- **NOTE — routing unchanged this step.** `setH2hPlayingMode(c.senderKind !== "boss")`
+  still routes boss → GameView legacy path (Step 5 state). Intermediate-but-green:
+  the boss now plays a fresh OWN draft vs the target in `ChallengeComparisonScreen`.
+  Step 2 flips routing to H2H.
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;

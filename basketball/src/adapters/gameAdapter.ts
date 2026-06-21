@@ -4,7 +4,7 @@
  */
 
 import { sportAdapter } from "./SportAdapter";
-import { getPlayers, getLogsByKey } from "../engines/dataEngine";
+import { getPlayers, getLogsByKey, setActiveSeason, ensureLoaded } from "../engines/dataEngine";
 import { generateRoster, redrawRoster as engineRedraw, mulberry32, randomSeed } from "../engines/rosterEngine";
 import { resolveCards } from "../engines/resolveEngine";
 import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
@@ -149,6 +149,58 @@ export function getTodaysStars(): DailyBonusPlayer[] {
 /** Internal: today's bonus map (basePlayerId → bonus FP), used at resolve time. */
 function getDailyBonusMapNow(): Map<string, number> {
   return buildDailyBonusMap(buildBonusPool());
+}
+
+/** Phase 2-mount Step 1 (draft-fresh) — remove the boss's own five from a
+ *  fresh-draft eval pool so the recipient can never be dealt a boss player.
+ *  Matches on basePlayerId (the canonical identity key). Pure + exported so
+ *  the no-collision invariant (fresh draft ≠ boss five) is unit-locked
+ *  independently of the fetch/season-coupled deal pipeline below. */
+export function excludeBossFive(evalPool: PlayerEval[], excludeBaseIds: Set<string>): PlayerEval[] {
+  if (excludeBaseIds.size === 0) return evalPool;
+  return evalPool.filter((e) => !excludeBaseIds.has(e.basePlayerId));
+}
+
+/** Phase 2-mount Step 1 (draft-fresh) — deal a FRESH roster pinned to a
+ *  boss's locked season, excluding the boss's own five. Interpretation 3:
+ *  a challenge locks a season and everything (draft pool, game logs,
+ *  salary/tier) derives from it. dataEngine is a module singleton, so the
+ *  setActiveSeason + ensureLoaded here scope getPlayers()/getLogsByKey()
+ *  for this deal; GameView re-affirms the same season via bypassSeasonKey
+ *  (App.tsx pins it to challengeCtx.season) — convergent, not racy.
+ *
+ *  Same recipe as dealInitialRoster with two deltas: the season pin and the
+ *  excludeBossFive filter. The boss five stays the OPPONENT (resolvedSenderHand),
+ *  never the recipient's deal — so the produced roster must share no player
+ *  with the boss five (unit-locked in dealFreshRoster.test.ts). */
+export async function dealFreshRoster(
+  season: string,
+  excludeBaseIds: Set<string>,
+): Promise<{ roster: PlayerCard[] }> {
+  setActiveSeason(season);
+  await ensureLoaded();
+
+  const allPlayers = getPlayers();
+  const logs = getLogsByKey();
+
+  const players = getDealPool(
+    sportAdapter as any,
+    allPlayers.map((p: any) => ({ ...p, basePlayerId: String(p.basePlayerId ?? p.id ?? "").trim() })),
+  );
+
+  const { projByBaseId } = buildProjections(players);
+  const evalPool = excludeBossFive(buildEvalPool(players, logs, projByBaseId), excludeBaseIds);
+
+  const rnd = mulberry32(randomSeed());
+  const rosterConfig = {
+    rosterSize: sportAdapter.rosterSize,
+    slotRequirements: sportAdapter.rosterSlots,
+    excludeFromFlex: [] as string[],
+    positionAware: sportAdapter.positionAware,
+  };
+
+  const cards = generateRoster(evalPool, rosterConfig, getEconomyConfig(), rnd);
+  return { roster: cards as unknown as PlayerCard[] };
 }
 
 export async function dealInitialRoster(): Promise<{ roster: PlayerCard[] }> {

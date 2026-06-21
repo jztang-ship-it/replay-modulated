@@ -41,7 +41,7 @@ import { sportAdapter } from "./adapters/SportAdapter";
 // inside the basketball GameView wrapper; they're now imported here so
 // the App can mount H2HRecipientPlay without going through GameView.
 import { h2hArcRenderer, h2hOverlayRenderer } from "./views/GameView";
-import { redrawRoster, resolveRoster } from "./adapters/gameAdapter";
+import { redrawRoster, resolveRoster, dealFreshRoster } from "./adapters/gameAdapter";
 import { calculateWinTier } from "./utils/payoutLogic";
 
 // ?debug=1 overlay. Eager import (not lazy) so a chunk-load failure
@@ -423,12 +423,22 @@ function AppInner() {
           validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
           calculateWinTier={calculateWinTier as (totalFp: number) => string}
           onAccept={(ctx) => {
+            // Phase 2-mount Step 1 (draft-fresh): the accept tail below is
+            // extracted into acceptProceed(c) so the HUMAN path stays
+            // behaviorally byte-identical (called synchronously with ctx),
+            // while the BOSS path first drafts a FRESH OWN roster from the
+            // boss's season — excluding the boss five, which stays the
+            // opponent via resolvedSenderHand — and swaps it onto
+            // initialRoster before running the same tail. async deal: the
+            // landing stays up until the draft lands; on deal failure we
+            // degrade to the inherited five (never block the user).
+            const acceptProceed = (c: ChallengeCtx) => {
             chDebug("setChallengeCtx", {
               from: "onAccept",
               prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
-              next: { challengeId: ctx.challengeId, h2hPlayingMode: true },
+              next: { challengeId: c.challengeId, h2hPlayingMode: c.senderKind !== "boss" },
             });
-            setChallengeCtx(ctx);
+            setChallengeCtx(c);
             setShowChallengeLanding(false);
             try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
             setView("game");
@@ -444,7 +454,7 @@ function AppInner() {
             // comparison surface the design intends), where the boss result
             // terminates outward (BossOutwardEnding). Human challenges carry
             // senderKind "player" → gate true → existing H2H path byte-unchanged.
-            setH2hPlayingMode(ctx.senderKind !== "boss");
+            setH2hPlayingMode(c.senderKind !== "boss");
             setH2hPlayKey(k => k + 1);
 
             // Dev affordance — phase 5a commit 3 (2026-05-27).
@@ -462,7 +472,7 @@ function AppInner() {
                 console.warn("[h2h] DEV: using mock fixture via ?mockSenderHand=1");
                 import("./dev/h2hMockFixture").then(({ SENDER_HAND }) => {
                   setChallengeCtx((prev) => {
-                    const match = !!(prev && prev.challengeId === ctx.challengeId);
+                    const match = !!(prev && prev.challengeId === c.challengeId);
                     const next = match
                       ? {
                           ...prev!,
@@ -496,7 +506,12 @@ function AppInner() {
             // 4xx/5xx, legacy `sender_resolved:false` — all leave
             // resolvedSenderHand undefined, which commit 3 treats as
             // the fallback signal.
-            const __chDebugPrefetchUrl = `/api/challenge/${ctx.challengeId}/sender-hand`;
+            //
+            // Boss (Phase 2-mount Step 1): the sender-hand endpoint's boss
+            // branch returns the baked five → resolvedSenderHand, so the boss
+            // is the OPPONENT here. The recipient's own hand is the fresh
+            // draft already swapped onto c.initialRoster above. Distinct.
+            const __chDebugPrefetchUrl = `/api/challenge/${c.challengeId}/sender-hand`;
             const __chDebugPrefetchStart = Date.now();
             chDebug("senderHand:start", { url: __chDebugPrefetchUrl });
             fetch(__chDebugPrefetchUrl)
@@ -524,7 +539,7 @@ function AppInner() {
                 // between prefetch start and resolve, drop the
                 // response.
                 setChallengeCtx((prev) => {
-                  const match = !!(prev && prev.challengeId === ctx.challengeId);
+                  const match = !!(prev && prev.challengeId === c.challengeId);
                   const next = match
                     ? { ...prev!, resolvedSenderHand: d.sender }
                     : prev;
@@ -548,6 +563,42 @@ function AppInner() {
                 // eslint-disable-next-line no-console
                 console.warn("[h2h] sender hand prefetch failed:", err);
               });
+            };
+
+            // Boss → draft-fresh (async); human → proceed immediately.
+            if (ctx.senderKind === "boss") {
+              const bossFive = ctx.initialRoster ?? [];
+              const excludeBaseIds = new Set(
+                bossFive
+                  .map((bc) => String((bc as { basePlayerId?: string }).basePlayerId ?? "").trim())
+                  .filter(Boolean),
+              );
+              chDebug("bossDraftFresh:start", {
+                challengeId: ctx.challengeId,
+                season: ctx.season,
+                exclude: excludeBaseIds.size,
+              });
+              dealFreshRoster(ctx.season, excludeBaseIds)
+                .then(({ roster }) => {
+                  chDebug("bossDraftFresh:dealt", { challengeId: ctx.challengeId, dealt: roster.length });
+                  acceptProceed({
+                    ...ctx,
+                    startMode: "draft-fresh",
+                    initialRoster: roster as unknown as import("@shared/types/index").GeneratedCard[],
+                  });
+                })
+                .catch((e) => {
+                  // Degrade — never block the user. Fall back to the inherited
+                  // five (pre-Step-1 behavior); the challenge still plays and
+                  // terminates outward. Not the locked mechanic, but safe.
+                  // eslint-disable-next-line no-console
+                  console.error("[boss] draft-fresh deal failed; falling back to inherited five:", e);
+                  chDebug("bossDraftFresh:error", { challengeId: ctx.challengeId, error: String(e) });
+                  acceptProceed({ ...ctx, startMode: "draft-fresh" });
+                });
+              return;
+            }
+            acceptProceed(ctx);
           }}
           onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
         />
