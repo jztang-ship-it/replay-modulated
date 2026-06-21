@@ -171,6 +171,14 @@ async function main() {
 
   const verbose = flags.includes("--verbose");
   const slateV2 = flags.includes("--slate-v2");
+  // --faithful-deal (additive, default OFF): replace the sim's hand-rolled
+  // uniform pick/deal with the REAL engine (generateRoster: anchor + salary²-
+  // weighting + cap−(n−1)·min min-spend + tier-floor), fed an eval pool built
+  // from STORED salary + STORED avgFP (matching toPlayerEval/buildProjections)
+  // and the REAL economyConfig (cap 250, real tierThresholds). The roll
+  // (random qualifying game per starter) is preserved byte-for-byte. No-flag
+  // path stays identical — matches the --slate-v2/DUMP_ALLFPS guard discipline.
+  const faithfulDeal = flags.includes("--faithful-deal");
 
   let cwd = process.cwd();
   if (sportArg) {
@@ -373,6 +381,102 @@ async function main() {
   }
   console.log("");
 
+  // ── --faithful-deal setup (additive; default path untouched) ─────────────
+  // Dynamic-import the REAL engine + economy (gated, so the no-flag path keeps
+  // the legacy ts-node module-resolution behavior — same discipline as the
+  // --slate-v2 dynamic import). Build the eval pool from STORED salary + STORED
+  // avgFP, deduped by basePlayerId + log-backed (mirrors buildEvalPool's
+  // hasValidLogs filter + buildProjections' stored-avgFP source).
+  let faithfulGenerateRoster: ((evalPool: any[], cfg: any, eco: any, rnd: () => number) => any[]) | null = null;
+  let faithfulRedrawRoster: ((cur: any[], held: Set<number>, evalPool: any[], cfg: any, eco: any, rnd: () => number) => any[]) | null = null;
+  let faithfulEvalPool: any[] = [];
+  let faithfulEcon: any = null;
+  let faithfulRosterCfg: any = null;
+  if (faithfulDeal) {
+    let engineMod: any, econMod: any;
+    try { engineMod = await import("../engines/rosterEngine.js" as string); }
+    catch { engineMod = await import("../engines/rosterEngine" as string); }
+    try { econMod = await import("../engines/economyEngine.js" as string); }
+    catch { econMod = await import("../engines/economyEngine" as string); }
+    faithfulGenerateRoster = engineMod.generateRoster;
+    faithfulRedrawRoster = engineMod.redrawRoster;
+    const DEF = econMod.DEFAULT_ECONOMY_CONFIG;
+    const tierFromSalaryReal: (s: number, eco: any) => string = econMod.tierFromSalary;
+    // REAL economyConfig: DEFAULT (salaryMin/thresholds/weighting) with the
+    // sport's real cap (basketball 250), exactly like gameAdapter.getEconomyConfig.
+    faithfulEcon = { ...DEF, capMax: config.salaryCap ?? DEF.capMax };
+
+    const seenBp = new Set<string>();
+    let rawMin = Infinity;
+    for (const p of players) {
+      const bid = String(p.basePlayerId ?? p.id ?? "").trim();
+      if (!bid || seenBp.has(bid)) continue;     // dedupe by basePlayerId (first wins — mirrors buildTierMap)
+      if (!logMap.has(bid)) continue;            // log-backed only (mirrors buildEvalPool's hasValidLogs)
+      seenBp.add(bid);
+      const stored = Number(p.salary ?? 10);
+      rawMin = Math.min(rawMin, stored);
+      const salary = Math.max(DEF.salaryMin, stored);            // toPlayerEval salary clamp
+      const proj = Number(p.avgFP ?? p.projectedFp ?? 0);        // buildProjections: STORED avgFP
+      faithfulEvalPool.push({
+        id: bid, basePlayerId: bid, personKey: bid, cardId: bid,
+        name: String(p.name ?? bid), team: String(p.team ?? ""), season: String(p.season ?? ""),
+        position: normalizePos(String(p.position ?? "")),
+        projectedFp: proj, salary,
+        tier: tierFromSalaryReal(salary, faithfulEcon),
+      });
+    }
+    faithfulRosterCfg = {
+      rosterSize,
+      slotRequirements: config.rosterSlots,
+      excludeFromFlex: config.excludeFromFlex ?? [],
+      positionAware: (config as any).positionAware === true,
+    };
+
+    // ── Provable tier exactness ──────────────────────────────────────────
+    // getTierById = tierFromSalary + a per-pool floor promotion (RED≥4,
+    // ORANGE≥12, highest-salary candidates first). tierFromSalary itself is
+    // salary-ABSOLUTE (pool-independent). So if the promotion never fires for
+    // THIS pool, the sim's threshold-tier === getTierById exactly. Replicate
+    // the promotion and assert zero fires.
+    const FLOORS: Record<string, number> = { RED: 4, ORANGE: 12 };
+    const tierOf = new Map<string, string>();
+    const origCounts: Record<string, number> = {};
+    for (const e of faithfulEvalPool) {
+      tierOf.set(e.basePlayerId, e.tier);
+      origCounts[e.tier] = (origCounts[e.tier] ?? 0) + 1;
+    }
+    const counts: Record<string, number> = { ...origCounts };
+    const sorted = [...faithfulEvalPool].sort((a, b) => b.salary - a.salary);
+    let promotions = 0;
+    for (const targetTier of ["RED", "ORANGE"]) {
+      if ((counts[targetTier] ?? 0) >= FLOORS[targetTier]) continue;
+      for (const e of sorted) {
+        if ((counts[targetTier] ?? 0) >= FLOORS[targetTier]) break;
+        const cur = tierOf.get(e.basePlayerId)!;
+        if (cur === "RED" || cur === targetTier) continue;
+        tierOf.set(e.basePlayerId, targetTier);
+        counts[cur] = Math.max(0, (counts[cur] ?? 0) - 1);
+        counts[targetTier] = (counts[targetTier] ?? 0) + 1;
+        promotions++;
+      }
+    }
+
+    console.log("=== FAITHFUL DEAL (real generateRoster + redrawRoster) ===");
+    console.log("  Engine pool: " + faithfulEvalPool.length + " unique log-backed players (deduped by basePlayerId)");
+    console.log("  Cap: $" + faithfulEcon.capMax + "   salaryMin: $" + faithfulEcon.salaryMin + "   weighting: salary² (engine default)");
+    console.log("  Threshold tiers: RED=" + (origCounts.RED ?? 0) + " ORANGE=" + (origCounts.ORANGE ?? 0) + " PURPLE=" + (origCounts.PURPLE ?? 0) + " BLUE=" + (origCounts.BLUE ?? 0) + " GREEN=" + (origCounts.GREEN ?? 0) + " WHITE=" + (origCounts.WHITE ?? 0));
+    console.log("  Salary clamp: min stored $" + (Number.isFinite(rawMin) ? rawMin : "?") + " ≥ salaryMin $" + faithfulEcon.salaryMin + " → clamp is a " + (rawMin >= faithfulEcon.salaryMin ? "no-op (eval salary == stored salary)" : "ACTIVE CLAMP (eval salary differs from stored)"));
+    if (promotions === 0) {
+      console.log("  ✓ TIER PROVABLY EXACT: floor promotion (RED≥4/ORANGE≥12) never fires for this pool;");
+      console.log("    tierFromSalary is salary-absolute ⇒ sim tier === runtime getTierById, exactly.\n");
+    } else {
+      console.warn("  ⚠ TIER NOT EXACT: floor promotion fired " + promotions + "× — threshold-tier diverges from getTierById; port the promotion before trusting tiers.\n");
+    }
+    if (rawMin < faithfulEcon.salaryMin) {
+      console.warn("  ⚠ Salary clamp ACTIVE: some stored salaries < salaryMin; eval-pool salary diverges from raw for tier basis.\n");
+    }
+  }
+
   // Simulate
   const rng = makeRng(42);
   const posFpS: Record<string,number[]> = {}, posBdgS: Record<string,number[]> = {};
@@ -392,24 +496,43 @@ async function main() {
 
   for (let i = 0; i < N; i++) {
     if (i > 0 && i % 2000 === 0) process.stdout.write("  " + i + "/" + N + "...\n");
-    const used = new Set<string>(), roster: PP[] = [];
-    let totalSal = 0;
-    const pick = (pool: PP[]) => { const a = pool.filter(p=>!used.has(p.id)); return a.length ? a[Math.floor(rng()*a.length)] : null; };
+    let roster: PP[];
+    let totalSal: number;
+    if (faithfulDeal) {
+      // FAITHFUL: the real engine builds the lineup (0-hold baseline — one
+      // generateRoster, no redraw). Maps GeneratedCard → the sim's PP shape so
+      // the roll below is byte-for-byte unchanged. Same seeded rng stream.
+      const cards = faithfulGenerateRoster!(faithfulEvalPool, faithfulRosterCfg, faithfulEcon, rng);
+      roster = (cards as any[]).map((c) => ({
+        id: String(c.basePlayerId ?? c.id ?? ""),
+        name: String(c.name ?? c.basePlayerId ?? ""),
+        position: normalizePos(String(c.position ?? "")),
+        projFp: Number(c.projectedFp ?? 0),
+        salary: Number(c.salary ?? 0),
+        tier: String(c.tier ?? "WHITE"),
+      }));
+      totalSal = roster.reduce((s, p) => s + p.salary, 0);
+    } else {
+      const used = new Set<string>();
+      roster = [];
+      totalSal = 0;
+      const pick = (pool: PP[]) => { const a = pool.filter(p=>!used.has(p.id)); return a.length ? a[Math.floor(rng()*a.length)] : null; };
 
-    for (const slot of config.rosterSlots) {
-      if (slot.toUpperCase() === "FLEX") continue;
-      const sp = byPos[slot.toUpperCase()] ?? [];
-      const left = rosterSize - roster.length;
-      const aff = sp.filter(p=>!used.has(p.id) && totalSal+p.salary <= econ.capMax-(left-1)*econ.salaryMin);
-      const p = pick(aff.length ? aff : sp);
-      if (p) { roster.push(p); used.add(p.id); totalSal+=p.salary; }
-    }
-    const fc = config.rosterSlots.filter(s=>s.toUpperCase()==="FLEX").length;
-    for (let f = 0; f < fc; f++) {
-      const rem = fc - f;
-      const aff = flexPool.filter(p=>!used.has(p.id) && totalSal+p.salary <= econ.capMax-(rem-1)*econ.salaryMin);
-      const p = pick(aff.length ? aff : flexPool);
-      if (p) { roster.push(p); used.add(p.id); totalSal+=p.salary; }
+      for (const slot of config.rosterSlots) {
+        if (slot.toUpperCase() === "FLEX") continue;
+        const sp = byPos[slot.toUpperCase()] ?? [];
+        const left = rosterSize - roster.length;
+        const aff = sp.filter(p=>!used.has(p.id) && totalSal+p.salary <= econ.capMax-(left-1)*econ.salaryMin);
+        const p = pick(aff.length ? aff : sp);
+        if (p) { roster.push(p); used.add(p.id); totalSal+=p.salary; }
+      }
+      const fc = config.rosterSlots.filter(s=>s.toUpperCase()==="FLEX").length;
+      for (let f = 0; f < fc; f++) {
+        const rem = fc - f;
+        const aff = flexPool.filter(p=>!used.has(p.id) && totalSal+p.salary <= econ.capMax-(rem-1)*econ.salaryMin);
+        const p = pick(aff.length ? aff : flexPool);
+        if (p) { roster.push(p); used.add(p.id); totalSal+=p.salary; }
+      }
     }
 
     let hfp = 0;
