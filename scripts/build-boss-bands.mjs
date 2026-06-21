@@ -62,16 +62,19 @@ function pctile(sorted, p) {
   return sorted[Math.min(sorted.length - 1, Math.max(0, Math.floor((p / 100) * sorted.length)))];
 }
 
-/** Build the eligible draft pool for a season: per player {salary, gamePool}. */
-function buildSeasonPool(season) {
+/** Build the eligible draft pool for a season: per player {id, salary, meanFp, gamePool}.
+ *  Exported for the step-3 beatability analysis (same pool the band uses). */
+export function buildSeasonPool(season) {
   const dir = resolve(SEASONS_DIR, season);
   const players = JSON.parse(readFileSync(resolve(dir, "players.json"), "utf8"));
   const logs = JSON.parse(readFileSync(resolve(dir, "gamelogs.json"), "utf8"));
   const posById = new Map();
   const salById = new Map();
+  const nameById = new Map();
   for (const p of players) {
     posById.set(String(p.basePlayerId), String(p.position ?? ""));
     salById.set(String(p.basePlayerId), Number(p.salary ?? 0));
+    nameById.set(String(p.basePlayerId), String(p.name ?? ""));
   }
   const poolById = new Map();
   const totalGames = new Map(); // ALL games (eligibility), vs qualifying games (scoring pool)
@@ -92,7 +95,8 @@ function buildSeasonPool(season) {
     if (salary <= 0) continue;
     if ((totalGames.get(id) ?? 0) < MIN_GAMES_THIS_SEASON) continue;
     if (gamePool.length < 1) continue;
-    pool.push({ id, salary, gamePool });
+    const meanFp = gamePool.reduce((a, b) => a + b, 0) / gamePool.length;
+    pool.push({ id, name: nameById.get(id) ?? "", salary, meanFp, gamePool });
   }
   return pool;
 }

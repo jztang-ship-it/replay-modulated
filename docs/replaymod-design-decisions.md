@@ -3260,6 +3260,39 @@ Output committed as a byte-match drift-guarded artifact (same pattern as
 its own-season band. **STOP after step 1** with the band table (per boss: season,
 tier, band, rolled target) for John before steps 2/3.
 
+### Step-3 beatability finding — the band is the wrong DIFFICULTY reference (premise flag, 2026-06-21)
+Bands signed off (step 1). Step 3 (`scripts/boss-beatability.mjs`, win-probability
+model, boss five excluded, targets averaged over 60 daily rolls) shows the
+difficulty model **does not deliver either tier**, because the band measures
+**random** lineups while the game is played with **drafting skill + redraws**:
+- **Beatable (all 13):** a best legal draft beats the target **92–99.5%** of the
+  time (single roll), with expected margins of **+40 to +77 FP** over target. Even
+  a RANDOM draft beats it **20–27%** single-roll (→ much higher with redraws + the
+  1-hour window). So "you're meant to win" is over-satisfied; the skill gap
+  (mediocre-fails) is thin across all 13. Targets sit low because the band is
+  P60–P85 of *random* lineups, far below a cap-maxed skilled draft.
+- **Marquee (both too soft, NOT brutal):** rolled `raid` (≥band hi) against the
+  *season* band, CHI-9798 target 173.5 → best-draft beats **56.9%**; GSW-1516
+  168.7 → **75.6%**. They're **reachable — too reachable** (not the broken-
+  unreachable failure; the opposite). The season is full of OTHER stars to draft
+  (e.g. '15-16: Westbrook/Cousins/AD/Harden/KD/LeBron) so a strong non-boss draft
+  clears the raid target easily. NOT "tantalizingly short."
+- **PHX-0607 — prime-cut premise CORRECTED:** over 60 days it's the LEAST trivial
+  beatable (P_random 20.3%, lowest best-margin +41.8) — the table's one-day
+  `tough_day` (109.3) was a stochastic low roll, not its average. Don't cut it for
+  being easy; it's relatively harder. (It does carry tough_day variance — some
+  days trivially easy — a UX note.)
+
+**Root premise:** targeting the boss at P60–P85 of RANDOM lineups makes beatable
+thin-skill-gap and marquee not-brutal. To deliver "mediocre fails / brutal
+marquee," the target must calibrate to the **strong-draft distribution** (e.g.
+beatable ≈ P50–P70 of best-draft rolls; marquee ≈ P85–P95 of best-draft rolls),
+not random lineups. This is season-derived calibration (not per-boss tuning).
+**HALTED before step 2** — building the integration would wire these
+non-tier-delivering targets into production. Awaiting John's call on the target
+model (keep random-band "you always win" daily vs. recalibrate to strong-draft
+percentiles), + the marquee fix (higher target).
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
