@@ -3599,3 +3599,67 @@ chad/paused voice, challenge-resolution logic, `isRealName` semantics.
 Audience/difficulty lever stays deferred and banned on comparison-bearing daily
 instances. Do NOT build rank / the You-Mike-Bulls comparison card / any per-player
 ordered tally (all Phase 2.5).
+
+## Fail-open choreography: click-through rounds (extends the fail-open corollary) — 2026-06-22
+
+Refines what "fail-open = fresh seed, run the 3 rounds vs the same target" looks like at runtime.
+
+When `resolvedSenderHand` is undefined (legacy `sender_resolved:false` cohort; or a transient
+fetch failure that survives retry), the recipient does NOT land on a static panel and does NOT
+skip to resolve. They land directly on the round-1 lineup of a fresh seed and click through:
+
+- Round 1 lineup, no hold controls. Advance button labeled **"Round 2"**.
+- Click → Round 2 lineup (fresh draw), no hold controls. Advance button labeled **"Round 3"**.
+- Click → Round 3 lineup, pause beat, **auto-reveal** scoring vs `targetScore`. No third button;
+  round 3 self-resolves.
+
+Two clicks (1→2, 2→3) to reach round 3. The button always names its destination.
+
+**Rename:** the single control "Auto" is STRUCK. "Auto" was correct only in the prior two-state
+model (one control, one jump). Three rounds need per-step destination labels, so a static "Auto"
+is wrong by construction. The control is click-to-advance, not passive playback — the user drives
+each transition; only the hold SELECTION is removed on this branch.
+
+**Hold-agency boundary** (locks the fail-open model's shape):
+
+- Defined hand (main 4a path): inherit the sender's five, run 3 rounds with REAL holds/redraws,
+  resolve vs target. Full agency.
+- Undefined hand (degraded branch): fresh seed, click-to-advance, NO hold selection, auto-reveal
+  at round 3. Advancement agency only.
+
+Defined = you play it; undefined = it auto-plays a fresh seed so you still reach a scored outcome
+vs the same target.
+
+**Panel relocation** (follows from the routing decision; SUPERSEDES f4ec0b3 mount-on-undefined):
+The floor panel ("OPPONENT HAND UNAVAILABLE" / your score / Target / Continue · Try Again · Play
+Your Own Hand) is NO LONGER the undefined-hand entry — the click-through rounds are. The panel is
+retained as the DEEPER-BREAK backstop: it mounts only if the click-through fresh-seed path itself
+cannot complete (fresh seed can't be produced, round loop throws, resolve fails). Its mount
+condition MUST move off "`resolvedSenderHand` undefined" or it double-fires with the click-through
+path. Copy + CTAs unchanged.
+
+**Panel trigger (named, not improvised):** the backstop mounts on an engine/data-load failure
+*during the fresh-seed run* — i.e. the existing `dataLoadError` / `engineError` states on the
+degraded branch (fresh-seed deal, redraw, or resolve itself throws). It does NOT mount on
+"`resolvedSenderHand` undefined" — that is now the click-through entry condition, a normal path,
+not a failure. The distinction is: undefined hand = expected (legacy cohort) → run the rounds;
+engine/data error during the run = the deeper break → panel. This is the concrete signal for
+"the click-through path cannot complete."
+
+**Data parity:** exactly one `useChallengeAttempt` POST per attempt.
+
+- Click-through path: POST at the round-3 auto-reveal, recording the fresh-seed run's real score.
+- Panel backstop: POST on mount, as today.
+
+Mutually exclusive — never both on one attempt.
+
+**§8 invariant evolves deliberately** (watched red→green; cannot stay verbatim — the reveal is no
+longer null and the terminal state is a scored reveal, not a static panel). New assertion: human
+ctx, no `resolvedSenderHand` → fresh seed dealt, round-1 lineup visible (NOT the panel); advance
+control reads "Round 2"; click → round-2 fresh lineup, control reads "Round 3"; click → round-3
+lineup pauses then auto-reveals a score vs `targetScore`; arc never blank; exactly one POST, at
+the reveal. Anti-regression heart (never-blank, reaches `targetScore`) preserved; the click
+sequence + rename are added on top. The panel backstop gets its own separate assertion: with the
+degraded branch forced into `dataLoadError`/`engineError` during the fresh-seed run, the panel
+mounts (showing `targetScore`) and fires its single mount POST — and this trigger is distinct
+from plain undefined-hand, which must reach the click-through rounds, not the panel.
