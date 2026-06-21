@@ -3293,6 +3293,40 @@ non-tier-delivering targets into production. Awaiting John's call on the target
 model (keep random-band "you always win" daily vs. recalibrate to strong-draft
 percentiles), + the marquee fix (higher target).
 
+### Step-2 DATA CORE built (2026-06-21) — opaque-target seam confirmed; glass UI handed off
+John's call: build the data core on placeholder targets now; calibration is the
+final pre-launch gate. Built green (commits `14cde56` · `7e5ef25` · `96dde1b`):
+- **Opaque-target seam (CONFIRMED, both halves).** build-boss-bank BAKES a per-boss
+  opaque `target` (a deterministic roll against the boss's season band — raid for
+  marquee) + the playable/revealable five into `bossBank.generated.json` (drift-
+  guarded). ensureDailyInstance READS `boss.target` verbatim — `projectSenderFacing`
+  dropped from the writer; the engine never rolls and is agnostic to derivation.
+  **Recalibration later = regenerate the artifact with a different target formula +
+  re-commit; ZERO engine change.** Pinned by an opaque-target assertion +
+  a real-artifact serveable test.
+- **Cheap-A enrichment.** `BossStarter` retains `basePlayerId`; the revealed five
+  carries basePlayerId + salary/tier (read from the stored `players.json` —
+  runtime parity). `initial_roster` now `{v:1, sport, holdsRecorded:false, cards}`
+  → fixes the "Invalid challenge data" landing-load bug for bosses.
+- **Serveable = has-a-target / fail-closed.** Targets baked ONLY for the 15 vetted
+  candidate keys (a band is per-season, so other bank bosses share banded seasons
+  but stay dormant). resolveBossForDate's rotation pool = serveable only; a pick
+  without a target THROWS. Shipping an uncalibrated boss is structurally impossible.
+- **sender-hand.ts boss branch.** A boss (no hand_log) returns its baked five as
+  `resolvedSenderHand` → no empty H2H battlefield.
+
+**HANDED OFF to the GLASS cycle (device-glass required):** Step-5 gate deletion →
+H2H routing, outward-ending relocation to `H2HResultsOverlay`, two-tier framing
+(`marquee` label "brutal by design" + distinct loss copy — `marquee` flag is baked
+in the artifact, ready to consume).
+
+**FINAL PRE-LAUNCH GATE (owned by John, done ONCE on real numbers, last step before
+user testing — NOT post-launch backlog):** calibration — recalibrate beatable
+targets to ≈P50–P70 and marquee to ≈P85–P95 of the strong-draft distribution
+(regenerate the artifact, zero engine change via the seam), + the which-set launch
+cut (currently all 15 serveable). Handling rule for any boss that can't be made
+beatable/tunable: drop it (none triggers it today — all beatable clear 92–99%).
+
 **Lock:** this section. Build authorized 2026-06-21 (John's review-at-fork via the
 Phase 2-mount build brief). Standing constraints carry: `feat/build-phase`,
 per-step commits, green before each, push to origin; one canonical FP path;
