@@ -50,6 +50,10 @@ export type SlateComposition = {
   protectedTier: string;
   /** Tiers used to absorb slack, in priority order. */
   absorbTiers: string[];
+  /** Tiers taken IN FULL every slate (all eligible players), reserved before
+   *  the quota roll and excluded from normalization/trim. Absent/empty ⇒
+   *  current behavior (every tier is quota-rolled). */
+  guaranteedTiers?: string[];
 };
 
 /** Tier order used for cap evaluation + anchor fill. */
@@ -232,18 +236,42 @@ function selectByTierQuota(
   rng: () => number,
 ): string[] {
   const comp = adapter.slateComposition!;
-  const tiers = Object.keys(comp.tierRanges);
+  const allTiers = Object.keys(comp.tierRanges);
 
-  // 1. Independent daily roll per tier within its [min, max] range.
+  // 0. Guaranteed tiers (e.g. RED/ORANGE/PURPLE): taken IN FULL every slate,
+  //    reserved before the quota roll and excluded from normalization/trim so
+  //    they can never be rotated out. Absent/empty ⇒ behavior is identical to
+  //    the original all-quota path (other sports keep their current slates).
+  const guaranteed = (comp.guaranteedTiers ?? []).filter((t) => allTiers.includes(t));
+  const guaranteedSet = new Set(guaranteed);
+  const quotaTiers = allTiers.filter((t) => !guaranteedSet.has(t));
+
+  // Reserve ALL eligible players from each guaranteed tier. Shuffled for
+  // display order only — every player is included, so the SET never rotates
+  // day-to-day; only ordering does.
+  const reserved: string[] = [];
+  for (const t of guaranteed) {
+    const pool = adapter.getTierPool!(t);
+    if (!pool.length) continue;
+    reserved.push(...fisherYates(pool, rng));
+  }
+
+  // Remaining budget for the non-guaranteed (filler) tiers. If the guaranteed
+  // set already meets/exceeds slateSize, take all guaranteed and add no filler —
+  // the slate may EXCEED slateSize rather than trim a guaranteed tier.
+  const remaining = Math.max(0, slateSize - reserved.length);
+
+  // 1. Independent daily roll per QUOTA tier within its [min, max] range.
   const counts: Record<string, number> = {};
-  for (const t of tiers) {
+  for (const t of quotaTiers) {
     const [lo, hi] = comp.tierRanges[t];
     counts[t] = lo + Math.floor(rng() * (hi - lo + 1));
   }
 
-  // 2. Normalize to slateSize. Adjust absorbTiers in order before touching
-  //    protectedTier. Each tier is clamped to its [min, max] range.
-  const totalOf = () => Object.values(counts).reduce((s, c) => s + c, 0);
+  // 2. Normalize the quota tiers to `remaining`. Adjust absorbTiers in order
+  //    before touching protectedTier; guaranteed tiers are never adjusted (they
+  //    are not in quotaTiers). Each tier is clamped to its [min, max] range.
+  const totalOf = () => quotaTiers.reduce((s, t) => s + counts[t], 0);
   const adjust = (tier: string, delta: number): number => {
     const [lo, hi] = comp.tierRanges[tier] ?? [counts[tier], counts[tier]];
     const before = counts[tier];
@@ -251,18 +279,19 @@ function selectByTierQuota(
     counts[tier] = next;
     return next - before; // actually applied
   };
-  let delta = slateSize - totalOf();
+  let delta = remaining - totalOf();
   for (const t of comp.absorbTiers) {
     if (delta === 0) break;
+    if (!quotaTiers.includes(t)) continue; // skip a guaranteed absorb tier
     delta -= adjust(t, delta);
   }
-  // If still off (BLUE+GREEN saturated), use protectedTier as last resort.
-  if (delta !== 0) {
+  // If still off, use protectedTier as last resort — unless it's guaranteed.
+  if (delta !== 0 && quotaTiers.includes(comp.protectedTier)) {
     delta -= adjust(comp.protectedTier, delta);
   }
-  // If still off (everything saturated), trim/extend the tier with most slack.
+  // If still off (everything saturated), trim/extend the quota tier with most slack.
   if (delta !== 0) {
-    const sorted = [...tiers].sort((a, b) => {
+    const sorted = [...quotaTiers].sort((a, b) => {
       const [aLo, aHi] = comp.tierRanges[a];
       const [bLo, bHi] = comp.tierRanges[b];
       const aSlack = delta > 0 ? aHi - counts[a] : counts[a] - aLo;
@@ -275,12 +304,13 @@ function selectByTierQuota(
     }
   }
 
-  // 3. Sample from each tier's pool. Daily-shuffled with the same rng stream
-  //    so different days surface different players; cap by current count.
-  //    If the pool is smaller than the count, take what's available — the
-  //    total slate is then under-sized, which the caller can detect.
-  const result: string[] = [];
-  for (const t of tiers) {
+  // 3. Reserved guaranteed players first, then sample each quota tier's pool.
+  //    Daily-shuffled with the same rng stream so different days surface
+  //    different fillers; cap by current count. If a pool is smaller than the
+  //    count, take what's available — the total slate is then under-sized,
+  //    which the caller can detect.
+  const result: string[] = [...reserved];
+  for (const t of quotaTiers) {
     const want = counts[t];
     if (want <= 0) continue;
     const pool = adapter.getTierPool!(t);

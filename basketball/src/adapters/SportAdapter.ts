@@ -371,17 +371,25 @@ export class SportAdapter {
    *  protection / absorb policy. Read by shared slateSelector. */
   readonly slateComposition = {
     tierRanges: {
+      // RED/ORANGE/PURPLE ranges are vestigial now — these tiers are taken in
+      // FULL via guaranteedTiers (below), so their quota range is never rolled.
       RED:    [2, 3]   as [number, number],
       ORANGE: [8, 12]  as [number, number],
       PURPLE: [12, 20] as [number, number],
-      BLUE:   [8, 18]  as [number, number],
-      GREEN:  [6, 12]  as [number, number],
-      WHITE:  [8, 12]  as [number, number],
+      // Filler maxes raised to the TIER_POOL_CAPS (BLUE 40 / GREEN 25 / WHITE 20)
+      // so the float-ceiling slateSize can pull the full capped filler bench
+      // every day. TIER_POOL_CAPS itself is unchanged (scrub-exclusion intact).
+      BLUE:   [8, 40]  as [number, number],
+      GREEN:  [6, 25]  as [number, number],
+      WHITE:  [8, 20]  as [number, number],
     },
-    /** Never trim or expand PURPLE during the 60-total normalization step. */
+    /** Never trim or expand PURPLE during the normalization step. */
     protectedTier: "PURPLE",
     /** Priority order for absorbing slack. BLUE flexes first, then GREEN. */
     absorbTiers: ["BLUE", "GREEN"],
+    /** Stars + gem tier taken IN FULL every slate (never rotated/trimmed);
+     *  BLUE/GREEN/WHITE fill the remainder to slateSize with daily variance. */
+    guaranteedTiers: ["RED", "ORANGE", "PURPLE"],
   };
 
   /** Per-tier player pool, sorted by career FP descending (most recognizable
