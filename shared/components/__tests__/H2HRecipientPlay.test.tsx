@@ -442,18 +442,18 @@ describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)",
   // non-previewed cell sets preview (no hold change); tap on the
   // already-previewed cell flips its held bit. So the hold-toggle
   // cycle is THREE taps on the same cell: preview → hold → unhold.
-  it("tap cycle on a single cell: preview → hold → LOCKED (permanent, no unhold)", async () => {
+  it("tap cycle on a single cell: preview → hold → unhold (reversible WITHIN the round; lock is at Next)", async () => {
     await dealThrough();
     const cell = screen.getByTestId("bottom-strip-up-2");
     // 1st tap: preview only. data-held should remain "false".
     fireEvent.click(cell);
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
-    // 2nd tap on same cell: commit hold. data-held → "true".
+    // 2nd tap on same cell: hold. data-held → "true".
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
-    // 3rd tap: held is PERMANENT (one-path model) — locked, no unhold. Stays "true".
+    // 3rd tap: this round's hold is REVERSIBLE until Next → unhold. data-held → "false".
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
   });
 
   it("multiple holds + Draw CTA is enabled (tap-tap per cell under #11)", async () => {
@@ -1233,7 +1233,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     expect(badgesAfterDeal.length).toBe(0);
   });
 
-  it("Fix 1 tap drives badge under #11 preview-then-hold: first tap previews (no badge), second tap holds (badge in cell 2), third tap is a NO-OP (badge stays — permanent hold)", async () => {
+  it("Fix 1 tap drives badge under #11 preview-then-hold: first tap previews (no badge), second tap holds (badge in cell 2), third tap unholds (badge gone — reversible within the round)", async () => {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
     const { container } = render(
@@ -1260,9 +1260,10 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     const cell2 = container.querySelector(`[data-h2h-play-bottom-cell="2"]`);
     expect(cell2?.querySelector(`[data-h-badge]`)).not.toBeNull();
 
-    // 3rd tap on the held cell → NO-OP. Held is permanent (locked); badge STAYS.
+    // 3rd tap on the held cell → unhold (this round's hold is reversible until
+    // Next). Badge gone.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(1);
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
   });
 
   it("end-to-end tap → lockedCardIds: tap slot 2; Draw; redrawRoster receives EXACTLY [initialRoster[2].cardId]", async () => {
@@ -1626,18 +1627,18 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
   });
 
   // ── §9 — third tap is a NO-OP (permanent holds) ────────────────────
-  it("§9 — third tap on a held cell is a NO-OP; markers persist (permanent hold)", async () => {
+  it("§9 — third tap on a held cell unholds it within the round (markers clear); preview stays", async () => {
     const { container } = await dealThroughPreview();
     fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // preview
-    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // commit hold
-    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // third tap → locked, no-op
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // hold
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // third tap → unhold (reversible this round)
 
-    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("true");
-    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(1);
-    // Big preview still shows the held card with its H mark intact.
+    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("false");
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+    // Big preview still shows the (now-unheld) card; unhold doesn't move preview.
     const previewCard = container.querySelector('[data-h2h-play-preview="card"]');
     expect(previewCard?.getAttribute("data-h2h-play-preview-slot")).toBe("3");
-    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("true");
+    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("false");
   });
 
   // ── §9 — move-resets-cycle ─────────────────────────────────────────
@@ -2122,18 +2123,57 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
   });
 
-  it("permanent holds: a held slot does NOT unhold on a third tap (locked forever)", async () => {
+  it("cross-round permanence: a hold committed at Next is LOCKED in the next round (cannot be unheld)", { timeout: 8000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
     );
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // preview
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // commit hold
+    // Round 1: hold slot 2 (tap-tap), then Next COMMITS it (lock-at-Next).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // third tap → NO-OP (locked)
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("hold_select"),
+      { timeout: 4000 },
+    );
+    // Round 2: slot 2 is a PRIOR-round hold — locked, NOT toggleable. Two taps
+    // (preview+toggle path) must NOT unhold it; permanence holds across rounds.
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+  });
+
+  it("within-round unhold then Next: an unheld slot is NOT locked next round (only committed holds lock)", { timeout: 8000 }, async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    // Round 1: hold slot 2, then UNHOLD it (3rd tap) before Next → not committed.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("hold_select"),
+      { timeout: 4000 },
+    );
+    // Round 2: slot 2 was NOT committed → it is unheld + freely holdable again.
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
   });
 

@@ -253,6 +253,13 @@ type PlayingState =
   | {
       kind: "hold_select";
       held: Set<number>;
+      /** Holds COMMITTED in PRIOR rounds — permanent + non-toggleable (doc
+       *  da292be: cumulative/permanent ACROSS rounds). `held` is always a
+       *  superset of `lockedHeld`; the toggleable slots are `held \ lockedHeld`
+       *  (this round's own holds). On Next, the round's holds lock — the NEXT
+       *  hold_select gets lockedHeld = this round's full held. Round 1 starts
+       *  with lockedHeld empty (all round-1 holds are reversible until Next). */
+      lockedHeld: Set<number>;
       /** Polish #11 — currently-previewed slot index (preview-then-hold
        *  interaction model). `null` on entry; tap on a non-previewed cell
        *  moves preview here without changing `held`; tap on the already-
@@ -533,7 +540,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     const finalId = window.setTimeout(() => {
       setState((s) =>
         s.kind === "deal_in" && s.cardsLanded === rosterSize
-          ? { kind: "hold_select", held: new Set(), previewedSlotIndex: null }
+          ? { kind: "hold_select", held: new Set(), lockedHeld: new Set(), previewedSlotIndex: null }
           : s,
       );
     }, DEAL_CASCADE_INTERVAL_MS * (rosterSize + 1));
@@ -684,7 +691,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           setRedrawnBase(flipFinalRoster);
           setState((s) =>
             s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
-              ? { kind: "hold_select", held: flipHeld, previewedSlotIndex: null }
+              ? { kind: "hold_select", held: flipHeld, lockedHeld: flipHeld, previewedSlotIndex: null }
               : s,
           );
         }
@@ -1047,21 +1054,24 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
    *  logic naturally fires on the first confirmed hold). */
   const onTap = (i: number) => {
     if (state.kind !== "hold_select") return;
-    if (state.held.has(i)) return; // PERMANENT holds: a held slot is locked — no unhold
+    // Prior-round holds are PERMANENTLY locked — never toggleable now (the
+    // commit-lock happens at Next, not at tap; see the lockedHeld threading).
+    if (state.lockedHeld.has(i)) return;
     setIntroDismissed(true);
     setState((s) => {
       if (s.kind !== "hold_select") return s;
-      if (s.held.has(i)) return s; // locked (guard against stale-closure double-tap)
+      if (s.lockedHeld.has(i)) return s; // prior-round lock (stale-closure guard)
       if (s.previewedSlotIndex !== i) {
-        // Preview or move-preview an UNHELD slot. Preview stays reversible.
-        return { kind: "hold_select", held: s.held, previewedSlotIndex: i };
+        // Preview or move-preview. No hold change.
+        return { kind: "hold_select", held: s.held, lockedHeld: s.lockedHeld, previewedSlotIndex: i };
       }
-      // Second tap on the previewed unheld card: COMMIT a permanent hold (no
-      // toggle). Keep it previewed so the big preview card stays showing the
-      // just-held card with its H mark.
+      // Second tap on the previewed card: TOGGLE this round's own hold (hold ↔
+      // unhold). Reversible within the round; it locks permanently at Next.
+      // Only THIS round's holds toggle — lockedHeld (prior rounds) is untouched,
+      // so held can never drop below the prior-round committed count.
       const next = new Set(s.held);
-      next.add(i);
-      return { kind: "hold_select", held: next, previewedSlotIndex: s.previewedSlotIndex };
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return { kind: "hold_select", held: next, lockedHeld: s.lockedHeld, previewedSlotIndex: s.previewedSlotIndex };
     });
   };
 
