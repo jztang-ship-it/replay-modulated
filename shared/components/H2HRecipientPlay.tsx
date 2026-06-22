@@ -665,17 +665,19 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
               : s,
           );
         } else {
-          // HOLD → another round. Carry the redrawn roster forward as the next
-          // base (wasHeld zeroed = fresh hold selection), clear holds, and reset
-          // the per-round timer/fire guards so redraw_running + your_redraw_flip
-          // re-arm for the next round.
+          // HOLD → another round. CUMULATIVE + PERMANENT holds (one-path model):
+          // carry the held set forward (held once = held forever, never re-held,
+          // never flips) and carry the redrawn roster as the next base WITH its
+          // wasHeld flags intact (held cards stay marked + untouched; only the
+          // still-unheld slots will redraw next round). Reset the per-round timer/
+          // fire guards so redraw_running + your_redraw_flip re-arm.
           redrawFiredRef.current = false;
           columnTimersRef.current.forEach(clearTimeout);
           columnTimersRef.current = [];
-          setRedrawnBase(flipFinalRoster.map((c) => ({ ...c, wasHeld: false })));
+          setRedrawnBase(flipFinalRoster);
           setState((s) =>
             s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
-              ? { kind: "hold_select", held: new Set(), previewedSlotIndex: null }
+              ? { kind: "hold_select", held: flipHeld, previewedSlotIndex: null }
               : s,
           );
         }
@@ -1002,16 +1004,20 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
    *  logic naturally fires on the first confirmed hold). */
   const onTap = (i: number) => {
     if (state.kind !== "hold_select") return;
+    if (state.held.has(i)) return; // PERMANENT holds: a held slot is locked — no unhold
     setIntroDismissed(true);
     setState((s) => {
       if (s.kind !== "hold_select") return s;
+      if (s.held.has(i)) return s; // locked (guard against stale-closure double-tap)
       if (s.previewedSlotIndex !== i) {
-        // Preview or move-preview. No hold change.
+        // Preview or move-preview an UNHELD slot. Preview stays reversible.
         return { kind: "hold_select", held: s.held, previewedSlotIndex: i };
       }
-      // Second tap on the already-previewed card: flip its held bit.
+      // Second tap on the previewed unheld card: COMMIT a permanent hold (no
+      // toggle). Keep it previewed so the big preview card stays showing the
+      // just-held card with its H mark.
       const next = new Set(s.held);
-      if (next.has(i)) next.delete(i); else next.add(i);
+      next.add(i);
       return { kind: "hold_select", held: next, previewedSlotIndex: s.previewedSlotIndex };
     });
   };
@@ -1828,12 +1834,12 @@ function deriveCta(state: PlayingState): {
       // only visible for a microtask before the auto-advance fires.
       return { label: "Loading…", disabled: true, onClick: null };
     case "deal_in":
-      // Deal CTA is killed (design-lock §1) — challenge entry goes
-      // straight into deal_in. The CTA sits in its Draw slot
-      // disabled until hold_select.
-      return { label: "Draw", disabled: true, onClick: null };
+      // One-path advance control: a single "Next" label, every advance (doc
+      // ONE-PATH MODEL CORRECTION). Disabled during deal_in; enabled at
+      // hold_select. Round position lives in SEPARATE signage, not on the button.
+      return { label: "Next", disabled: true, onClick: null };
     case "hold_select":
-      return { label: "Draw", disabled: false, onClick: "draw" };
+      return { label: "Next", disabled: false, onClick: "draw" };
     case "redraw_running":
     case "your_redraw_flip":
     case "ab_transition":

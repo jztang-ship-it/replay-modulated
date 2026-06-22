@@ -312,7 +312,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     expect(container.querySelector("[data-cta-label='Deal']")).toBeNull();
-    const drawBtn = container.querySelector("[data-cta-label='Draw']") as HTMLButtonElement | null;
+    const drawBtn = container.querySelector("[data-cta-label='Next']") as HTMLButtonElement | null;
     expect(drawBtn).not.toBeNull();
     expect(drawBtn?.disabled).toBe(true);
   });
@@ -401,13 +401,13 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
     // No "Deal" button exists — pre_deal is killed.
     await act(async () => { vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS); });
     expect(container.querySelector("[data-cta-label='Deal']")).toBeNull();
-    const drawBtnMid = container.querySelector("[data-cta-label='Draw']") as HTMLButtonElement;
+    const drawBtnMid = container.querySelector("[data-cta-label='Next']") as HTMLButtonElement;
     expect(drawBtnMid?.disabled).toBe(true);
     // After cascade: state → hold_select; same CTA slot now enabled.
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
-    const drawBtn = screen.getByText("Draw") as HTMLButtonElement;
+    const drawBtn = screen.getByText("Next") as HTMLButtonElement;
     expect(drawBtn.disabled).toBe(false);
   });
 });
@@ -442,18 +442,18 @@ describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)",
   // non-previewed cell sets preview (no hold change); tap on the
   // already-previewed cell flips its held bit. So the hold-toggle
   // cycle is THREE taps on the same cell: preview → hold → unhold.
-  it("tap cycle on a single cell: preview → hold → unhold", async () => {
+  it("tap cycle on a single cell: preview → hold → LOCKED (permanent, no unhold)", async () => {
     await dealThrough();
     const cell = screen.getByTestId("bottom-strip-up-2");
     // 1st tap: preview only. data-held should remain "false".
     fireEvent.click(cell);
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
-    // 2nd tap on same cell: hold. data-held → "true".
+    // 2nd tap on same cell: commit hold. data-held → "true".
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
-    // 3rd tap on same cell: unhold. data-held → "false".
+    // 3rd tap: held is PERMANENT (one-path model) — locked, no unhold. Stays "true".
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("false");
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
   });
 
   it("multiple holds + Draw CTA is enabled (tap-tap per cell under #11)", async () => {
@@ -466,7 +466,7 @@ describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)",
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     expect(screen.getByTestId("bottom-strip-up-1").getAttribute("data-held")).toBe("true");
     expect(screen.getByTestId("bottom-strip-up-4").getAttribute("data-held")).toBe("true");
-    const drawBtn = screen.getByText("Draw") as HTMLButtonElement;
+    const drawBtn = screen.getByText("Next") as HTMLButtonElement;
     expect(drawBtn.disabled).toBe(false);
   });
 });
@@ -494,7 +494,7 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     // Switch to real timers so the async redrawRoster microtask
     // resolves cleanly.
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
     const callArg = props.redrawRoster.mock.calls[0][0];
     // Fix 2 (Bug 1 invariant): H2HRecipientPlay derives a wasHeld-zeroed
@@ -531,7 +531,7 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
 
     // At redraw_running: slot 2 is held face-up, slots 0/1/3/4/5 are face-down.
     await waitFor(() => {
@@ -581,7 +581,7 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
 
     await waitFor(() => {
       const root = document.querySelector("[data-h2h-recipient-play]");
@@ -631,7 +631,7 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
     );
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -681,7 +681,7 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
     fireEvent.click(screen.getByTestId(`bottom-strip-up-${heldSlot}`));
     fireEvent.click(screen.getByTestId(`bottom-strip-up-${heldSlot}`));
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(() => {
       const root = document.querySelector("[data-h2h-recipient-play]");
       expect(root?.getAttribute("data-playing-state")).toBe("your_redraw_flip");
@@ -760,7 +760,7 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
     // No holds; tap Draw straight through.
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
@@ -797,7 +797,7 @@ describe("H2HRecipientPlay — ab_transition (Layout A → Layout B beat)", () =
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Flush redraw microtask + advance through the 6-column flip pass.
     await act(async () => {
       await Promise.resolve();
@@ -849,7 +849,7 @@ describe("H2HRecipientPlay — S5 held-card position invariant", () => {
     expect(cell3.textContent).toContain("Init-3");
 
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Walk all the way through the column-flip pass.
     await waitFor(
       () => expect(screen.queryByTestId("top-strip-up-5")).not.toBeNull(),
@@ -876,11 +876,11 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     // scheduled at that point — no Deal-button tap.
     await waitFor(
       () => {
-        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // Layout A/B restructure: the "Next" button now exists (disabled)
         // during deal_in too — pre_deal is killed and the CTA sits in
         // its Draw slot from the start. Wait for it to become ENABLED,
         // which signals hold_select reached.
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -889,7 +889,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     // Hold slot 4 (tap-tap per #11).
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
 
     await waitFor(
       () => expect(props.resolveRoster).toHaveBeenCalledTimes(1),
@@ -913,17 +913,17 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     // scheduled at that point — no Deal-button tap.
     await waitFor(
       () => {
-        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // Layout A/B restructure: the "Next" button now exists (disabled)
         // during deal_in too — pre_deal is killed and the CTA sits in
         // its Draw slot from the start. Wait for it to become ENABLED,
         // which signals hold_select reached.
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
       { timeout: 2000 },
     );
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Wait for H2HRecipientReveal to mount. resolvedSenderHand is
     // present, so the gate inside H2HRecipientReveal passes and the
     // wrapper renders.
@@ -969,17 +969,17 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     );
     await waitFor(
       () => {
-        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // Layout A/B restructure: the "Next" button now exists (disabled)
         // during deal_in too — pre_deal is killed and the CTA sits in
         // its Draw slot from the start. Wait for it to become ENABLED,
         // which signals hold_select reached.
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
       { timeout: 2000 },
     );
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Wait until handoff_resolving (settle-pause proper). The
     // empty-hero composition renders during BOTH ab_transition and
     // handoff_resolving (per inSettlePauseRender); waiting on the
@@ -1043,17 +1043,17 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     // scheduled at that point — no Deal-button tap.
     await waitFor(
       () => {
-        // Layout A/B restructure: the "Draw" button now exists (disabled)
+        // Layout A/B restructure: the "Next" button now exists (disabled)
         // during deal_in too — pre_deal is killed and the CTA sits in
         // its Draw slot from the start. Wait for it to become ENABLED,
         // which signals hold_select reached.
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
       { timeout: 2000 },
     );
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(
       () => expect(container.querySelector("[data-h2h-play-cta][data-cta-label='Try again']")).not.toBeNull(),
       { timeout: 8000 },
@@ -1085,13 +1085,13 @@ describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () =
     );
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
       { timeout: 3000 },
     );
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Wait until the strip wrapper uncollapses (Layout B reached).
     await waitFor(
       () => {
@@ -1118,13 +1118,13 @@ describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () =
     );
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
       { timeout: 3000 },
     );
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(
       () => {
         const wrapper = container.querySelector(
@@ -1233,7 +1233,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     expect(badgesAfterDeal.length).toBe(0);
   });
 
-  it("Fix 1 tap drives badge under #11 preview-then-hold: first tap previews (no badge), second tap holds (badge in cell 2), third tap unholds (badge gone)", async () => {
+  it("Fix 1 tap drives badge under #11 preview-then-hold: first tap previews (no badge), second tap holds (badge in cell 2), third tap is a NO-OP (badge stays — permanent hold)", async () => {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
     const { container } = render(
@@ -1260,9 +1260,9 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     const cell2 = container.querySelector(`[data-h2h-play-bottom-cell="2"]`);
     expect(cell2?.querySelector(`[data-h-badge]`)).not.toBeNull();
 
-    // 3rd tap on the same previewed cell → unhold. Badge gone.
+    // 3rd tap on the held cell → NO-OP. Held is permanent (locked); badge STAYS.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(1);
   });
 
   it("end-to-end tap → lockedCardIds: tap slot 2; Draw; redrawRoster receives EXACTLY [initialRoster[2].cardId]", async () => {
@@ -1282,7 +1282,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
     const callArg = props.redrawRoster.mock.calls[0][0];
     // Pins the chain: only the user's confirmed hold (slot 2) — NOT
@@ -1348,10 +1348,10 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
     });
     const rootAfter = container.querySelector("[data-h2h-recipient-play]");
     expect(rootAfter?.getAttribute("data-playing-state")).toBe("deal_in");
-    // CTA shifted to the "Draw" slot, still disabled until cascade
+    // CTA shifted to the "Next" slot, still disabled until cascade
     // settles (deal_in → hold_select enables it).
     const cta2 = container.querySelector("[data-h2h-play-cta]") as HTMLButtonElement;
-    expect(cta2?.getAttribute("data-cta-label")).toBe("Draw");
+    expect(cta2?.getAttribute("data-cta-label")).toBe("Next");
     expect(cta2?.disabled).toBe(true);
     restore();
   });
@@ -1412,7 +1412,7 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
     // scheduled at that point — no Deal-button tap.
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -1425,7 +1425,7 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
 
     await waitFor(() => expect(props.resolveRoster).toHaveBeenCalledTimes(1), { timeout: 6000 });
     const resolveArg = props.resolveRoster.mock.calls[0][0];
@@ -1504,14 +1504,12 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
   });
 
-  it("Stage 1 stays dismissed after the preview-then-unhold round-trip", async () => {
+  it("Stage 1 dismisses on a preview-only tap (sticky); held.size 0 → headline, not Stage 2", async () => {
     const { container } = await dealThroughCtx(s3Ctx());
-    // Preview → hold → unhold the same cell.
+    // A single preview tap (no hold committed) dismisses the intro — sticky on
+    // first tap. held.size stays 0 (preview-only), so the instructional headline
+    // shows, NOT Stage 1 (dismissed) or Stage 2 (needs a confirmed hold).
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    // No cards held now (introDismissed is sticky); instructional
-    // headline (not Stage 1) takes over.
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
     expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
@@ -1537,7 +1535,7 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     // Wait for hold_select.
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -1547,7 +1545,7 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Eventually transitions past hold_select; the settle-pause empty-
     // hero composition mounts and intro stages collapse.
     await waitFor(
@@ -1627,20 +1625,19 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("true");
   });
 
-  // ── §9 — third tap unholds ─────────────────────────────────────────
-  it("§9 — third tap on the same cell unholds it (markers clear)", async () => {
+  // ── §9 — third tap is a NO-OP (permanent holds) ────────────────────
+  it("§9 — third tap on a held cell is a NO-OP; markers persist (permanent hold)", async () => {
     const { container } = await dealThroughPreview();
     fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // preview
-    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // hold
-    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // unhold
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // commit hold
+    fireEvent.click(screen.getByTestId("bottom-strip-up-3")); // third tap → locked, no-op
 
-    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("false");
-    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(0);
-    // Preview window: card still shown big (unhold doesn't move preview),
-    // but the held marker is cleared.
+    expect(screen.getByTestId("bottom-strip-up-3").getAttribute("data-held")).toBe("true");
+    expect(container.querySelectorAll(`[data-h2h-play-bottom-cell] [data-h-badge]`).length).toBe(1);
+    // Big preview still shows the held card with its H mark intact.
     const previewCard = container.querySelector('[data-h2h-play-preview="card"]');
     expect(previewCard?.getAttribute("data-h2h-play-preview-slot")).toBe("3");
-    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("false");
+    expect(previewCard?.getAttribute("data-h2h-play-preview-held")).toBe("true");
   });
 
   // ── §9 — move-resets-cycle ─────────────────────────────────────────
@@ -1676,7 +1673,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
 
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
 
     await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
     const callArg = props.redrawRoster.mock.calls[0][0];
@@ -1740,7 +1737,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     // scheduled at that point — no Deal-button tap.
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -1785,7 +1782,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -1799,7 +1796,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
 
     // Draw transitions through redraw_running → your_redraw_flip →
     // ab_transition → handoff_resolving (settle-pause).
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
 
     // Settle-pause empty-hero composition must take over the hero zone,
     // displacing the preview. No VS, no preview, no headline.
@@ -1851,7 +1848,7 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     vi.useRealTimers();
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(() => {
       const root = document.querySelector("[data-h2h-recipient-play]");
       expect(root?.getAttribute("data-playing-state")).toBe("redraw_running");
@@ -1931,7 +1928,7 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     // Tap-tap to hold slot 2 (preview-then-hold).
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     // Drain redraw promise microtasks.
     await act(async () => {
       await Promise.resolve();
@@ -2079,7 +2076,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     // Reach hold_select (round 1) — Draw enabled.
     await waitFor(
       () => {
-        const btn = screen.queryByText("Draw") as HTMLButtonElement | null;
+        const btn = screen.queryByText("Next") as HTMLButtonElement | null;
         expect(btn).not.toBeNull();
         expect(btn?.disabled).toBe(false);
       },
@@ -2087,7 +2084,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     );
     // Round 1 Draw → redraw → flip. With maxRounds=3, the SWAP loops back to
     // hold_select for round 2 (NOT ab_transition→arc as the single-shot does).
-    fireEvent.click(screen.getByText("Draw"));
+    fireEvent.click(screen.getByText("Next"));
     await waitFor(
       () => expect(
         container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
@@ -2096,6 +2093,47 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     );
     expect(props.redrawRoster).toHaveBeenCalledTimes(1); // one redraw per round
     // Draw is back (round 2 available) — proof the loop re-armed, not resolved.
-    expect((screen.queryByText("Draw") as HTMLButtonElement | null)?.disabled).toBe(false);
+    expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false);
+  });
+
+  // ── B2: cumulative + permanent holds (THE core bug) ──────────────────────
+  it("cumulative holds: a slot held in round 1 stays held in round 2 without re-holding (carried, not lost)", { timeout: 8000 }, async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    // Hold slot 2 (tap-tap per #11) → held.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+    // Advance to round 2.
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("hold_select"),
+      { timeout: 4000 },
+    );
+    // CORE: slot 2 is STILL held in round 2 — holds are cumulative + permanent,
+    // never lost when not re-held. (Pre-fix the loop-back cleared held.)
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+  });
+
+  it("permanent holds: a held slot does NOT unhold on a third tap (locked forever)", async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // preview
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // commit hold
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // third tap → NO-OP (locked)
+    expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
   });
 });
