@@ -78,14 +78,6 @@ export interface ChallengeCtx {
    *  via resolvedSenderHand. Set only on the boss path; the human path never
    *  touches it. */
   startMode?: "inherit" | "draft-fresh";
-  /** 4a degraded path (2026-06-22): set true by App ONLY when the sender-hand
-   *  fetch DEFINITIVELY failed — legacy `sender_resolved:false`, or a transient
-   *  fetch that exhausted retry. Distinct from `resolvedSenderHand === undefined`,
-   *  which is also the IN-FLIGHT state (the fetch resolves async after play
-   *  begins). H2HRecipientPlay keys the degraded click-through on THIS flag, not
-   *  on the missing hand, so a normal recipient whose fetch is still pending is
-   *  never mis-routed into the degraded experience at round 1. */
-  senderHandFailed?: boolean;
   /** Phase 2-mount Step 4 (2026-06-21): two-tier boss framing. Threaded from
    *  the GET response's initial_roster.marquee at accept (boss only; default
    *  false/undefined for humans). marquee → the result uses margin-based loss

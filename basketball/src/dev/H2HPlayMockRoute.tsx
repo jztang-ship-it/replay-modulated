@@ -42,16 +42,10 @@ function buildMockCtx(): ChallengeCtx {
   // surfaced in live verification.
   const initialRoster = INITIAL_RECIPIENT_HAND.cards as unknown as GeneratedCard[];
   let challengerName = SENDER_HAND.displayName;
-  let degraded = false;
   if (typeof window !== "undefined") {
     const sp = new URLSearchParams(window.location.search);
     const overrideName = sp.get("challengerName");
     if (overrideName && overrideName.length > 0) challengerName = overrideName;
-    // ?degraded=1 glasses the degraded path. Per doc a52436c's two-predicate
-    // split: senderHandFailed routes the PLAY branch to the click-through;
-    // dropping resolvedSenderHand lands the TERMINAL on the one-sided reveal.
-    // Both halves are required (see the return below).
-    degraded = sp.get("degraded") === "1";
   }
   return {
     challengeId: MOCK_CHALLENGE_ID,
@@ -60,20 +54,12 @@ function buildMockCtx(): ChallengeCtx {
     challengerName,
     sport: "basketball",
     season: "2425",
-    // Degraded PLAY-branch trigger (a52436c): the click-through keys on this.
-    senderHandFailed: degraded,
-    // Degraded TERMINAL trigger: undefined → arc lands on the one-sided reveal;
-    // present → the two-sided battlefield. Dropping it is the second half of the
-    // split — without it the play branch would click-through but the terminal
-    // would still show the battlefield.
-    resolvedSenderHand: degraded
-      ? undefined
-      : {
-          handId: SENDER_HAND.handId,
-          totalFp: SENDER_HAND.totalFp,
-          tier: SENDER_HAND.tier,
-          cards: SENDER_HAND.cards as unknown as GeneratedCard[],
-        },
+    resolvedSenderHand: {
+      handId: SENDER_HAND.handId,
+      totalFp: SENDER_HAND.totalFp,
+      tier: SENDER_HAND.tier,
+      cards: SENDER_HAND.cards as unknown as GeneratedCard[],
+    },
   };
 }
 

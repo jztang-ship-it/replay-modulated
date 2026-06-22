@@ -115,7 +115,6 @@ import { ScoreCell } from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
-import { useChallengeAttempt } from "@shared/hooks/useChallengeAttempt";
 import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
@@ -424,18 +423,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // the async commit callback so it never sees a stale closure.
   const maxRounds = props.maxRounds ?? 1;
   const roundsUsedRef = useRef(1);
-  // State mirror of the ref — drives the degraded branch's CTA label ("Round N").
-  const [roundsUsed, setRoundsUsed] = useState(1);
-  // Degraded branch: the sender-hand fetch DEFINITIVELY failed (legacy
-  // sender_resolved:false, or transient retry exhausted) — App sets
-  // challengeCtx.senderHandFailed at that point. Deliberately NOT keyed on
-  // !resolvedSenderHand: that is ALSO true while the fetch is merely IN FLIGHT
-  // (it resolves async, after play has already begun), so it would wrongly give a
-  // normal recipient the degraded click-through at round 1. senderHandFailed is
-  // the definitive "unavailable, not pending" signal. (The arc TERMINAL below
-  // still keys on resolvedSenderHand: a late-arriving hand shows the battlefield;
-  // a never-arriving one shows the one-sided reveal — fail-open either way.)
-  const isDegraded = challengeCtx.senderHandFailed === true;
 
   // Roster size for this replay = the recipient's actual dealt hand. Drives
   // the deal-in / column-flip cascade counts, the fade-up window, and the
@@ -669,17 +656,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           },
         });
         roundsUsedRef.current = decision.roundsUsed;
-        setRoundsUsed(decision.roundsUsed);
         if (decision.next === "REVEALING") {
-          // Lock → the EXISTING handoff_resolving → arc seam (resolve unmoved).
-          // Main path plays the ab_transition opponent-appear beat first; the
-          // degraded path has no opponent strip, so it skips straight to
-          // handoff_resolving → arc → one-sided reveal.
+          // Lock → the EXISTING ab_transition → handoff_resolving → arc seam
+          // (resolve unmoved). ONE path — boss and human alike.
           setState((s) =>
             s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
-              ? (isDegraded
-                  ? { kind: "handoff_resolving", finalRoster: flipFinalRoster, held: flipHeld }
-                  : { kind: "ab_transition", finalRoster: flipFinalRoster, held: flipHeld })
+              ? { kind: "ab_transition", finalRoster: flipFinalRoster, held: flipHeld }
               : s,
           );
         } else {
@@ -822,13 +804,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   } else if (!dataReady) {
     headline = "Loading challenge data…";
     cta = { label: "Loading…", disabled: true, onClick: null };
-  }
-  // Degraded click-through: the advance control names its destination round
-  // ("Round 2" / "Round 3"). Scoped to THIS branch — NOT a shared label/constant
-  // (deriveCta's "Draw" is local to this file and the main path keeps it). No
-  // holds; the button just advances to the next fresh-seed round.
-  if (isDegraded && state.kind === "hold_select" && !dataLoadError && engineError === null) {
-    cta = { label: `Round ${roundsUsed + 1}`, disabled: false, onClick: "draw" };
   }
 
   // Layout A composition (design-lock §2): opponent strip absent,
@@ -1026,7 +1001,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
    *  Stage 1 → Stage 2 swap continues to key on `held.size > 0` (existing
    *  logic naturally fires on the first confirmed hold). */
   const onTap = (i: number) => {
-    if (isDegraded) return; // degraded click-through has NO hold selection
     if (state.kind !== "hold_select") return;
     setIntroDismissed(true);
     setState((s) => {
@@ -1620,62 +1594,26 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // board across the S3→S4 boundary; only the slot CONTENTS visibly
   // transition (playing-inner fades to 0; reveal arc fades in).
   const compositeOverlay = arcComposite && state.kind === "arc" ? (
-    // Terminal at arc. Main path (opponent resolved) → the two-sided battlefield
-    // reveal. Degraded path (resolvedSenderHand undefined — legacy / transient-
-    // exhausted) → the ONE-SIDED reveal (docs §"Degraded round-3 terminal"): a
-    // fresh-seed run scored vs targetScore, no opponent battlefield, never blank.
-    // The floor panel is NO LONGER reached here — it's the deeper-break backstop
-    // (engine/data error during the run), early-returned below.
-    challengeCtx.resolvedSenderHand ? (
-      <H2HRecipientReveal
-        challengeCtx={challengeCtx}
-        myScore={state.resolvedScore}
-        myRoster={state.resolvedRoster}
-        myWinTier={state.resolvedTier}
-        gameState={"REVEALING" as any}
-        bypassGameStateGate
-        sport={sport}
-        renderBattlefieldCard={renderBattlefieldCard}
-        renderOverlayCard={renderOverlayCard}
-        onSendItBack={onSendItBack}
-        onTryAgain={onTryAgain}
-        onPlayOwnHand={onPlayOwnHand}
-        onDismiss={onDismiss}
-      />
-    ) : (
-      <H2HOneSidedReveal
-        challengeId={challengeCtx.challengeId}
-        sport={sport}
-        resolvedScore={state.resolvedScore}
-        targetScore={challengeCtx.targetScore}
-        resolvedRoster={state.resolvedRoster}
-        onTryAgain={onTryAgain}
-        onPlayOwnHand={onPlayOwnHand}
-        onDismiss={onDismiss}
-      />
-    )
+    // Terminal at arc: the two-sided battlefield reveal vs the opponent's five
+    // (human sender five or boss five — same reveal). ONE path; the opponent
+    // lineup is a precondition (always present). Resolves through the unchanged
+    // finalRoster → resolveRoster → arc seam.
+    <H2HRecipientReveal
+      challengeCtx={challengeCtx}
+      myScore={state.resolvedScore}
+      myRoster={state.resolvedRoster}
+      myWinTier={state.resolvedTier}
+      gameState={"REVEALING" as any}
+      bypassGameStateGate
+      sport={sport}
+      renderBattlefieldCard={renderBattlefieldCard}
+      renderOverlayCard={renderOverlayCard}
+      onSendItBack={onSendItBack}
+      onTryAgain={onTryAgain}
+      onPlayOwnHand={onPlayOwnHand}
+      onDismiss={onDismiss}
+    />
   ) : null;
-
-  // Deeper-break backstop (docs §"Fail-open choreography" panel trigger @3641):
-  // the floor panel mounts ONLY on an engine/data-load failure DURING the
-  // degraded fresh-seed run — NOT on "resolvedSenderHand undefined" (that is the
-  // normal click-through entry, handled above). Two distinct components (floor vs
-  // one-sided reveal) → the single useChallengeAttempt POST fires on exactly one
-  // of them per attempt, by construction. The main path keeps its own
-  // dataLoadError/engineError "Try again" treatment (below), unchanged.
-  if (isDegraded && (dataLoadError || engineError !== null)) {
-    return (
-      <H2HRecipientNoOpponentFloor
-        challengeCtx={challengeCtx}
-        myScore={state.kind === "arc" ? state.resolvedScore : 0}
-        myRoster={state.kind === "arc" ? state.resolvedRoster : []}
-        sport={sport}
-        onTryAgain={onTryAgain}
-        onPlayOwnHand={onPlayOwnHand}
-        onDismiss={onDismiss}
-      />
-    );
-  }
 
   return (
     <>
@@ -2172,158 +2110,6 @@ function CardBack({ side: _side }: { side: "back" | "front-when-down" }) {
         boxShadow: "inset 0 0 8px rgba(0,0,0,0.4)",
       }}
     />
-  );
-}
-
-/** One-sided reveal — the degraded round-3 terminal (docs/replaymod-design-
- *  decisions.md → "Degraded round-3 terminal: one-sided reveal surface").
- *
- *  When resolvedSenderHand is undefined (legacy / transient-exhausted), the
- *  recipient runs the click-through rounds and lands HERE: a fresh-seed run
- *  produced a real score, presented as a legitimate outcome vs the authoritative
- *  targetScore. Echoes the reveal scoring chrome, renders ONE column (your score)
- *  — NO opponent battlefield, NO "unavailable" / error framing (that lives only
- *  on the deeper-break floor). By CONSTRUCTION it can reach no opponent data: its
- *  inputs are resolvedScore + targetScore (+ the POST/CTA essentials), never
- *  challengeCtx.resolvedSenderHand — the structural guarantee against the
- *  missing-hand blank class that started this whole thread.
- *
- *  Fires the single useChallengeAttempt POST HERE, on reveal mount — the
- *  click-through path's one POST. The deeper-break floor fires its own on its
- *  mount; two distinct components → mutual exclusivity by construction. */
-function H2HOneSidedReveal(props: {
-  challengeId: string;
-  sport: string;
-  resolvedScore: number;
-  targetScore: number;
-  resolvedRoster: GeneratedCard[];
-  onTryAgain: () => void;
-  onPlayOwnHand: () => void;
-  onDismiss: () => void;
-}) {
-  const { challengeId, sport, resolvedScore, targetScore, resolvedRoster, onTryAgain, onPlayOwnHand, onDismiss } = props;
-  useChallengeAttempt({
-    challengeId,
-    myScore: resolvedScore,
-    targetScore,
-    sport,
-    enabled: true,
-    resolvedRoster,
-  });
-  const won = resolvedScore >= targetScore;
-  const accent = won ? "#7CE38B" : "#FFB14A";
-  const secondaryBtn: React.CSSProperties = {
-    padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)",
-    background: "transparent", color: "#EAF0FF", fontWeight: 800, fontSize: 13, cursor: "pointer",
-  };
-  return (
-    <div
-      data-h2h-oneside-reveal="true"
-      style={{
-        position: "fixed", inset: 0, zIndex: 9000,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        gap: 10, padding: 24, boxSizing: "border-box",
-        background: "#070A12", color: "#EAF0FF",
-        fontFamily: "'Inter', system-ui, sans-serif", textAlign: "center",
-      }}
-    >
-      <GlobalChallengeHeader />
-      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>
-        Your run
-      </div>
-      {/* One column — your score, in the reveal score-numeral scale. */}
-      <div style={{ fontSize: 64, fontWeight: 900, lineHeight: 1, color: accent }}>{resolvedScore.toFixed(1)}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "rgba(234,240,255,0.55)" }}>FP</div>
-      <div data-h2h-oneside-target style={{ fontSize: 15, color: "rgba(234,240,255,0.85)", marginTop: 6 }}>
-        Target: <b>{targetScore.toFixed(1)} FP</b>
-      </div>
-      <div style={{ fontSize: 18, fontWeight: 900, color: accent, marginTop: 2 }}>
-        {won ? "You beat the target" : "Short of the target"}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, marginTop: 12 }}>
-        <button data-h2h-oneside-cta="dismiss" onClick={onDismiss} style={{
-          padding: "14px", borderRadius: 12, border: "none", background: "#FFB14A",
-          color: "#070A12", fontWeight: 900, fontSize: 15, textTransform: "uppercase", letterSpacing: 0.5, cursor: "pointer",
-        }}>Continue</button>
-        <button data-h2h-oneside-cta="try-again" onClick={onTryAgain} style={secondaryBtn}>Try Again</button>
-        <button data-h2h-oneside-cta="play-own" onClick={onPlayOwnHand} style={secondaryBtn}>Play Your Own Hand</button>
-      </div>
-    </div>
-  );
-}
-
-/** Fail-open floor for the DEEPER BREAK (docs/replaymod-design-decisions.md →
- *  "Missing opponent hand: fail-open floor" + the "Fail-open choreography" panel
- *  trigger). Mounts ONLY when an engine/data-load error occurs during the
- *  degraded fresh-seed run — NOT on plain "resolvedSenderHand undefined" (that is
- *  the normal click-through entry, which terminates on the one-sided reveal). Its
- *  "opponent hand unavailable" copy is honest here: the run could not complete.
- *  This is the floor the pre-5b ChallengeComparisonScreen used to provide before
- *  the surface migration dropped it (restoring the principle, not the form).
- *
- *  Records the attempt via useChallengeAttempt on mount — exclusive with the
- *  one-sided reveal's POST (a run reaches one terminal or the other, never both). */
-function H2HRecipientNoOpponentFloor(props: {
-  challengeCtx: ChallengeCtx;
-  myScore: number;
-  myRoster: GeneratedCard[];
-  sport: string;
-  onTryAgain: () => void;
-  onPlayOwnHand: () => void;
-  onDismiss: () => void;
-}) {
-  const { challengeCtx, myScore, myRoster, sport, onTryAgain, onPlayOwnHand, onDismiss } = props;
-  useChallengeAttempt({
-    challengeId: challengeCtx.challengeId,
-    myScore,
-    targetScore: challengeCtx.targetScore,
-    sport,
-    enabled: true,
-    resolvedRoster: myRoster,
-  });
-  const target = challengeCtx.targetScore;
-  const won = myScore >= target;
-  const ACCENT = "#FFB14A";
-  const secondaryBtn: React.CSSProperties = {
-    padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)",
-    background: "transparent", color: "#EAF0FF", fontWeight: 800, fontSize: 13, cursor: "pointer",
-  };
-  return (
-    <div
-      data-h2h-no-opponent-floor="true"
-      style={{
-        position: "fixed", inset: 0, zIndex: 9000,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        gap: 14, padding: 24, boxSizing: "border-box",
-        background: "#070A12", color: "#EAF0FF",
-        fontFamily: "'Inter', system-ui, sans-serif", textAlign: "center",
-      }}
-    >
-      <GlobalChallengeHeader />
-      <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1.4, textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>
-        Opponent hand unavailable
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 900, color: won ? "#7CE38B" : "#EAF0FF" }}>
-        {won ? "You beat the target" : "You came up short"}
-      </div>
-      <div style={{ fontSize: 15, color: "rgba(234,240,255,0.85)" }}>
-        Your score: <b>{myScore.toFixed(1)} FP</b>
-      </div>
-      <div data-h2h-floor-target style={{ fontSize: 15, color: "rgba(234,240,255,0.85)" }}>
-        Target: <b>{target.toFixed(1)} FP</b>
-      </div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", maxWidth: 320, lineHeight: 1.4 }}>
-        We couldn’t load your opponent’s lineup, so the head-to-head can’t be shown — but your result against the target stands.
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%", maxWidth: 320, marginTop: 8 }}>
-        <button data-h2h-floor-cta="dismiss" onClick={onDismiss} style={{
-          padding: "14px", borderRadius: 12, border: "none", background: ACCENT,
-          color: "#070A12", fontWeight: 900, fontSize: 15, textTransform: "uppercase", letterSpacing: 0.5, cursor: "pointer",
-        }}>Continue</button>
-        <button data-h2h-floor-cta="try-again" onClick={onTryAgain} style={secondaryBtn}>Try Again</button>
-        <button data-h2h-floor-cta="play-own" onClick={onPlayOwnHand} style={secondaryBtn}>Play Your Own Hand</button>
-      </div>
-    </div>
   );
 }
 
