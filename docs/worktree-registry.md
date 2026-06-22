@@ -266,3 +266,49 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **At-risk content at removal:** only `M package-lock.json` (install drift) —
   discarded. Global `stash@{0}` left untouched.
 - **Last reviewed:** 2026-06-16
+
+---
+
+> **Registry reconciliation (2026-06-22, 3-round-H2H session):** the three live
+> worktrees below (`feat-cta-row`, `feat-rd8-rivalry-divergence`,
+> `feat-3round-h2h`) were absent from this registry at session start — drift
+> surfaced during ritual item 5. Added below. Branch base for all three is
+> `feat/build-phase` (current local workhorse; `origin/main` is at `e526e45`, far
+> behind). The global `stash@{0}` (football-culture WIP) belongs to
+> `feat/basketball-perseason-layout` and is visible from every worktree — it is
+> NOT owned by any entry below.
+
+### `feat/cta-row` — active (unregistered until 2026-06-22)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-cta-row`
+- **Branch HEAD:** `808afee` (= `feat/build-phase` tip)
+- **Unique commits vs `feat/build-phase`:** 0 · **vs main:** 87 (all inherited from `feat/build-phase`, none unique to this branch)
+- **Uncommitted state:** `M CLAUDE.md`, `M package-lock.json` — **the CLAUDE.md edit is parallel-evolution risk** (highest-frequency mid-merge surprise per ritual item 5); flagged, NOT investigated this session (out of scope).
+- **Equivalence on main:** branch tip == `feat/build-phase` tip; no unique committed work.
+- **Intent:** CTA-row workstream off `feat/build-phase`. State unverified beyond the above — owner session should refresh.
+- **Last reviewed:** 2026-06-22 (state-capture only; not content-audited)
+
+---
+
+### `feat/rd8-rivalry-divergence` — active-parked (unregistered until 2026-06-22)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-rd8-rivalry-divergence`
+- **Branch HEAD:** `adbafbb` — "feat(rd8): Register A — agency stat token cites the fantasy scalar, not the box triple"
+- **Unique commits vs `feat/build-phase`:** 10 · **vs main:** 10
+- **Uncommitted state:** `M shared/explanation/explainH2HResult.ts`, `M package-lock.json` — uncommitted RD8 work AT RISK.
+- **Equivalence on main:** none verified — 10 unique commits not on main; do not assume shipped.
+- **Intent:** RD8 rivalry-divergence workstream. Carries unique unshipped commits + uncommitted edits; treat as do-not-touch by other sessions.
+- **Last reviewed:** 2026-06-22 (state-capture only; not content-audited)
+
+---
+
+### `feat/3round-h2h` — active (this session, created 2026-06-22)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-3round-h2h`
+- **Branch HEAD:** `808afee` (= `feat/build-phase` tip; branched off it)
+- **Unique commits vs `feat/build-phase`:** 0 (fresh) · **vs main:** 87 (inherited)
+- **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup — root + basketball installed per worktree-install pattern).
+- **What it carries:** dedicated build env for the 3-Round Human H2H Construction feature (Score-Is-The-Object / universal-3 grammar; doc lock + the contained `H2HRecipientPlay` swap). Mission scope only.
+- **Equivalence on main:** none — new feature branch.
+- **Intent:** active build for the current session's mission. Retire after the feature lands.
+- **Last reviewed:** 2026-06-22

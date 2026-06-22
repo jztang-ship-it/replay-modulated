@@ -3176,6 +3176,8 @@ correctly degrades to no-boss-field. A real `bossChallengeId` in the GET respons
 is gated on this DB action — the last step to user-reachable boss.
 
 ### Play model — Interpretation 3 (season-locked from-scratch draft) — DECISION LOCKED; per-season band is the bottleneck (step-1 finding, 2026-06-21)
+> **HUMAN SIDE SUPERSEDED (2026-06-21) — see "Challenge model — Score-Is-The-Object + 3-round universal" block immediately below.** The boss side of this block (draft-fresh, 3-round, season-pinned, boss-five excluded) is UNCHANGED. Only the human-shared-start mechanic referenced here is superseded.
+
 **Decision (John, locked):** a boss is a sender; **equivalence holds at the
 bookends** (landing → reveal → result → share identical to a human challenge).
 What differs is the **starting-roster source**: the recipient does NOT inherit
@@ -3221,6 +3223,91 @@ modern-calibrated boss target — the unfair-by-construction state the principle
 forbids. **Per the build gate, halted after step 1 — awaiting go on the
 per-season-band script scope before steps 2/3.** No difficulty tuning lever
 (banned); the fix is season-derived calibration only.
+
+### Challenge model — Score-Is-The-Object + 3-round universal — DECISION LOCKED (John, 2026-06-21)
+
+**Amends:** "Play model — Interpretation 3 ... DECISION LOCKED (2026-06-21)" — that block
+locked boss=draft-fresh / human=shared-start(inherit + 1 redraw). This supersedes the
+*human* side only. Boss side (draft-fresh, 3-round, season-pinned, boss-five excluded) is
+unchanged.
+
+**Decision (John, locked):** The object of a challenge is the SCORE, not the hand. Highest
+score wins — sole decider for boss AND friend challenges. A challenge is a **score + a season
+pool** ("scored 224 from the '98 pool — beat it"), structurally identical to a boss. 3-round
+hold/redraw construction is the single universal grammar across normal / boss / human H2H.
+One engine, one grammar.
+
+**Human H2H start-mode — 4a LOCKED:** the recipient INHERITS the sender's five as the
+**starting hand**, then runs the full **3 rounds** of hold/redraw on top (maxRounds=3 for the
+inherit start-mode, same as normal/boss). Shared-start survives as a *seed*, not a preserved
+hand — over 3 rounds the recipient can redraw the inherited five down to nothing, and that is
+the ownership mechanic working as intended ("I took their five and built my own team to beat
+them"), not a leak.
+
+- **4c (not taken):** inherit + 1 round while normal/boss get 3. Rejected — breaks the
+  universal-3 grammar. Reversible: 4a↔4c is a single maxRounds-per-start-mode parameter, so
+  4c remains a cheap dial later if the "same hand, light tweak" feel is wanted.
+- **4b (struck):** full draft-fresh for human H2H. Reverses the boss-vs-human distinction and
+  nullifies the boss's only distinguishing mechanic. Uniformity for its own sake.
+
+**Consequence — starting hand is seed material, not the sent object.** What gets sent and
+compared is the score. Accepted, not a regret: collapses boss and friend into one object,
+unifies screen + construction + onboarding ("build a team, beat the score" — self-explaining).
+
+**Loop fuel (don't re-litigate):** the old loop's beatable scores (busts/near-misses from
+1-redraw imperfection) relocate, not vanish — now from resolution roll-variance (a strong
+lineup still busts when the games roll cold; resolution is a random sample over real game
+logs), pool spread, and the rematch/rivalry ladder (the loop 3 rounds *improves*).
+
+**Stamps — UNCHANGED.** BAD BEAT / MISS / CAREER HI / RECORD / SEASON HI + all
+choke/near-miss/rare/season-high triggers stay. Trigger *contexts* may re-point from
+hand-relative to score-relative; the stamp *types* are untouched.
+
+**Commentary consequence (gate for the commentary-cleanup workstream):** inheritance /
+hand-as-object framing RETIRED; reactive (score/tier/stamp) + comparison (score-vs-score)
+framing canonical. Supersede h2h-relay-tension-design-lock.md; patch
+commentary-voice-system.md.
+
+**Build (the contained swap, not money-path surgery):** add a 3-round hold/redraw loop inside
+H2HRecipientPlay, driving the loop/lock decision through `commitRound` reused as a BLACK BOX
+(entryFee:0, no-op persist/charge/rake). Resolution already shared; the finalRoster →
+resolveRoster → arc seam does NOT move. commitRound's contract forces per-round resolveRoster
+(construction-timing change, not resolution-logic change). NOT an extract-shared-loop refactor
+— that would touch the money choreography + pinned tests and is explicitly out of scope.
+
+**Cross-ref:** boss target calibration (deferred gate) and this loop's health depend on the
+strong-draft (3-round optimal) score distribution, which the current simulator does not yet
+produce — see the simulator-fidelity correction (faithful-deal phase).
+
+### Challenge model — Missing opponent hand: fail-open floor (corollary of Score-Is-The-Object) — DECISION LOCKED (John, 2026-06-22)
+The challenge object is score + season pool (both required, loaded by the blocking GET before
+accept). The opponent's resolved hand (`resolvedSenderHand`) is optional, arrives via a separate
+non-blocking fetch, and is seed/visual material — not the object. Undefined on legacy challenges
+(`sender_resolved:false`) and on transient fetch failures.
+
+**Decision (fail-open / "A"):** a missing opponent hand never blocks or blanks. The recipient
+always reaches a visible, faithful outcome against the authoritative `targetScore`.
+
+**Floor invariant (universal, pre- and post-build):** `resolvedSenderHand` undefined must never
+produce the silent dead-end (inner opacity 0 + reveal null). Always a visible state showing the
+true `targetScore`. Guarded by a test carried into the 3-round build as its regression guard.
+
+**Path-split:** Legacy (hand never stored) → retry futile → fail-open immediately, reveal
+replaced by honest "unavailable" treatment. Transient (4xx/5xx/network/race) → retry with
+backoff, then degrade to the same fail-open. Ripe-transient-exhausted → fail-open per A;
+same-hand feel is seed not object, object fully presentable without it. (Fail-closed rejected:
+would block a playable object over a missing visual.)
+
+**Meaning across the build:** pre-build the recipient drafts their own roster, so the floor =
+outcome-vs-target with no reveal. Post-build (4a) the opponent hand is the inherited starting
+hand, so fail-open = fresh seed, run 3 rounds vs the same target. NOT struck-4b: 4b nullified the
+boss distinction as the grammar for all challenges; this is a degraded-seed fallback for one
+failure case, object identical — equivalent to the locked "shared-start redrawn to nothing."
+
+**History:** blank dates to the Phase 5b surface migration (2026-05-30), which routed humans onto
+`H2HRecipientPlay`→arc without carrying the pre-5b `ChallengeComparisonScreen` backstop that made
+the null-gate safe by design. This restores that principle on the current surface. Not a
+recent-work regression — boss/build-phase work left the human path byte-unchanged.
 
 ### Two-tier bosses + per-season-band GO (2026-06-21, John)
 **Two tiers** (both terminate outward; invariant holds for every view):
@@ -3513,62 +3600,7 @@ Audience/difficulty lever stays deferred and banned on comparison-bearing daily
 instances. Do NOT build rank / the You-Mike-Bulls comparison card / any per-player
 ordered tally (all Phase 2.5).
 
-## Fail-open choreography: click-through rounds (extends the fail-open corollary) — 2026-06-22
-
-Refines what "fail-open = fresh seed, run the 3 rounds vs the same target" looks like at runtime.
-
-When `resolvedSenderHand` is undefined (legacy `sender_resolved:false` cohort; or a transient
-fetch failure that survives retry), the recipient does NOT land on a static panel and does NOT
-skip to resolve. They land directly on the round-1 lineup of a fresh seed and click through:
-
-- Round 1 lineup, no hold controls. Advance button labeled **"Round 2"**.
-- Click → Round 2 lineup (fresh draw), no hold controls. Advance button labeled **"Round 3"**.
-- Click → Round 3 lineup, pause beat, **auto-reveal** scoring vs `targetScore`. No third button;
-  round 3 self-resolves.
-
-Two clicks (1→2, 2→3) to reach round 3. The button always names its destination.
-
-**Rename:** the single control "Auto" is STRUCK. "Auto" was correct only in the prior two-state
-model (one control, one jump). Three rounds need per-step destination labels, so a static "Auto"
-is wrong by construction. The control is click-to-advance, not passive playback — the user drives
-each transition; only the hold SELECTION is removed on this branch.
-
-**Hold-agency boundary** (locks the fail-open model's shape):
-
-- Defined hand (main 4a path): inherit the sender's five, run 3 rounds with REAL holds/redraws,
-  resolve vs target. Full agency.
-- Undefined hand (degraded branch): fresh seed, click-to-advance, NO hold selection, auto-reveal
-  at round 3. Advancement agency only.
-
-Defined = you play it; undefined = it auto-plays a fresh seed so you still reach a scored outcome
-vs the same target.
-
-**Panel relocation** (follows from the routing decision; SUPERSEDES f4ec0b3 mount-on-undefined):
-The floor panel ("OPPONENT HAND UNAVAILABLE" / your score / Target / Continue · Try Again · Play
-Your Own Hand) is NO LONGER the undefined-hand entry — the click-through rounds are. The panel is
-retained as the DEEPER-BREAK backstop: it mounts only if the click-through fresh-seed path itself
-cannot complete (fresh seed can't be produced, round loop throws, resolve fails). Its mount
-condition MUST move off "`resolvedSenderHand` undefined" or it double-fires with the click-through
-path. Copy + CTAs unchanged.
-
-**Data parity:** exactly one `useChallengeAttempt` POST per attempt.
-
-- Click-through path: POST at the round-3 auto-reveal, recording the fresh-seed run's real score.
-- Panel backstop: POST on mount, as today.
-
-Mutually exclusive — never both on one attempt.
-
-**§8 invariant evolves deliberately** (watched red→green; cannot stay verbatim — the reveal is no
-longer null and the terminal state is a scored reveal, not a static panel). New assertion: human
-ctx, no `resolvedSenderHand` → fresh seed dealt, round-1 lineup visible (NOT the panel); advance
-control reads "Round 2"; click → round-2 fresh lineup, control reads "Round 3"; click → round-3
-lineup pauses then auto-reveals a score vs `targetScore`; arc never blank; exactly one POST, at
-the reveal. Anti-regression heart (never-blank, reaches `targetScore`) preserved; the click
-sequence + rename are added on top. The panel backstop gets its own separate assertion on the
-relocated (deeper-break) trigger.
-
-
-## Fail-open choreography: click-through rounds (extends the fail-open corollary) — 2026-06-22
+## Fail-open choreography: click-through rounds (extends the fail-open corollary) — 2026-06-22  (SUPERSEDED by da292be — historical)
 
 Refines what "fail-open = fresh seed, run the 3 rounds vs the same target" looks like at runtime.
 
@@ -3632,10 +3664,7 @@ degraded branch forced into `dataLoadError`/`engineError` during the fresh-seed 
 mounts (showing `targetScore`) and fires its single mount POST — and this trigger is distinct
 from plain undefined-hand, which must reach the click-through rounds, not the panel.
 
-cd "$(git rev-parse --show-toplevel)"
-cat >> docs/replaymod-design-decisions.md << 'DOCBLOCK'
-
-## Degraded round-3 terminal: one-sided reveal surface (amends "Fail-open choreography: click-through rounds") — 2026-06-22
+## Degraded round-3 terminal: one-sided reveal surface (amends "Fail-open choreography: click-through rounds") — 2026-06-22  (SUPERSEDED by da292be — historical)
 
 Resolves the surface the prior block left unnamed ("auto-reveals scoring vs `targetScore`" without
 naming where). CC ground-truthed two candidates out: the arc hard-depends on a resolved opponent
@@ -3674,9 +3703,7 @@ hand → fresh seed → click-through "Round 2"/"Round 3" → round-3 auto-revea
 `targetScore`, arc never blank — with the terminal now being this one-sided surface (not the arc,
 not the panel). The error panel keeps its separate assertion on the `dataLoadError`/`engineError`
 deeper-break trigger.
-DOCBLOCK
-git add docs/replaymod-design-decisions.md
-git commit -m "doc: degraded round-3 one-sided reveal surface — amends fail-open choreography"
+
 ## SOLO vs H2H — TWO DIFFERENT LOOPS (corrects "normal and challenge function the same")
 
 Confirmed by read-only ground-truth (CC, HEAD d41a8f2, suite 1408 green).
@@ -3716,3 +3743,222 @@ five (SENDER_HAND) -- H2HPlayMockRoute.tsx:43,57. So it exercises loop mechanics
 human "recipient starts holding the sender's exact five" semantic. That entry is only
 visible on a real human challenge (/basketball/challenge/<uuid>, non-legacy id). No boss
 dev mock route exists; the real boss path needs a backend-served boss challenge_id.
+
+## Degraded trigger correction: senderHandFailed, not undefined-hand (amends all prior fail-open blocks) — 2026-06-22  (SUPERSEDED by da292be — historical)
+
+RATIFIED (John). Corrects a flaw in the trigger semantics that every prior fail-open block stated
+the same wrong way ("undefined `resolvedSenderHand` → degraded / floor"). The build exposed it.
+
+**The flaw.** `resolvedSenderHand` is undefined in TWO unrelated situations, and prior blocks
+conflated them:
+- PENDING — the sender-hand fetch is in flight. It fires at accept and resolves ~1-3s later, after
+  play begins, so `resolvedSenderHand` is undefined at round 1 for EVERY challenge, normal ones
+  included.
+- FAILED — definitive: legacy `sender_resolved:false` cohort, or transient-retry-exhausted.
+
+Gating the degraded click-through on `!resolvedSenderHand` therefore mis-routes EVERY normal
+recipient into the click-through at round 1, before their real opponent hand arrives. (This is the
+same surface symptom as the parked "drops to fresh deal" investigation — see note below. It also
+broke 33 existing tests, which were correctly reporting the conflation.)
+
+**The correction (ratified).** Two different predicates for two different decisions:
+- Degraded PLAY branch keys on a new explicit `challengeCtx.senderHandFailed` flag. App sets it
+  TRUE only on the definitive-failure paths (legacy `sender_resolved:false`,
+  transient-retry-exhausted). It is FALSE while pending.
+- Arc TERMINAL still keys on `resolvedSenderHand`: a late-arriving hand → battlefield reveal; a
+  never-arriving hand → one-sided reveal.
+
+So: pending → wait (normal path, battlefield when the hand lands). Failed → degraded click-through
+→ one-sided terminal. "Degraded = unavailable, not pending." This is the faithful realization of
+what every prior block INTENDED; those blocks lacked the vocabulary because undefined-vs-failed
+hadn't been distinguished until the build forced it.
+
+**Scope of the change.** Adds a `senderHandFailed` field to ChallengeCtx + App wiring to set it on
+the two definitive-failure paths. Reversible (one trigger line + the App signal) if ever respecced.
+The `_roundMachine.ts` / resolveRoster / seam are untouched by this.
+
+**Supersedes wording, not intent, in:** the fail-open floor corollary (9b31aef), the click-through
+choreography block (9f1d25d), and the one-sided reveal block (31e7d7e). Wherever those say
+"undefined hand → degraded/floor," read "senderHandFailed → degraded/floor." The undefined-hand
+predicate survives ONLY for the arc terminal's late-vs-never distinction.
+
+**Likely closes the parked "drops to fresh deal" investigation (to confirm, not assume).** The
+original seed hypothesized retry-then-fail-open might remove the premature fresh-deal as a
+byproduct. Stronger: the premature fresh-deal WAS the undefined-while-pending mis-route, and
+`senderHandFailed` gating is its direct fix — a normal recipient is `senderHandFailed:false` while
+pending, so they wait for the battlefield instead of dropping to click-through. NOT closed from
+here — that investigation has its own findings unread at this layer; confirm when that mission
+opens. The [ch-debug] instrumentation (f673bf54) is the tool to confirm it.
+
+## ONE-PATH MODEL CORRECTION — supersedes the four fail-open blocks — 2026-06-22
+
+Status: governing concept. Supersedes by hash: 9b31aef, 9f1d25d, 31e7d7e, a52436c. Those four blocks
+encode a TWO-path model (normal vs "degraded / missing opponent hand") that does not exist. The real
+model is ONE path. The fail-open UX they describe (floor panel, click-through, one-sided reveal,
+senderHandFailed branch) solves a problem that cannot occur, because the opponent lineup is a
+PRECONDITION, not a failure mode.
+
+### THE ONE PATH (governing model)
+
+One path, universal across boss and human H2H. Identical loop. The ONLY difference between a boss
+and a human challenge is the starting-roster source: boss = fresh draft (startMode:"draft-fresh");
+human = the inherited sender five. Everything after is byte-identical. (Already wired: one mount at
+App.tsx:283, maxRounds={3} unconditional, no senderKind branch inside H2HRecipientPlay.)
+
+The opponent lineup is a PRECONDITION. It always exists. A recipient never faces a missing opponent.
+No degraded experience, no fail-open UX, no one-sided reveal, no senderHandFailed branch.
+
+Cumulative, permanent holds (the core mechanic):
+- Each round the user holds 0–5 cards. Held cards get an H mark that persists to the reveal.
+- Once held, a card is held FOREVER — no re-holding in later rounds, never flips. The user only ever
+  decides about currently-UNHELD slots; held slots are locked.
+- Each round, ONLY unheld slots flip in replacements. Held cards stay put, untouched, H intact.
+
+Conditional flip step:
+- Round with >=1 unheld slot: flip unheld slots, user decides holds, advance.
+- Round with ZERO unheld slots (all 5 already held cumulatively): no flip step, nothing to decide.
+
+Collapse to reveal when holds reach 5: because holds are cumulative and permanent, once accumulated
+holds = 5, every remaining round has zero unheld slots, so they collapse — straight to the matchup
+reveal, skipping the flip wait. The "hold all 5 in round 1" case is just its earliest trigger.
+- Hold all 5 in round 1 → signage 1/3 jumps to 3/3 → reveal (no flip).
+- Hold all 5 in round 2 → signage 2/3 jumps to 3/3 → reveal (no flip).
+- Hold <5 through round 2 → round 3 flips the remaining unheld slots, THEN reveals (normal).
+- 3/3 always means "final lineup locked, reveal"; the only variable is whether reaching it involved
+  a flip (unheld slots existed) or not (all held).
+
+CTA + signage:
+- CTA is a single label: "Next". Not "Round 2"/"Round 3", not "Draw". One label, every advance.
+- Round position is SEPARATE signage: 1/3, 2/3, 3/3. On collapse, signage jumps (e.g. 1/3 → 3/3).
+
+Reveal: the existing H2H one-card-at-a-time matchup vs the opponent's five (human sender five or boss
+five — same battlefield reveal). Resolves through the unchanged finalRoster → resolveRoster → arc
+seam.
+
+### DATA NOTE — the legacy cohort (not a UX problem)
+
+CC confirmed (read-only, api/__tests__/challenge-sender-hand.test.ts:184-187): ~20 production
+hand_log rows (ids 38–45, 2026-04-14/15) store final_roster as a JSON-encoded string blob from an
+experimental write path, not an array. The endpoint's Array.isArray guard routes non-array →
+sender_resolved:false / reason:"legacy_pre_h2h_capture" / sender:null, so the API genuinely returns
+no usable hand for these rows. The one-path answer is a DATA fix, not a UX path: FILTER these rows so
+they are never served as challenges (decision: filter, not backfill; no kept flag, senderHandFailed
+deleted). The recipient never faces a missing opponent.
+
+OWED (John, confirms the filter target, NOT blocking the build): live-DB read —
+select id, hand_id, final_roster, created_at from hand_log where id between 38 and 45 — to confirm
+whether the rows exist and are reachable as servable challenges. If already unreachable, the filter
+is a belt-and-suspenders no-op. Model is settled regardless.
+
+### REVERT LIST (two-path artifacts to remove)
+
+- The isDegraded / senderHandFailed branch inside H2HRecipientPlay.
+- The one-sided reveal component (H2HOneSidedReveal).
+- The branch-scoped "Round 2"/"Round 3" CTA labels (deriveCta degraded override).
+- H2HRecipientNoOpponentFloor — REMOVE ENTIRELY (component + mount + tests). CONFIRMED (John): the
+  floor did NOT exist before this 3-round work; everything worked fine pre-change with the old
+  single-shot 5-card flip. Pure two-path artifact, nothing underneath to preserve. (Corollary: the
+  black-out crisis the seed opened with was created by this work, not pre-existing.)
+- The senderHandFailed field on ChallengeCtx (challengeTypes.ts:88) + App wiring — DELETE. Dangling
+  orphan inviting re-use of a struck concept; trivially re-addable if ever needed. Cohort handled by
+  data-layer filtering.
+- The dev ?degraded=1 toggle in H2HPlayMockRoute.tsx (KEEP the maxRounds={3} mount fix).
+
+### KEEP (correct one-path infrastructure)
+
+- Single play mount (App.tsx:283), maxRounds={3} unconditional, no senderKind branch inside.
+- commitRound consumed as a black box (entryFee:0, no-op economics), _roundMachine.ts untouched.
+- The finalRoster → resolveRoster → arc seam (byte-intact; resolve stays in handoff_resolving).
+- Boss/human sharing the loop, differing only in starting-roster source.
+- The battlefield reveal as the universal terminal.
+
+### BUILD DELTA (the actual one-path work — partly unbuilt)
+
+1. Fix holds to cumulative + permanent. Current build loses a held card if not re-held next round.
+   Correct: held once = held forever, never flips, no re-hold; user acts only on unheld slots. THE
+   core bug.
+2. Persist the H mark to the reveal (symptom of #1; verify it renders persistently once hold-state
+   is correct).
+3. CTA → "Next" (single label; remove round-numbered labels entirely).
+4. Add 1/3 / 2/3 / 3/3 signage as a separate element (not on the button).
+5. Add the collapse rule: a round with zero unheld slots has no flip step; cumulative holds = 5
+   collapses remaining rounds straight to reveal; signage jumps (1/3→3/3, 2/3→3/3). NEW logic — not
+   built; the loop currently runs a fixed 3 rounds.
+
+### TEST IMPACT (flag, don't assume)
+
+The §8/§8b degraded/one-sided/panel assertions test removed machinery — they go with it. §9 main-loop
+stays but must be EXTENDED for cumulative-permanent holds + the collapse rule. New assertions owed:
+hold persists across rounds; held card never flips; all-5 collapse jumps signage and skips flip; CTA
+reads "Next". CC writes these RED-first.
+
+---
+
+## H2H ROUND SIGNAGE — ACCEPT-STATE (glassed 2026-06-22, scoped)
+
+Status: SCOPED ACCEPT. John glass-accepted the signage work in a deliberately partial
+state and moved on to other features. The behaviors below are ACCEPTED PRODUCT BEHAVIOR,
+not pending bugs. Do not "finish" steps (ii)/(iii) unless this decision is revisited.
+
+Code commit: 4e13efe (feat/3round-h2h). Suite 1409 green, basketball build green at accept.
+
+### What shipped (exact scope)
+
+- FIX 1 (DONE + glassed): round signage advances on the committing Next tap, in
+  H2HRecipientPlay.handleDraw, so it LEADS the flip — consistent with the collapse path's
+  on-tap jump. The post-flip commit callback no longer sets the displayed value (only the
+  ref advances there, feeding commitRound's next-round input).
+- FIX 2/3 (step i ONLY): reveal-band signage. New shared single-source-of-truth offset
+  constant H2H_SIGNAGE_OFFSET_BELOW_ROW + a shared RoundSignage component +
+  H2HBoardShell.roundSignage slot. The reveal surface renders its OWN in-band signage
+  (riding the reveal's recipient row) via H2HRecipientReveal -> H2HRevealScreen -> shell.
+  The play-phase fixed sibling GATES OFF at the arc state so there is exactly one signage
+  element across the handoff (test asserts count === 1).
+
+### Deliberately NOT done
+
+- Step (ii): results-band signage. The results screen shows NO round indicator.
+- Step (iii): full three-surface Y-alignment. The play sibling stays at bottom:18%; the
+  reveal in-band signage sits at the constant offset below the recipient row. These Ys
+  differ, so the play->reveal arc has a Y-jump.
+
+### Consciously accepted on glass (John, 2026-06-22)
+
+a. A brief BLANK as 3/3 crosses the play->reveal arc.
+b. A Y-JUMP at that crossing (play sibling bottom:18% vs the in-band reveal position;
+   step iii would have aligned them).
+c. NO 3/3 on the results screen — accepted because the round indicator is meaningless
+   once play is over.
+
+### Rationale
+
+John chose to stop at step (i) and move to other features rather than complete steps
+(ii)/(iii). These are scoping decisions, not defects. Revisit only if the decision is
+explicitly reopened.
+
+---
+
+## MERGE NOTE — missing-opponent-slot fallback on the merged branch (minor, calibrated — not an owed fix) — 2026-06-22
+
+Recorded at the feat/3round-h2h -> feat/build-phase merge. This is a graceful single-slot
+missing-data fallback, NOT a revival of the superseded two-path degraded UX.
+
+**What it is.** When challengeCtx.resolvedSenderHand is unpopulated, the affected opponent
+slot renders SenderUpPlaceholder — a single card-slot "?" placeholder, content-only inside
+one TopStripCell front-face container (shared/components/H2HRecipientPlay.tsx: defined ~:2214,
+rendered ~:2025). Positioning and flip scaffolding are owned by the parent cell; the
+placeholder is purely the cell's front-face content. The ONE path is intact: no one-sided
+reveal, no click-through rounds, no floor panel — all of that machinery is confirmed removed
+(see the ONE-PATH MODEL CORRECTION block above; greps for senderHandFailed / isDegraded /
+H2HOneSidedReveal / NoOpponentFloor are empty on the branch tip).
+
+**Two arms of "unpopulated":**
+
+- LEGACY arm (the 38-45 cohort, sender_resolved:false): should be handled UPSTREAM by the
+  parked data FILTER (seed decision: filter-not-backfill, gated on John's live-DB read), so a
+  legacy challenge never becomes servable and never reaches the placeholder. This is a
+  refinement that folds into the existing parked DB-filter task — NOT a new fix.
+- TRANSIENT arm (genuine network exhaustion after retryWithBackoff's bounded retries): the "?"
+  placeholder in that single slot is ACCEPTED as a reasonable fallback, unless John later
+  decides a different treatment (e.g. a retry-UI). Not owed; recorded as the accepted behavior.
+

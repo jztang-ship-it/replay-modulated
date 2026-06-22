@@ -115,6 +115,7 @@ import { ScoreCell } from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
+import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
   HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
@@ -252,6 +253,13 @@ type PlayingState =
   | {
       kind: "hold_select";
       held: Set<number>;
+      /** Holds COMMITTED in PRIOR rounds — permanent + non-toggleable (doc
+       *  da292be: cumulative/permanent ACROSS rounds). `held` is always a
+       *  superset of `lockedHeld`; the toggleable slots are `held \ lockedHeld`
+       *  (this round's own holds). On Next, the round's holds lock — the NEXT
+       *  hold_select gets lockedHeld = this round's full held. Round 1 starts
+       *  with lockedHeld empty (all round-1 holds are reversible until Next). */
+      lockedHeld: Set<number>;
       /** Polish #11 — currently-previewed slot index (preview-then-hold
        *  interaction model). `null` on entry; tap on a non-previewed cell
        *  moves preview here without changing `held`; tap on the already-
@@ -294,6 +302,12 @@ type PlayingState =
 export interface H2HRecipientPlayProps {
   challengeCtx: ChallengeCtx;
   sport: string;
+  /** 4a SWAP — rounds of hold/redraw the recipient runs before resolve.
+   *  Defaults to 1 (single-shot, the pre-4a behavior — keeps existing single
+   *  Draw→arc tests valid). App passes the adapter's value (basketball = 3) so
+   *  the recipient inherits the sender's five and runs the full 3 rounds. Mirrors
+   *  GameView's `adapter.maxRounds ?? 1`. */
+  maxRounds?: number;
   /** Sport-specific atomic redraw. Held positions preserved; unheld
    *  refilled. Returns full roster in one call (path β requires
    *  surface-controlled reveal timing). */
@@ -399,10 +413,27 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // of-truth guarantee: the recipient never inherits hold flags.
   // lockedCardIds below builds off this array via cardId, so the zeroed
   // hand still resolves correctly to the engine's held-set logic.
-  const initialRoster = useMemo(
+  const inheritedRoster = useMemo(
     () => challengeCtx.initialRoster.map((c) => ({ ...c, wasHeld: false })),
     [challengeCtx.initialRoster],
   );
+  // 4a SWAP (3-round loop): the recipient inherits the sender's five as the
+  // ROUND-1 base, then holds/redraws on it across maxRounds. `redrawnBase`
+  // carries the prior round's redrawn roster forward (wasHeld zeroed — each round
+  // is a fresh hold selection per the no-held-state invariant). Every existing
+  // base read (deal / hold / redraw / strip) consumes `initialRoster`, which now
+  // resolves to the CURRENT round's base — no per-site rewiring needed.
+  const [redrawnBase, setRedrawnBase] = useState<GeneratedCard[] | null>(null);
+  const initialRoster = redrawnBase ?? inheritedRoster;
+  // The deal is lineup 1 (GameView convention); each redraw commits a round
+  // through commitRound. maxRounds=3 → 2 redraws → 3 lineups. Ref is read inside
+  // the async commit callback so it never sees a stale closure.
+  const maxRounds = props.maxRounds ?? 1;
+  const roundsUsedRef = useRef(1);
+  // State mirror of the ref — drives the round-position signage (N/maxRounds).
+  // The deal is lineup 1; on the locking commit it jumps to maxRounds so the
+  // signage reads e.g. 3/3 at the reveal (including the collapse jump).
+  const [roundsUsed, setRoundsUsed] = useState(1);
 
   // Roster size for this replay = the recipient's actual dealt hand. Drives
   // the deal-in / column-flip cascade counts, the fade-up window, and the
@@ -509,7 +540,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     const finalId = window.setTimeout(() => {
       setState((s) =>
         s.kind === "deal_in" && s.cardsLanded === rosterSize
-          ? { kind: "hold_select", held: new Set(), previewedSlotIndex: null }
+          ? { kind: "hold_select", held: new Set(), lockedHeld: new Set(), previewedSlotIndex: null }
           : s,
       );
     }, DEAL_CASCADE_INTERVAL_MS * (rosterSize + 1));
@@ -596,6 +627,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     if (state.kind !== "your_redraw_flip") return;
     if (state.revealedColumns !== 0) return;
     if (columnTimersRef.current.length > 0) return;
+    // Captured at schedule time (revealedColumns===0); finalRoster/held don't
+    // change during the flip. The async commit callback reads these, not `state`.
+    const flipFinalRoster = state.finalRoster;
+    const flipHeld = state.held;
     const timers: number[] = [];
     // Column N's flip kicks off when revealedColumns crosses N → N+1.
     // The first column fires at delay=0 (engine just returned; the
@@ -610,15 +645,57 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       timers.push(id);
     }
     const finalId = window.setTimeout(() => {
-      setState((s) =>
-        s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
-          ? {
-              kind: "ab_transition",
-              finalRoster: s.finalRoster,
-              held: s.held,
-            }
-          : s,
-      );
+      // 4a SWAP: route the round's loop/lock decision through commitRound as a
+      // BLACK BOX (entryFee:0, no-op economics; _roundMachine.ts untouched).
+      // commitRound's resolvedRoster is never economically read here (no-op
+      // resolveOutcome), so the single real resolveRoster stays in
+      // handoff_resolving — the finalRoster→resolveRoster→arc seam does NOT move.
+      void (async () => {
+        const decision = await commitRound({
+          roundsUsed: roundsUsedRef.current,
+          maxRounds,
+          userTappedReveal: false,
+          entryFee: 0,
+          streak: 0,
+          resolvedRoster: flipFinalRoster as any,
+          resolveOutcome: () => ({ totalFp: 0, tier: "", payout: 0 }),
+          effects: {
+            telemetry: () => {},
+            persistLock: async () => ({ ok: false, handId: "" }),
+            charge: () => {},
+            rake: () => {},
+          },
+        });
+        roundsUsedRef.current = decision.roundsUsed;
+        // Signage was already advanced on the committing Next tap (handleDraw,
+        // leading the flip — consistent with the collapse path); only the ref
+        // updates here, feeding commitRound's next-round input.
+        if (decision.next === "REVEALING") {
+          // Lock → the EXISTING ab_transition → handoff_resolving → arc seam
+          // (resolve unmoved). ONE path — boss and human alike.
+          setState((s) =>
+            s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
+              ? { kind: "ab_transition", finalRoster: flipFinalRoster, held: flipHeld }
+              : s,
+          );
+        } else {
+          // HOLD → another round. CUMULATIVE + PERMANENT holds (one-path model):
+          // carry the held set forward (held once = held forever, never re-held,
+          // never flips) and carry the redrawn roster as the next base WITH its
+          // wasHeld flags intact (held cards stay marked + untouched; only the
+          // still-unheld slots will redraw next round). Reset the per-round timer/
+          // fire guards so redraw_running + your_redraw_flip re-arm.
+          redrawFiredRef.current = false;
+          columnTimersRef.current.forEach(clearTimeout);
+          columnTimersRef.current = [];
+          setRedrawnBase(flipFinalRoster);
+          setState((s) =>
+            s.kind === "your_redraw_flip" && s.revealedColumns === rosterSize
+              ? { kind: "hold_select", held: flipHeld, lockedHeld: flipHeld, previewedSlotIndex: null }
+              : s,
+          );
+        }
+      })();
     }, rosterSize * (COLUMN_FLIP_DURATION_MS + COLUMN_FLIP_INTERSTITIAL_MS));
     timers.push(finalId);
     columnTimersRef.current = timers;
@@ -921,7 +998,50 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
 
   const handleDraw = () => {
     if (state.kind !== "hold_select") return;
-    setState({ kind: "redraw_running", held: state.held });
+    const held = state.held;
+    if (held.size === rosterSize) {
+      // COLLAPSE (one-path model): every slot is held → there are NO unheld slots
+      // to flip. Skip the flip step and lock the current lineup straight to the
+      // matchup reveal; signage jumps to maxRounds (e.g. 1/3 → 3/3). The lock is
+      // routed through commitRound as a black box (userTappedReveal:true forces
+      // it); the finalRoster→resolveRoster→arc seam is unchanged (resolve still
+      // happens in handoff_resolving). All cards are held → mark wasHeld so the H
+      // persists to the reveal (no redraw runs here to mark them).
+      const finalRoster = initialRoster.map((c) => ({ ...c, wasHeld: true }));
+      roundsUsedRef.current = maxRounds;
+      setRoundsUsed(maxRounds);
+      void (async () => {
+        await commitRound({
+          roundsUsed: roundsUsedRef.current,
+          maxRounds,
+          userTappedReveal: true,
+          entryFee: 0,
+          streak: 0,
+          resolvedRoster: finalRoster as any,
+          resolveOutcome: () => ({ totalFp: 0, tier: "", payout: 0 }),
+          effects: {
+            telemetry: () => {},
+            persistLock: async () => ({ ok: false, handId: "" }),
+            charge: () => {},
+            rake: () => {},
+          },
+        });
+        setState((s) =>
+          s.kind === "hold_select"
+            ? { kind: "ab_transition", finalRoster, held }
+            : s,
+        );
+      })();
+      return;
+    }
+    // FIX 1: advance the round signage NOW, on the committing Next tap, so it
+    // LEADS the flip (consistent with the collapse path's on-tap jump) — not
+    // after the flip completes. Destination = the next lineup, capped at
+    // maxRounds (entering the final round, rd2's Next reads 3/3 as the last
+    // replacements begin flipping). The ref still advances in the commit
+    // callback for commitRound; this only moves the displayed value.
+    setRoundsUsed(Math.min(roundsUsedRef.current + 1, maxRounds));
+    setState({ kind: "redraw_running", held });
   };
 
   /** Polish #11 — preview-then-hold tap dispatch (per design-lock §3 truth table).
@@ -941,17 +1061,24 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
    *  logic naturally fires on the first confirmed hold). */
   const onTap = (i: number) => {
     if (state.kind !== "hold_select") return;
+    // Prior-round holds are PERMANENTLY locked — never toggleable now (the
+    // commit-lock happens at Next, not at tap; see the lockedHeld threading).
+    if (state.lockedHeld.has(i)) return;
     setIntroDismissed(true);
     setState((s) => {
       if (s.kind !== "hold_select") return s;
+      if (s.lockedHeld.has(i)) return s; // prior-round lock (stale-closure guard)
       if (s.previewedSlotIndex !== i) {
         // Preview or move-preview. No hold change.
-        return { kind: "hold_select", held: s.held, previewedSlotIndex: i };
+        return { kind: "hold_select", held: s.held, lockedHeld: s.lockedHeld, previewedSlotIndex: i };
       }
-      // Second tap on the already-previewed card: flip its held bit.
+      // Second tap on the previewed card: TOGGLE this round's own hold (hold ↔
+      // unhold). Reversible within the round; it locks permanently at Next.
+      // Only THIS round's holds toggle — lockedHeld (prior rounds) is untouched,
+      // so held can never drop below the prior-round committed count.
       const next = new Set(s.held);
       if (next.has(i)) next.delete(i); else next.add(i);
-      return { kind: "hold_select", held: next, previewedSlotIndex: s.previewedSlotIndex };
+      return { kind: "hold_select", held: next, lockedHeld: s.lockedHeld, previewedSlotIndex: s.previewedSlotIndex };
     });
   };
 
@@ -1487,8 +1614,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       style={{
         paddingTop: RESERVED_PADDING_TOP_PX,
         display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        gap: 8,
         minHeight: RESERVED_MIN_HEIGHT_PX,
         width: "100%",
       }}
@@ -1533,6 +1662,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // board across the S3→S4 boundary; only the slot CONTENTS visibly
   // transition (playing-inner fades to 0; reveal arc fades in).
   const compositeOverlay = arcComposite && state.kind === "arc" ? (
+    // Terminal at arc: the two-sided battlefield reveal vs the opponent's five
+    // (human sender five or boss five — same reveal). ONE path; the opponent
+    // lineup is a precondition (always present). Resolves through the unchanged
+    // finalRoster → resolveRoster → arc seam.
     <H2HRecipientReveal
       challengeCtx={challengeCtx}
       myScore={state.resolvedScore}
@@ -1547,6 +1680,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       onTryAgain={onTryAgain}
       onPlayOwnHand={onPlayOwnHand}
       onDismiss={onDismiss}
+      // Step (i): the reveal surface shows the signage in-band (riding its
+      // recipient row), at the final locked round (roundsUsed = maxRounds → 3/3).
+      roundSignageLabel={`${roundsUsed}/${maxRounds}`}
     />
   ) : null;
 
@@ -1644,6 +1780,29 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerScrollable={!arcComposite}
         belowBoardSticky={!arcComposite}
       />
+      {/* Round-position signage — PLAY-phase only (gated off at arc). Approach
+          (a) step (i): at arc the reveal surface renders its OWN in-band signage
+          (riding the reveal's recipient row via H2HBoardShell.roundSignage), so
+          this fixed sibling GATES OFF at arc to avoid a double-render. The two
+          flip on the SAME arc state transition (atomic re-render) — no
+          double-render. NOTE (steps ii/iii, glass): this sibling still sits at
+          bottom:18% during play, a different Y than the reveal's in-band signage,
+          so the play→reveal handoff has a Y-JUMP at the arc until step (iii)
+          moves THIS into the play band at the aligned Y. Shows 1/3 → 2/3 → 3/3;
+          leads the flip (FIX 1). pointerEvents:none. */}
+      {state.kind !== "arc" && (
+        <div
+          data-h2h-round-signage="true"
+          style={{
+            position: "fixed", left: 0, right: 0, bottom: "18%",
+            textAlign: "center", pointerEvents: "none", zIndex: 9100,
+            fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
+            color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
+          }}
+        >
+          {roundsUsed}/{maxRounds}
+        </div>
+      )}
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
           shell's flex children — it's a sibling of the shell. The
@@ -1763,12 +1922,12 @@ function deriveCta(state: PlayingState): {
       // only visible for a microtask before the auto-advance fires.
       return { label: "Loading…", disabled: true, onClick: null };
     case "deal_in":
-      // Deal CTA is killed (design-lock §1) — challenge entry goes
-      // straight into deal_in. The CTA sits in its Draw slot
-      // disabled until hold_select.
-      return { label: "Draw", disabled: true, onClick: null };
+      // One-path advance control: a single "Next" label, every advance (doc
+      // ONE-PATH MODEL CORRECTION). Disabled during deal_in; enabled at
+      // hold_select. Round position lives in SEPARATE signage, not on the button.
+      return { label: "Next", disabled: true, onClick: null };
     case "hold_select":
-      return { label: "Draw", disabled: false, onClick: "draw" };
+      return { label: "Next", disabled: false, onClick: "draw" };
     case "redraw_running":
     case "your_redraw_flip":
     case "ab_transition":

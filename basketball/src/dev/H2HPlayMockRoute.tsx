@@ -98,6 +98,7 @@ export default function H2HPlayMockRoute() {
     <H2HRecipientPlay
       challengeCtx={ctx}
       sport="basketball"
+      maxRounds={3}
       redrawRoster={redrawRoster}
       resolveRoster={resolveRoster}
       calculateWinTier={calculateWinTier as (totalFp: number) => string}

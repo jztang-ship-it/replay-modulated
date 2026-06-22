@@ -2,7 +2,7 @@
  * basketball/src/dev/h2hMockFixture.ts
  *
  * Mock H2H end-state for the phase-2 static reveal screen. Two resolved
- * basketball hands (6 cards each), mix of held/swapped, mix of tier
+ * basketball hands (5 cards each — basketball rosterSize), mix of held/swapped, mix of tier
  * colors, you ahead by ~4 FP.
  *
  * Shape matches the phase-1 endpoint response (GET /api/challenge/{id}/sender-hand
@@ -36,11 +36,11 @@ function gi(date: string, opp: string, homeAway: "home" | "away"): { date: strin
   return { date, opponent: opp, homeAway };
 }
 
-// ── Sender hand: 6 cards, ROOKIE result, totalFp = 178.4 ─────────────────
+// ── Sender hand: 5 cards, ROOKIE result, totalFp = 152.0 (sumFp-computed) ──
 // (Anchored at a "good but not great" outcome — the opponent. You beat
 // them by 4.0 FP.)
 const SENDER_CARDS: H2HCard[] = [
-  // ── Swap cards: 0 (cheapest) → 3 (most expensive swap) ──
+  // ── Swap cards: 0 (cheapest) → 2 (most expensive swap) ──
   {
     // Amend6 bug A fix (2026-05-27): basePlayerId was 1629029
     // (Luka Dončić's NBA stats ID) — caused the hero photo to render
@@ -72,21 +72,12 @@ const SENDER_CARDS: H2HCard[] = [
     statLine: statLine(22, 7, 4, 1, 1, 2, 35),
     achievements: [],
   },
-  {
-    id: "201142", basePlayerId: "201142", personKey: "201142", cardId: "201142_card",
-    name: "Kevin Durant", team: "PHX", season: "2425", position: "SF",
-    photoCode: "duranke01", salary: 55, tier: "ORANGE", projectedFp: 42.0,
-    slotIndex: 3, wasHeld: false, actualFp: 26.4, fpDelta: -15.6,
-    gameInfo: gi("2025-01-10", "SAC", "home"),
-    statLine: statLine(18, 4, 3, 0, 1, 2, 32),
-    achievements: [],
-  },
-  // ── Held cards: 4 (cheapest held) → 5 (most expensive held = climax) ──
+  // ── Held cards: 3 (cheapest held) → 4 (most expensive held = climax) ──
   {
     id: "201939", basePlayerId: "201939", personKey: "201939", cardId: "201939_card",
     name: "Stephen Curry", team: "GSW", season: "2425", position: "PG",
     photoCode: "curryst01", salary: 72, tier: "ORANGE", projectedFp: 45.0,
-    slotIndex: 4, wasHeld: true, actualFp: 38.9, fpDelta: -6.1,
+    slotIndex: 3, wasHeld: true, actualFp: 38.9, fpDelta: -6.1,
     gameInfo: gi("2025-01-12", "LAL", "away"),
     statLine: statLine(24, 5, 7, 1, 0, 3, 34),
     achievements: [],
@@ -95,19 +86,20 @@ const SENDER_CARDS: H2HCard[] = [
     id: "203999", basePlayerId: "203999", personKey: "203999", cardId: "203999_card",
     name: "Nikola Jokić", team: "DEN", season: "2425", position: "C",
     photoCode: "jokicni01", salary: 95, tier: "RED", projectedFp: 56.0,
-    slotIndex: 5, wasHeld: true, actualFp: 48.2, fpDelta: -7.8,
+    slotIndex: 4, wasHeld: true, actualFp: 48.2, fpDelta: -7.8,
     gameInfo: gi("2025-01-15", "PHX", "home"),
     statLine: statLine(28, 14, 9, 1, 0, 4, 36),
     achievements: [],
   },
 ];
 
-// ── Recipient (you) hand: 6 cards, ROOKIE result, totalFp = 182.4 ────────
-// (Same tier as opponent but +4.0 FP ahead. Held overperformer with
-// GOD_MODE badge so the achievement strip renders. Within target "you
-// ahead by 3-5 FP" range.)
+// ── Recipient (you) hand: 5 cards, ROOKIE result, totalFp = 154.0 (sumFp) ──
+// (Recipient WINS by ~2: 154.0 vs the sender's 152.0 — the default glass state,
+// and a win exercises the fuller win-tier reveal. The held overperformer +
+// GOD_MODE badge (Giannis) is preserved for the badge strip. See the slot-2
+// card comment for the one-card swap that reproduces the loss state.)
 const RECIPIENT_CARDS: H2HCard[] = [
-  // ── Swap cards: 0 (cheapest) → 3 (most expensive swap) ──
+  // ── Swap cards: 0 (cheapest) → 2 (most expensive swap) ──
   {
     // Amend6 bug A fix (2026-05-27): basePlayerId was 1629638
     // (Nickeil Alexander-Walker's NBA stats ID). Correct Bobby Portis
@@ -130,32 +122,27 @@ const RECIPIENT_CARDS: H2HCard[] = [
     achievements: [],
   },
   {
-    // Amend6 bug A fix (2026-05-27): basePlayerId was 1629680
-    // (Matisse Thybulle's NBA stats ID). Correct Tyrese Maxey
-    // NBA stats ID is 1630178.
-    id: "1630178", basePlayerId: "1630178", personKey: "1630178", cardId: "1630178_card",
-    name: "Tyrese Maxey", team: "PHI", season: "2425", position: "PG",
-    photoCode: "maxeyty01", salary: 46, tier: "PURPLE", projectedFp: 36.0,
-    slotIndex: 2, wasHeld: false, actualFp: 28.4, fpDelta: -7.6,
-    gameInfo: gi("2025-01-08", "BKN", "away"),
-    statLine: statLine(20, 3, 5, 1, 0, 2, 32),
-    achievements: [],
-  },
-  {
+    // The 6→5 trim originally kept Tyrese Maxey here (actualFp 28.4), which
+    // left the recipient at 150.8 — a ~1pt LOSS vs the sender's 152.0. Swapped
+    // to Jaylen Brown (31.6, a real card already in this hand's 6-card pool) so
+    // the recipient defaults to a WIN (154.0 > 152.0) — the glass surface, and
+    // a win exercises the fuller win-tier reveal.
+    // LOSS-DEMO: to reproduce the loss state, swap this card back to Tyrese
+    // Maxey (id 1630178, actualFp 28.4) → recipient 150.8 < 152.0.
     id: "1627759", basePlayerId: "1627759", personKey: "1627759", cardId: "1627759_card",
     name: "Jaylen Brown", team: "BOS", season: "2425", position: "SG",
     photoCode: "brownja02", salary: 50, tier: "PURPLE", projectedFp: 38.0,
-    slotIndex: 3, wasHeld: false, actualFp: 31.6, fpDelta: -6.4,
+    slotIndex: 2, wasHeld: false, actualFp: 31.6, fpDelta: -6.4,
     gameInfo: gi("2025-01-09", "ATL", "home"),
     statLine: statLine(21, 5, 4, 1, 0, 2, 33),
     achievements: [],
   },
-  // ── Held cards: 4 (cheapest held) → 5 (most expensive held = climax) ──
+  // ── Held cards: 3 (cheapest held) → 4 (most expensive held = climax) ──
   {
     id: "1626164", basePlayerId: "1626164", personKey: "1626164", cardId: "1626164_card",
     name: "Devin Booker", team: "PHX", season: "2425", position: "SG",
     photoCode: "bookede01", salary: 68, tier: "ORANGE", projectedFp: 44.0,
-    slotIndex: 4, wasHeld: true, actualFp: 34.2, fpDelta: -9.8,
+    slotIndex: 3, wasHeld: true, actualFp: 34.2, fpDelta: -9.8,
     gameInfo: gi("2025-01-13", "DEN", "away"),
     statLine: statLine(22, 4, 5, 1, 0, 2, 34),
     achievements: [],
@@ -170,7 +157,7 @@ const RECIPIENT_CARDS: H2HCard[] = [
     id: "203507", basePlayerId: "203507", personKey: "203507", cardId: "203507_card",
     name: "Giannis Antetokounmpo", team: "MIL", season: "2425", position: "PF",
     photoCode: "antetgi01", salary: 92, tier: "RED", projectedFp: 40.0,
-    slotIndex: 5, wasHeld: true, actualFp: 62.8, fpDelta: 8.8,
+    slotIndex: 4, wasHeld: true, actualFp: 62.8, fpDelta: 8.8,
     gameInfo: gi("2025-01-14", "MIA", "home"),
     statLine: statLine(36, 13, 5, 2, 2, 3, 38),
     achievements: [{ id: "GOD_MODE", icon: "🔥", label: "GOD MODE", fp: 15 }],
@@ -182,7 +169,7 @@ function sumFp(cards: H2HCard[]): number {
 }
 
 // ── Initial recipient hand (pre-redraw, pre-resolve) ─────────────────────
-// The recipient's PLAYING-MODE starting hand. Same 6 players as
+// The recipient's PLAYING-MODE starting hand. Same 5 players as
 // RECIPIENT_CARDS (the resolved end-state hand) but zeroed: wasHeld
 // false on ALL slots (no holds yet — the recipient hasn't chosen),
 // actualFp/fpDelta/statLine/achievements zeroed (no game has been
@@ -220,7 +207,7 @@ export const INITIAL_RECIPIENT_HAND: H2HHand = {
 // and the component is caught by tsc at build time.
 export const SENDER_HAND: H2HHand = {
   handId: "mock-sender-hand-001",
-  totalFp: sumFp(SENDER_CARDS),     // = 178.4
+  totalFp: sumFp(SENDER_CARDS),     // = 152.0
   tier: "ROOKIE",
   cards: SENDER_CARDS,
   displayName: "Mike",
@@ -228,7 +215,7 @@ export const SENDER_HAND: H2HHand = {
 
 export const RECIPIENT_HAND: H2HHand = {
   handId: "mock-recipient-hand-001",
-  totalFp: sumFp(RECIPIENT_CARDS),  // = 182.4
+  totalFp: sumFp(RECIPIENT_CARDS),  // = 154.0
   tier: "ROOKIE",
   cards: RECIPIENT_CARDS,
   // Bug 3 / Layout A/B restructure §5: recipient label reads literal
