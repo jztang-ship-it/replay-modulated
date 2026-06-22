@@ -201,6 +201,9 @@ export interface H2HRevealScreenProps {
    *  (DON'T-BREAK #1 — the RD6.2 delta anchor re-measures the shifted
    *  totals). */
   globalHeader?: React.ReactNode;
+  /** Round-position signage, forwarded to the shell's roundSignage slot so it
+   *  rides the recipient row on the reveal surface (e.g. <RoundSignage label="3/3" />). */
+  roundSignage?: React.ReactNode;
 }
 
 // ── Tier colors ──────────────────────────────────────────────────────────
@@ -1626,7 +1629,7 @@ function BattlefieldSlot({ card, renderCard, visibleFp, revealed, shakeType, glo
 // ── H2HRevealScreen ──────────────────────────────────────────────────────
 
 export function H2HRevealScreen(props: H2HRevealScreenProps) {
-  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal, globalHeader } = props;
+  const { sender, recipient, renderCard, battlefieldSlotIndex, reveal, globalHeader, roundSignage } = props;
   const reducedMotion = usePrefersReducedMotion();
 
   // Resolve battlefield + display state from either the reveal hook
@@ -2231,6 +2234,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           show the final values, matching the static end-state path
           the dev mock route exercises. */}
       <H2HBoardShell
+        roundSignage={roundSignage}
         surfaceKind="reveal"
         globalHeader={globalHeader}
         topLabel={sender.displayName}

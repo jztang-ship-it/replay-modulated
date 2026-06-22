@@ -50,6 +50,7 @@ import {
 import { isRealName } from "@shared/utils/isRealName";
 import { BossOutwardEnding } from "./BossOutwardEnding";
 import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
+import { RoundSignage } from "./H2HBoardShell";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
 import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
 import { fetchAuthoredFlavor } from "@shared/utils/fetchAuthoredFlavor";
@@ -108,6 +109,10 @@ export interface H2HRecipientRevealProps {
   onTryAgain: () => void;
   onPlayOwnHand: () => void;
   onDismiss: () => void;
+  /** Round-position signage label (e.g. "3/3"), supplied by H2HRecipientPlay so
+   *  the reveal surface shows the final locked round, riding the recipient row.
+   *  Optional — omitted by other consumers. */
+  roundSignageLabel?: string;
 }
 
 export function H2HRecipientReveal(props: H2HRecipientRevealProps) {
@@ -132,7 +137,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
   const {
     challengeCtx, senderResolved, myScore, myRoster, myWinTier, sport,
     renderBattlefieldCard, renderOverlayCard,
-    onSendItBack, onTryAgain, onPlayOwnHand, onDismiss,
+    onSendItBack, onTryAgain, onPlayOwnHand, onDismiss, roundSignageLabel,
   } = props;
 
   const reducedMotion = usePrefersReducedMotion();
@@ -300,6 +305,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
         recipient={recipient}
         renderCard={renderBattlefieldCard}
         reveal={reveal}
+        roundSignage={roundSignageLabel ? <RoundSignage label={roundSignageLabel} /> : undefined}
         // RD7.1 (2026-06-13): recipient-flow Reveal screen header. Same
         // component the results overlay below mounts → identical height →
         // reveal→results no-snap preserved.

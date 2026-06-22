@@ -2198,6 +2198,26 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("2/3");
   });
 
+  // ── FIX 1: signage value LEADS the flip (advances on the committing tap) ──
+  it("signage advances on the committing Next tap, leading the flip (not after it completes)", { timeout: 8000 }, async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("1/3");
+    // Tap Next — signage must read 2/3 IMMEDIATELY (leading the flip), BEFORE the
+    // flip completes and the loop-back to round 2 lands. Pre-fix it updated only
+    // in the post-flip commit callback, so right after the tap it was still 1/3.
+    fireEvent.click(screen.getByText("Next"));
+    expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("2/3");
+    // And we are still mid-flip (NOT yet back at a round-2 hold_select / arc).
+    const st = container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state");
+    expect(st).not.toBe("arc");
+  });
+
   // ── B4: collapse — all slots held → no flip, signage jumps, reveal still occurs
   it("collapse: holding every slot in round 1 skips the flip, jumps signage to 3/3, and still reveals", { timeout: 10000 }, async () => {
     const props = baseProps();
@@ -2261,6 +2281,16 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     const sig = container.querySelector("[data-h2h-round-signage]");
     expect(sig).not.toBeNull();
     expect(sig?.textContent ?? "").toContain("3/3");
+    // Approach (a) step (i): at arc the signage is rendered IN the reveal shell
+    // (riding the reveal's recipient band via H2HBoardShell.roundSignage), not
+    // the play fixed-sibling. The play sibling gates OFF at arc — so there is
+    // EXACTLY ONE signage element (no double-render across the handoff).
+    const revealSig = container.querySelector(
+      "[data-h2h-recipient-reveal] [data-h2h-round-signage]",
+    );
+    expect(revealSig).not.toBeNull();
+    expect(revealSig?.textContent ?? "").toContain("3/3");
+    expect(container.querySelectorAll("[data-h2h-round-signage]").length).toBe(1);
   });
 
   // ── Boss + human run the identical loop (differ only in starting roster) ──

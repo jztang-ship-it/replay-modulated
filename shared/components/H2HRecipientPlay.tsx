@@ -667,9 +667,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           },
         });
         roundsUsedRef.current = decision.roundsUsed;
-        // Signage: on lock it reads maxRounds (e.g. 3/3 = final lineup locked);
-        // mid-loop it tracks the round count.
-        setRoundsUsed(decision.next === "REVEALING" ? maxRounds : decision.roundsUsed);
+        // Signage was already advanced on the committing Next tap (handleDraw,
+        // leading the flip — consistent with the collapse path); only the ref
+        // updates here, feeding commitRound's next-round input.
         if (decision.next === "REVEALING") {
           // Lock → the EXISTING ab_transition → handoff_resolving → arc seam
           // (resolve unmoved). ONE path — boss and human alike.
@@ -1034,6 +1034,13 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       })();
       return;
     }
+    // FIX 1: advance the round signage NOW, on the committing Next tap, so it
+    // LEADS the flip (consistent with the collapse path's on-tap jump) — not
+    // after the flip completes. Destination = the next lineup, capped at
+    // maxRounds (entering the final round, rd2's Next reads 3/3 as the last
+    // replacements begin flipping). The ref still advances in the commit
+    // callback for commitRound; this only moves the displayed value.
+    setRoundsUsed(Math.min(roundsUsedRef.current + 1, maxRounds));
     setState({ kind: "redraw_running", held });
   };
 
@@ -1673,6 +1680,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       onTryAgain={onTryAgain}
       onPlayOwnHand={onPlayOwnHand}
       onDismiss={onDismiss}
+      // Step (i): the reveal surface shows the signage in-band (riding its
+      // recipient row), at the final locked round (roundsUsed = maxRounds → 3/3).
+      roundSignageLabel={`${roundsUsed}/${maxRounds}`}
     />
   ) : null;
 
@@ -1770,29 +1780,29 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerScrollable={!arcComposite}
         belowBoardSticky={!arcComposite}
       />
-      {/* Round-position signage — a SEPARATE element (doc ONE-PATH: "Round
-          position is SEPARATE signage: 1/3, 2/3, 3/3", NOT on the CTA).
-          Rendered as a sibling of the shell, OUTSIDE the faded inner, so it
-          PERSISTS through the arc/reveal handoff (the play inner fades to 0 at
-          arc and the reveal composite covers the screen — an in-flow signage
-          would vanish). Sits in the recipient-strip band, below the mini slot
-          row, above the reveal (zIndex). Shows N/maxRounds every state: 1/3 →
-          2/3 → 3/3, and at the conclusion/reveal it reads the FINAL round the
-          user landed on (maxRounds = 3/3, incl. after a collapse jump from 1/3
-          or 2/3 — roundsUsed is set to maxRounds on lock). pointerEvents:none so
-          it never blocks the reveal's CTAs; exact pixel placement is
-          device-glass-tunable. */}
-      <div
-        data-h2h-round-signage="true"
-        style={{
-          position: "fixed", left: 0, right: 0, bottom: "18%",
-          textAlign: "center", pointerEvents: "none", zIndex: 9100,
-          fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
-          color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
-        }}
-      >
-        {roundsUsed}/{maxRounds}
-      </div>
+      {/* Round-position signage — PLAY-phase only (gated off at arc). Approach
+          (a) step (i): at arc the reveal surface renders its OWN in-band signage
+          (riding the reveal's recipient row via H2HBoardShell.roundSignage), so
+          this fixed sibling GATES OFF at arc to avoid a double-render. The two
+          flip on the SAME arc state transition (atomic re-render) — no
+          double-render. NOTE (steps ii/iii, glass): this sibling still sits at
+          bottom:18% during play, a different Y than the reveal's in-band signage,
+          so the play→reveal handoff has a Y-JUMP at the arc until step (iii)
+          moves THIS into the play band at the aligned Y. Shows 1/3 → 2/3 → 3/3;
+          leads the flip (FIX 1). pointerEvents:none. */}
+      {state.kind !== "arc" && (
+        <div
+          data-h2h-round-signage="true"
+          style={{
+            position: "fixed", left: 0, right: 0, bottom: "18%",
+            textAlign: "center", pointerEvents: "none", zIndex: 9100,
+            fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
+            color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
+          }}
+        >
+          {roundsUsed}/{maxRounds}
+        </div>
+      )}
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
           shell's flex children — it's a sibling of the shell. The

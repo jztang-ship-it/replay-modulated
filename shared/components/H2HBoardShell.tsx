@@ -95,6 +95,33 @@ export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(125px, 28vw) * ${(478 /
  *  feels like the first beat of the column_flip choreography. */
 export const HERO_MIN_HEIGHT_TRANSITION_MS = 250;
 
+/** Round-position signage — single source of truth for its placement so the
+ *  three surfaces (play / reveal / results) can't drift. The signage sits this
+ *  many px below the bottom (recipient) mini-slot row, riding it. */
+export const H2H_SIGNAGE_OFFSET_BELOW_ROW = 8;
+
+/** The signage element itself — ONE markup definition shared by every surface.
+ *  Rendered into the shell's `roundSignage` slot (play / reveal) or inline at
+ *  the same offset (results). `label` is e.g. "2/3" / "3/3". */
+export function RoundSignage({ label }: { label: string }) {
+  return (
+    <div
+      data-h2h-round-signage="true"
+      style={{
+        marginTop: H2H_SIGNAGE_OFFSET_BELOW_ROW,
+        fontSize: 12,
+        fontWeight: 800,
+        letterSpacing: 1.5,
+        color: "rgba(234,240,255,0.55)",
+        textTransform: "uppercase",
+        textAlign: "center",
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
 // ── Sub-components (moved verbatim from H2HRevealScreen) ────────────
 
 /** Zone panel — glass-chrome wrapper for hand-strip zones. Mirrors
@@ -406,6 +433,10 @@ export interface H2HBoardShellProps {
    *  be a plain flow node (no transform) — see GlobalChallengeHeader and
    *  docs/rd7.1-header-spec.md DON'T-BREAK #1. */
   globalHeader?: React.ReactNode;
+  /** Round-position signage (e.g. <RoundSignage label="2/3" />), rendered a
+   *  constant H2H_SIGNAGE_OFFSET_BELOW_ROW below the bottom (recipient) strip so
+   *  it RIDES that row. Optional — omitted by surfaces that don't show it. */
+  roundSignage?: React.ReactNode;
 }
 
 // ── Shell ───────────────────────────────────────────────────────────
@@ -415,7 +446,7 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
     topLabel, bottomLabel, topStrip, bottomStrip, hero, belowBoard, surfaceKind,
     rootDataAttrs, innerOpacity, innerTransitionMs, innerDataAttr, compositeOverlay,
     heroMinHeight, topZoneMarginBottom, heroMarginBottom, innerScrollable, belowBoardSticky,
-    topScore, bottomScore, globalHeader,
+    topScore, bottomScore, globalHeader, roundSignage,
   } = props;
   const resolvedHeroMinHeight = heroMinHeight ?? HERO_MIN_HEIGHT_CSS;
   const resolvedTopZoneMargin = topZoneMarginBottom ?? TOP_ZONE_MARGIN_BOTTOM_PX;
@@ -558,6 +589,11 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
           <ZoneHeader label={bottomLabel} position="bottom" score={bottomScore} />
           {bottomStrip}
         </ZonePanel>
+
+        {/* Round-position signage — rides the recipient (bottom) row at a
+            constant H2H_SIGNAGE_OFFSET_BELOW_ROW. In-flow (after the bottom
+            ZonePanel) so it travels with the row's vertical position. */}
+        {roundSignage}
 
         {/* Reserved bottom space — flex-grow region BELOW the bottom
             strip. Empty on the reveal; holds the playing-mode CTA via
