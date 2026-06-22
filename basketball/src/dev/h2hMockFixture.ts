@@ -93,11 +93,11 @@ const SENDER_CARDS: H2HCard[] = [
   },
 ];
 
-// ── Recipient (you) hand: 5 cards, ROOKIE result, totalFp = 150.8 (sumFp) ──
-// (Same tier as opponent. NOTE: dropping a swap card from each hand to reach
-// the 5-card basketball rosterSize flipped the demo to a NARROW recipient LOSS
-// — 150.8 vs 152.0 — where the 6-card fixture showed a ~+4 win. The held
-// overperformer + GOD_MODE badge (Giannis) is preserved for the badge strip.)
+// ── Recipient (you) hand: 5 cards, ROOKIE result, totalFp = 154.0 (sumFp) ──
+// (Recipient WINS by ~2: 154.0 vs the sender's 152.0 — the default glass state,
+// and a win exercises the fuller win-tier reveal. The held overperformer +
+// GOD_MODE badge (Giannis) is preserved for the badge strip. See the slot-2
+// card comment for the one-card swap that reproduces the loss state.)
 const RECIPIENT_CARDS: H2HCard[] = [
   // ── Swap cards: 0 (cheapest) → 2 (most expensive swap) ──
   {
@@ -122,15 +122,19 @@ const RECIPIENT_CARDS: H2HCard[] = [
     achievements: [],
   },
   {
-    // Amend6 bug A fix (2026-05-27): basePlayerId was 1629680
-    // (Matisse Thybulle's NBA stats ID). Correct Tyrese Maxey
-    // NBA stats ID is 1630178.
-    id: "1630178", basePlayerId: "1630178", personKey: "1630178", cardId: "1630178_card",
-    name: "Tyrese Maxey", team: "PHI", season: "2425", position: "PG",
-    photoCode: "maxeyty01", salary: 46, tier: "PURPLE", projectedFp: 36.0,
-    slotIndex: 2, wasHeld: false, actualFp: 28.4, fpDelta: -7.6,
-    gameInfo: gi("2025-01-08", "BKN", "away"),
-    statLine: statLine(20, 3, 5, 1, 0, 2, 32),
+    // The 6→5 trim originally kept Tyrese Maxey here (actualFp 28.4), which
+    // left the recipient at 150.8 — a ~1pt LOSS vs the sender's 152.0. Swapped
+    // to Jaylen Brown (31.6, a real card already in this hand's 6-card pool) so
+    // the recipient defaults to a WIN (154.0 > 152.0) — the glass surface, and
+    // a win exercises the fuller win-tier reveal.
+    // LOSS-DEMO: to reproduce the loss state, swap this card back to Tyrese
+    // Maxey (id 1630178, actualFp 28.4) → recipient 150.8 < 152.0.
+    id: "1627759", basePlayerId: "1627759", personKey: "1627759", cardId: "1627759_card",
+    name: "Jaylen Brown", team: "BOS", season: "2425", position: "SG",
+    photoCode: "brownja02", salary: 50, tier: "PURPLE", projectedFp: 38.0,
+    slotIndex: 2, wasHeld: false, actualFp: 31.6, fpDelta: -6.4,
+    gameInfo: gi("2025-01-09", "ATL", "home"),
+    statLine: statLine(21, 5, 4, 1, 0, 2, 33),
     achievements: [],
   },
   // ── Held cards: 3 (cheapest held) → 4 (most expensive held = climax) ──
@@ -203,7 +207,7 @@ export const INITIAL_RECIPIENT_HAND: H2HHand = {
 // and the component is caught by tsc at build time.
 export const SENDER_HAND: H2HHand = {
   handId: "mock-sender-hand-001",
-  totalFp: sumFp(SENDER_CARDS),     // = 178.4
+  totalFp: sumFp(SENDER_CARDS),     // = 152.0
   tier: "ROOKIE",
   cards: SENDER_CARDS,
   displayName: "Mike",
@@ -211,7 +215,7 @@ export const SENDER_HAND: H2HHand = {
 
 export const RECIPIENT_HAND: H2HHand = {
   handId: "mock-recipient-hand-001",
-  totalFp: sumFp(RECIPIENT_CARDS),  // = 182.4
+  totalFp: sumFp(RECIPIENT_CARDS),  // = 154.0
   tier: "ROOKIE",
   cards: RECIPIENT_CARDS,
   // Bug 3 / Layout A/B restructure §5: recipient label reads literal
