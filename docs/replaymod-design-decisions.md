@@ -3512,3 +3512,207 @@ chad/paused voice, challenge-resolution logic, `isRealName` semantics.
 Audience/difficulty lever stays deferred and banned on comparison-bearing daily
 instances. Do NOT build rank / the You-Mike-Bulls comparison card / any per-player
 ordered tally (all Phase 2.5).
+
+## Fail-open choreography: click-through rounds (extends the fail-open corollary) — 2026-06-22
+
+Refines what "fail-open = fresh seed, run the 3 rounds vs the same target" looks like at runtime.
+
+When `resolvedSenderHand` is undefined (legacy `sender_resolved:false` cohort; or a transient
+fetch failure that survives retry), the recipient does NOT land on a static panel and does NOT
+skip to resolve. They land directly on the round-1 lineup of a fresh seed and click through:
+
+- Round 1 lineup, no hold controls. Advance button labeled **"Round 2"**.
+- Click → Round 2 lineup (fresh draw), no hold controls. Advance button labeled **"Round 3"**.
+- Click → Round 3 lineup, pause beat, **auto-reveal** scoring vs `targetScore`. No third button;
+  round 3 self-resolves.
+
+Two clicks (1→2, 2→3) to reach round 3. The button always names its destination.
+
+**Rename:** the single control "Auto" is STRUCK. "Auto" was correct only in the prior two-state
+model (one control, one jump). Three rounds need per-step destination labels, so a static "Auto"
+is wrong by construction. The control is click-to-advance, not passive playback — the user drives
+each transition; only the hold SELECTION is removed on this branch.
+
+**Hold-agency boundary** (locks the fail-open model's shape):
+
+- Defined hand (main 4a path): inherit the sender's five, run 3 rounds with REAL holds/redraws,
+  resolve vs target. Full agency.
+- Undefined hand (degraded branch): fresh seed, click-to-advance, NO hold selection, auto-reveal
+  at round 3. Advancement agency only.
+
+Defined = you play it; undefined = it auto-plays a fresh seed so you still reach a scored outcome
+vs the same target.
+
+**Panel relocation** (follows from the routing decision; SUPERSEDES f4ec0b3 mount-on-undefined):
+The floor panel ("OPPONENT HAND UNAVAILABLE" / your score / Target / Continue · Try Again · Play
+Your Own Hand) is NO LONGER the undefined-hand entry — the click-through rounds are. The panel is
+retained as the DEEPER-BREAK backstop: it mounts only if the click-through fresh-seed path itself
+cannot complete (fresh seed can't be produced, round loop throws, resolve fails). Its mount
+condition MUST move off "`resolvedSenderHand` undefined" or it double-fires with the click-through
+path. Copy + CTAs unchanged.
+
+**Data parity:** exactly one `useChallengeAttempt` POST per attempt.
+
+- Click-through path: POST at the round-3 auto-reveal, recording the fresh-seed run's real score.
+- Panel backstop: POST on mount, as today.
+
+Mutually exclusive — never both on one attempt.
+
+**§8 invariant evolves deliberately** (watched red→green; cannot stay verbatim — the reveal is no
+longer null and the terminal state is a scored reveal, not a static panel). New assertion: human
+ctx, no `resolvedSenderHand` → fresh seed dealt, round-1 lineup visible (NOT the panel); advance
+control reads "Round 2"; click → round-2 fresh lineup, control reads "Round 3"; click → round-3
+lineup pauses then auto-reveals a score vs `targetScore`; arc never blank; exactly one POST, at
+the reveal. Anti-regression heart (never-blank, reaches `targetScore`) preserved; the click
+sequence + rename are added on top. The panel backstop gets its own separate assertion on the
+relocated (deeper-break) trigger.
+
+
+## Fail-open choreography: click-through rounds (extends the fail-open corollary) — 2026-06-22
+
+Refines what "fail-open = fresh seed, run the 3 rounds vs the same target" looks like at runtime.
+
+When `resolvedSenderHand` is undefined (legacy `sender_resolved:false` cohort; or a transient
+fetch failure that survives retry), the recipient does NOT land on a static panel and does NOT
+skip to resolve. They land directly on the round-1 lineup of a fresh seed and click through:
+
+- Round 1 lineup, no hold controls. Advance button labeled **"Round 2"**.
+- Click → Round 2 lineup (fresh draw), no hold controls. Advance button labeled **"Round 3"**.
+- Click → Round 3 lineup, pause beat, **auto-reveal** scoring vs `targetScore`. No third button;
+  round 3 self-resolves.
+
+Two clicks (1→2, 2→3) to reach round 3. The button always names its destination.
+
+**Rename:** the single control "Auto" is STRUCK. "Auto" was correct only in the prior two-state
+model (one control, one jump). Three rounds need per-step destination labels, so a static "Auto"
+is wrong by construction. The control is click-to-advance, not passive playback — the user drives
+each transition; only the hold SELECTION is removed on this branch.
+
+**Hold-agency boundary** (locks the fail-open model's shape):
+
+- Defined hand (main 4a path): inherit the sender's five, run 3 rounds with REAL holds/redraws,
+  resolve vs target. Full agency.
+- Undefined hand (degraded branch): fresh seed, click-to-advance, NO hold selection, auto-reveal
+  at round 3. Advancement agency only.
+
+Defined = you play it; undefined = it auto-plays a fresh seed so you still reach a scored outcome
+vs the same target.
+
+**Panel relocation** (follows from the routing decision; SUPERSEDES f4ec0b3 mount-on-undefined):
+The floor panel ("OPPONENT HAND UNAVAILABLE" / your score / Target / Continue · Try Again · Play
+Your Own Hand) is NO LONGER the undefined-hand entry — the click-through rounds are. The panel is
+retained as the DEEPER-BREAK backstop: it mounts only if the click-through fresh-seed path itself
+cannot complete (fresh seed can't be produced, round loop throws, resolve fails). Its mount
+condition MUST move off "`resolvedSenderHand` undefined" or it double-fires with the click-through
+path. Copy + CTAs unchanged.
+
+**Panel trigger (named, not improvised):** the backstop mounts on an engine/data-load failure
+*during the fresh-seed run* — i.e. the existing `dataLoadError` / `engineError` states on the
+degraded branch (fresh-seed deal, redraw, or resolve itself throws). It does NOT mount on
+"`resolvedSenderHand` undefined" — that is now the click-through entry condition, a normal path,
+not a failure. The distinction is: undefined hand = expected (legacy cohort) → run the rounds;
+engine/data error during the run = the deeper break → panel. This is the concrete signal for
+"the click-through path cannot complete."
+
+**Data parity:** exactly one `useChallengeAttempt` POST per attempt.
+
+- Click-through path: POST at the round-3 auto-reveal, recording the fresh-seed run's real score.
+- Panel backstop: POST on mount, as today.
+
+Mutually exclusive — never both on one attempt.
+
+**§8 invariant evolves deliberately** (watched red→green; cannot stay verbatim — the reveal is no
+longer null and the terminal state is a scored reveal, not a static panel). New assertion: human
+ctx, no `resolvedSenderHand` → fresh seed dealt, round-1 lineup visible (NOT the panel); advance
+control reads "Round 2"; click → round-2 fresh lineup, control reads "Round 3"; click → round-3
+lineup pauses then auto-reveals a score vs `targetScore`; arc never blank; exactly one POST, at
+the reveal. Anti-regression heart (never-blank, reaches `targetScore`) preserved; the click
+sequence + rename are added on top. The panel backstop gets its own separate assertion: with the
+degraded branch forced into `dataLoadError`/`engineError` during the fresh-seed run, the panel
+mounts (showing `targetScore`) and fires its single mount POST — and this trigger is distinct
+from plain undefined-hand, which must reach the click-through rounds, not the panel.
+
+cd "$(git rev-parse --show-toplevel)"
+cat >> docs/replaymod-design-decisions.md << 'DOCBLOCK'
+
+## Degraded round-3 terminal: one-sided reveal surface (amends "Fail-open choreography: click-through rounds") — 2026-06-22
+
+Resolves the surface the prior block left unnamed ("auto-reveals scoring vs `targetScore`" without
+naming where). CC ground-truthed two candidates out: the arc hard-depends on a resolved opponent
+hand so it cannot render the degraded (fresh-seed, no-opponent) terminal; and the floor panel's
+"opponent hand unavailable / we couldn't load" copy is an error surface, wrong for a run that
+succeeded. So the degraded round-3 reveal gets its own surface.
+
+**New lean surface, not a mode on H2HRevealScreen.** The terminal is a NEW one-sided reveal
+component, not H2HRevealScreen flagged into a "one-sided mode." Rationale: H2HRevealScreen's layout
+is built around the two-hand battlefield; threading "if no opponent" conditionals through it
+re-creates the exact failure class that started this thread (a sub-element resolving to nothing →
+silent blank — the 5b black-out shape). A component that only ever knows one score + one target has
+no opponent-shaped hole to blank into. The degraded path's whole reason for existing is robustness
+against the missing hand, so its terminal must be the surface that structurally cannot depend on
+the missing thing.
+
+**Echo the chrome, don't reuse the component.** Visually it should read as the same game, not a
+stripped error state: pull the scoring typography/treatment tokens from H2HRevealScreen, render one
+column (your score) instead of two. Same family, one-sided layout.
+
+**Framing — expected outcome, NOT an error.** Copy is "you scored {resolvedScore} vs Target
+{targetScore}" (final wording John's to set), no opponent battlefield, NO "unavailable"/"couldn't
+load"/apology language. The user played a real 3-round run and got a real score; present it as a
+legitimate outcome against the target. "Unavailable" language lives ONLY on the deeper-break error
+panel — undefined-hand is expected (legacy cohort), not a failure.
+
+**Data + POST.** Both inputs exist at this point: `state.resolvedScore` (the fresh-seed run's real
+score) and `targetScore`. The single `useChallengeAttempt` POST fires HERE, at this one-sided
+reveal — unchanged from the prior block's "POST at the round-3 auto-reveal." Structural separation
+preserved: one-sided surface fires on reveal; error panel fires on mount; two distinct components,
+never the same code path. The "exactly one POST per attempt, mutually exclusive" guarantee is now
+enforced by construction (different components), not by runtime routing.
+
+**§8 unchanged in intent, sharpened in target.** The evolved §8 assertion still holds — undefined
+hand → fresh seed → click-through "Round 2"/"Round 3" → round-3 auto-reveal showing a score vs
+`targetScore`, arc never blank — with the terminal now being this one-sided surface (not the arc,
+not the panel). The error panel keeps its separate assertion on the `dataLoadError`/`engineError`
+deeper-break trigger.
+DOCBLOCK
+git add docs/replaymod-design-decisions.md
+git commit -m "doc: degraded round-3 one-sided reveal surface — amends fail-open choreography"
+## SOLO vs H2H — TWO DIFFERENT LOOPS (corrects "normal and challenge function the same")
+
+Confirmed by read-only ground-truth (CC, HEAD d41a8f2, suite 1408 green).
+
+Solo / non-challenge play mounts GameView, NOT H2HRecipientPlay. App.tsx gates:
+h2hPlayingMode && challengeCtx -> H2HRecipientPlay (App.tsx:283); otherwise the normal
+app renders GameView (App.tsx:385). H2HRecipientPlay is mounted ONLY by the challenge
+branch and the dev mock route; GameView references it only in a comment (GameView.tsx:1773).
+
+Solo runs GameView's OWN 3-round loop (commitRound GameView.tsx:1902, maxRounds =
+adapter.maxRounds ?? 1 = 3 for basketball at :1065), revealing against the win-tier / FP
+gauge -- there is no opponent five. This is the money-path original, untouched by
+feat/3round-h2h.
+
+Consequence: every mechanic feat/3round-h2h shipped -- cumulative+permanent holds, the
+collapse rule, the single "Next" CTA, the 1/3 2/3 3/3 signage -- lives in
+H2HRecipientPlay ONLY. Solo exercises NONE of it. Glassing solo verifies GameView
+(regression only); it is NOT a proxy for the H2H loop work. The seed's "normal and
+challenge function the same" is conceptually true (both 3-round) but mechanically
+misleading: two separate components, two separate loops.
+
+Boss-launch condition (confirmed): a challenge is a boss iff the deployed backend returns
+sender_kind:"boss" for that challenge id. App.tsx:591 branches on ctx.senderKind ===
+"boss" -> dealFreshRoster -> acceptProceed with startMode:"draft-fresh"; human falls
+through to acceptProceed(ctx) with the inherited sender five (App.tsx:623). senderKind =
+normalizeSenderKind(data.sender_kind) from GET /api/challenge/:id
+(ChallengeLandingScreen.tsx:158); landing routes to BossLandingView when boss (:218).
+Cannot be forced client-side -- backend/DB-gated (daily boss instance; migration 014 /
+boss_bank_version).
+
+## DEV MOCK IS BOSS-SHAPED -- cannot glass the human inherited-five semantic
+
+/basketball/dev/h2h-play-mock: maxRounds=3, 5-card fixture, default recipient win
+(154.0 > 152.0). Its recipient starting five (INITIAL_RECIPIENT_HAND.cards) != opponent
+five (SENDER_HAND) -- H2HPlayMockRoute.tsx:43,57. So it exercises loop mechanics
+(hold/redraw/collapse/Next/signage/reveal) and the boss/fresh-draft shape, but NOT the
+human "recipient starts holding the sender's exact five" semantic. That entry is only
+visible on a real human challenge (/basketball/challenge/<uuid>, non-legacy id). No boss
+dev mock route exists; the real boss path needs a backend-served boss challenge_id.
