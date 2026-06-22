@@ -3851,3 +3851,47 @@ The §8/§8b degraded/one-sided/panel assertions test removed machinery — they
 stays but must be EXTENDED for cumulative-permanent holds + the collapse rule. New assertions owed:
 hold persists across rounds; held card never flips; all-5 collapse jumps signage and skips flip; CTA
 reads "Next". CC writes these RED-first.
+
+---
+
+## H2H ROUND SIGNAGE — ACCEPT-STATE (glassed 2026-06-22, scoped)
+
+Status: SCOPED ACCEPT. John glass-accepted the signage work in a deliberately partial
+state and moved on to other features. The behaviors below are ACCEPTED PRODUCT BEHAVIOR,
+not pending bugs. Do not "finish" steps (ii)/(iii) unless this decision is revisited.
+
+Code commit: 4e13efe (feat/3round-h2h). Suite 1409 green, basketball build green at accept.
+
+### What shipped (exact scope)
+
+- FIX 1 (DONE + glassed): round signage advances on the committing Next tap, in
+  H2HRecipientPlay.handleDraw, so it LEADS the flip — consistent with the collapse path's
+  on-tap jump. The post-flip commit callback no longer sets the displayed value (only the
+  ref advances there, feeding commitRound's next-round input).
+- FIX 2/3 (step i ONLY): reveal-band signage. New shared single-source-of-truth offset
+  constant H2H_SIGNAGE_OFFSET_BELOW_ROW + a shared RoundSignage component +
+  H2HBoardShell.roundSignage slot. The reveal surface renders its OWN in-band signage
+  (riding the reveal's recipient row) via H2HRecipientReveal -> H2HRevealScreen -> shell.
+  The play-phase fixed sibling GATES OFF at the arc state so there is exactly one signage
+  element across the handoff (test asserts count === 1).
+
+### Deliberately NOT done
+
+- Step (ii): results-band signage. The results screen shows NO round indicator.
+- Step (iii): full three-surface Y-alignment. The play sibling stays at bottom:18%; the
+  reveal in-band signage sits at the constant offset below the recipient row. These Ys
+  differ, so the play->reveal arc has a Y-jump.
+
+### Consciously accepted on glass (John, 2026-06-22)
+
+a. A brief BLANK as 3/3 crosses the play->reveal arc.
+b. A Y-JUMP at that crossing (play sibling bottom:18% vs the in-band reveal position;
+   step iii would have aligned them).
+c. NO 3/3 on the results screen — accepted because the round indicator is meaningless
+   once play is over.
+
+### Rationale
+
+John chose to stop at step (i) and move to other features rather than complete steps
+(ii)/(iii). These are scoping decisions, not defects. Revisit only if the decision is
+explicitly reopened.
