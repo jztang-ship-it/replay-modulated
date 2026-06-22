@@ -3749,3 +3749,105 @@ byproduct. Stronger: the premature fresh-deal WAS the undefined-while-pending mi
 pending, so they wait for the battlefield instead of dropping to click-through. NOT closed from
 here — that investigation has its own findings unread at this layer; confirm when that mission
 opens. The [ch-debug] instrumentation (f673bf54) is the tool to confirm it.
+
+## ONE-PATH MODEL CORRECTION — supersedes the four fail-open blocks — 2026-06-22
+
+Status: governing concept. Supersedes by hash: 9b31aef, 9f1d25d, 31e7d7e, a52436c. Those four blocks
+encode a TWO-path model (normal vs "degraded / missing opponent hand") that does not exist. The real
+model is ONE path. The fail-open UX they describe (floor panel, click-through, one-sided reveal,
+senderHandFailed branch) solves a problem that cannot occur, because the opponent lineup is a
+PRECONDITION, not a failure mode.
+
+### THE ONE PATH (governing model)
+
+One path, universal across boss and human H2H. Identical loop. The ONLY difference between a boss
+and a human challenge is the starting-roster source: boss = fresh draft (startMode:"draft-fresh");
+human = the inherited sender five. Everything after is byte-identical. (Already wired: one mount at
+App.tsx:283, maxRounds={3} unconditional, no senderKind branch inside H2HRecipientPlay.)
+
+The opponent lineup is a PRECONDITION. It always exists. A recipient never faces a missing opponent.
+No degraded experience, no fail-open UX, no one-sided reveal, no senderHandFailed branch.
+
+Cumulative, permanent holds (the core mechanic):
+- Each round the user holds 0–5 cards. Held cards get an H mark that persists to the reveal.
+- Once held, a card is held FOREVER — no re-holding in later rounds, never flips. The user only ever
+  decides about currently-UNHELD slots; held slots are locked.
+- Each round, ONLY unheld slots flip in replacements. Held cards stay put, untouched, H intact.
+
+Conditional flip step:
+- Round with >=1 unheld slot: flip unheld slots, user decides holds, advance.
+- Round with ZERO unheld slots (all 5 already held cumulatively): no flip step, nothing to decide.
+
+Collapse to reveal when holds reach 5: because holds are cumulative and permanent, once accumulated
+holds = 5, every remaining round has zero unheld slots, so they collapse — straight to the matchup
+reveal, skipping the flip wait. The "hold all 5 in round 1" case is just its earliest trigger.
+- Hold all 5 in round 1 → signage 1/3 jumps to 3/3 → reveal (no flip).
+- Hold all 5 in round 2 → signage 2/3 jumps to 3/3 → reveal (no flip).
+- Hold <5 through round 2 → round 3 flips the remaining unheld slots, THEN reveals (normal).
+- 3/3 always means "final lineup locked, reveal"; the only variable is whether reaching it involved
+  a flip (unheld slots existed) or not (all held).
+
+CTA + signage:
+- CTA is a single label: "Next". Not "Round 2"/"Round 3", not "Draw". One label, every advance.
+- Round position is SEPARATE signage: 1/3, 2/3, 3/3. On collapse, signage jumps (e.g. 1/3 → 3/3).
+
+Reveal: the existing H2H one-card-at-a-time matchup vs the opponent's five (human sender five or boss
+five — same battlefield reveal). Resolves through the unchanged finalRoster → resolveRoster → arc
+seam.
+
+### DATA NOTE — the legacy cohort (not a UX problem)
+
+CC confirmed (read-only, api/__tests__/challenge-sender-hand.test.ts:184-187): ~20 production
+hand_log rows (ids 38–45, 2026-04-14/15) store final_roster as a JSON-encoded string blob from an
+experimental write path, not an array. The endpoint's Array.isArray guard routes non-array →
+sender_resolved:false / reason:"legacy_pre_h2h_capture" / sender:null, so the API genuinely returns
+no usable hand for these rows. The one-path answer is a DATA fix, not a UX path: FILTER these rows so
+they are never served as challenges (decision: filter, not backfill; no kept flag, senderHandFailed
+deleted). The recipient never faces a missing opponent.
+
+OWED (John, confirms the filter target, NOT blocking the build): live-DB read —
+select id, hand_id, final_roster, created_at from hand_log where id between 38 and 45 — to confirm
+whether the rows exist and are reachable as servable challenges. If already unreachable, the filter
+is a belt-and-suspenders no-op. Model is settled regardless.
+
+### REVERT LIST (two-path artifacts to remove)
+
+- The isDegraded / senderHandFailed branch inside H2HRecipientPlay.
+- The one-sided reveal component (H2HOneSidedReveal).
+- The branch-scoped "Round 2"/"Round 3" CTA labels (deriveCta degraded override).
+- H2HRecipientNoOpponentFloor — REMOVE ENTIRELY (component + mount + tests). CONFIRMED (John): the
+  floor did NOT exist before this 3-round work; everything worked fine pre-change with the old
+  single-shot 5-card flip. Pure two-path artifact, nothing underneath to preserve. (Corollary: the
+  black-out crisis the seed opened with was created by this work, not pre-existing.)
+- The senderHandFailed field on ChallengeCtx (challengeTypes.ts:88) + App wiring — DELETE. Dangling
+  orphan inviting re-use of a struck concept; trivially re-addable if ever needed. Cohort handled by
+  data-layer filtering.
+- The dev ?degraded=1 toggle in H2HPlayMockRoute.tsx (KEEP the maxRounds={3} mount fix).
+
+### KEEP (correct one-path infrastructure)
+
+- Single play mount (App.tsx:283), maxRounds={3} unconditional, no senderKind branch inside.
+- commitRound consumed as a black box (entryFee:0, no-op economics), _roundMachine.ts untouched.
+- The finalRoster → resolveRoster → arc seam (byte-intact; resolve stays in handoff_resolving).
+- Boss/human sharing the loop, differing only in starting-roster source.
+- The battlefield reveal as the universal terminal.
+
+### BUILD DELTA (the actual one-path work — partly unbuilt)
+
+1. Fix holds to cumulative + permanent. Current build loses a held card if not re-held next round.
+   Correct: held once = held forever, never flips, no re-hold; user acts only on unheld slots. THE
+   core bug.
+2. Persist the H mark to the reveal (symptom of #1; verify it renders persistently once hold-state
+   is correct).
+3. CTA → "Next" (single label; remove round-numbered labels entirely).
+4. Add 1/3 / 2/3 / 3/3 signage as a separate element (not on the button).
+5. Add the collapse rule: a round with zero unheld slots has no flip step; cumulative holds = 5
+   collapses remaining rounds straight to reveal; signage jumps (1/3→3/3, 2/3→3/3). NEW logic — not
+   built; the loop currently runs a fixed 3 rounds.
+
+### TEST IMPACT (flag, don't assume)
+
+The §8/§8b degraded/one-sided/panel assertions test removed machinery — they go with it. §9 main-loop
+stays but must be EXTENDED for cumulative-permanent holds + the collapse rule. New assertions owed:
+hold persists across rounds; held card never flips; all-5 collapse jumps signage and skips flip; CTA
+reads "Next". CC writes these RED-first.
