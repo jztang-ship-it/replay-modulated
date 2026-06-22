@@ -5,7 +5,7 @@
  * Phase 5b piece 2 — playing-mode layout rework (locked 2026-05-30,
  * commits 18f6376 + 63fcd8d). Coverage:
  *   - state-1 pre_deal render (face-down top, empty bottom, Deal CTA)
- *   - state-2 deal_in cascade lands 6 face-up positional from
+ *   - state-2 deal_in cascade lands 5 face-up positional from
  *     challengeCtx.initialRoster (NOT a redraw, NOT a deterministic
  *     engine call — the snapshot read corrected in 63fcd8d)
  *   - hold tap toggles
@@ -96,14 +96,14 @@ function makeCard(over: Partial<GeneratedCard> = {}, i = 0): GeneratedCard {
   } as GeneratedCard;
 }
 
-/** Initial roster cards named "Init-0".."Init-5" — assertion-friendly. */
+/** Initial roster cards named "Init-0".."Init-4" — assertion-friendly. */
 function makeRoster(): GeneratedCard[] {
-  return Array.from({ length: 6 }, (_, i) =>
+  return Array.from({ length: 5 }, (_, i) =>
     makeCard({ name: `Init-${i}`, cardId: `init-${i}`, actualFp: 30 + i }, i),
   );
 }
 
-/** Distinct roster for redrawRoster return — cards named "Final-0".."Final-5"
+/** Distinct roster for redrawRoster return — cards named "Final-0".."Final-4"
  *  so path-β tests can check whether a replacement name has hit the DOM. */
 function makeFinalRoster(initial: GeneratedCard[], heldSlots: Set<number>): GeneratedCard[] {
   return initial.map((card, i) => {
@@ -135,7 +135,7 @@ function makeSenderHand(): SenderHand {
     handId: "sender-hand-1",
     totalFp: 178.4,
     tier: "ROOKIE",
-    cards: Array.from({ length: 6 }, (_, i) =>
+    cards: Array.from({ length: 5 }, (_, i) =>
       makeCard({ slotIndex: i, cardId: `s-${i}`, name: `Sender-${i}` }, i),
     ),
   };
@@ -258,7 +258,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     );
     // Top-strip front-face wrapper carries containerType
     const fronts = container.querySelectorAll('[data-h2h-play-top-front="true"]');
-    expect(fronts.length).toBe(6);
+    expect(fronts.length).toBe(5);
     for (const front of Array.from(fronts)) {
       const style = (front as HTMLElement).getAttribute("style") ?? "";
       expect(style).toMatch(/container-type:\s*inline-size/);
@@ -286,8 +286,8 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     );
     const topCells = container.querySelectorAll('[data-h2h-play-top-cell]');
     const bottomEmpties = container.querySelectorAll('[data-h2h-play-bottom-cell][data-empty="true"]');
-    expect(topCells.length).toBe(6);
-    expect(bottomEmpties.length).toBe(6);
+    expect(topCells.length).toBe(5);
+    expect(bottomEmpties.length).toBe(5);
     for (const cell of [...Array.from(topCells), ...Array.from(bottomEmpties)]) {
       const style = (cell as HTMLElement).getAttribute("style") ?? "";
       expect(style).toMatch(/aspect-ratio:\s*329\s*\/\s*478/);
@@ -298,10 +298,10 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     }
   });
 
-  it("renders 6 empty placeholders on bottom strip at cardsLanded=0", () => {
+  it("renders 5 empty placeholders on bottom strip at cardsLanded=0", () => {
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       expect(screen.getByTestId(`bottom-strip-empty-${i}`)).toBeTruthy();
     }
   });
@@ -320,7 +320,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
   it("renders no replacement names (path β at rest)", () => {
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       expect(screen.queryByText(`Final-${i}`)).toBeNull();
     }
   });
@@ -378,7 +378,7 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
     expect(screen.getByTestId("bottom-strip-empty-1")).toBeTruthy();
   });
 
-  it("cascade lands 6 face-up cells in positional order from initialRoster", async () => {
+  it("cascade lands 5 face-up cells in positional order from initialRoster", async () => {
     vi.useFakeTimers();
     render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
@@ -388,7 +388,7 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       expect(screen.getByTestId(`bottom-strip-up-${i}`)).toBeTruthy();
       expect(screen.getByText(`Init-${i}`)).toBeTruthy();
     }
@@ -430,9 +430,9 @@ describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)",
     return utils;
   }
 
-  it("hold_select has all 6 cells face-up tappable", async () => {
+  it("hold_select has all 5 cells face-up tappable", async () => {
     await dealThrough();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       const cell = screen.getByTestId(`bottom-strip-up-${i}`);
       expect(cell.getAttribute("data-held")).toBe("false");
     }
@@ -533,7 +533,7 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     vi.useRealTimers();
     fireEvent.click(screen.getByText("Next"));
 
-    // At redraw_running: slot 2 is held face-up, slots 0/1/3/4/5 are face-down.
+    // At redraw_running: slot 2 is held face-up, slots 0/1/3/4 are face-down.
     await waitFor(() => {
       const root = document.querySelector("[data-h2h-recipient-play]");
       expect(root?.getAttribute("data-playing-state")).toBe("redraw_running");
@@ -541,7 +541,7 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     // Held slot still shows its initial card name.
     expect(screen.getByText("Init-2")).toBeTruthy();
     // Unheld slots have NO replacement value mounted.
-    for (const i of [0, 1, 3, 4, 5]) {
+    for (const i of [0, 1, 3, 4]) {
       expect(screen.queryByText(`Final-${i}`)).toBeNull();
       expect(screen.getByTestId(`bottom-strip-down-${i}`)).toBeTruthy();
     }
@@ -723,7 +723,7 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
     //     window — small confident settle.
     // No per-card animation, no rotateY, no back face — design-lock
     // §1/§3 (opponent flip killed) STILL stands; this is wrapper-only.
-    const props = await advanceToYourFlip(5);
+    const props = await advanceToYourFlip(4);
     // Wait into your_redraw_flip mid-pass.
     await waitFor(
       () => expect(screen.queryByText("Final-0")).not.toBeNull(),
@@ -852,7 +852,7 @@ describe("H2HRecipientPlay — S5 held-card position invariant", () => {
     fireEvent.click(screen.getByText("Next"));
     // Walk all the way through the column-flip pass.
     await waitFor(
-      () => expect(screen.queryByTestId("top-strip-up-5")).not.toBeNull(),
+      () => expect(screen.queryByTestId("top-strip-up-4")).not.toBeNull(),
       { timeout: 4000 },
     );
     // Held card is still in slot 3, still showing Init-3 (S5 invariant:
@@ -1009,12 +1009,12 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
     // mounted under the settle-pause branch).
     expect(container.querySelector("[data-h2h-play-headline]")).toBeNull();
     // Layout B composition: opponent strip uncollapsed (face-up),
-    // your strip has all 6 cells face-up.
+    // your strip has all 5 cells face-up.
     const stripWrapper = container.querySelector(
       "[data-h2h-play-top-strip]",
     ) as HTMLElement | null;
     expect(stripWrapper?.style.opacity).toBe("1");
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       expect(container.querySelector(`[data-testid="bottom-strip-up-${i}"]`)).not.toBeNull();
     }
     // State attribute confirms we sampled during handoff_resolving.
@@ -1103,7 +1103,7 @@ describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () =
       { timeout: 6000 },
     );
     // Real sender card identities are in the DOM, one per top cell.
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       const topCell = container.querySelector(`[data-h2h-play-top-cell="${i}"]`);
       expect(topCell).not.toBeNull();
       const senderText = topCell?.textContent ?? "";
@@ -1191,13 +1191,13 @@ describe("H2HRecipientPlay — anonymous path (P5)", () => {
 
 describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
   function makeLeakyCtx(): ChallengeCtx {
-    // Build initialRoster with wasHeld:true on slots 4/5 — mirrors the
-    // dev-mock-fixture leak shape that surfaced live.
-    const roster = Array.from({ length: 6 }, (_, i) =>
+    // Build initialRoster with wasHeld:true on the last two slots (3/4 at
+    // rosterSize 5) — mirrors the dev-mock-fixture leak shape that surfaced live.
+    const roster = Array.from({ length: 5 }, (_, i) =>
       makeCard({
         cardId: `init-${i}`,
         name: `Init-${i}`,
-        wasHeld: i === 4 || i === 5,
+        wasHeld: i === 3 || i === 4,
       }, i),
     );
     return {
@@ -1286,11 +1286,11 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     await waitFor(() => expect(props.redrawRoster).toHaveBeenCalledTimes(1));
     const callArg = props.redrawRoster.mock.calls[0][0];
     // Pins the chain: only the user's confirmed hold (slot 2) — NOT
-    // slots 4/5 (which had snapshot wasHeld:true) — reaches redrawRoster.
+    // slots 3/4 (which had snapshot wasHeld:true) — reaches redrawRoster.
     expect(callArg.lockedCardIds.size).toBe(1);
     expect(callArg.lockedCardIds.has("init-2")).toBe(true);
     expect(callArg.lockedCardIds.has("init-4")).toBe(false);
-    expect(callArg.lockedCardIds.has("init-5")).toBe(false);
+    expect(callArg.lockedCardIds.has("init-3")).toBe(false);
   });
 });
 
@@ -1385,7 +1385,7 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
 // ── 12. FIX 1/2 happy-path end-to-end — pins C/D fixed ─────────────
 
 describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", () => {
-  it("tap slots 1+5, Draw → reveal receives wasHeld:true on 1,5; non-zero score", { timeout: 10000 }, async () => {
+  it("tap slots 1+4, Draw → reveal receives wasHeld:true on 1,4; non-zero score", { timeout: 10000 }, async () => {
     // Mock redrawRoster to honor lockedCardIds (set wasHeld:true on
     // locked slots, leave others as-is) and resolveRoster to populate
     // actualFp:30 on every card. This exercises the chain that was
@@ -1418,24 +1418,24 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
       },
       { timeout: 3000 },
     );
-    // Polish #11: confirm hold of slot 1 with tap-tap, then slot 5 with
+    // Polish #11: confirm hold of slot 1 with tap-tap, then slot 4 with
     // tap-tap. (Tap-tap on a previously-previewed cell holds it; moving
     // to a different cell only previews it, never holds.)
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
-    fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
-    fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     fireEvent.click(screen.getByText("Next"));
 
     await waitFor(() => expect(props.resolveRoster).toHaveBeenCalledTimes(1), { timeout: 6000 });
     const resolveArg = props.resolveRoster.mock.calls[0][0];
     // Engine HAPPY path: held slots carry wasHeld:true into resolveRoster.
     expect(resolveArg.finalCards[1].wasHeld).toBe(true);
-    expect(resolveArg.finalCards[5].wasHeld).toBe(true);
+    expect(resolveArg.finalCards[4].wasHeld).toBe(true);
     expect(resolveArg.finalCards[0].wasHeld).toBe(false);
 
     // The reveal mounts (engine succeeded — Fix 2 guardrail is NOT
-    // tripped). Score is non-zero (6 × 30 = 180).
+    // tripped). Score is non-zero (5 × 30 = 150).
     await waitFor(
       () => expect(container.querySelector("[data-h2h-recipient-reveal]")).not.toBeNull(),
       { timeout: 8000 },
@@ -1760,8 +1760,8 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     );
     const stage2A = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
 
-    // Move preview to slot 5 (no hold change; held.size still 1).
-    fireEvent.click(screen.getByTestId("bottom-strip-up-5"));
+    // Move preview to slot 4 (no hold change; held.size still 1).
+    fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
     // Stage 2 still mounted (heldCount > 0). Text must be byte-identical
     // — the introSig key is ctx-derived and the preview tap didn't
     // touch ctx.

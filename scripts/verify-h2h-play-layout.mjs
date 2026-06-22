@@ -67,7 +67,7 @@ const COLUMN_FLIP_INTERSTITIAL_MS = 150;
 // design-lock §9 (replaces the prior VS / Ready-Set-Go beat).
 const PRE_REVEAL_HOLD_MS = 1000;
 const ARC_COMPOSITE_CROSSFADE_MS = 250;
-const ROSTER_SIZE = 6;
+const ROSTER_SIZE = 5; // basketball rosterSize (config.maxPlayers)
 
 // Bug 5 guard: minimum clearance between the recipient "YOU" label's
 // bottom and the sticky CTA's top in the overlay sweep. The user's
