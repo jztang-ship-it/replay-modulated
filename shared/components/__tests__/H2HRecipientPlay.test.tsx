@@ -2232,6 +2232,37 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     );
   });
 
+  // ── Signage persists into the conclusion/reveal showing the final round ──
+  it("signage persists into the conclusion/reveal (arc) and shows the final round 3/3", { timeout: 12000 }, async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    // Two advances (no holds) → round 1 → round 2 → arc.
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("hold_select"),
+      { timeout: 4000 },
+    );
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("arc"),
+      { timeout: 8000 },
+    );
+    // Signage is STILL mounted at the reveal (not unmounted at conclusion) and
+    // shows the final round the user landed on (3/3).
+    const sig = container.querySelector("[data-h2h-round-signage]");
+    expect(sig).not.toBeNull();
+    expect(sig?.textContent ?? "").toContain("3/3");
+  });
+
   // ── Boss + human run the identical loop (differ only in starting roster) ──
   it("boss-style ctx (startMode draft-fresh) runs the SAME loop — first Next loops back to round 2", { timeout: 8000 }, async () => {
     const props = baseProps();

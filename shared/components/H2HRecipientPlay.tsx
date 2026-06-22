@@ -1615,21 +1615,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         width: "100%",
       }}
     >
-      {/* Round-position signage — a SEPARATE element from the CTA (doc ONE-PATH:
-          "Round position is SEPARATE signage: 1/3, 2/3, 3/3"). Shows through every
-          pre-arc state; on the locking commit / collapse it reads maxRounds (N/N =
-          final lineup locked). Hidden at arc (the reveal composite takes over). */}
-      {state.kind !== "arc" && (
-        <div
-          data-h2h-round-signage="true"
-          style={{
-            fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
-            color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
-          }}
-        >
-          {roundsUsed}/{maxRounds}
-        </div>
-      )}
       {ctaVisible && (
         <button
           data-h2h-play-cta="true"
@@ -1785,6 +1770,29 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerScrollable={!arcComposite}
         belowBoardSticky={!arcComposite}
       />
+      {/* Round-position signage — a SEPARATE element (doc ONE-PATH: "Round
+          position is SEPARATE signage: 1/3, 2/3, 3/3", NOT on the CTA).
+          Rendered as a sibling of the shell, OUTSIDE the faded inner, so it
+          PERSISTS through the arc/reveal handoff (the play inner fades to 0 at
+          arc and the reveal composite covers the screen — an in-flow signage
+          would vanish). Sits in the recipient-strip band, below the mini slot
+          row, above the reveal (zIndex). Shows N/maxRounds every state: 1/3 →
+          2/3 → 3/3, and at the conclusion/reveal it reads the FINAL round the
+          user landed on (maxRounds = 3/3, incl. after a collapse jump from 1/3
+          or 2/3 — roundsUsed is set to maxRounds on lock). pointerEvents:none so
+          it never blocks the reveal's CTAs; exact pixel placement is
+          device-glass-tunable. */}
+      <div
+        data-h2h-round-signage="true"
+        style={{
+          position: "fixed", left: 0, right: 0, bottom: "18%",
+          textAlign: "center", pointerEvents: "none", zIndex: 9100,
+          fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
+          color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
+        }}
+      >
+        {roundsUsed}/{maxRounds}
+      </div>
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
           shell's flex children — it's a sibling of the shell. The
