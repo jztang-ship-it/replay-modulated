@@ -4090,3 +4090,65 @@ deep.
    strategy.
 3. Inventory existing systems before inventing. Levers may be half-built
    already (e.g. badges).
+
+## BOSS CANON — RECON CORRECTIONS (ratified 2026-06-23, post-7b14332 recon)
+
+This block corrects two statements in the BOSS FEATURE — STRATEGY CANON above
+that the read-only recon (branch feat/build-phase, against 7b14332) falsified.
+Append-only; the original sections stand except as corrected here.
+
+CORRECTION 1 — gap days, and the true bank cost.
+- "An empty boss day is a bug" was guarding a case that CANNOT occur.
+  resolveBossForDate (ensureDailyInstance.ts:102) schedules only over
+  BANK.bosses.filter(target != null) and fail-closes (throws) on an empty
+  serveable pool rather than serving a hole. The scheduler never iterates
+  seasons. Missing seasons cause zero crashes — they simply never appear.
+- The real issue is therefore COVERAGE / FRESHNESS, not a gap-day bug: only
+  14 of 29 seasons currently rotate (banded + vetted). 15 seasons are out of
+  rotation — 6 with NO bank entry (author from scratch: 0203, 0405, 0506,
+  1112, 2122, 9899) and 9 dormant-but-present (have an entry, lack a band +
+  CANDIDATES membership: 0809, 0910, 1213, 1415, 1617, 1718, 1819, 2324, 9900).
+- ">=1 per season" is NOT a one-command regen. Per season it is: bank entry in
+  docs/boss-bank-v1.json (6 need this) + a per-season BAND in
+  bossBands.generated.json (the real cost — FP-range calibration against that
+  season's gamelogs via bossData/bossTable/bossVarianceCert tooling) + adding
+  the key to CANDIDATES (scripts/build-boss-bank.mjs, beatability gate) + one
+  regen (npm run build:boss-bank, drift-guarded byte-match). Band calibration
+  is the effort, not the bank entries.
+
+CORRECTION 2 — layer C is cheaper than "net-new"; the outward share is LIVE.
+- The original honesty note ("BossOutwardEnding is dressed for an outward exit
+  that is not wired") is wrong. BossOutwardEnding is mounted (via
+  H2HRecipientReveal.tsx:346 / App.tsx Step 3) and its outward share UI is live:
+  "Challenge Someone" (navigator.share -> clipboard fallback) + "Copy Link",
+  margin-based enemy-referential copy, analytics (boss_outward_share/_copy).
+- So layer C is a MODIFICATION of a working surface, not a from-zero build.
+  The three genuine deltas are: (a) a BEAT-TO-SEND gate (today it shares on
+  loss too — "the boss got me, think you survive them?"; canon wants
+  forward-only-if-beaten), (b) a referrer token in the share URL
+  (/{sport}/challenge/{bossId}?ref={token}) sitting BESIDE the single global
+  boss row (never a new row — that would break score comparability), and
+  (c) a referral/lobby store keyed (instance_key, referrer_token) so a local
+  lobby = challenge_attempts grouped by that token (same shape as the existing
+  global-boss leaderboard query, scoped). Margin is derivable now
+  (score - target_fp), already in share text; persisting it structured is
+  optional.
+- BossEntryCta (GameView ~3236) is inbound/self-entry only (drives a viewer
+  INTO today's boss); reusable as an entry surface (e.g. relocate into
+  onboarding) but it is NOT the outbound-forward surface — that lives in
+  BossOutwardEnding's share buttons.
+
+SEQUENCING DECISION (ratified): build/glass layer C against the existing 14
+rotating seasons NOW. C does not depend on bank completeness — beat-to-send
+works against whatever rotates today. The 14-season battlefield is sufficient
+to ship the viral switch; bank coverage is a parallel content track, not a
+blocker. The A -> C -> B-half -> near-miss -> B -> belts conceptual chain is
+unchanged; only the WORK order shifts, because the recon inverted the cost
+assumption (A's remaining calibration is the expensive part, C is cheap).
+
+TODO — BOSS BANK COVERAGE BACKFILL (deferred, do not lose):
+After layer C is live, raise rotation coverage from 14 toward full 29-season
+representation, iconic seasons doubled. Per season: bank entry (6 from-scratch:
+0203 0405 0506 1112 2122 9899) / activate dormant (9: 0809 0910 1213 1415 1617
+1718 1819 2324 9900) + band calibration + CANDIDATES vetting + regen. Band
+calibration is the gating effort. Fund-as-you-go; not required before C ships.
