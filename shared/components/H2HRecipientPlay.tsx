@@ -423,6 +423,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // the async commit callback so it never sees a stale closure.
   const maxRounds = props.maxRounds ?? 1;
   const roundsUsedRef = useRef(1);
+  // State mirror of the ref — drives the round-position signage (N/maxRounds).
+  // The deal is lineup 1; on the locking commit it jumps to maxRounds so the
+  // signage reads e.g. 3/3 at the reveal (including the collapse jump).
+  const [roundsUsed, setRoundsUsed] = useState(1);
 
   // Roster size for this replay = the recipient's actual dealt hand. Drives
   // the deal-in / column-flip cascade counts, the fade-up window, and the
@@ -656,6 +660,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           },
         });
         roundsUsedRef.current = decision.roundsUsed;
+        // Signage: on lock it reads maxRounds (e.g. 3/3 = final lineup locked);
+        // mid-loop it tracks the round count.
+        setRoundsUsed(decision.next === "REVEALING" ? maxRounds : decision.roundsUsed);
         if (decision.next === "REVEALING") {
           // Lock → the EXISTING ab_transition → handoff_resolving → arc seam
           // (resolve unmoved). ONE path — boss and human alike.
@@ -984,7 +991,43 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
 
   const handleDraw = () => {
     if (state.kind !== "hold_select") return;
-    setState({ kind: "redraw_running", held: state.held });
+    const held = state.held;
+    if (held.size === rosterSize) {
+      // COLLAPSE (one-path model): every slot is held → there are NO unheld slots
+      // to flip. Skip the flip step and lock the current lineup straight to the
+      // matchup reveal; signage jumps to maxRounds (e.g. 1/3 → 3/3). The lock is
+      // routed through commitRound as a black box (userTappedReveal:true forces
+      // it); the finalRoster→resolveRoster→arc seam is unchanged (resolve still
+      // happens in handoff_resolving). All cards are held → mark wasHeld so the H
+      // persists to the reveal (no redraw runs here to mark them).
+      const finalRoster = initialRoster.map((c) => ({ ...c, wasHeld: true }));
+      roundsUsedRef.current = maxRounds;
+      setRoundsUsed(maxRounds);
+      void (async () => {
+        await commitRound({
+          roundsUsed: roundsUsedRef.current,
+          maxRounds,
+          userTappedReveal: true,
+          entryFee: 0,
+          streak: 0,
+          resolvedRoster: finalRoster as any,
+          resolveOutcome: () => ({ totalFp: 0, tier: "", payout: 0 }),
+          effects: {
+            telemetry: () => {},
+            persistLock: async () => ({ ok: false, handId: "" }),
+            charge: () => {},
+            rake: () => {},
+          },
+        });
+        setState((s) =>
+          s.kind === "hold_select"
+            ? { kind: "ab_transition", finalRoster, held }
+            : s,
+        );
+      })();
+      return;
+    }
+    setState({ kind: "redraw_running", held });
   };
 
   /** Polish #11 — preview-then-hold tap dispatch (per design-lock §3 truth table).
@@ -1554,12 +1597,29 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       style={{
         paddingTop: RESERVED_PADDING_TOP_PX,
         display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
+        flexDirection: "column",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        gap: 8,
         minHeight: RESERVED_MIN_HEIGHT_PX,
         width: "100%",
       }}
     >
+      {/* Round-position signage — a SEPARATE element from the CTA (doc ONE-PATH:
+          "Round position is SEPARATE signage: 1/3, 2/3, 3/3"). Shows through every
+          pre-arc state; on the locking commit / collapse it reads maxRounds (N/N =
+          final lineup locked). Hidden at arc (the reveal composite takes over). */}
+      {state.kind !== "arc" && (
+        <div
+          data-h2h-round-signage="true"
+          style={{
+            fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
+            color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
+          }}
+        >
+          {roundsUsed}/{maxRounds}
+        </div>
+      )}
       {ctaVisible && (
         <button
           data-h2h-play-cta="true"

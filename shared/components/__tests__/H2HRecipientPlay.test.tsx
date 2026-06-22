@@ -2136,4 +2136,80 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // third tap → NO-OP (locked)
     expect(screen.getByTestId("bottom-strip-up-2").getAttribute("data-held")).toBe("true");
   });
+
+  // ── B3: round-position signage (separate element, not on the CTA) ────────
+  it("round signage shows N/maxRounds as a separate element and advances 1/3 → 2/3", { timeout: 8000 }, async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("1/3");
+    // Advance (no holds) → round 2.
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("hold_select"),
+      { timeout: 4000 },
+    );
+    expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("2/3");
+  });
+
+  // ── B4: collapse — all slots held → no flip, signage jumps, reveal still occurs
+  it("collapse: holding every slot in round 1 skips the flip, jumps signage to 3/3, and still reveals", { timeout: 10000 }, async () => {
+    const props = baseProps();
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    const rosterSize = makeRoster().length;
+    // Hold EVERY slot (tap-tap each) → zero unheld slots remain.
+    for (let i = 0; i < rosterSize; i++) {
+      fireEvent.click(screen.getByTestId(`bottom-strip-up-${i}`));
+      fireEvent.click(screen.getByTestId(`bottom-strip-up-${i}`));
+    }
+    expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("1/3");
+    // Advance → collapse: no unheld slots to flip.
+    fireEvent.click(screen.getByText("Next"));
+    // Signage jumps straight to 3/3 (final lineup locked).
+    await waitFor(
+      () => expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("3/3"),
+      { timeout: 3000 },
+    );
+    // Flip skipped — no redraw ran (nothing unheld to redraw).
+    expect(props.redrawRoster).not.toHaveBeenCalled();
+    // The matchup reveal STILL occurs (collapse skips the flip, not the reveal).
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("arc"),
+      { timeout: 6000 },
+    );
+  });
+
+  // ── Boss + human run the identical loop (differ only in starting roster) ──
+  it("boss-style ctx (startMode draft-fresh) runs the SAME loop — first Next loops back to round 2", { timeout: 8000 }, async () => {
+    const props = baseProps();
+    // The component has no senderKind branch; startMode is App-level only. A
+    // boss-style ctx must run byte-identically to a human one.
+    const ctx = makeCtx({ resolvedSenderHand: makeSenderHand(), startMode: "draft-fresh" });
+    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    await waitFor(
+      () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
+      { timeout: 2000 },
+    );
+    fireEvent.click(screen.getByText("Next"));
+    await waitFor(
+      () => expect(
+        container.querySelector("[data-h2h-recipient-play]")?.getAttribute("data-playing-state"),
+      ).toBe("hold_select"),
+      { timeout: 4000 },
+    );
+    expect(container.querySelector("[data-h2h-round-signage]")?.textContent).toContain("2/3");
+  });
 });
