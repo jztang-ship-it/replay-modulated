@@ -3976,3 +3976,117 @@ When reasoning about basketball gameplay: treat score as the only outcome-determ
 Scope: this describes basketball, the lead/MVP sport. Baseball and football still run the live economy (economyEnabled defaults true) and are out of scope until basketball MVP is finalized and we migrate.
 
 Supersession note: earlier live-economy language in this doc (around lines 114, 358-365, 648-663, 721) predates this lock and is SUPERSEDED for basketball MVP by this statement. Those blocks were not struck (the doc is append-only); do not treat them as current basketball guidance.
+
+## BOSS FEATURE — STRATEGY CANON (ratified 2026-06-23 with John)
+
+ONE-SENTENCE PHILOSOPHY:
+The boss supplies the battlefield, sharing supplies the spread, relationships
+supply the memory. Three different jobs, three layers. Making one mechanic do
+all three is how products get overbuilt — do not do it.
+
+THE TWO GENERATIVE PRINCIPLES (these produce the layer sequence; they are not
+decoration):
+1. Every screen answers "who sees this next?", not "what happens next?".
+   Solo-game thinking asks the second. Boss screens ask the first — results,
+   copy, share object, button hierarchy, spotlights, even losses.
+2. Every share carries UNFINISHED BUSINESS, not an achievement. Achievements
+   are terminal and die ("I scored 212"). Open margins propagate ("Today's
+   Bulls: 204, me +8, can you top it?"). The share is a move in a game, not a
+   screenshot.
+
+DEFERRED IDENTITY (the architecture seam between virality and rivalry):
+Virality wants zero friction (no accounts, instant play). Rivalry wants
+persistent identity (you cannot hold a record anonymously). Reconcile by NEVER
+gating play — ask who you are only at the moment of stake, i.e. when a
+cumulative running record exists to defend. Identity is a reward for winning,
+not a gate to playing. Ephemeral rivalry is the free trial of identity.
+
+THE SIX-LAYER MAP (a sequence — each layer gives meaning to the prior one, not
+a backlog):
+  A  Daily boss — RITUAL. Same boss for everyone, fresh battlefield daily, no
+     identity, always visible, no ignition gate. Spotlight contextually after a
+     strong solo run (a taunt), never a gate. Renewable content, finite
+     freshness. Job: give people something to do today. SUBSTANTIALLY BUILT.
+  C  Outbound challenge — THE VIRAL SWITCH. Virality lives in the share, not
+     the CTA or home screen. BEAT-TO-SEND: you can only forward a boss you have
+     beaten; the share carries the sender's margin as the thing to top, so the
+     payload is non-empty by construction and the boss now has an author
+     stamped on the shared row. No accounts; needs a referrer token sitting
+     BESIDE the global boss row (not replacing it). NET-NEW.
+  B-half  Local lobby — HUMAN SCALE. Everyone who entered through one link is
+     ranked against each other. Never empty, immediately social, no accounts,
+     ephemeral (resets with the daily boss, by design). The cold-start fix for
+     leaderboards. NET-NEW (referrer token + arrival grouping).
+  Near-miss — RETURN ARC. "One point away — run it back." Sends the loop
+     BACKWARD to someone already in it, which sustains the population between
+     acquisition spikes (the thing 82-0 lacks). Almost free: copy and timing on
+     a comparison already computed at result time; rides into the C build.
+     NET-NEW (copy + timing). DO NOT DROP because it is small — it is the
+     return arc that keeps the population alive between acquisition spikes.
+  B  Persistent rivalry — IDENTITY EARNS ITS KEEP. Cumulative record across
+     days ("you lead Mike 18-14"; "current streak Mike W3"). The daily reset is
+     the belt's SUBSTRATE, not its enemy — discrete bosses mint the units a
+     record is made of (cf. "I always beat my brother at Wordle"). Maps onto
+     the existing directed-human challenge path; what is new is aggregation
+     across duels, not the single duel. Deferred identity is asked HERE.
+     NET-NEW (identity + aggregation).
+  Belts and scars — LONG-TERM MEANING. Records, not events. Live across days,
+     never on a single boss. NET-NEW.
+
+SEQUENCE: A -> C -> B-half -> near-miss -> B -> belts.
+
+DISAMBIGUATION — "head honcho" means two separate things, kept separate:
+(1) the AI titan you fight; (2) a human-winnable title (top scorer vs today's
+boss). Do not blur them.
+
+TWO FRESHNESS ENGINES: rotation (boss changes daily; more bank entries = more
+days before repeat) is FINITE freshness — it is content and it runs out. The
+human leaderboard (the target is other people, who keep moving) is INFINITE
+freshness. The same-boss-for-everyone-today decision is the keystone: it makes
+scores comparable, which is what makes BOTH a real leaderboard AND a real share
+possible. We win on OPPONENTS, not content.
+
+BOSS BANK SIZING DECISION:
+- Author at least one boss for EVERY season so the daily schedule can never
+  resolve to a hole (an empty boss day is a bug). Iconic seasons carry two
+  (e.g. the 7-seconds-or-less Suns AND that year's champion).
+- Where a season has no obvious titan, author a CREDIBLE best-of-era boss,
+  framed honestly — never a forced marquee that lands flat. A boss nobody
+  recognizes generates no unfinished business worth sending.
+- We do NOT chase bank depth beyond completeness. Completeness (27+ with iconic
+  seasons doubled) already clears the anti-repeat cooldown and carries the
+  ritual window until the human layers take over. 82-0 needs near-infinite
+  content because content is all it has; we deliberately do not, because
+  rivalry is our retention engine.
+
+BEAT-TO-SEND TRADEOFF (chosen with eyes open): layer C sits downstream of a
+WIN, not downstream of merely playing. This trades share VOLUME for share
+WEIGHT — fewer people reach the share, but every share that goes out is loaded
+and carries a proof-of-beatability certificate (the sender beat it, so it is
+beatable). The near-miss layer softens the tax: an almost-win is one rematch
+from earning the right to send.
+
+COMPETITIVE FRAME: our core loop (random team+era, draft five, score, share) is
+structurally the same as 82-0.com, which went viral in June 2026 on
+bragging-rights sharing with no leaderboard, no accounts, no competitive
+structure — and whose creators are now racing to add leaderboards. The category
+is hot and the loop is proven; the open, ownable frontier is the rivalry layer
+82-0 lacks. The boss is our wedge from content into rivals.
+
+HONESTY NOTE (do not mistake "designed" for "mostly there"): only layer A is
+substantially wired today. The boss currently surfaces ONLY as a post-results
+CTA (BossEntryCta, GameView around line 3236) — no share, no invite, no
+referrer, no lobby, no rank, and BossOutwardEnding is dressed for an outward
+exit that is not wired. The battlefield exists; the spread and the memory are
+net-new client build. The six-layer map is seductive; the wiring is one layer
+deep.
+
+## JOHN'S DESIGN PHILOSOPHY (ratified to canon 2026-06-23)
+1. Frictionless game with a LITTLE strategy. NOT chess, NOT poker. Do not
+   overbuild depth.
+2. The system caps achievable depth (price predicts score at r=1.0, the dealer
+   force-spends, outcomes are mostly luck from random game logs). So the design
+   goal is making users FEEL their choices matter, not engineering real deep
+   strategy.
+3. Inventory existing systems before inventing. Levers may be half-built
+   already (e.g. badges).
