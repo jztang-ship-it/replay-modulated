@@ -3962,3 +3962,17 @@ H2HOneSidedReveal / NoOpponentFloor are empty on the branch tip).
   placeholder in that single slot is ACCEPTED as a reasonable fallback, unless John later
   decides a different treatment (e.g. a retry-UI). Not owed; recorded as the accepted behavior.
 
+
+## CANONICAL — Basketball scoring model & economy status (MVP) — LOCKED (John, 2026-06-22)
+
+The current product is an MVP. Basketball MVP is a free-to-play, no-economy, highest-score-wins game. The sole objective of a lineup is to score the highest fantasy-point total. There are no payouts, no multipliers affecting outcome, no bonus pools, and no RTP in the basketball player experience. Score is the only benchmark; in challenges, highest score wins.
+
+MVP must never venture outside this safe zone. Anything economy-related — payouts, RTP, multipliers, wallet, bonus pool, rake — is by definition OUT OF MVP SCOPE. During MVP work it is not modeled, not tuned, not reasoned about as if live, and not removed. If a task seems to require touching the economy, that is the signal the task has left MVP scope — stop and confirm with John, do not proceed.
+
+The dormant economy is a deliberately parked future asset, not dead code. The machinery (wallet, payouts, multipliers, bonus pool, rake) is preserved dormant but intact behind the economyEnabled adapter flag (basketball = false). The product's planned post-MVP future is a real-money betting game; this machinery is the foundation that rebuild will re-wire. It must NOT be deleted. economy-retrieval-map.md remains the index for that future work.
+
+When reasoning about basketball gameplay: treat score as the only outcome-determining quantity. Win-tiers and the score gauge are display-only (tier labels and gauge position), never economic. Two basketball computations are intentionally computed-but-inert (calculatePayoutWithStreak per reveal; the money_won phantom leaderboard write) — leave them; they are dormant scaffolding, not cruft, and the money_won write is money-path test-pinned.
+
+Scope: this describes basketball, the lead/MVP sport. Baseball and football still run the live economy (economyEnabled defaults true) and are out of scope until basketball MVP is finalized and we migrate.
+
+Supersession note: earlier live-economy language in this doc (around lines 114, 358-365, 648-663, 721) predates this lock and is SUPERSEDED for basketball MVP by this statement. Those blocks were not struck (the doc is append-only); do not treat them as current basketball guidance.
