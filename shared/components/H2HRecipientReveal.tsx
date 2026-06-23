@@ -314,6 +314,24 @@ function H2HRecipientRevealInner(props: InnerProps) {
   const showOverlay = reveal.phase === "done" && doneHoldElapsed;
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
 
+  // TEMP DIAGNOSTIC (reveal-hang triage) — the done→overlay handoff stages.
+  // arc reaches "done" (confirmed), so the stall is here. This logs every
+  // transition so the next glass pinpoints: doneHoldElapsed never true →
+  // the FINAL_HOLD timer/effect; mounted never true → showOverlay gate;
+  // mounted true but visible never true → the crossfade RAF. ?arcdebug=1.
+  useEffect(() => {
+    if (!ARC_DEBUG) return;
+    // eslint-disable-next-line no-console
+    console.log("[arc-overlay]", {
+      phase: reveal.phase,
+      doneHoldElapsed,
+      showOverlay,
+      mounted: overlayCrossfade.mounted,
+      visible: overlayCrossfade.visible,
+      t: Date.now(),
+    });
+  }, [reveal.phase, doneHoldElapsed, showOverlay, overlayCrossfade.mounted, overlayCrossfade.visible]);
+
   // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.
   // Pre-RD6.1 the reveal-side right-rail ScoreCells were hidden via a
   // `suppressed` flag (glideHandoff) the moment the glide animation
