@@ -22,6 +22,11 @@ import { useEffect, useState } from "react";
 import { recordBossResult, getBossResult, type BossResult } from "@shared/utils/bossResultMemory";
 import { track } from "@shared/analytics/analytics";
 
+// Layer C, delta-a: the loss "near-miss" return-arc threshold. A loss within
+// this many FP of the boss target reads as a near-miss ("run it back") rather
+// than a plain retry. Single source of truth for the close-vs-far loss split.
+const NEAR_MISS_MARGIN = 5;
+
 interface Props {
   sport: string;
   bossChallengeId: string;
@@ -72,11 +77,25 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
     : marqueeLoss
       ? `I came within ${margin} of ${enemy} — closer than you'll get.`
       : "The boss got me. Think you survive them?";
+  // Layer C, delta-a: a LOSS never forwards (beat-to-send is win-only). It runs
+  // it back instead — replaying TODAY'S boss via onPlayAgain (App wires it to
+  // onTryAgain → re-mount with this same boss snapshot, a fresh draft vs the
+  // same target; it is NOT a normal-hand deal in the boss flow). A near-miss
+  // (within NEAR_MISS_MARGIN of target) earns the urgent return-arc framing; a
+  // far loss gets the plain retry. targetScore absent (older/beatable callers)
+  // → treated as a far loss (no margin to claim).
+  const lostMargin =
+    !result.won && targetScore != null
+      ? Math.max(0, Math.round(targetScore - result.score))
+      : null;
+  const isNearMiss = lostMargin != null && lostMargin <= NEAR_MISS_MARGIN;
   const sub = result.won
     ? "Can your friends?"
-    : marqueeLoss
-      ? `Came within ${margin} of ${enemy} — closer than most get.`
-      : "Think you survive them?";
+    : isNearMiss
+      ? lostMargin! <= 1
+        ? "One point away."
+        : `${lostMargin} away.`
+      : "The boss held.";
 
   function challengeSomeone() {
     if (typeof navigator === "undefined") return;
@@ -114,45 +133,72 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
       </div>
       <div style={{ fontSize: 15, color: "#FFB14A", fontWeight: 800, marginBottom: 6 }}>{sub}</div>
 
-      {/* Outward branch — ABOVE the line. */}
-      <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
+      {/* Outward branch — ABOVE the line. Layer C, delta-a: BEAT-TO-SEND —
+          the forward affordance (Challenge Someone / Copy Link) renders ONLY on
+          a win, so every shared boss carries a proof-of-beatability. A loss
+          shows NO forward affordance; it offers run-it-back (replay the same
+          boss) instead. */}
+      {result.won ? (
+        <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
+          <button
+            data-testid="boss-challenge-someone"
+            onClick={challengeSomeone}
+            style={{
+              flex: 1, padding: "14px", borderRadius: 12, border: "none",
+              background: "#FFB14A", color: "#070A12", fontSize: 15, fontWeight: 900, cursor: "pointer",
+            }}
+          >
+            Challenge Someone
+          </button>
+          <button
+            data-testid="boss-copy-link"
+            onClick={copyLink}
+            style={{
+              flex: 1, padding: "14px", borderRadius: 12, cursor: "pointer",
+              background: "transparent", border: "1px solid rgba(255,255,255,0.25)",
+              color: "#EAF0FF", fontSize: 15, fontWeight: 800,
+            }}
+          >
+            {copied ? "Link Copied ✓" : "Copy Link"}
+          </button>
+        </div>
+      ) : (
         <button
-          data-testid="boss-challenge-someone"
-          onClick={challengeSomeone}
+          data-testid="boss-run-it-back"
+          onClick={onPlayAgain}
           style={{
-            flex: 1, padding: "14px", borderRadius: 12, border: "none",
+            width: "100%", maxWidth: 420, padding: "14px", borderRadius: 12, border: "none",
             background: "#FFB14A", color: "#070A12", fontSize: 15, fontWeight: 900, cursor: "pointer",
           }}
         >
-          Challenge Someone
+          {isNearMiss ? "Run it back" : "Try again"}
         </button>
-        <button
-          data-testid="boss-copy-link"
-          onClick={copyLink}
-          style={{
-            flex: 1, padding: "14px", borderRadius: 12, cursor: "pointer",
-            background: "transparent", border: "1px solid rgba(255,255,255,0.25)",
-            color: "#EAF0FF", fontSize: 15, fontWeight: 800,
-          }}
-        >
-          {copied ? "Link Copied ✓" : "Copy Link"}
-        </button>
-      </div>
+      )}
 
-      {/* The line — replay is the spine, branch is above it. */}
-      <div style={{ width: "100%", maxWidth: 420, height: 1, background: "rgba(255,255,255,0.14)", margin: "12px 0 4px" }} />
+      {/* The line + below-line "Play Again" — WIN ONLY. On a loss the single
+          above-line run-it-back CTA is the whole affordance (it already replays
+          the boss via onPlayAgain), so we deliberately drop the below-line
+          "Play Again" to avoid two identical buttons. This is an INTENTIONAL,
+          John-approved loss-branch exception to the "Play Again below the line,
+          never deleted" invariant — do NOT "restore" it on the loss path. */}
+      {result.won && (
+        <>
+          {/* The line — replay is the spine, branch is above it. */}
+          <div style={{ width: "100%", maxWidth: 420, height: 1, background: "rgba(255,255,255,0.14)", margin: "12px 0 4px" }} />
 
-      {/* Play Again — BELOW the line, never alone, never deleted. */}
-      <button
-        data-testid="boss-play-again"
-        onClick={onPlayAgain}
-        style={{
-          background: "transparent", border: "none", color: "rgba(255,255,255,0.6)",
-          fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "8px 12px",
-        }}
-      >
-        Play Again
-      </button>
+          {/* Play Again — BELOW the line, never alone, never deleted (win path). */}
+          <button
+            data-testid="boss-play-again"
+            onClick={onPlayAgain}
+            style={{
+              background: "transparent", border: "none", color: "rgba(255,255,255,0.6)",
+              fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "8px 12px",
+            }}
+          >
+            Play Again
+          </button>
+        </>
+      )}
     </div>
   );
 }

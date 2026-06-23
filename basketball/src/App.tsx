@@ -19,6 +19,7 @@ import H2HRevealMockRoute from "./dev/H2HRevealMockRoute";
 import H2HPlayMockRoute from "./dev/H2HPlayMockRoute";
 import ChallengeLandingMockRoute from "./dev/ChallengeLandingMockRoute";
 import HeadlineMockRoute from "./dev/HeadlineMockRoute";
+import BossLandingMockRoute from "./dev/BossLandingMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -94,6 +95,13 @@ function getChallengeId(): string | null {
 function getDevRouteSlug(): string | null {
   if (typeof window === "undefined") return null;
   const match = window.location.pathname.match(/\/basketball\/dev\/([a-z0-9-]+)$/);
+  // Layer-C glass harness — DEV-gated dev-route trace. Retained (not throwaway):
+  // diagnoses dev-mock routing for the rest of layer C. Pruned from prod by the
+  // import.meta.env.DEV guard.
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log("[dev-route] pathname=", window.location.pathname, "| slug=", match ? match[1] : null, "| DEV=", import.meta.env.DEV);
+  }
   return match ? match[1] : null;
 }
 
@@ -118,6 +126,12 @@ function AppInner() {
   }
   if (import.meta.env.DEV && devSlug === "headline-mock") {
     return <HeadlineMockRoute />;
+  }
+  if (import.meta.env.DEV && devSlug === "boss-outward-mock") {
+    // Layer-C glass harness — retained DEV-only trace (inside the DEV guard).
+    // eslint-disable-next-line no-console
+    console.log("[boss-mock] case hit, slug=", devSlug);
+    return <BossLandingMockRoute />;
   }
 
   const challengeIdFromUrl = getChallengeId();
