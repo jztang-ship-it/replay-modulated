@@ -45,9 +45,18 @@ interface Props {
   marquee?: boolean;
   targetScore?: number;
   bossName?: string;
+  /** 2026-06-23 boss-result unification. "full" (default) = the standalone
+   *  outward ending — headline + score + sub + CTAs — used by the REVISIT
+   *  landing (BossLandingView) and the dev mock, where there is NO results
+   *  board to carry the verdict. "cta-only" = JUST the share/replay CTA block,
+   *  for the unified results overlay's CTA slot: the human results board now
+   *  renders the verdict (center line) and both totals (ZoneHeaders), so the
+   *  headline/score/sub would duplicate it. Same share + result-memory
+   *  machinery in both modes — only the verdict chrome is dropped. */
+  variant?: "full" | "cta-only";
 }
 
-export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName }: Props) {
+export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full" }: Props) {
   const [result, setResult] = useState<BossResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -138,19 +147,29 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
       .catch(() => { /* ignore */ });
   }
 
+  // cta-only (unified results overlay slot): the board above carries the
+  // verdict (center line) + both totals (ZoneHeaders), so headline/score/sub
+  // are dropped to avoid duplicating it. "full" keeps them for the standalone
+  // surfaces (revisit landing + dev mock) that have no board.
+  const ctaOnly = variant === "cta-only";
+
   return (
     <div
       data-testid="boss-outward-ending"
       data-won={result.won ? "true" : "false"}
       style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 6 }}
     >
-      <div style={{ fontSize: 22, fontWeight: 950, color: "#EAF0FF", letterSpacing: 0.4, textTransform: "uppercase" }}>
-        {headline}
-      </div>
-      <div data-testid="boss-outward-score" style={{ fontSize: 14, color: "rgba(234,240,255,0.7)", fontWeight: 700 }}>
-        You scored {result.score.toFixed(1)}
-      </div>
-      <div style={{ fontSize: 15, color: "#FFB14A", fontWeight: 800, marginBottom: 6 }}>{sub}</div>
+      {!ctaOnly && (
+        <div style={{ fontSize: 22, fontWeight: 950, color: "#EAF0FF", letterSpacing: 0.4, textTransform: "uppercase" }}>
+          {headline}
+        </div>
+      )}
+      {!ctaOnly && (
+        <div data-testid="boss-outward-score" style={{ fontSize: 14, color: "rgba(234,240,255,0.7)", fontWeight: 700 }}>
+          You scored {result.score.toFixed(1)}
+        </div>
+      )}
+      {!ctaOnly && <div style={{ fontSize: 15, color: "#FFB14A", fontWeight: 800, marginBottom: 6 }}>{sub}</div>}
 
       {/* Outward branch — ABOVE the line. Layer C, delta-a: BEAT-TO-SEND —
           the forward affordance (Challenge Someone / Copy Link) renders ONLY on

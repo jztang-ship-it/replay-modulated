@@ -130,6 +130,47 @@ describe("BossOutwardEnding", () => {
     expect(screen.queryByTestId("boss-copy-link")).toBeNull();
   });
 
+  it("variant='cta-only' (results-overlay slot): drops headline/score/sub, keeps the CTAs", async () => {
+    // 2026-06-23 boss-result unification. In the unified results overlay the
+    // human board carries the verdict (center line) + both totals (ZoneHeaders),
+    // so the slot drops the headline/score/sub to avoid duplicating it. The
+    // share/replay CTAs (and their machinery) stay.
+    render(
+      <BossOutwardEnding
+        variant="cta-only"
+        sport="basketball"
+        bossChallengeId={BOSS_ID}
+        freshResult={{ score: 233.5, won: true }}
+        onPlayAgain={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
+    // Verdict chrome dropped — the board provides it now.
+    expect(screen.queryByText(/YOU BEAT TODAY'S BOSS/)).toBeNull();
+    expect(screen.queryByTestId("boss-outward-score")).toBeNull();
+    // CTAs (+ result memory) intact.
+    expect(screen.getByTestId("boss-challenge-someone")).toBeTruthy();
+    expect(screen.getByTestId("boss-copy-link")).toBeTruthy();
+    expect(screen.getByTestId("boss-play-again")).toBeTruthy();
+    expect(getBossResult(BOSS_ID)).toEqual({ score: 233.5, won: true });
+  });
+
+  it("variant='cta-only' loss: drops verdict chrome, keeps run-it-back", async () => {
+    render(
+      <BossOutwardEnding
+        variant="cta-only"
+        sport="basketball"
+        bossChallengeId={`${BOSS_ID}-cta-loss`}
+        freshResult={{ score: 100, won: false }}
+        onPlayAgain={() => {}}
+      />
+    );
+    await waitFor(() => expect(screen.getByTestId("boss-run-it-back")).toBeTruthy());
+    expect(screen.queryByText(/TODAY'S BOSS GOT YOU/)).toBeNull();
+    expect(screen.queryByTestId("boss-outward-score")).toBeNull();
+    expect(screen.queryByTestId("boss-challenge-someone")).toBeNull();
+  });
+
   it("recordBossResult keeps best score + sticky win (attempted-not-per-play)", () => {
     recordBossResult(BOSS_ID, { score: 200, won: false });
     recordBossResult(BOSS_ID, { score: 150, won: true }); // worse score, but a win

@@ -142,24 +142,26 @@ export interface H2HResultsOverlayProps {
    *  renders in the same resolution slot). Consumers that don't pass it
    *  (sender reveal / dev mock) fall back to the legacy line. */
   explanation?: string;
-  /** Phase 2-mount Step 3 (2026-06-21): boss outward-ending slot. When the
-   *  recipient flow (H2HRecipientReveal, boss branch) supplies this node, it
-   *  REPLACES the entire human rivalry board+CTAs — a boss result terminates
-   *  OUTWARD (the boss is a comparison object, not a rivalry). The overlay is
-   *  agnostic to its contents (it just renders the provided node), so no boss
-   *  knowledge leaks into this shared component. Absent for human challenges
-   *  and all non-basketball sports → the human board renders unchanged. */
-  bossOutwardEnding?: React.ReactNode;
+  /** 2026-06-23 boss-result unification. Optional CTA-region slot. When
+   *  supplied (the boss path: H2HRecipientReveal passes the boss share/replay
+   *  block), it REPLACES the state-derived primaryCta button inside the
+   *  reserved CTA region — and ONLY that button. The boss now renders the SAME
+   *  human results board (opponent strip + heroes + user strip + verdict);
+   *  only its CTAs differ (share/replay vs rivalry). The overlay stays boss-
+   *  agnostic — it renders whatever node is passed. Absent for human challenges
+   *  and all non-basketball sports → the state-derived primaryCta renders
+   *  unchanged (human board byte-identical). */
+  ctaSlot?: React.ReactNode;
 }
 
 /** Cross-fade duration. */
 export const OVERLAY_CROSSFADE_MS = 350;
 
-// Results overlay stacking layer. BOTH the boss-result branch and the human
-// rivalry-board branch must use this single value so they can't drift — a prior
-// drift (boss branch hardcoded zIndex:50, below the reveal board's z-9000) left
-// the boss result rendering BEHIND the final card while mounted+visible. Must
-// sit above H2HBoardShell's root (zIndex 9000).
+// Results overlay stacking layer. The single results container (human board;
+// boss now renders through it too post-unification) uses this value. A prior
+// drift (a separate boss branch hardcoded zIndex:50, below the reveal board's
+// z-9000) left the boss result rendering BEHIND the final card while
+// mounted+visible. Must sit above H2HBoardShell's root (zIndex 9000).
 const H2H_RESULTS_OVERLAY_Z = 9100;
 
 // ── Layout constants ────────────────────────────────────────────────────
@@ -1082,7 +1084,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     primaryCtaOverride,
     globalHeader,
     explanation,
-    bossOutwardEnding,
+    ctaSlot,
   } = props;
 
   // Per-strip flip (phase 4 fix 3, 2026-05-27). Each strip has its OWN
@@ -1307,34 +1309,14 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
     return { label: "Play your own hand", handler: onPlayOwnHand };
   })();
 
-  // Phase 2-mount Step 3 — boss results terminate OUTWARD. When the caller
-  // supplies the outward-ending slot, it REPLACES the human rivalry board +
-  // CTAs wholesale (the comparison visual already played via the
-  // H2HRevealScreen battlefield above). Early fork placed AFTER all hooks
-  // (rules-of-hooks); the human render below is provably unentered for a boss.
-  // Crossfade honored via the same `visible` opacity transition.
-  if (bossOutwardEnding) {
-    return (
-      <div
-        data-testid="h2h-boss-result"
-        data-h2h-boss-result="true"
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: H2H_RESULTS_OVERLAY_Z,
-          opacity: visible ? 1 : 0,
-          transition: `opacity ${OVERLAY_CROSSFADE_MS}ms ease`,
-          pointerEvents: visible ? "auto" : "none",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-        }}
-      >
-        {globalHeader}
-        {bossOutwardEnding}
-      </div>
-    );
-  }
+  // 2026-06-23 boss-result unification: the early boss-result branch is gone.
+  // A boss now renders THROUGH this same human results board (the caller passes
+  // boss sender/recipient/state/explanation identically); only the CTA region
+  // differs, via the optional ctaSlot below. The verify gate confirmed the
+  // boss verdict reads correctly from delta: senderResolved.totalFp and the
+  // recorded target both derive from the same persisted shared_challenges.
+  // target_fp column (api sender-hand.ts:66 / [id].ts:51), so the board's
+  // delta-sign verdict and the recorded win can't disagree.
 
   return (
     <div
@@ -1786,50 +1768,57 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           >
             Tap any card for game logs
           </div>
-          <div
-            data-h2h-overlay-ctas="true"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              width: "100%",
-              maxWidth: 360,
-              margin: "0 auto",
-            }}
-          >
-            <button
-              type="button"
-              data-h2h-overlay-primary-cta="true"
-              data-cta-label={primaryCta.label}
-              onClick={primaryCta.handler}
+          {/* 2026-06-23 boss-result unification: the boss path supplies its
+              share/replay block here via ctaSlot, REPLACING the state-derived
+              primaryCta button (and only it — the reserved band, logs hint,
+              and sticky positioning are shared). Human path leaves ctaSlot
+              undefined → the exact prior button renders, byte-identical. */}
+          {ctaSlot ?? (
+            <div
+              data-h2h-overlay-ctas="true"
               style={{
-                position: "relative",
-                // RD6.1-g (2026-06-11): padding 15 → 10. Tightens the
-                // CTA button to ~36–40px tall (was ~46–50px). The
-                // 16px text + 900 weight stays plenty tappable; the
-                // 10px padding keeps thumb-comfortable hit area.
-                padding: "10px",
-                borderRadius: 12,
-                background: "#FFB14A",
-                border: "none",
-                color: "#070A12",
-                fontSize: 16,
-                fontWeight: 900,
-                textAlign: "center",
-                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+                width: "100%",
+                maxWidth: 360,
+                margin: "0 auto",
               }}
             >
-              {primaryCta.label}
-              {/* #7: flip-timer merged into the bar — bare clock, right-
-                  aligned, absolutely positioned so the label stays
-                  dead-centered. LOSS_OPEN only. Removing the old pill
-                  reclaims the vertical space that was overlaying the
-                  bottom mini-strip's tap area. */}
-              {state === "LOSS_OPEN" && (
-                <CtaClock windowClosesAtMs={windowClosesAtMs} />
-              )}
-            </button>
-          </div>
+              <button
+                type="button"
+                data-h2h-overlay-primary-cta="true"
+                data-cta-label={primaryCta.label}
+                onClick={primaryCta.handler}
+                style={{
+                  position: "relative",
+                  // RD6.1-g (2026-06-11): padding 15 → 10. Tightens the
+                  // CTA button to ~36–40px tall (was ~46–50px). The
+                  // 16px text + 900 weight stays plenty tappable; the
+                  // 10px padding keeps thumb-comfortable hit area.
+                  padding: "10px",
+                  borderRadius: 12,
+                  background: "#FFB14A",
+                  border: "none",
+                  color: "#070A12",
+                  fontSize: 16,
+                  fontWeight: 900,
+                  textAlign: "center",
+                  cursor: "pointer",
+                }}
+              >
+                {primaryCta.label}
+                {/* #7: flip-timer merged into the bar — bare clock, right-
+                    aligned, absolutely positioned so the label stays
+                    dead-centered. LOSS_OPEN only. Removing the old pill
+                    reclaims the vertical space that was overlaying the
+                    bottom mini-strip's tap area. */}
+                {state === "LOSS_OPEN" && (
+                  <CtaClock windowClosesAtMs={windowClosesAtMs} />
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

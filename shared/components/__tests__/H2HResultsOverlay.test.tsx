@@ -105,28 +105,36 @@ describe("H2HResultsOverlay — state machine + CTAs", () => {
     expect(container.querySelector('[data-h2h-overlay-countdown="true"]')).toBeNull();
   });
 
-  it("boss outward-ending slot REPLACES the human board/CTAs (Phase 2-mount Step 3)", () => {
-    // A boss result terminates OUTWARD: when the recipient flow supplies the
-    // bossOutwardEnding slot, it stands in for the entire human rivalry board
-    // (a boss is a comparison object, not a rivalry). The human CTAs must NOT
+  it("ctaSlot REPLACES the primaryCta button but the board still renders (2026-06-23 unification)", () => {
+    // Boss-result unification: a boss now renders THROUGH the same human board
+    // (opponent strip + heroes + user strip + verdict). Only the CTA region
+    // differs — the boss share/replay block arrives via ctaSlot, replacing the
+    // state-derived primaryCta button (and ONLY it). The board must still
     // render.
-    render(
+    const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Boss", 200)}
         recipient={makeHand("You", 150)}
         renderCard={stubRender()}
         state="LOSS_CLOSED"
-        bossOutwardEnding={<div data-testid="boss-stub">outward</div>}
+        ctaSlot={<div data-testid="boss-stub">outward</div>}
       />
     );
+    // The CTA slot renders in place of the primaryCta button.
     expect(screen.getByTestId("boss-stub")).toBeTruthy();
-    // The human board's primary CTA for LOSS_CLOSED is "Play your own hand" —
-    // its absence proves the human render is unentered.
+    // The state-derived primaryCta ("Play your own hand" for LOSS_CLOSED) is
+    // replaced by the slot, so it must NOT render.
     expect(screen.queryByRole("button", { name: "Play your own hand" })).toBeNull();
+    expect(container.querySelector('[data-h2h-overlay-primary-cta="true"]')).toBeNull();
+    // …but the human board itself DOES render (this is the unification): the
+    // overlay root + the opponent strip cards are present.
+    expect(container.querySelector('[data-h2h-results-overlay="true"]')).toBeTruthy();
+    expect(container.querySelector('[data-card-id="Boss-0"]')).toBeTruthy();
+    expect(container.querySelector('[data-card-id="You-0"]')).toBeTruthy();
   });
 
-  it("renders the human board (no boss slot) when bossOutwardEnding is absent", () => {
-    render(
+  it("renders the state-derived primaryCta (no ctaSlot) when ctaSlot is absent", () => {
+    const { container } = render(
       <H2HResultsOverlay
         sender={makeHand("Mike", 178.4)}
         recipient={makeHand("You", 182.4)}
@@ -135,6 +143,7 @@ describe("H2HResultsOverlay — state machine + CTAs", () => {
       />
     );
     expect(screen.getByRole("button", { name: "Send It Back" })).toBeTruthy();
+    expect(container.querySelector('[data-h2h-overlay-primary-cta="true"]')).toBeTruthy();
     expect(screen.queryByTestId("boss-stub")).toBeNull();
   });
 

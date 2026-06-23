@@ -336,17 +336,23 @@ function H2HRecipientRevealInner(props: InnerProps) {
           onDismiss={onDismiss}
           senderRevealOrder={reveal?.senderRevealOrder}
           recipientRevealOrder={reveal?.recipientRevealOrder}
-          // Phase 2-mount Step 3 — boss results terminate OUTWARD. For a boss
-          // sender, supply the outward-ending slot; H2HResultsOverlay then
-          // renders it IN PLACE OF the human rivalry board. Win is racing the
-          // baked target (matches the removed ChallengeComparisonScreen fork);
+          // 2026-06-23 boss-result unification. A boss now renders THROUGH the
+          // human results board above (sender = the boss five, recipient = the
+          // player's hand — both already passed); only the CTA region differs.
+          // For a boss we supply the share/replay block via ctaSlot in
+          // "cta-only" mode: the board carries the verdict + both totals, so
+          // BossOutwardEnding drops its headline/score here (it keeps them on
+          // the standalone revisit landing). Win is racing the baked target;
           // the boss five is the opponent shown in the battlefield reveal
-          // above. "Play Again" replays the same boss (onTryAgain) — replay-
-          // below-the-line per the outward-ending invariant. recordBossResult
-          // + getBossResult inside BossOutwardEnding make fresh === revisited.
-          bossOutwardEnding={
+          // above. "Play Again" replays the same boss (onTryAgain). The verify
+          // gate confirmed senderResolved.totalFp === targetScore (same
+          // persisted target_fp), so the board's delta verdict matches the
+          // recorded win. recordBossResult + getBossResult inside
+          // BossOutwardEnding make fresh === revisited.
+          ctaSlot={
             challengeCtx.senderKind === "boss" ? (
               <BossOutwardEnding
+                variant="cta-only"
                 sport={sport}
                 bossChallengeId={challengeCtx.challengeId}
                 freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
