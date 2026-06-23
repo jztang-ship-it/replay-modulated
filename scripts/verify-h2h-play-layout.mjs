@@ -135,23 +135,31 @@ async function newPage(browser) {
 
 async function loadAndWaitForReveal(page) {
   await page.goto(REVEAL_URL, { waitUntil: "networkidle", timeout: 30000 });
-  await page.waitForSelector(`[data-h2h-board-zone="top"]`, { timeout: 5000 });
-  await page.waitForSelector(`[data-h2h-board-zone="bottom"]`, { timeout: 5000 });
-  await page.waitForSelector(`[data-h2h-board-zone="hero"]`, { timeout: 5000 });
+  // Scoped to the reveal container: the reveal-mock route co-mounts the
+  // reveal AND the (now shell-based) results overlay, so a bare
+  // [data-h2h-board-zone="top"] is ambiguous (both emit it). Container scope
+  // disambiguates — selectors more specific, no assertion change.
+  await page.waitForSelector(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="top"]`, { timeout: 5000 });
+  await page.waitForSelector(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="bottom"]`, { timeout: 5000 });
+  await page.waitForSelector(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="hero"]`, { timeout: 5000 });
   // The reveal mock route is the static-end-state arc (no entrance
   // animation); let one frame settle.
   await page.waitForTimeout(100);
 }
 
 async function captureRevealRects(page) {
-  const topRect = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
-  const bottomRect = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
-  const heroRect = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+  // Scoped to [data-h2h-board-surface=reveal] — the co-mounted overlay now shares
+  // the shell's data-h2h-board-zone vocabulary, so the reveal-surface queries
+  // must name the reveal container to stay unambiguous (selectors more
+  // specific; bounding-box comparison + label assertions unchanged).
+  const topRect = await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="top"]`).boundingBox();
+  const bottomRect = await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="bottom"]`).boundingBox();
+  const heroRect = await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="hero"]`).boundingBox();
   // Target the ZoneHeader spans directly (data-h2h-board-zone-label)
   // so the captured text is JUST the label, not the entire zone's
   // textContent (which would include strip-cell text too).
-  const topLabel = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim() ?? "";
-  const bottomLabel = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim() ?? "";
+  const topLabel = (await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="top"]`).first().textContent())?.trim() ?? "";
+  const bottomLabel = (await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim() ?? "";
   return { topRect, bottomRect, heroRect, topLabel, bottomLabel };
 }
 
@@ -702,12 +710,12 @@ async function runPlayHarness(browser) {
   const playingMounted = (await page.locator("[data-h2h-recipient-play]").count()) === 1;
   record("Fix C2: playing canvas root STAYS mounted at arc state", playingMounted);
 
-  const revealDescendant = await page.locator("[data-h2h-recipient-play] [data-h2h-recipient-reveal]").count();
+  const revealDescendant = await page.locator("[data-h2h-recipient-play] [data-h2h-board-surface=reveal]").count();
   record("Fix C2: reveal mounted as descendant of playing root (single canvas)", revealDescendant >= 1);
 
   const revealSibling = await page.evaluate(() => {
     const playing = document.querySelector("[data-h2h-recipient-play]");
-    const allReveals = Array.from(document.querySelectorAll("[data-h2h-recipient-reveal]"));
+    const allReveals = Array.from(document.querySelectorAll("[data-h2h-board-surface=reveal]"));
     return allReveals.filter((r) => !playing?.contains(r)).length;
   });
   record("Fix C2: no reveal mounted OUTSIDE the playing root", revealSibling === 0);
@@ -781,7 +789,7 @@ async function runPlayHarness(browser) {
   // generous timeout.
   await page.waitForFunction(
     () => {
-      const reveals = document.querySelectorAll(`[data-h2h-recipient-reveal] [data-h2h-team-score]`);
+      const reveals = document.querySelectorAll(`[data-h2h-board-surface=reveal] [data-h2h-team-score]`);
       if (reveals.length < 2) return false;
       // Recipient score = second [data-h2h-team-score] inside the reveal.
       const recipientEl = reveals[1];
@@ -873,7 +881,7 @@ async function runPlayHarness(browser) {
   // don't conflate with the top (sender) strip's wasHeld badges, which
   // come from a different data path.
   const revealRecipientHBadgeCount = await page
-    .locator(`[data-h2h-recipient-reveal] [data-h2h-board-zone="bottom"] svg polygon[fill="#F5C850"]`)
+    .locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="bottom"] svg polygon[fill="#F5C850"]`)
     .count();
   record(
     `C/D: ≥2 H badges on recipient reveal strip (2 cards were held pre-Draw)`,
@@ -893,7 +901,7 @@ async function runPlayHarness(browser) {
   // results-side delta column-shift bug was caught by a similar X-axis
   // guard, but the reveal-side had no equivalent).
   const revealDeltaSnap = await page.evaluate(() => {
-    const reveal = document.querySelector("[data-h2h-recipient-reveal]");
+    const reveal = document.querySelector("[data-h2h-board-surface=reveal]");
     const battlefield = reveal?.querySelector("[data-h2h-battlefield]");
     const float = reveal?.querySelector("[data-h2h-mid-rail-float]");
     // Query the ENTER (settled hero) cards specifically. BattlefieldSlot
@@ -1023,7 +1031,7 @@ async function runPlayHarness(browser) {
   //   (b) Cell rect.x strictly increases left-to-right (sanity: no
   //       cells overlap, layout is a horizontal strip).
   const recipientMiniCells = await page
-    .locator(`[data-h2h-recipient-reveal] [data-h2h-hand-strip][data-side="recipient"] [data-h2h-mini-cell="true"]`)
+    .locator(`[data-h2h-board-surface=reveal] [data-h2h-hand-strip][data-side="recipient"] [data-h2h-mini-cell="true"]`)
     .all();
   const cellInfo = [];
   for (const cell of recipientMiniCells) {
@@ -1363,13 +1371,13 @@ async function runHoldSelectViewportSweep(browser, vp) {
     // shell's inner column.
     //
     // The reveal renders its own H2HBoardShell. It exposes its own
-    // [data-h2h-board-inner] inside [data-h2h-recipient-reveal]. We
+    // [data-h2h-board-inner] inside [data-h2h-board-surface=reveal]. We
     // measure containment against the viewport AND, if the strip/CTA
     // overflow, accept the failure ONLY IF the reveal-shell's inner
     // is scrollable AND the strip/CTA become reachable via scroll —
     // matching the §5b rule applied to Layout B.
     const arcMeasure = await page.evaluate(() => {
-      const reveal = document.querySelector("[data-h2h-recipient-reveal]");
+      const reveal = document.querySelector("[data-h2h-board-surface=reveal]");
       if (!reveal) return { ok: false, reason: "no reveal mounted" };
       // The reveal shell's inner — scope to the reveal subtree so we
       // don't pick up the playing shell's inner (which sits beneath).
@@ -1546,7 +1554,13 @@ async function captureOverlayRects(page) {
       const r = el.getBoundingClientRect();
       return { x: r.x, y: r.y, width: r.width, height: r.height };
     };
-    const inner = document.querySelector("[data-h2h-overlay-inner]");
+    // Scoped to [data-h2h-results-overlay] — RESULTS_OVERLAY_URL is the
+    // reveal-mock?overlay=1 page, which co-mounts the reveal AND the overlay.
+    // Both now emit the shell's data-h2h-board-* vocab, and document
+    // .querySelector returns the FIRST (DOM-order) match = the reveal's zone.
+    // Container scope keeps these measuring the OVERLAY's zones (selectors
+    // more specific; geometry comparison unchanged).
+    const inner = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-inner]");
     const innerInfo = inner
       ? {
           scrollTop: inner.scrollTop,
@@ -1556,9 +1570,9 @@ async function captureOverlayRects(page) {
         }
       : null;
     return {
-      topZone: get("[data-h2h-overlay-zone='opponent']"),
-      bottomZone: get("[data-h2h-overlay-zone='user']"),
-      bottomStrip: get("[data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]"),
+      topZone: get("[data-h2h-results-overlay] [data-h2h-board-zone='top']"),
+      bottomZone: get("[data-h2h-results-overlay] [data-h2h-board-zone='bottom']"),
+      bottomStrip: get("[data-h2h-results-overlay] [data-h2h-board-zone='bottom'] [data-h2h-overlay-strip]"),
       cta: get("[data-h2h-overlay-primary-cta]"),
       reserved: get("[data-h2h-overlay-reserved]"),
       innerInfo,
@@ -1568,7 +1582,7 @@ async function captureOverlayRects(page) {
 
 async function scrollOverlayInnerTo(page, where /* "top" | "bottom" */) {
   await page.evaluate((target) => {
-    const inner = document.querySelector("[data-h2h-overlay-inner]");
+    const inner = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-inner]");
     if (!inner) return;
     inner.scrollTo({
       top: target === "bottom" ? inner.scrollHeight : 0,
@@ -1611,7 +1625,7 @@ async function runResultsOverlayViewportSweep(browser, vp) {
   // read it from the first child (the name span) instead of the
   // whole zone-label.
   const bottomLabel = await page.evaluate(() => {
-    const el = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+    const el = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone-label='bottom']");
     const nameSpan = el?.firstElementChild;
     return nameSpan ? (nameSpan.textContent ?? "").trim() : null;
   });
@@ -1918,7 +1932,7 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     // Bug 5 guard (§5a no-scroll case): even when content fits, the
     // "YOU" label must not overlap the CTA. label.bottom <= cta.top.
     const labelVsCtaA = await page.evaluate(() => {
-      const label = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+      const label = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone-label='bottom']");
       const cta = document.querySelector("[data-h2h-overlay-primary-cta]");
       if (!label || !cta) return null;
       const lr = label.getBoundingClientRect();
@@ -1958,7 +1972,7 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     // RESERVED_BOTTOM_CLEARANCE_PX (~100px) of marginBottom on the
     // user ZonePanel so the label clears the CTA's pinned region.
     const labelVsCta = await page.evaluate(() => {
-      const label = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+      const label = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone-label='bottom']");
       const cta = document.querySelector("[data-h2h-overlay-primary-cta]");
       if (!label || !cta) return null;
       const lr = label.getBoundingClientRect();
@@ -1975,8 +1989,8 @@ async function runResultsOverlayViewportSweep(browser, vp) {
 
     // Bottom strip reachable via scrollIntoView.
     const stripReachable = await page.evaluate(() => {
-      const strip = document.querySelector("[data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]")
-        ?? document.querySelector("[data-h2h-overlay-strip]");
+      const strip = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone='bottom'] [data-h2h-overlay-strip]")
+        ?? document.querySelector("[data-h2h-results-overlay] [data-h2h-overlay-strip]");
       if (!strip) return { ok: false, reason: "strip not in DOM" };
       strip.scrollIntoView({ block: "center", behavior: "instant" });
       const r = strip.getBoundingClientRect();
@@ -2080,9 +2094,9 @@ async function runReducedMotionChargeCheck(browser) {
 //
 // Side mapping:
 //   sender    (top strip)    — reveal: [data-h2h-hand-strip][data-side="sender"]
-//                            — overlay: [data-h2h-overlay-zone='opponent'] [data-h2h-overlay-strip]
+//                            — overlay: [data-h2h-board-zone='top'] [data-h2h-overlay-strip]
 //   recipient (bottom strip) — reveal: [data-h2h-hand-strip][data-side="recipient"]
-//                            — overlay: [data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]
+//                            — overlay: [data-h2h-board-zone='bottom'] [data-h2h-overlay-strip]
 
 // Matches H2HResultsOverlay.tsx:133 (export const OVERLAY_CROSSFADE_MS).
 const OVERLAY_CROSSFADE_MS_HARNESS = 350;
@@ -2137,8 +2151,8 @@ async function captureLineupStripGeometry(page, kind /* "reveal" | "overlay" */)
         outerSel = `[data-h2h-hand-strip="true"][data-side="${sideKey}"]`;
         cellSel = `${outerSel} > [data-h2h-mini-cell="true"]`;
       } else {
-        const zoneAttr = sideKey === "sender" ? "opponent" : "user";
-        outerSel = `[data-h2h-overlay-zone='${zoneAttr}'] [data-h2h-overlay-strip="true"]`;
+        const zoneAttr = sideKey === "sender" ? "top" : "bottom";
+        outerSel = `[data-h2h-results-overlay] [data-h2h-board-zone='${zoneAttr}'] [data-h2h-overlay-strip="true"]`;
         cellSel = `${outerSel} > [data-h2h-overlay-cell="true"]`;
       }
       const outer = document.querySelector(outerSel);
@@ -2394,10 +2408,10 @@ async function runNoJumpAssertion(browser) {
     };
     const nameEl = (sel) => document.querySelector(sel)?.firstElementChild;
     return {
-      revealTop: fmt(nameEl(`[data-h2h-board-zone-label="top"]`)),
-      revealBottom: fmt(nameEl(`[data-h2h-board-zone-label="bottom"]`)),
-      overlayTop: fmt(nameEl(`[data-h2h-overlay-zone-label="top"]`)),
-      overlayBottom: fmt(nameEl(`[data-h2h-overlay-zone-label="bottom"]`)),
+      revealTop: fmt(nameEl(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="top"]`)),
+      revealBottom: fmt(nameEl(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="bottom"]`)),
+      overlayTop: fmt(nameEl(`[data-h2h-results-overlay] [data-h2h-board-zone-label="top"]`)),
+      overlayBottom: fmt(nameEl(`[data-h2h-results-overlay] [data-h2h-board-zone-label="bottom"]`)),
     };
   });
 
