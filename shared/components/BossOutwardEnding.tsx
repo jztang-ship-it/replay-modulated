@@ -21,6 +21,7 @@
 import { useEffect, useState } from "react";
 import { recordBossResult, getBossResult, type BossResult } from "@shared/utils/bossResultMemory";
 import { track } from "@shared/analytics/analytics";
+import { getOrMintReferrerToken } from "@shared/utils/referrerToken";
 
 // Layer C, delta-a: the loss "near-miss" return-arc threshold. A loss within
 // this many FP of the boss target reads as a near-miss ("run it back") rather
@@ -97,11 +98,29 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
         : `${lostMargin} away.`
       : "The boss held.";
 
+  // Layer C, delta-b: the forwarded URL carries the sender-stable ?ref={token}
+  // BESIDE the single global boss row (bossChallengeId is unchanged — never a new
+  // instance). The token is minted ONLY here, at forward time (first Challenge
+  // Someone / Copy Link), then reused forever on this device. Pure client; no DB.
+  function buildForwardUrl(): string {
+    if (!shareUrl) return "";
+    const ref = getOrMintReferrerToken();
+    const url = `${shareUrl}?ref=${encodeURIComponent(ref)}`;
+    if (import.meta.env.DEV) {
+      // Layer-C glass harness — surfaces the produced forward URL (with ?ref) so
+      // it's readable on a forward. DEV-only.
+      // eslint-disable-next-line no-console
+      console.log("[boss-forward] share url=", url);
+    }
+    return url;
+  }
+
   function challengeSomeone() {
     if (typeof navigator === "undefined") return;
     track("challenges", "boss_outward_share", { challenge_id: bossChallengeId, sport, won: result!.won });
+    const forwardUrl = buildForwardUrl();
     if (navigator.share) {
-      navigator.share({ title: "ReplayIFS — Today's Boss", text: shareText, url: shareUrl }).catch((err: any) => {
+      navigator.share({ title: "ReplayIFS — Today's Boss", text: shareText, url: forwardUrl }).catch((err: any) => {
         if (err?.name === "AbortError") return;
         copyLink();
       });
@@ -114,7 +133,7 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
     if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return;
     track("challenges", "boss_outward_copy", { challenge_id: bossChallengeId, sport, won: result!.won });
     navigator.clipboard
-      .writeText(shareUrl)
+      .writeText(buildForwardUrl())
       .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); })
       .catch(() => { /* ignore */ });
   }

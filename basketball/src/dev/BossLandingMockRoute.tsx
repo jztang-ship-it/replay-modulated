@@ -16,6 +16,7 @@
 // does not re-enter the real boss loop (that lives in App's onTryAgain).
 
 import { BossOutwardEnding } from "@shared/components/BossOutwardEnding";
+import { peekReferrerToken, REFERRER_TOKEN_KEY } from "@shared/utils/referrerToken";
 
 type Outcome = "win" | "close" | "far";
 
@@ -61,6 +62,13 @@ export default function BossLandingMockRoute() {
         <a href="?outcome=win" style={{ color: "#FFB14A" }}>win</a>
         <a href="?outcome=close" style={{ color: "#FFB14A" }}>close loss</a>
         <a href="?outcome=far" style={{ color: "#FFB14A" }}>far loss</a>
+      </div>
+      {/* Layer-C delta-b send-side glass: the stored referral token (peeked, NOT
+          minted by rendering this). "(not minted yet)" until the first Challenge
+          Someone / Copy Link on a WIN forwards. Click an outcome link to re-read
+          after a forward; the value must stay the SAME across forwards (reuse). */}
+      <div style={{ fontSize: 12, color: "rgba(234,240,255,0.6)", textAlign: "center" }}>
+        localStorage[{REFERRER_TOKEN_KEY}] = {peekReferrerToken() ?? "(not minted yet)"}
       </div>
       <div style={{ width: "100%", maxWidth: 460 }}>
         <BossOutwardEnding
