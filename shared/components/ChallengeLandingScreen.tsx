@@ -467,7 +467,12 @@ function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept, s
           marquee={marquee}
           targetScore={data.target_score}
           bossName={data.challenger_name}
-          onPlayAgain={onClose}
+          /* Rule 1 (boss fully replayable): the revisit ending's "Play Again"
+             RE-ACCEPTS (onAccept → App boss branch → dealFreshRoster → a FRESH
+             draft) instead of closing to solo. Same fresh-draft replay as the
+             live ending (App.onTryAgain boss branch). The result screen still
+             shows on revisit (Option B) — only its action is rewired. */
+          onPlayAgain={onAccept}
         />
       ) : (
         <>

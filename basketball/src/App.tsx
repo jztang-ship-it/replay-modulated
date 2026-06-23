@@ -235,6 +235,39 @@ function AppInner() {
     setView("game");
   };
 
+  // Boss replay (rule 1: fully replayable). Re-drafts a FRESH five excluding the
+  // boss five (from resolvedSenderHand — initialRoster was overwritten by the
+  // first draft) and re-mounts H2HRecipientPlay with it. Reuses the existing
+  // dealFreshRoster seam; resolvedSenderHand (the boss opponent) is preserved so
+  // the reveal still races the same boss. Boss-only — wired into onTryAgain
+  // below for the boss path; humans keep the same-five key-bump retake.
+  const replayBossFreshDraft = () => {
+    const ctx = challengeCtx;
+    if (!ctx || ctx.senderKind !== "boss") return;
+    const bossFive = ctx.resolvedSenderHand?.cards ?? [];
+    const excludeBaseIds = new Set(
+      bossFive
+        .map((bc) => String((bc as { basePlayerId?: string }).basePlayerId ?? "").trim())
+        .filter(Boolean),
+    );
+    chDebug("bossReplay:start", { challengeId: ctx.challengeId, season: ctx.season, exclude: excludeBaseIds.size });
+    dealFreshRoster(ctx.season, excludeBaseIds)
+      .then(({ roster }) => {
+        chDebug("bossReplay:dealt", { challengeId: ctx.challengeId, dealt: roster.length });
+        setChallengeCtx({
+          ...ctx,
+          startMode: "draft-fresh",
+          initialRoster: roster as unknown as import("@shared/types/index").GeneratedCard[],
+        });
+        setH2hPlayKey((k) => k + 1);
+      })
+      .catch((e) => {
+        // Degrade — never block the user. Replay the existing five (key bump).
+        console.error("[boss] replay draft-fresh failed; replaying current five:", e);
+        setH2hPlayKey((k) => k + 1);
+      });
+  };
+
   // [ch-debug] render-gate tripwire. Fires on every transition of the
   // gate inputs. `branch` names what the JSX would mount next render —
   // the primary signal for the ripe-challenge "drops to fresh deal"
@@ -352,6 +385,14 @@ function AppInner() {
             setH2hPlayingMode(false);
           }}
           onTryAgain={() => {
+            // Rule 1 (boss fully replayable): a BOSS "Play Again" re-drafts a
+            // FRESH five (draft-fresh re-entry) rather than replaying the same
+            // hand. HUMAN challenges keep the same-five key-bump retake — gated
+            // on senderKind so human behavior is unchanged.
+            if (challengeCtx?.senderKind === "boss") {
+              replayBossFreshDraft();
+              return;
+            }
             // Key bump re-mounts H2HRecipientPlay with fresh state
             // (state machine resets to loading → deal_in per the
             // Layout A/B restructure; pre_deal was killed). The
