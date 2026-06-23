@@ -6,6 +6,8 @@ import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import { supabase } from "@shared/lib/supabase";
 import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
+import { getPlayerUid } from "@shared/utils/playerIdentity";
+import { serializeResolvedRoster } from "@shared/utils/resolvedRosterSerialization";
 
 export interface ChallengeShareState {
   triggerResult: TriggerResult | null;
@@ -56,6 +58,98 @@ export interface CreateChallengeArgs {
 // attempt is practice — doesn't count toward challenge stats). Does NOT
 // block replays; replays run normally.
 const CHALLENGE_ATTEMPTED_PREFIX = "rm_challenge_attempted_";
+
+/** Outcome of the share-path hand_log gap-fill (below). Surfaced for tests
+ *  and for telemetry; createChallenge ignores it (best-effort). */
+export type HandLogGapFillResult = "written" | "exists" | "skipped-anon" | "error";
+
+/**
+ * Idempotent sender hand_log gap-fill (2026-06-23 — "fix c" for the 0659ca6
+ * black-reveal regression).
+ *
+ * Since 0659ca6 the unconditional reveal-write (_useReveal.ts:371) was deleted
+ * and the SOLE hand_log writer is the best-effort/bounded persistLock at
+ * lineup-lock. currentHandIdRef is set synchronously (regardless of whether
+ * that write lands), and the lock-time getPlayerUid() can still be `u_…`
+ * mid-auth-resolution — so a SIGNED-IN sender can mint a challenge whose
+ * hand_id has NO hand_log row → recipient GET .../sender-hand returns
+ * sender_resolved:false (legacy_pre_h2h_capture) → undefined resolvedSenderHand
+ * → black reveal. Broad: every signed-in share that races/skips that write.
+ *
+ * This restores prod's "a row exists for every shared hand" invariant ON THE
+ * SHARE PATH — entirely off the money seam (no commitRound/persistLock/charge).
+ * At challenge-create, if no hand_log row exists for handId, write one from the
+ * resolved data the share already holds.
+ *
+ * Idempotency is the correctness requirement: no-op when persistLock's write
+ * landed (the common case) via an existence check, and the unique PARTIAL index
+ * idx_hand_log_hand_id (migration 002:20, `WHERE hand_id IS NOT NULL`) is the
+ * race backstop. NB: that index is partial, so supabase-js `.upsert({onConflict})`
+ * can't supply the predicate to match it — we therefore do select-then-insert
+ * and treat a 23505 unique-violation as the ON-CONFLICT-DO-NOTHING no-op.
+ *
+ * Gate 1 (auth): player_id is taken from the SHARE-TIME getPlayerUid(); a
+ *   still-anonymous `u_…` id SKIPS the write (never poison the uuid column).
+ * Gate 2 (shape): final_roster via serializeResolvedRoster — the exact array
+ *   shape the recipient's Array.isArray check at sender-hand.ts:100 requires.
+ * Gate 3 (completeness): the same column set logHandToDb writes (the reveal
+ *   read needs hand_id/total_fp/tier/final_roster; downstream audits key on
+ *   hand_id). payout/streak_at_play are gap-fill defaults — real values only
+ *   exist when persistLock landed (it didn't here); the money seam already
+ *   skipped the charge on that failure, so there is no authoritative payout to
+ *   record and this row exists for the H2H reveal READ, not reconciliation.
+ */
+export async function ensureSenderHandLogRow(
+  args: CreateChallengeArgs,
+  session: { access_token?: string } | null,
+): Promise<HandLogGapFillResult> {
+  // Gate 1 — real Supabase uuid only. A `u_…` id (signed-out, or auth not yet
+  // resolved) must NEVER reach the player_id uuid column. Skip cleanly.
+  let uid: string;
+  try {
+    uid = getPlayerUid();
+  } catch {
+    return "error";
+  }
+  if (!uid || uid.startsWith("u_")) return "skipped-anon";
+
+  try {
+    // Idempotent fast-path: persistLock already wrote the row → no-op.
+    const { data: existing } = await supabase
+      .from("hand_log")
+      .select("hand_id")
+      .eq("hand_id", args.handId)
+      .maybeSingle();
+    if (existing) return "exists";
+
+    const row = {
+      player_id: uid,
+      hand_id: args.handId,
+      roster_ids: args.roster
+        .map((c) => String((c as { basePlayerId?: unknown }).basePlayerId ?? ""))
+        .filter(Boolean),
+      total_fp: args.totalFp,
+      tier: args.winTier,
+      payout: 0,
+      streak_at_play: 0,
+      verified: !!session?.access_token,
+      sport: args.sport,
+      season: args.season,
+      final_roster: serializeResolvedRoster(args.roster),
+    };
+    const { error } = await supabase.from("hand_log").insert(row);
+    if (error) {
+      // 23505 = a concurrent persistLock insert won the unique partial index
+      // → exactly ON CONFLICT DO NOTHING; treat as a no-op success.
+      if ((error as { code?: string }).code === "23505") return "exists";
+      return "error";
+    }
+    return "written";
+  } catch {
+    // Best-effort: a gap-fill failure must NEVER break the share.
+    return "error";
+  }
+}
 
 export function useChallengeShare(sportKey: string) {
   const [state, setState] = useState<ChallengeShareState>({
@@ -136,6 +230,18 @@ export function useChallengeShare(sportKey: string) {
       });
       if (!resp.ok) throw new Error("Create failed");
       const data = await resp.json();
+      // Fix c (2026-06-23): guarantee the sender hand_log row exists for this
+      // challenge's hand_id so the recipient's H2H reveal resolves instead of
+      // falling back to legacy_pre_h2h_capture → black. Idempotent + best-
+      // effort + OFF the money seam (see ensureSenderHandLogRow). Awaited so the
+      // row is in place before the share URL is handed out, but never throws and
+      // never blocks the create result. Reuses the session fetched above for the
+      // `verified` flag (no extra round-trip).
+      try {
+        await ensureSenderHandLogRow(args, session ?? null);
+      } catch {
+        /* belt-and-suspenders — the helper already swallows; never break share */
+      }
       setState(s => ({
         ...s, isCreating: false,
         challengeId: data.challenge_id,
