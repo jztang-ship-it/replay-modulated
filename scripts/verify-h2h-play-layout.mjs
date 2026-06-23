@@ -441,18 +441,18 @@ async function runPlayHarness(browser) {
   // After the untap above the state is: previewedSlotIndex=2, held=∅.
   //   Step 1: tap slot 2 → slot 2 is the already-previewed cell, not held
   //           → flips to held. State: previewed=2, held={2}.
-  //   Step 2: tap slot 5 → slot 5 not previewed → moves preview to 5.
-  //   Step 3: tap slot 5 again → slot 5 is now the previewed cell, not
-  //           held → flips to held. State: previewed=5, held={2,5}.
+  //   Step 2: tap slot 4 → slot 4 not previewed → moves preview to 4.
+  //   Step 3: tap slot 4 again → slot 4 is now the previewed cell, not
+  //           held → flips to held. State: previewed=4, held={2,4}.
   await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
   await page.waitForTimeout(20);
-  await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
+  await page.locator(`[data-h2h-play-bottom-cell="4"]`).click();
   await page.waitForTimeout(20);
-  await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
+  await page.locator(`[data-h2h-play-bottom-cell="4"]`).click();
   await page.waitForTimeout(50);
   const hBadgeCountTwoHeld = await page.locator(hBadgeSelectorBottom).count();
   record(
-    `H badge count == 2 after holding slots 2 and 5 (multi-hold tap)`,
+    `H badge count == 2 after holding slots 2 and 4 (multi-hold tap)`,
     hBadgeCountTwoHeld === 2,
     `count=${hBadgeCountTwoHeld}`,
   );
@@ -868,7 +868,7 @@ async function runPlayHarness(browser) {
   );
 
   // C/D regression-lock #2: ≥2 H badges in the recipient's reveal strip
-  // (we held slots 2 and 5 before Draw — both should be HOLD at reveal).
+  // (we held slots 2 and 4 before Draw — both should be HOLD at reveal).
   // Target the bottom zone INSIDE the reveal (recipient's strip) so we
   // don't conflate with the top (sender) strip's wasHeld badges, which
   // come from a different data path.
@@ -1010,7 +1010,7 @@ async function runPlayHarness(browser) {
   );
 
   // ── #4 regression-lock (2026-05-30): strip LAYOUT = slotIndex, not revealOrder ──
-  // We held slots 2 and 5 pre-Draw. With the strip-sort fix, the H-badged
+  // We held slots 2 and 4 pre-Draw. With the strip-sort fix, the H-badged
   // cells must remain at DOM-positions 2 and 5 in the recipient reveal
   // strip — NOT clustered at the rightmost positions (which would happen
   // if revealOrder drove spatial layout: held cards go last in time, so
@@ -1018,8 +1018,8 @@ async function runPlayHarness(browser) {
   //
   // Strategy: walk the recipient strip's mini-cells in DOM order, record
   // which contain an H-badge polygon, and check rect.x ordering. Asserts:
-  //   (a) H-badge cells at DOM-indices {2, 5} (slotIndex layout), NOT
-  //       DOM-indices {4, 5} (revealOrder layout).
+  //   (a) H-badge cells at DOM-indices {2, 4} (slotIndex layout), NOT
+  //       DOM-indices {3, 4} (revealOrder layout).
   //   (b) Cell rect.x strictly increases left-to-right (sanity: no
   //       cells overlap, layout is a horizontal strip).
   const recipientMiniCells = await page
@@ -1040,8 +1040,8 @@ async function runPlayHarness(browser) {
     .map((info, i) => (info.hasHBadge ? i : -1))
     .filter((i) => i >= 0);
   record(
-    `#4: held cells at DOM-indices {2, 5} (slotIndex layout) — NOT {4, 5} (revealOrder layout)`,
-    heldDomIndices.length === 2 && heldDomIndices[0] === 2 && heldDomIndices[1] === 5,
+    `#4: held cells at DOM-indices {2, 4} (slotIndex layout) — NOT {3, 4} (revealOrder layout)`,
+    heldDomIndices.length === 2 && heldDomIndices[0] === 2 && heldDomIndices[1] === 4,
     `got DOM-indices=${JSON.stringify(heldDomIndices)}`,
   );
   // Sanity: strictly-increasing rect.x left-to-right.
@@ -1092,9 +1092,9 @@ const HS_TAP_STATES = [
   { id: "HS-0", label: "baseline (post-deal)",            tapSelector: null },
   { id: "HS-1", label: "preview (tap slot 2)",            tapSelector: '[data-h2h-play-bottom-cell="2"]' },
   { id: "HS-2", label: "first-hold (tap slot 2 again)",   tapSelector: '[data-h2h-play-bottom-cell="2"]' },
-  { id: "HS-3", label: "move (tap slot 5)",               tapSelector: '[data-h2h-play-bottom-cell="5"]' },
-  { id: "HS-4", label: "multi-hold (tap slot 5 again)",   tapSelector: '[data-h2h-play-bottom-cell="5"]' },
-  { id: "HS-5", label: "unhold (tap slot 5 a third time)",tapSelector: '[data-h2h-play-bottom-cell="5"]' },
+  { id: "HS-3", label: "move (tap slot 4)",               tapSelector: '[data-h2h-play-bottom-cell="4"]' },
+  { id: "HS-4", label: "multi-hold (tap slot 4 again)",   tapSelector: '[data-h2h-play-bottom-cell="4"]' },
+  { id: "HS-5", label: "unhold (tap slot 4 a third time)",tapSelector: '[data-h2h-play-bottom-cell="4"]' },
 ];
 
 async function injectSafeArea(page, safeTop, safeBottom) {
@@ -1207,7 +1207,7 @@ async function runHoldSelectViewportSweep(browser, vp) {
   // assertions: the recipient strip + CTA must be contained-or-
   // reachable on tight viewports.
   //
-  // From hold_select with held={2,5} (HS-4 final state), tap Draw to
+  // From hold_select with held={2,4} (HS-4 final state), tap Draw to
   // drive into Layout B. Wait through redraw_running → your_redraw_flip
   // → ab_transition into the handoff_resolving settle-pause.
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
@@ -2175,9 +2175,9 @@ function assertNoJumpForSide(sideLabel, reveal, overlay) {
     );
     return;
   }
-  if (reveal.cells.length !== 6 || overlay.cells.length !== 6) {
+  if (reveal.cells.length !== 5 || overlay.cells.length !== 5) {
     record(
-      `no-jump ${sideLabel}: both strips have 6 cells`,
+      `no-jump ${sideLabel}: both strips have 5 cells`,
       false,
       `revealCells=${reveal.cells.length} overlayCells=${overlay.cells.length}`,
     );
@@ -2215,7 +2215,7 @@ function assertNoJumpForSide(sideLabel, reveal, overlay) {
   // Per-cell rect — each of the 6 cells in slotIndex order must land
   // at the same x/y/w/h on both surfaces. The strips both sort by
   // slotIndex, so cells[i] on reveal pairs with cells[i] on overlay.
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const rc = reveal.cells[i];
     const oc = overlay.cells[i];
     for (const f of RECT_FIELDS) {
@@ -2260,7 +2260,7 @@ function assertNoJumpForSide(sideLabel, reveal, overlay) {
   // DISPLAY_WIDTH = STRIP_HEIGHT × 329 / 478. Drift in either constant
   // (STRIP_HEIGHT_PX or STRIP_CARD_NATURAL_WIDTH_PX) re-derives the
   // scale differently per file.
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const rs = reveal.innerScales[i].scale;
     const os = overlay.innerScales[i].scale;
     if (!rs || !os) {
