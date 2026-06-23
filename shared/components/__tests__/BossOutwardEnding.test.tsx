@@ -33,20 +33,26 @@ describe("BossOutwardEnding", () => {
     expect(getBossResult(BOSS_ID)).toEqual({ score: 233.5, won: true });
   });
 
-  it("fresh LOSS: enemy-referential, never self-referential", async () => {
+  it("fresh LOSS (no target → far): run-it-back framing, no forward, never self-referential", async () => {
     render(<BossOutwardEnding sport="basketball" bossChallengeId={BOSS_ID} freshResult={{ score: 180, won: false }} onPlayAgain={() => {}} />);
     await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
     expect(screen.getByTestId("boss-outward-ending").getAttribute("data-won")).toBe("false");
     expect(screen.getByText(/TODAY'S BOSS GOT YOU/)).toBeTruthy();
-    expect(screen.getByText(/Think you survive them\?/)).toBeTruthy();
+    // delta-a: no targetScore → margin unknown → far-loss sub, NOT the
+    // pre-delta-a "Think you survive them?" enemy-referential share line.
+    expect(screen.getByText(/The boss held\./)).toBeTruthy();
+    expect(screen.queryByText(/Think you survive them\?/)).toBeNull();
+    // delta-a: a loss never forwards (beat-to-send is win-only).
+    expect(screen.queryByTestId("boss-challenge-someone")).toBeNull();
+    expect(screen.queryByTestId("boss-copy-link")).toBeNull();
     // No self-referential "beat my score" framing.
     expect(screen.queryByText(/beat my score/i)).toBeNull();
   });
 
-  // Phase 2-mount Step 4 — two-tier framing. A MARQUEE boss loss uses
-  // margin-based copy (the near-miss is the draw), referencing the boss by
-  // name + the margin — NOT the generic beatable enemy line.
-  it("marquee LOSS: margin-based copy referencing the boss + the margin", async () => {
+  // delta-a: MARQUEE no longer drives loss copy. A marquee loss at margin >
+  // NEAR_MISS_MARGIN (5) reads as a far loss ("The boss held."), NOT the
+  // pre-delta-a margin-based marquee share line.
+  it("marquee LOSS (margin > near-miss): far-loss copy; marquee no longer drives loss share", async () => {
     render(
       <BossOutwardEnding
         sport="basketball"
@@ -59,10 +65,13 @@ describe("BossOutwardEnding", () => {
       />
     );
     await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
-    // margin = round(200 - 182) = 18, boss referenced by name.
-    expect(screen.getByText(/within 18 of the '15-16 Warriors/)).toBeTruthy();
-    // NOT the generic beatable enemy line.
+    // margin = round(200 - 182) = 18 > 5 → far loss.
+    expect(screen.getByText(/The boss held\./)).toBeTruthy();
+    // The pre-delta-a marquee margin share line is gone.
+    expect(screen.queryByText(/within 18 of the '15-16 Warriors/)).toBeNull();
     expect(screen.queryByText(/Think you survive them\?/)).toBeNull();
+    // Loss → no forward.
+    expect(screen.queryByTestId("boss-challenge-someone")).toBeNull();
   });
 
   it("marquee WIN still terminates outward (outward branch + Play Again present)", async () => {
@@ -91,21 +100,34 @@ describe("BossOutwardEnding", () => {
     expect(screen.getByTestId("boss-outward-score").textContent).toMatch(/You scored 233\.5/);
   });
 
-  it("Play Again fires onPlayAgain (never alone, but present)", async () => {
+  it("loss: Run it back fires onPlayAgain; Play Again is win-only (absent on loss)", async () => {
     const onPlayAgain = vi.fn();
     render(<BossOutwardEnding sport="basketball" bossChallengeId={BOSS_ID} freshResult={{ score: 100, won: false }} onPlayAgain={onPlayAgain} />);
-    await waitFor(() => expect(screen.getByTestId("boss-play-again")).toBeTruthy());
-    fireEvent.click(screen.getByTestId("boss-play-again"));
+    // delta-a: the loss CTA is run-it-back (replays the boss via onPlayAgain);
+    // the below-line "Play Again" is win-only, so it's absent on a loss.
+    await waitFor(() => expect(screen.getByTestId("boss-run-it-back")).toBeTruthy());
+    expect(screen.queryByTestId("boss-play-again")).toBeNull();
+    fireEvent.click(screen.getByTestId("boss-run-it-back"));
     expect(onPlayAgain).toHaveBeenCalledTimes(1);
   });
 
-  it("Copy Link writes the boss URL", async () => {
+  it("Copy Link (win) writes the forward URL with ?ref; absent on loss", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
-    render(<BossOutwardEnding sport="basketball" bossChallengeId={BOSS_ID} freshResult={{ score: 100, won: false }} onPlayAgain={() => {}} />);
+    // Win: Copy Link present, writes the boss URL — now with the delta-b ?ref
+    // token appended BESIDE the single boss id.
+    const win = render(<BossOutwardEnding sport="basketball" bossChallengeId={BOSS_ID} freshResult={{ score: 233.5, won: true }} onPlayAgain={() => {}} />);
     await waitFor(() => expect(screen.getByTestId("boss-copy-link")).toBeTruthy());
     fireEvent.click(screen.getByTestId("boss-copy-link"));
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining(`/basketball/challenge/${BOSS_ID}`));
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("?ref="));
+    win.unmount();
+    // Loss: forward is win-only → Copy Link absent. Fresh id so the sticky-win
+    // memory from the win render above doesn't bleed in and re-show the forward.
+    localStorage.clear();
+    render(<BossOutwardEnding sport="basketball" bossChallengeId={`${BOSS_ID}-loss`} freshResult={{ score: 100, won: false }} onPlayAgain={() => {}} />);
+    await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
+    expect(screen.queryByTestId("boss-copy-link")).toBeNull();
   });
 
   it("recordBossResult keeps best score + sticky win (attempted-not-per-play)", () => {
