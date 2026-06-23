@@ -133,6 +133,44 @@ describe("useChallengeAttempt POST body — phase 5b commit 2 contract", () => {
     expect(body.is_winner).toBe(false);
   });
 
+  it("includes referrer_token when referrerToken is supplied (layer C delta-b)", async () => {
+    renderHook(() =>
+      useChallengeAttempt({
+        challengeId: "test-challenge",
+        myScore: 100,
+        targetScore: 90,
+        sport: "basketball",
+        enabled: true,
+        referrerToken: "GLASS-REF-001",
+      }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = JSON.parse(init.body as string);
+    expect(body.referrer_token).toBe("GLASS-REF-001");
+  });
+
+  it("omits referrer_token when referrerToken is not supplied (byte-identical no-ref body)", async () => {
+    renderHook(() =>
+      useChallengeAttempt({
+        challengeId: "test-challenge",
+        myScore: 80,
+        targetScore: 90,
+        sport: "basketball",
+        enabled: true,
+        // referrerToken intentionally omitted
+      }),
+    );
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const body = JSON.parse(init.body as string);
+    // Absent (key not present), not null — the optionality the server's null
+    // default + the no-ref byte-identical guarantee depend on.
+    expect("referrer_token" in body).toBe(false);
+  });
+
   it("does not POST when enabled is false", async () => {
     renderHook(() =>
       useChallengeAttempt({

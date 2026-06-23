@@ -85,6 +85,17 @@ function getChallengeId(): string | null {
   return match ? match[1] : null;
 }
 
+/** Layer C, delta-b/c capture: the sender-stable referral token off a forwarded
+ *  boss link's ?ref param (BESIDE the single global boss id in the path). Read
+ *  alongside getChallengeId; the strip in the mount effect preserves ?ref
+ *  (only signin/play/profile are removed), so it survives to accept time. Null
+ *  when absent → the recipient attempt carries no token (byte-identical path). */
+function getRefToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("ref");
+  return raw && raw.length > 0 ? raw : null;
+}
+
 /** Dev-only route detector. Matches /basketball/dev/<slug> paths and
  *  returns the slug. Production users have no entry point here.
  *
@@ -458,7 +469,19 @@ function AppInner() {
               prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
               next: { challengeId: c.challengeId, h2hPlayingMode: true },
             });
-            setChallengeCtx(c);
+            // Layer C, delta-b/c: stamp the forwarded ?ref token onto the ctx
+            // at the single accept point (covers boss draft-fresh, its fallback,
+            // and the human path). Optional — undefined when no ?ref, so
+            // non-forwarded attempts are byte-identical.
+            const __refToken = getRefToken() ?? undefined;
+            if (import.meta.env.DEV) {
+              // Layer-C glass harness — confirms capture on the real recipient
+              // flow (DEV-only). Read this in the console while glassing a
+              // /basketball/challenge/<id>?ref=<token> link.
+              // eslint-disable-next-line no-console
+              console.log("[ref-capture] challengeId=", c.challengeId, "refToken=", __refToken ?? "(none)");
+            }
+            setChallengeCtx({ ...c, refToken: __refToken });
             setShowChallengeLanding(false);
             try { localStorage.setItem(SKIP_LANDING_KEY, "1"); } catch {}
             setView("game");

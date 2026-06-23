@@ -149,6 +149,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
     sport,
     enabled: true,
     resolvedRoster: myRoster,
+    // Layer C, delta-b/c: carry the forwarded ?ref token (if any) onto this
+    // attempt. Optional — undefined for direct/human attempts (byte-identical).
+    referrerToken: challengeCtx.refToken,
   });
 
   // Compose H2HHand objects from the resolved sender data + the

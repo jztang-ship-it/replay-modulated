@@ -36,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Missing or invalid id" });
   }
 
-  const { score, score_breakdown, is_winner, user_id, user_name, anon_uid } = req.body ?? {};
+  const { score, score_breakdown, is_winner, user_id, user_name, anon_uid, referrer_token } = req.body ?? {};
   if (score == null || is_winner == null) {
     return res.status(400).json({ error: "score and is_winner required" });
   }
@@ -57,6 +57,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const safeAnonUid: string | null = (typeof anon_uid === "string" && anon_uid.length > 0 && anon_uid.length <= 64)
     ? anon_uid.trim()
     : null;
+  // Layer C, delta-b/c: the forwarded boss link's ?ref token, written to
+  // challenge_attempts.referrer_token (migration 015) so attempts can be grouped
+  // into a per-sender lobby (the lobby READ is delta-c). Validate/clamp like
+  // anon_uid — non-string or junk-stuffed → null. Null when absent, so direct
+  // boss plays and all human challenges are unchanged. The lobby write only.
+  const safeReferrerToken: string | null =
+    (typeof referrer_token === "string" && referrer_token.length > 0 && referrer_token.length <= 64)
+      ? referrer_token.trim()
+      : null;
   // The single identity we cluster on for this attempt. Auth wins when
   // available; anon_uid fills the gap. Either anchors the window math.
   const clusterIdentity: { kind: "auth" | "anon"; value: string } | null =
@@ -145,6 +154,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       score: newScore,
       score_breakdown: score_breakdown ?? null,
       is_winner: newIsWinner,
+      // Layer C, delta-b/c: null when no forwarded ?ref (direct/human attempts).
+      referrer_token: safeReferrerToken,
     })
     .select("attempt_id, created_at")
     .single();

@@ -83,6 +83,13 @@ export interface ChallengeCtx {
    *  false/undefined for humans). marquee → the result uses margin-based loss
    *  copy and the landing shows a "brutal by design" label. */
   marquee?: boolean;
+  /** Layer C, delta-b/c: the sender-stable referral token captured off the
+   *  forwarded boss link's ?ref param at accept time. Optional — undefined on
+   *  direct boss plays (no ?ref) and on every human challenge, so non-forwarded
+   *  attempts stay byte-identical. Threaded to useChallengeAttempt so the
+   *  recipient's attempt row carries it (challenge_attempts.referrer_token), the
+   *  write half of the per-sender lobby (the lobby READ is delta-c). */
+  refToken?: string;
 }
 
 /**

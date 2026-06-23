@@ -66,6 +66,13 @@ export interface UseChallengeAttemptArgs {
    *  in pre-resolve call paths; in those cases score_breakdown is
    *  omitted and the server's existing `?? null` default applies. */
   resolvedRoster?: GeneratedCard[];
+  /** Layer C, delta-b/c: the sender-stable referral token captured off a
+   *  forwarded boss link's ?ref param. When present, the POST body includes
+   *  referrer_token so the attempt row carries it (challenge_attempts
+   *  .referrer_token, the lobby-write half; the READ is delta-c). Optional —
+   *  OMITTED from the body when absent, so direct boss plays and all human
+   *  challenges send a byte-identical body and the server's null default holds. */
+  referrerToken?: string;
 }
 
 export interface UseChallengeAttemptReturn {
@@ -96,7 +103,7 @@ export interface UseChallengeAttemptReturn {
 }
 
 export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallengeAttemptReturn {
-  const { challengeId, myScore, targetScore, sport, enabled, resolvedRoster } = args;
+  const { challengeId, myScore, targetScore, sport, enabled, resolvedRoster, referrerToken } = args;
 
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -166,6 +173,10 @@ export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallenge
         // user_notifications.payload.attempter_roster so the sender-side
         // overlay (phase 5b commits 3-4) can render the attempter's hand.
         score_breakdown: resolvedRoster ? serializeResolvedRoster(resolvedRoster) : undefined,
+        // Layer C, delta-b/c: include the forwarded ?ref token ONLY when present
+        // so non-forwarded attempts send a byte-identical body (the key is
+        // absent, not null). Server writes challenge_attempts.referrer_token.
+        ...(referrerToken ? { referrer_token: referrerToken } : {}),
       }),
     })
       .then(r => r.json())
