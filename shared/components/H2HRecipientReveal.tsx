@@ -77,6 +77,13 @@ export const HOLD_TO_ARC_CROSSFADE_MS = 250;
  *  is unchanged; only the hold duration shrinks). Tunable on glass. */
 export const FINAL_HOLD_MS = 150;
 
+// TEMP DIAGNOSTIC (reveal-hang triage) — runtime-gated so it fires in the
+// PRODUCTION preview build. Opt in with ?arcdebug=1; inert otherwise. REVERT.
+const ARC_DEBUG =
+  import.meta.env.DEV ||
+  (typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("arcdebug") === "1");
+
 export interface H2HRecipientRevealProps {
   challengeCtx: ChallengeCtx;
   /** Recipient's total FP, computed by the caller from `myRoster`. */
@@ -119,6 +126,14 @@ export function H2HRecipientReveal(props: H2HRecipientRevealProps) {
   const { challengeCtx, gameState, bypassGameStateGate } = props;
   const senderResolved = challengeCtx.resolvedSenderHand;
   const isInRevealOrResults = gameState === "REVEALING" || gameState === "RESULTS";
+
+  // TEMP DIAGNOSTIC (reveal-hang triage) — the :123 gate render. When
+  // senderResolved flips falsy mid-arc, this logs false and the Inner unmounts
+  // (see [arc-inner] UNMOUNT) → cancelAll("unmount") → the flicker-unmount hang.
+  if (ARC_DEBUG) {
+    // eslint-disable-next-line no-console
+    console.log("[arc-gate] render", { senderResolved: !!senderResolved, isInRevealOrResults, bypassGameStateGate, willRenderInner: !!senderResolved && (isInRevealOrResults || !!bypassGameStateGate), t: Date.now() });
+  }
 
   if (!senderResolved || (!isInRevealOrResults && !bypassGameStateGate)) return null;
 
@@ -244,6 +259,26 @@ function H2HRecipientRevealInner(props: InnerProps) {
   useEffect(() => {
     const id = requestAnimationFrame(() => setVisible(true));
     return () => cancelAnimationFrame(id);
+  }, []);
+
+  // TEMP DIAGNOSTIC (reveal-hang triage) — Inner mount/unmount + tab visibility.
+  // An UNMOUNT during the arc is the flicker-unmount trigger (pairs with
+  // [arc-gate] senderResolved=false + [arc] cancelAll reason=unmount). A HIDDEN
+  // visibility change identifies the tab-background / RAF-pause trigger.
+  useEffect(() => {
+    if (!ARC_DEBUG) return;
+    // eslint-disable-next-line no-console
+    console.log("[arc-inner] MOUNT", { t: Date.now() });
+    const onVis = () => {
+      // eslint-disable-next-line no-console
+      console.log("[arc-vis]", document.hidden ? "HIDDEN" : "VISIBLE", { t: Date.now() });
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      // eslint-disable-next-line no-console
+      console.log("[arc-inner] UNMOUNT", { t: Date.now() });
+    };
   }, []);
 
   // Start the arc once the crossfade has had time to complete.
