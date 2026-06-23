@@ -155,6 +155,13 @@ export interface H2HResultsOverlayProps {
 /** Cross-fade duration. */
 export const OVERLAY_CROSSFADE_MS = 350;
 
+// Results overlay stacking layer. BOTH the boss-result branch and the human
+// rivalry-board branch must use this single value so they can't drift — a prior
+// drift (boss branch hardcoded zIndex:50, below the reveal board's z-9000) left
+// the boss result rendering BEHIND the final card while mounted+visible. Must
+// sit above H2HBoardShell's root (zIndex 9000).
+const H2H_RESULTS_OVERLAY_Z = 9100;
+
 // ── Layout constants ────────────────────────────────────────────────────
 //
 // LEFT_RAIL_WIDTH_PX (100) and RIGHT_RAIL_WIDTH_PX (80) are imported
@@ -1314,7 +1321,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
         style={{
           position: "fixed",
           inset: 0,
-          zIndex: 50,
+          zIndex: H2H_RESULTS_OVERLAY_Z,
           opacity: visible ? 1 : 0,
           transition: `opacity ${OVERLAY_CROSSFADE_MS}ms ease`,
           pointerEvents: visible ? "auto" : "none",
@@ -1340,7 +1347,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 9100,
+        zIndex: H2H_RESULTS_OVERLAY_Z,
         background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
         color: "#EAF0FF",
         fontFamily: "'Inter', system-ui, sans-serif",

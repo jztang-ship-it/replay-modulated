@@ -377,14 +377,6 @@ export const MATCHUP_RESOLVE_PAUSE_MS = 850;
  *  Removes the dead pause so it reads as one beat: delta → boom. */
 export const END_OF_ARC_HOLD_MS = 700;
 
-// TEMP DIAGNOSTIC (reveal-hang triage) — runtime-gated so it fires in the
-// PRODUCTION preview build (import.meta.env.DEV is false there). Opt in with
-// ?arcdebug=1 on the URL; inert otherwise (no prod noise). REVERT after triage.
-const ARC_DEBUG =
-  import.meta.env.DEV ||
-  (typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("arcdebug") === "1");
-
 /** Battlefield card-pull travel window — used by H2HRevealScreen's
  *  BattlefieldSlot for the in/out keyframe animations. Fits inside
  *  MATCHUP_RESOLVE_PAUSE_MS so both the outgoing and incoming motions
@@ -631,11 +623,6 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   //     crossfade — fixes the spoiler flash.
   const [phase, setPhase] = useState<RevealPhase>(initialPhase);
   const [matchupIndex, setMatchupIndex] = useState(startIdle ? -1 : matchups.length - 1);
-  // TEMP DIAGNOSTIC (reveal-hang triage) — latest phase/matchup for cancelAll logging.
-  const _phaseRef = useRef(phase);
-  const _matchupIndexRef = useRef(matchupIndex);
-  useEffect(() => { _phaseRef.current = phase; }, [phase]);
-  useEffect(() => { _matchupIndexRef.current = matchupIndex; }, [matchupIndex]);
   const [visibleFpMap, setVisibleFpMap] = useState<Map<string, number>>(() => new Map());
   // RD3-C (2026-06-11): JOHN holds at sender.totalFp from idle through
   // done — does NOT roll up from 0. The fixed-bar contract for the
@@ -704,14 +691,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
     return id;
   }, []);
 
-  const cancelAll = useCallback((reason = "?") => {
-    // TEMP DIAGNOSTIC (reveal-hang triage) — every runId bump, with WHO and the
-    // phase/matchup at bump time. A bump mid-arc (phase revealing/end-hold) is
-    // the dropped-final-transition trigger; reason "unmount" = the flicker-unmount.
-    if (ARC_DEBUG) {
-      // eslint-disable-next-line no-console
-      console.log("[arc] cancelAll", { reason, phase: _phaseRef.current, matchup: _matchupIndexRef.current, runId: runIdRef.current, t: Date.now() });
-    }
+  const cancelAll = useCallback(() => {
     runIdRef.current++;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     for (const id of timersRef.current) clearTimeout(id);
@@ -720,7 +700,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   }, []);
 
   // Unmount cleanup
-  useEffect(() => () => cancelAll("unmount"), [cancelAll]);
+  useEffect(() => () => cancelAll(), [cancelAll]);
 
   // Animate a single matchup. Trigger CardFront's RAF for both cards,
   // then drive the running totals in a parallel RAF over the same
@@ -926,13 +906,6 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
             anchorHoldMs,
           );
           setPhase(isFinalMatchup ? "end-hold" : "paused");
-          // TEMP DIAGNOSTIC (reveal-hang triage) — final matchup reached end-hold;
-          // the done timer is now armed. If "[arc] reached done" never logs after
-          // this, the final scheduleTimeout was dropped (runId bump / RAF stall).
-          if (ARC_DEBUG && isFinalMatchup) {
-            // eslint-disable-next-line no-console
-            console.log("[arc] end-hold armed (final)", { index, runId: myRunId, t: Date.now() });
-          }
           scheduleTimeout(
             isFinalMatchup ? END_OF_ARC_HOLD_MS : intermediateAdvanceDelay,
             () => {
@@ -941,10 +914,6 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
                 runMatchup(index + 1, myRunId);
               } else {
                 // End-hold complete — settle to "done" and fire onArcResolved.
-                if (ARC_DEBUG) {
-                  // eslint-disable-next-line no-console
-                  console.log("[arc] reached done", { index, runId: myRunId, t: Date.now() });
-                }
                 setPhase("done");
                 onArcResolvedRef.current?.({
                   senderTotal: newSenderTotal,
@@ -994,7 +963,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   }, [matchups, scheduleTimeout, sender.totalFp]);
 
   const play = useCallback(() => {
-    cancelAll("play");
+    cancelAll();
     runIdRef.current++;
     const myRunId = runIdRef.current;
     // Clean slate — visibleFpMap empty so CardFront's reset path runs
@@ -1111,7 +1080,7 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
   }, [cancelAll, scheduleTimeout, matchups.length, runMatchup, reducedMotion, skipEntrance, sender.totalFp]);
 
   const skipToEnd = useCallback(() => {
-    cancelAll("skipToEnd");
+    cancelAll();
     setPhase("done");
     setMatchupIndex(matchups.length - 1);
     // Empty map — CardFront falls through to actualFp via phase=RESULTS.

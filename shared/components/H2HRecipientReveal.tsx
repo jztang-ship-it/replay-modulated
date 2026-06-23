@@ -77,13 +77,6 @@ export const HOLD_TO_ARC_CROSSFADE_MS = 250;
  *  is unchanged; only the hold duration shrinks). Tunable on glass. */
 export const FINAL_HOLD_MS = 150;
 
-// TEMP DIAGNOSTIC (reveal-hang triage) — runtime-gated so it fires in the
-// PRODUCTION preview build. Opt in with ?arcdebug=1; inert otherwise. REVERT.
-const ARC_DEBUG =
-  import.meta.env.DEV ||
-  (typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("arcdebug") === "1");
-
 export interface H2HRecipientRevealProps {
   challengeCtx: ChallengeCtx;
   /** Recipient's total FP, computed by the caller from `myRoster`. */
@@ -126,14 +119,6 @@ export function H2HRecipientReveal(props: H2HRecipientRevealProps) {
   const { challengeCtx, gameState, bypassGameStateGate } = props;
   const senderResolved = challengeCtx.resolvedSenderHand;
   const isInRevealOrResults = gameState === "REVEALING" || gameState === "RESULTS";
-
-  // TEMP DIAGNOSTIC (reveal-hang triage) — the :123 gate render. When
-  // senderResolved flips falsy mid-arc, this logs false and the Inner unmounts
-  // (see [arc-inner] UNMOUNT) → cancelAll("unmount") → the flicker-unmount hang.
-  if (ARC_DEBUG) {
-    // eslint-disable-next-line no-console
-    console.log("[arc-gate] render", { senderResolved: !!senderResolved, isInRevealOrResults, bypassGameStateGate, willRenderInner: !!senderResolved && (isInRevealOrResults || !!bypassGameStateGate), t: Date.now() });
-  }
 
   if (!senderResolved || (!isInRevealOrResults && !bypassGameStateGate)) return null;
 
@@ -261,26 +246,6 @@ function H2HRecipientRevealInner(props: InnerProps) {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  // TEMP DIAGNOSTIC (reveal-hang triage) — Inner mount/unmount + tab visibility.
-  // An UNMOUNT during the arc is the flicker-unmount trigger (pairs with
-  // [arc-gate] senderResolved=false + [arc] cancelAll reason=unmount). A HIDDEN
-  // visibility change identifies the tab-background / RAF-pause trigger.
-  useEffect(() => {
-    if (!ARC_DEBUG) return;
-    // eslint-disable-next-line no-console
-    console.log("[arc-inner] MOUNT", { t: Date.now() });
-    const onVis = () => {
-      // eslint-disable-next-line no-console
-      console.log("[arc-vis]", document.hidden ? "HIDDEN" : "VISIBLE", { t: Date.now() });
-    };
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      document.removeEventListener("visibilitychange", onVis);
-      // eslint-disable-next-line no-console
-      console.log("[arc-inner] UNMOUNT", { t: Date.now() });
-    };
-  }, []);
-
   // Start the arc once the crossfade has had time to complete.
   // setTimeout matches the crossfade duration so the user sees the
   // entrance animation begin after the fade-in lands.
@@ -313,24 +278,6 @@ function H2HRecipientRevealInner(props: InnerProps) {
   }, [reveal.phase]);
   const showOverlay = reveal.phase === "done" && doneHoldElapsed;
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
-
-  // TEMP DIAGNOSTIC (reveal-hang triage) — the done→overlay handoff stages.
-  // arc reaches "done" (confirmed), so the stall is here. This logs every
-  // transition so the next glass pinpoints: doneHoldElapsed never true →
-  // the FINAL_HOLD timer/effect; mounted never true → showOverlay gate;
-  // mounted true but visible never true → the crossfade RAF. ?arcdebug=1.
-  useEffect(() => {
-    if (!ARC_DEBUG) return;
-    // eslint-disable-next-line no-console
-    console.log("[arc-overlay]", {
-      phase: reveal.phase,
-      doneHoldElapsed,
-      showOverlay,
-      mounted: overlayCrossfade.mounted,
-      visible: overlayCrossfade.visible,
-      t: Date.now(),
-    });
-  }, [reveal.phase, doneHoldElapsed, showOverlay, overlayCrossfade.mounted, overlayCrossfade.visible]);
 
   // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.
   // Pre-RD6.1 the reveal-side right-rail ScoreCells were hidden via a
