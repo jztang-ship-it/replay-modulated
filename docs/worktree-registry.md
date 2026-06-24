@@ -312,3 +312,15 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **Equivalence on main:** none — new feature branch.
 - **Intent:** active build for the current session's mission. Retire after the feature lands.
 - **Last reviewed:** 2026-06-22
+
+---
+
+### `feat/season-follows-boss` — mergeable (merged 2026-06-25; worktree removed)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-season-follows-boss` (removed after merge)
+- **Branch HEAD:** `56589fc` — "feat(boss): solo slate follows the daily boss season (one-season-days)"
+- **Unique commits vs main:** 0 after merge (was 2: `8185dc8` schedule artifact + guard, `56589fc` gate pin) — both landed on `main` via merge `54c309a`.
+- **Uncommitted state:** none committed (npm-install drift — `package-lock.json`, `shared/package-lock.json` — deliberately never committed; the tracked `shared/node_modules` symlink was restored after the worktree install).
+- **What it carried:** season coupling — the basketball daily slate season follows the daily boss (one coherent season/day). Precomputed `shared/data/bossSchedule.generated.json` (same canonical `scheduleHeadline` resolver, drift + anti-fork guarded) + the gate pin in `DailySeasonReelGate`.
+- **Equivalence on main:** fully merged via `54c309a` (batched with card-format `redesign/boss-card-colors`); no unique work remains. Safe to delete branch.
+- **Last reviewed:** 2026-06-25 (merged + worktree removed this session)
