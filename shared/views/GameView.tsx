@@ -3147,6 +3147,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
         sportKey={sportKey}
+        roundsUsed={roundsUsed}
+        maxRounds={maxRounds}
         hideTierBar
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
