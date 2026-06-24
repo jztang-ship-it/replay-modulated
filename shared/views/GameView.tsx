@@ -2463,7 +2463,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       fontFamily: "'Inter', system-ui, sans-serif",
       userSelect: "none",
       boxSizing: "border-box",
-      paddingTop: "env(safe-area-inset-top, 0px)",
+      // Safe-area top: on SOLO the platinum band is a full-bleed top bar that
+      // OWNS the inset (pads its own top so it fills the notch strip), so the
+      // root must NOT also pad — else double-inset. On challenge the root keeps
+      // padding (the challenge-via-GameView header is unchanged dark glass).
+      paddingTop: challengeCtx ? "env(safe-area-inset-top, 0px)" : 0,
     }}>
       {/* ── Transient error banner ── */}
       {gameError && dataReady && (
@@ -2496,12 +2500,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
         {/* 1 — Header */}
         <div style={{
-          flex: "0 0 10dvh",
+          // SOLO: grow by the safe-area inset so the full-bleed band can fill
+          // the notch strip without squeezing the 10dvh of header content;
+          // padding 0 so the band runs edge-to-edge. CHALLENGE: unchanged.
+          flex: !challengeCtx ? "0 0 calc(10dvh + env(safe-area-inset-top, 0px))" : "0 0 10dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
           gap: 4,
-          padding: "0 10px 0",
+          padding: !challengeCtx ? 0 : "0 10px 0",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
@@ -2511,12 +2518,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               challenge platinum comes from GlobalChallengeHeader elsewhere).
               onLight drives AppHeader's dark-on-light inversion in lockstep. */}
           <div data-ftue-chrome="true" style={{
-            borderRadius: 16,
-            border: !challengeCtx ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.10)",
+            // SOLO (Option A): full-bleed SQUARED top bar — no corner radius, no
+            // side border, just a bottom hairline + a subtle bottom shadow so it
+            // reads as top chrome (a surface), not a floating rounded lozenge.
+            // Its top padding OWNS the safe-area inset (root no longer pads on
+            // solo) so the platinum fills the notch strip and REPLAY/profile/bell
+            // clear the status bar. CHALLENGE: unchanged dark-glass pill.
+            borderRadius: !challengeCtx ? 0 : 16,
+            border: !challengeCtx ? "none" : "1px solid rgba(255,255,255,0.10)",
+            borderBottom: !challengeCtx ? "1px solid rgba(0,0,0,0.10)" : undefined,
             background: !challengeCtx ? PLATINUM_BAND_GRADIENT : "rgba(255,255,255,0.05)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-            padding: "2px 12px",
-            backdropFilter: "blur(10px)",
+            boxShadow: !challengeCtx ? "0 2px 6px rgba(0,0,0,0.18)" : "0 8px 24px rgba(0,0,0,0.28)",
+            padding: !challengeCtx ? "calc(env(safe-area-inset-top, 0px) + 4px) 12px 4px" : "2px 12px",
+            backdropFilter: !challengeCtx ? undefined : "blur(10px)",
           }}>
             <AppHeader
               onLight={!challengeCtx}
