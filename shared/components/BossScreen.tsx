@@ -83,19 +83,23 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
   const first = card.name.split(" ")[0] ?? "";
   const last = card.name.split(" ").slice(1).join(" ");
   return (
-    <div style={{ width: 48, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+    // flex:1 so the five tiles fill the content width edge-to-edge (the hero);
+    // maxWidth caps them card-sized on wide screens. Real ~2:3 card aspect.
+    <div style={{ flex: 1, minWidth: 0, maxWidth: 76, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
       <div style={{
-        width: 46, height: 34, borderRadius: 6, overflow: "hidden",
-        background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+        width: "100%", aspectRatio: "2 / 3", borderRadius: 8, overflow: "hidden",
+        background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
       }}>
         {src ? (
-          <img src={src} alt="" width={46} height={34} style={{ objectFit: "cover", objectPosition: "top center" }} />
+          // NBA headshot is landscape; cover + top-center crops it to the
+          // portrait card showing the face.
+          <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
         ) : (
-          <span style={{ fontSize: 9, fontWeight: 900, color: "rgba(255,255,255,0.5)", paddingBottom: 4 }}>{card.position}</span>
+          <span style={{ fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.5)", paddingBottom: 8 }}>{card.position}</span>
         )}
       </div>
-      <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.75)", maxWidth: 48, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.1 }}>
+      <span style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.8)", width: "100%", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.1 }}>
         {last || first}
       </span>
     </div>
@@ -213,8 +217,10 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
 
         {/* 4 — Lineup strip (compact, centered, h-scroll if needed) */}
         {boss && boss.cards.length > 0 && (
-          <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "14px 12px 0" }}>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", maxWidth: "100%", padding: "0 2px 2px" }}>
+          <div style={{ width: "100%", padding: "16px 14px 0", boxSizing: "border-box" }}>
+            {/* The lineup is the page hero: five flex:1 cards fill the row
+                edge-to-edge, one row, no scroll, all five visible. */}
+            <div style={{ display: "flex", gap: 6, width: "100%", justifyContent: "center", alignItems: "flex-start" }}>
               {boss.cards.map((c, i) => <LineupTile key={`lu-${i}`} card={c} headshotUrl={headshotUrl} />)}
             </div>
           </div>
@@ -268,7 +274,7 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
           </div>
         ) : (
           <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.45)" }}>
-            Not on the board yet — beat the boss to rank.
+            The board doesn't know your name yet. Fix that.
           </div>
         )}
       </div>
