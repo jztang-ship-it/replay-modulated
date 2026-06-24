@@ -3077,7 +3077,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         replayPulse={(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter}
-        onViewLeaderboard={() => {
+        // Trophy REMOVED for basketball (Option 1) — the boss moved to the top
+        // BOSS pill (year·players row). Passing undefined makes BOTH GameBar
+        // trophy render sites (each gated on `onViewLeaderboard ?`) render
+        // nothing for basketball. Non-basketball KEEPS trophy → daily
+        // leaderboard — its last play-surface leaderboard door, since Brief-1's
+        // Collect-tab hide already removed the collect_screen door on the play
+        // surface for all sports. No cross-sport orphan.
+        onViewLeaderboard={sportKey === "basketball" ? undefined : () => {
           setTrophyPulsing(false);
           setTrophyBurst(false);
           // Durable acknowledgement — kills the iconBlink pulse loop
@@ -3085,17 +3092,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // "0" and flips back to "1" (a fresh entry edge).
           try { localStorage.setItem("rm_board_ack", "1"); } catch { }
           setFtueCommentaryOverride(null);
-          // Trophy → BossScreen for basketball (the boss sport). Other sports
-          // have no boss, so they keep the daily leaderboard on the trophy
-          // (no cross-sport regression). Collect + post-hand openers still
-          // point at LeaderboardScreen everywhere (Option A — untouched).
-          if (sportKey === "basketball") {
-            setShowBoss(true);
-            track("boss", "boss_screen_opened", { source: "gamebar_trophy" });
-          } else {
-            setShowLeaderboard(true);
-            track("leaderboard", "viewed", { source: "gamebar_trophy" });
-          }
+          setShowLeaderboard(true);
+          track("leaderboard", "viewed", { source: "gamebar_trophy" });
         }}
         legendPulsing={legendGold}
         trophyPulsing={trophyPulsing}
