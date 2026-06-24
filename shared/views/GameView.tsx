@@ -68,7 +68,6 @@ import { AppHeader } from "@shared/components/AppHeader";
 import { PLATINUM_BAND_GRADIENT } from "@shared/components/platinumBand";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import { useBossEntry } from "@shared/hooks/useBossEntry";
-import { BossEntryCta } from "@shared/components/BossEntryCta";
 import { BossScreen } from "@shared/components/BossScreen";
 import {
   useEmotionalReveal,
@@ -3258,19 +3257,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           mode has its own h2h slot owners). Mount location is presentation-neutral
           (the component renders nothing in-flow; its modals are fixed/inset:0).
           Send machinery byte-identical; onConsumed/onDismiss clear the trigger. */}
-      {/* Phase 2-mount Step 4: boss entry CTA — sibling on the post-results
-          strip. Gated on basketball + a resolved boss id (NOT challengeTrigger,
-          so it shows on EVERY basketball result, not just special hands). Hidden
-          while playing a received challenge (challengeCtx). Conditional
-          unattempted/attempted lives in BossEntryCta. */}
-      {!challengeCtx && sportKey === "basketball" && bossEntry.bossChallengeId
-        && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled && (
-        <BossEntryCta
-          sport={sportKey}
-          bossChallengeId={bossEntry.bossChallengeId}
-          bossPlayerCount={bossEntry.bossPlayerCount}
-        />
-      )}
+      {/* Boss entry on the result strip REMOVED — the boss now lives behind the
+          GameBar trophy (BossScreen). The result screen keeps ONE primary
+          (REPLAY). BossEntryCta is still used inside BossScreen. */}
 
       {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
         <Suspense fallback={null}>
