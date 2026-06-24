@@ -65,6 +65,7 @@ import {
   type RosterGridCardProps,
 } from "@shared/components/RosterGrid";
 import { AppHeader } from "@shared/components/AppHeader";
+import { PLATINUM_BAND_GRADIENT } from "@shared/components/platinumBand";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import { useBossEntry } from "@shared/hooks/useBossEntry";
 import { BossEntryCta } from "@shared/components/BossEntryCta";
@@ -2496,15 +2497,25 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           boxSizing: "border-box",
           overflow: "hidden",
         }}>
+          {/* Solo play-surface header = platinum band (matches the challenge
+              GlobalChallengeHeader look); gated on !challengeCtx so the
+              challenge-via-GameView header keeps its existing dark glass (the
+              challenge platinum comes from GlobalChallengeHeader elsewhere).
+              onLight drives AppHeader's dark-on-light inversion in lockstep. */}
           <div data-ftue-chrome="true" style={{
             borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.10)",
-            background: "rgba(255,255,255,0.05)",
+            border: !challengeCtx ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.10)",
+            background: !challengeCtx ? PLATINUM_BAND_GRADIENT : "rgba(255,255,255,0.05)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
             padding: "2px 12px",
             backdropFilter: "blur(10px)",
           }}>
             <AppHeader
+              onLight={!challengeCtx}
+              // Solo play surface hides Play + Collect (kept in PRIMARY_TABS,
+              // parked pre-launch); profile + bell stay. Challenge-via-GameView
+              // header is left unchanged.
+              hiddenTabs={!challengeCtx ? ["home", "collect"] : []}
               onCollect={() => setShowCollect(true)}
               onProfile={() => {
                 setShowProfile(true);

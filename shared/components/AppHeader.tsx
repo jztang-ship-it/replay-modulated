@@ -7,12 +7,19 @@
  *   onCollect?, onProfile?, onBell?  — tab/icon handlers
  *   hasUncollected? — collect-tab red dot
  *   unreadInboxCount? — bell red dot trigger (>0 shows dot)
+ *   onLight? — platinum-band variant: dark-on-light inversion for the solo
+ *     play-surface header. Defaults OFF; every other usage stays dark-on-dark.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { soundManager } from "@shared/utils/soundManager";
 import { useAuth } from "@shared/auth/useAuth";
 import { track } from "@shared/analytics/analytics";
+import {
+  PLATINUM_INK,
+  PLATINUM_INK_MUTED,
+  PLATINUM_DOT_BORDER,
+} from "@shared/components/platinumBand";
 
 type TabId = "home" | "pulse" | "tourney" | "collect" | "profile";
 
@@ -35,6 +42,11 @@ type Props = {
   hasUncollected?: boolean;
   unreadInboxCount?: number;
   hasNewAchievements?: boolean;
+  /** Platinum-band variant — dark-on-light inversion. Default OFF. */
+  onLight?: boolean;
+  /** Primary tabs to hide at render (still kept in PRIMARY_TABS — parked, not
+   *  deleted). Used by the solo play surface to hide Play + Collect. Default []. */
+  hiddenTabs?: TabId[];
 };
 
 export function AppHeader({
@@ -45,12 +57,25 @@ export function AppHeader({
   hasUncollected,
   unreadInboxCount = 0,
   hasNewAchievements,
+  onLight = false,
+  hiddenTabs = [],
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [muted, setMuted] = useState(soundManager.isMuted());
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement>(null);
   const { isAnonymous } = useAuth();
+
+  // Platinum-band inversion (onLight): text/icons go dark-on-light to read on
+  // the light bar; IFS keeps brand orange (#FFB14A); the notification-dot ring
+  // becomes a light cutout halo instead of the dark-body ring. Default OFF
+  // keeps every other AppHeader usage exactly as-is.
+  const inkPrimary = onLight ? PLATINUM_INK : "#EAF0FF";
+  const inkActive = onLight ? PLATINUM_INK : "#FFB14A";
+  const inkOverflowClosed = onLight ? PLATINUM_INK_MUTED : "#7c8aa3";
+  const badgeColor = onLight ? PLATINUM_INK_MUTED : "rgba(255,255,255,0.4)";
+  const badgeBorder = onLight ? "1px solid rgba(0,0,0,0.18)" : "1px solid rgba(255,255,255,0.15)";
+  const dotBorder = "1.5px solid " + (onLight ? PLATINUM_DOT_BORDER : "#070A12");
 
   // Click-outside to close overflow dropdown
   useEffect(() => {
@@ -87,7 +112,7 @@ export function AppHeader({
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.location.href = "/?pick=1"; } }}
           style={{ display: "flex", alignItems: "baseline", gap: 2, cursor: "pointer" }}
         >
-          <span style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.5, color: "#EAF0FF" }}>REPLAY</span>
+          <span style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.5, color: inkPrimary }}>REPLAY</span>
           <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 2, color: "#FFB14A", marginLeft: 2 }}>IFS</span>
         </div>
         <span
@@ -97,15 +122,15 @@ export function AppHeader({
         {sportLabel && (
           <span style={{
             fontSize: 9, fontWeight: 700, letterSpacing: 1.5,
-            color: "rgba(255,255,255,0.4)", textTransform: "uppercase",
-            border: "1px solid rgba(255,255,255,0.15)", borderRadius: 4, padding: "1px 5px",
+            color: badgeColor, textTransform: "uppercase",
+            border: badgeBorder, borderRadius: 4, padding: "1px 5px",
           }}>{sportLabel}</span>
         )}
       </div>
 
       {/* Right cluster: primary tabs · overflow · bell */}
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {PRIMARY_TABS.map(({ id, label, icon }) => {
+        {PRIMARY_TABS.filter(({ id }) => !hiddenTabs.includes(id)).map(({ id, label, icon }) => {
           const active   = activeTab === id;
           const isCollect = id === "collect";
           function handleClick() {
@@ -127,7 +152,7 @@ export function AppHeader({
                 }}
               >
                 <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
-                <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: active ? "#FFB14A" : "#EAF0FF" }}>
+                <span style={{ fontSize: 7, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: active ? inkActive : inkPrimary }}>
                   {label}
                 </span>
               </button>
@@ -135,7 +160,7 @@ export function AppHeader({
                 <div style={{
                   position: "absolute", top: 0, right: 2,
                   width: 7, height: 7, borderRadius: "50%",
-                  background: "#EF4444", border: "1.5px solid #070A12",
+                  background: "#EF4444", border: dotBorder,
                   pointerEvents: "none",
                 }} />
               )}
@@ -143,7 +168,7 @@ export function AppHeader({
                 <div style={{
                   position: "absolute", top: 0, right: 2,
                   width: 7, height: 7, borderRadius: "50%",
-                  background: "#FFB14A", border: "1.5px solid #070A12",
+                  background: "#FFB14A", border: dotBorder,
                   pointerEvents: "none",
                 }} />
               )}
@@ -164,7 +189,7 @@ export function AppHeader({
               background: overflowOpen ? "rgba(255,177,74,0.12)" : "transparent",
               border: overflowOpen ? "1px solid rgba(255,177,74,0.3)" : "1px solid transparent",
               borderRadius: 8, cursor: "pointer",
-              fontSize: 16, color: overflowOpen ? "#FFB14A" : "#7c8aa3",
+              fontSize: 16, color: overflowOpen ? inkActive : inkOverflowClosed,
             }}
             aria-label="More"
             aria-expanded={overflowOpen}
@@ -219,7 +244,7 @@ export function AppHeader({
               <div style={{
                 position: "absolute", top: 0, right: 2,
                 width: 7, height: 7, borderRadius: "50%",
-                background: "#EF4444", border: "1.5px solid #070A12",
+                background: "#EF4444", border: dotBorder,
                 pointerEvents: "none",
               }} />
             )}
