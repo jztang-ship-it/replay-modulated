@@ -68,7 +68,8 @@ import { AppHeader } from "@shared/components/AppHeader";
 import { PLATINUM_BAND_GRADIENT } from "@shared/components/platinumBand";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import { useBossEntry } from "@shared/hooks/useBossEntry";
-import { BossEntryCta } from "@shared/components/BossEntryCta";
+import { BossScreen } from "@shared/components/BossScreen";
+import { getBossResult } from "@shared/utils/bossResultMemory";
 import {
   useEmotionalReveal,
   DRAWING_DWELL_MS,
@@ -462,6 +463,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Phase 2-mount Step 3/4: today's boss for the post-results entry CTA.
   // Basketball-only inside the hook; null elsewhere → CTA never renders.
   const bossEntry = useBossEntry(sportKey);
+  // Boss availability — drives the top BOSS pill (basketball-only) + its tell.
+  const bossLive = !!bossEntry.bossChallengeId;
+  // Attempted-today is per-device local memory (getBossResult, presence ===
+  // attempted) — matches BossEntryCta, no new query. Drives the pill emphasis:
+  // unattempted → occasional glow pulse; attempted → steady gold.
+  const bossAttemptedToday = bossLive && !!getBossResult(bossEntry.bossChallengeId);
   const {
     gameState, setGameState,
     roundsUsed, setRoundsUsed,
@@ -528,6 +535,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [betNonce, setBetNonce] = useState(0);
   const [showRawScore, setShowRawScore] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showBoss, setShowBoss] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   // OAuth-resume race guard — belt-and-suspenders companion to
@@ -2542,7 +2550,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hasNewAchievements={newlyUnlockedAchievements.length > 0}
             />
           </div>
-          <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
+          <div data-ftue-chrome="true" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
             {challengeCtx ? (
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -2574,6 +2582,55 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   />
                 )}
                 {SlateChipComponent && <SlateChipComponent />}
+                {/* BOSS pill — basketball-only, right-aligned in the year·players
+                    row. Absolutely positioned so the SlateChip stays centered;
+                    distinct from the slate-info chip (boss = a destination, gold).
+                    Opens BossScreen (the single boss door). Glass the 360 width
+                    budget for chip+pill crowding. Emphasis/pulse is the next
+                    commit. */}
+                {sportKey === "basketball" && bossLive && (
+                  <>
+                    {/* Pill emphasis: unattempted → an OCCASIONAL single glow
+                        pulse (one glow per ~18s, NOT a continuous blink);
+                        attempted → steady gold (animation:none). The keyframe
+                        animates box-shadow ONLY (never transform — the pill's
+                        translateY centering must survive). The media query is
+                        the prefers-reduced-motion guard: under reduced motion
+                        the pulse falls back to steady gold. */}
+                    <style>{`
+                      @keyframes rmBossPillPulse {
+                        0%, 88%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+                        94% { box-shadow: 0 0 9px 2px rgba(255,215,0,0.55); }
+                      }
+                      @media (prefers-reduced-motion: reduce) {
+                        .rm-boss-pill { animation: none !important; }
+                      }
+                    `}</style>
+                    <button
+                      type="button"
+                      data-testid="boss-pill"
+                      aria-label="Today's boss"
+                      className="rm-boss-pill"
+                      onClick={() => {
+                        setShowBoss(true);
+                        track("boss", "boss_screen_opened", { source: "boss_pill" });
+                      }}
+                      style={{
+                        position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                        display: "inline-flex", alignItems: "center",
+                        padding: "4px 12px", borderRadius: 999,
+                        background: "rgba(255,215,0,0.12)",
+                        border: "1px solid rgba(255,215,0,0.5)",
+                        color: "#FFD700", fontSize: 11, fontWeight: 900,
+                        letterSpacing: 1, textTransform: "uppercase",
+                        cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
+                        animation: bossAttemptedToday ? "none" : "rmBossPillPulse 18s ease-in-out infinite",
+                      }}
+                    >
+                      BOSS
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -3056,11 +3113,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
-        // Two-button result row: when a story trigger exists in sender mode, show a
-        // compact "Challenge" button beside REPLAY (REPLAY stays permanent). Default
-        // off ⇒ non-challenge sports/states keep the single-REPLAY row unchanged.
-        // onChallenge starts the send via the invisible prompt's startSend() handle.
-        challengeAvailable={!challengeCtx && !!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+        // Human Challenge SUSPENDED for launch — HIDDEN, not deleted (Collect-
+        // pattern: suspend the surface, preserve the engine). Forcing
+        // challengeAvailable=false means ChallengeButton never renders and REPLAY
+        // returns to the lone centered primary (the challengeAvailable=false row
+        // branch centers REPLAY at min(168px,50%)) — which also closes the
+        // off-center two-button bug for free. The mint/share engine
+        // (ChallengeSharePrompt + useChallengeShare + challengeSendRef + onChallenge)
+        // stays mounted and intact for a future re-home onto Boss results.
+        // Original gate: !challengeCtx && !!challengeTrigger && (RESULTS || WIN_CELEBRATION).
+        challengeAvailable={false}
         onChallenge={() => challengeSendRef.current?.startSend()}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
@@ -3071,8 +3133,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         replayPulse={(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter}
-        onViewLeaderboard={() => {
-          setShowLeaderboard(true);
+        // Trophy REMOVED for basketball (Option 1) — the boss moved to the top
+        // BOSS pill (year·players row). Passing undefined makes BOTH GameBar
+        // trophy render sites (each gated on `onViewLeaderboard ?`) render
+        // nothing for basketball. Non-basketball KEEPS trophy → daily
+        // leaderboard — its last play-surface leaderboard door, since Brief-1's
+        // Collect-tab hide already removed the collect_screen door on the play
+        // surface for all sports. No cross-sport orphan.
+        onViewLeaderboard={sportKey === "basketball" ? undefined : () => {
           setTrophyPulsing(false);
           setTrophyBurst(false);
           // Durable acknowledgement — kills the iconBlink pulse loop
@@ -3080,11 +3148,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // "0" and flips back to "1" (a fresh entry edge).
           try { localStorage.setItem("rm_board_ack", "1"); } catch { }
           setFtueCommentaryOverride(null);
+          setShowLeaderboard(true);
           track("leaderboard", "viewed", { source: "gamebar_trophy" });
         }}
         legendPulsing={legendGold}
         trophyPulsing={trophyPulsing}
         trophyBurst={trophyBurst}
+        // Boss-live tell: static gold on the trophy when a boss is available.
+        // Naturally false for non-basketball (useBossEntry returns null there).
+        bossLive={!!bossEntry.bossChallengeId}
         streak={streak}
         showStreak={streaksEnabled}
         economyEnabled={economyEnabled}
@@ -3112,6 +3184,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             currentUid={getPlayerUid()}
             sport={leaderboardScope}
             onClose={() => setShowLeaderboard(false)}
+          />
+        )}
+
+        {showBoss && (
+          <BossScreen
+            sport={leaderboardScope}
+            currentUid={getPlayerUid()}
+            bossChallengeId={bossEntry.bossChallengeId}
+            bossPlayerCount={bossEntry.bossPlayerCount}
+            onClose={() => setShowBoss(false)}
           />
         )}
 
@@ -3237,19 +3319,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           mode has its own h2h slot owners). Mount location is presentation-neutral
           (the component renders nothing in-flow; its modals are fixed/inset:0).
           Send machinery byte-identical; onConsumed/onDismiss clear the trigger. */}
-      {/* Phase 2-mount Step 4: boss entry CTA — sibling on the post-results
-          strip. Gated on basketball + a resolved boss id (NOT challengeTrigger,
-          so it shows on EVERY basketball result, not just special hands). Hidden
-          while playing a received challenge (challengeCtx). Conditional
-          unattempted/attempted lives in BossEntryCta. */}
-      {!challengeCtx && sportKey === "basketball" && bossEntry.bossChallengeId
-        && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled && (
-        <BossEntryCta
-          sport={sportKey}
-          bossChallengeId={bossEntry.bossChallengeId}
-          bossPlayerCount={bossEntry.bossPlayerCount}
-        />
-      )}
+      {/* Boss entry on the result strip REMOVED — the boss now lives behind the
+          GameBar trophy (BossScreen). The result screen keeps ONE primary
+          (REPLAY). BossEntryCta is still used inside BossScreen. */}
 
       {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
         <Suspense fallback={null}>
