@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TodaysSlatePanel, type SlatePanelAdapter } from "@shared/components/TodaysSlatePanel";
-import { useDailySlate, slateSignature } from "@shared/hooks/useDailySlate";
+import { useDailySlate } from "@shared/hooks/useDailySlate";
 import { SlateChip } from "@shared/components/SlateChip";
 import { ensureLoaded, getPlayers, getActiveSeason } from "@shared/engines/dataEngine";
 import { headshotUrl } from "@shared/utils/headshotUrl";
@@ -262,12 +262,11 @@ export function BasketballSlateChip() {
     return () => { cancelled = true; };
   }, []);
 
-  // Fallback chip (data not yet loaded): show signature with 0 count.
-  // Avoids any flash; signature is computable without player data.
+  // Fallback chip (data not yet loaded): 0 count, no label/season.
+  // Avoids any flash before the daily slate resolves.
   if (!dataReady) {
-    const sig = slateSignature(new Date());
     return (
-      <SlateChip label={sig.label} playerCount={0} sportKey="basketball">
+      <SlateChip playerCount={0} sportKey="basketball">
         <BasketballSlatePanel />
       </SlateChip>
     );
@@ -299,7 +298,6 @@ function BasketballSlateChipInner({ playerIndex }: { playerIndex: Map<string, Re
   const seasonLabel = formatSeasonKey(getActiveSeason() ?? "");
   return (
     <SlateChip
-      label={slate.signature.label}
       playerCount={playerCount}
       sportKey="basketball"
       seasonLabel={seasonLabel || undefined}

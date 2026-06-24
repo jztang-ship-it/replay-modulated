@@ -16,8 +16,9 @@ import { useCallback, useEffect, useState } from "react";
 import { track } from "@shared/analytics/analytics";
 
 interface SlateChipProps {
-  /** "Slate #145" or similar identity label. */
-  label: string;
+  /** Optional "Slate #145"-style identity label. When omitted, the chip
+   *  renders "<season> · <N> players" with no leading separator. */
+  label?: string;
   /** Total player count across slate (anchor + bonus + rotating). */
   playerCount: number;
   /** Slate panel content rendered inside the overlay when opened. */
@@ -89,14 +90,14 @@ export function SlateChip({ label, playerCount, children, sportKey, seasonLabel 
           lineHeight: 1.1,
         }}
       >
-        <span style={{ color: "#C9A84C", fontWeight: 900 }}>{label}</span>
+        {label && <span style={{ color: "#C9A84C", fontWeight: 900 }}>{label}</span>}
         {seasonLabel && (
           <>
-            <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
+            {label && <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>}
             <span style={{ color: "#FFFFFF", fontWeight: 900 }}>{seasonLabel}</span>
           </>
         )}
-        <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>
+        {(label || seasonLabel) && <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>}
         <span style={{ fontVariantNumeric: "tabular-nums" }}>{playerCount} players</span>
       </button>
 
