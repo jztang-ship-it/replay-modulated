@@ -25,8 +25,12 @@ import { useEffect, useState, useCallback } from "react";
 // a drift test keeps it synced to the bank.
 import bossStories from "@shared/data/bossStories.generated.json";
 // Reuse the SAME tier-color source the gameplay cards (CardFront) use — not a
-// parallel recolor. getTier(tier) → { bg, bgEnd, frame, ... }.
-import { getTier } from "@shared/theme";
+// parallel recolor. getTier(tier) → { bg, bgEnd, frame, ... }. TIER_POSITION_TEXT
+// is the same top-right position palette CardFront uses; replicated (not a
+// CardFront import) so the boss tile matches the gameplay card face token-for-token.
+import { getTier, TIER_POSITION_TEXT, type TierKey } from "@shared/theme";
+// Shared "0304" → "03-04" formatter (values-only; not CardFront's private copy).
+import { formatSeasonRange } from "@shared/utils/seasonRange";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -34,12 +38,14 @@ const BOSS_STORIES = bossStories as Record<string, string>;
 
 type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
 
-type LineupCard = { name: string; position: string; photoCode: string | null; basePlayerId: string; tier: string };
+type LineupCard = { name: string; position: string; salary: number; photoCode: string | null; basePlayerId: string; tier: string };
 
 interface BossInfo {
   display: string;
   story: string;          // story ?? flavor (see header note)
   target: number | null;
+  team: string;           // derived from boss_identity_id prefix (see GET handler)
+  seasonRange: string;    // top-level season "0304" → "03-04"
   cards: LineupCard[];
 }
 
@@ -96,22 +102,41 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
   const last = card.name.split(" ").slice(1).join(" ");
   const showImg = !!src && !imgFailed;
   const t = getTier(card.tier);
+  // Replica of CardFront's face tokens (NOT a CardFront import — no refactor):
+  // salary uses onCardText (white only on the dark WHITE-tier body, else black);
+  // position uses the TIER_POSITION_TEXT palette. Same italic/900 treatment,
+  // scaled to the mini-tile.
+  const derivedTier = String(card.tier ?? "WHITE").toUpperCase();
+  const onCardText = derivedTier === "WHITE" ? "#FFFFFF" : "#000000";
+  const positionTextColor = TIER_POSITION_TEXT[(derivedTier as TierKey)] ?? TIER_POSITION_TEXT.WHITE;
   return (
     // flex:1 so the five tiles fill the content width edge-to-edge (the hero);
     // maxWidth caps them card-sized on wide screens. Real ~2:3 card aspect.
     <div style={{ flex: 1, minWidth: 0, maxWidth: 76, display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* Composition B — a miniature of the gameplay card: the TIER GRADIENT is
           the card body (getTier — same source as CardFront), tier frame border,
+          salary top-left + position top-right (CardFront token replica),
           headshot anchored in the top region (NOT full-bleed) so the gradient
           band reads at the bottom, and the name on that band over a slight dark
           scrim (guaranteed-readable on every tier — see note). onError → the
           gradient body + position glyph + name (a colored tile, not flat dark). */}
       <div style={{
+        position: "relative",
         width: "100%", aspectRatio: "2 / 3", borderRadius: 8, overflow: "hidden",
         background: `linear-gradient(to bottom, ${t.bg} 0%, ${t.bgEnd} 100%)`,
         border: `1.5px solid ${t.frame}`,
         display: "flex", flexDirection: "column",
       }}>
+        {/* SALARY — top-left (replica of CardFront salary token, mini scale) */}
+        <span style={{
+          position: "absolute", top: 3, left: 4, zIndex: 3, pointerEvents: "none",
+          fontSize: 10, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1,
+        }}>${card.salary}</span>
+        {/* POSITION — top-right (replica of CardFront position token, mini scale) */}
+        <span style={{
+          position: "absolute", top: 3, right: 4, zIndex: 3, pointerEvents: "none",
+          fontSize: 10, fontWeight: 900, fontStyle: "italic", color: positionTextColor, letterSpacing: -0.5, lineHeight: 1, textTransform: "uppercase",
+        }}>{card.position}</span>
         <div style={{ flex: "1 1 auto", minHeight: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden" }}>
           {showImg ? (
             // NBA headshot is landscape; cover + top-center crops it to the face.
@@ -167,13 +192,21 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
         const cards: LineupCard[] = Array.isArray(rawCards)
           ? rawCards.slice(0, 5).map((c: any) => ({
               name: String(c.name ?? ""),
-              position: String(c.position ?? ""),
+              // On the wire the field is `pos` (revealedFive shape); `position`
+              // is the legacy fallback — neither is `position` today.
+              position: String(c.pos ?? c.position ?? ""),
+              salary: Number(c.salary ?? 0),
               photoCode: c.photoCode != null ? String(c.photoCode) : null,
               basePlayerId: String(c.basePlayerId ?? ""),
               tier: String(c.tier ?? "WHITE"),
             }))
           : [];
         const mappedStory = d.boss_identity_id ? BOSS_STORIES[String(d.boss_identity_id)] : undefined;
+        // Title team — derive from the SAME boss_identity_id already consumed
+        // for the story map (no re-fetch, no threading). Relies on the
+        // authoritative {TEAM}-{YYYY} bank-key convention (e.g. "DET-0304" →
+        // "DET"); every serveable boss key conforms.
+        const team = String(d.boss_identity_id ?? "").split("-")[0];
         setBoss({
           display: String(d.challenger_name ?? "Today's Boss"),
           // Prefer the authored per-boss story (bundled map, keyed by
@@ -181,6 +214,8 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
           // the flavor one-liner. Flavor stays the fallback for a missing entry.
           story: String(mappedStory ?? d.story ?? d.share_headline ?? ""),
           target: typeof d.target_score === "number" ? d.target_score : null,
+          team,
+          seasonRange: formatSeasonRange(d.season),
           cards,
         });
       });
@@ -232,9 +267,15 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
           }}>Done</button>
         </div>
 
-        {/* 2 — Title: boss display name */}
+        {/* 2 — Title: boss display name · {TEAM} {season-range}
+            (e.g. "Goin' to Work · DET 03-04"). Team + season are per-boss from
+            data — team from boss_identity_id, season from the top-level row —
+            never hardcoded. Suffix only when the boss (and thus both) resolved. */}
         <div style={{ fontSize: 24, fontWeight: 950, color: "#EAF0FF", fontFamily: FF, letterSpacing: 0.5, textAlign: "center", padding: "8px 16px 0" }}>
           {boss?.display ?? "Today's Boss"}
+          {boss?.team && boss?.seasonRange && (
+            <span style={{ fontWeight: 800, color: "rgba(234,240,255,0.55)" }}>{` · ${boss.team} ${boss.seasonRange}`}</span>
+          )}
         </div>
 
         {/* 3 — Story slot: context + Target */}
