@@ -195,6 +195,11 @@ type Props = {
   /** Challenge mode: when present, replace the tier-countdown label with
    *  "TARGET: {fp} — {name}" so the recipient knows the score to beat. */
   challengeTarget?: { name: string; fp: number };
+  /** Round position for the x/N hold-loop indicator. Both default to single-shot
+   *  (maxRounds 1) — the indicator + "NEXT" relabel only engage when maxRounds>1
+   *  (basketball), so single-shot sports are untouched. */
+  roundsUsed?: number;
+  maxRounds?: number;
 };
 
 const MULTIPLIERS = [1, 3, 5, 10];
@@ -223,10 +228,14 @@ function getTierState(totalFp: number, winTiers: WinTierDisplay[]) {
   return { label: next.label, fillPct, color: fillColor, glow: fillGlow, fptNeeded: Math.max(0, ceiling - totalFp) };
 }
 
-function actionLabel(state: GameStateLabel): string {
+function actionLabel(state: GameStateLabel, maxRounds: number): string {
   if (state === "IDLE") return "DEAL";
   if (state === "DEALING") return "...";
-  if (state === "HOLD") return "DRAW";
+  // Multi-round (basketball, maxRounds>1): every interactive HOLD advance reads
+  // "NEXT" (one-path model — finality is carried by the x/N round signage, not
+  // the button). Single-shot sports (maxRounds===1) keep "DRAW" — their only
+  // HOLD locks immediately, so the relabel can never reach them.
+  if (state === "HOLD") return maxRounds > 1 ? "NEXT" : "DRAW";
   if (state === "DRAWING") return "...";
   if (state === "REVEALING") return "AUTO";
   return "REPLAY";
@@ -1415,7 +1424,15 @@ export function GameBar({
   onTrophyOpened,
   sportKey,
   challengeTarget,
+  roundsUsed = 1,
+  maxRounds = 1,
 }: Props) {
+  // x/N hold-loop indicator + "NEXT" relabel — multi-round only. Single-shot
+  // sports (maxRounds 1) get neither, so their HOLD stays "DRAW" and no
+  // indicator renders. Shown across the active hand (HOLD/DRAWING/REVEALING);
+  // roundsUsed snaps to maxRounds at lock so the reveal reads N/N.
+  const showRoundIndicator = maxRounds > 1 &&
+    (gameState === "HOLD" || gameState === "DRAWING" || gameState === "REVEALING");
   // Trophy button: 36×36 circular, sits absolutely positioned right of the
   // action button row's container. Border + icon flip to gold once the user
   // has landed on the daily leaderboard (rm_on_board_today === "1").
@@ -1692,18 +1709,37 @@ export function GameBar({
               the original centered-REPLAY + absolute-right-icons layout (so
               non-challenge sports/states are pixel-unchanged). */}
           <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: 44, ...(challengeAvailable ? { gap: 8 } : { justifyContent: "center" as const }) }}>
-            {/* Wallet chip — left. Hidden in challenge mode (no wager) and when the
-                economy is off (F2P money seam — wallet never moves). */}
-            {!challengeMode && economyEnabled && (
-              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 4, opacity: 1, transition: "opacity 0.3s ease" }}>
-                <span style={{
-                  fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
-                  color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
-                  filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
-                  transition: "color 300ms ease, filter 300ms ease",
-                }}>
-                  $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
-                </span>
+            {/* Left zone — round indicator (multi-round only) + wallet, side by
+                side in one absolute container so they never overlap. The
+                indicator never renders for single-shot sports, leaving the
+                wallet at left:0 exactly as before (extra wrapper is layout-inert
+                with one child). */}
+            {(showRoundIndicator || (!challengeMode && economyEnabled)) && (
+              <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                {/* x/N round indicator — left of the wallet; CTA stays centered.
+                    Finality is carried here (snaps to N/N at lock), not the button. */}
+                {showRoundIndicator && (
+                  <span data-testid="round-indicator" style={{
+                    fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                    letterSpacing: 1, color: "rgba(255,255,255,0.6)", fontFamily: FF, whiteSpace: "nowrap",
+                  }}>
+                    {roundsUsed}/{maxRounds}
+                  </span>
+                )}
+                {/* Wallet chip. Hidden in challenge mode (no wager) and when the
+                    economy is off (F2P money seam — wallet never moves). */}
+                {!challengeMode && economyEnabled && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, opacity: 1, transition: "opacity 0.3s ease" }}>
+                    <span style={{
+                      fontSize: 14, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
+                      color: balanceColor === "win" ? "#22C55E" : balanceColor === "loss" ? "#FF3B30" : "#FFFFFF",
+                      filter: balanceColor !== "default" ? `drop-shadow(0 0 5px ${balanceColor === "win" ? "#22C55E88" : "#FF3B3088"})` : "none",
+                      transition: "color 300ms ease, filter 300ms ease",
+                    }}>
+                      $<RollingNumber value={displayBalance} decimals={0} duration={1200} />
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1726,7 +1762,7 @@ export function GameBar({
                 animation: replayPulse ? "replayPulse 1.2s ease-in-out infinite" : "none",
               }}>
               {replayPulse && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
-              {actionLabel(gameState)}
+              {actionLabel(gameState, maxRounds)}
             </button>
 
             {/* Compact secondary Challenge button — in-flow flex sibling between
@@ -1957,7 +1993,7 @@ export function GameBar({
                   boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                   transition: "opacity 150ms ease", lineHeight: 1,
                 }}>
-                {actionLabel(gameState)}
+                {actionLabel(gameState, maxRounds)}
               </button>
               {/* Parity with the split path: Challenge button as an in-flow sibling
                   (null unless challengeAvailable). */}
