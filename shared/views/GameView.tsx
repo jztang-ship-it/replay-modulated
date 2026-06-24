@@ -3057,11 +3057,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}
         onAction={handleButtonClick}
-        // Two-button result row: when a story trigger exists in sender mode, show a
-        // compact "Challenge" button beside REPLAY (REPLAY stays permanent). Default
-        // off ⇒ non-challenge sports/states keep the single-REPLAY row unchanged.
-        // onChallenge starts the send via the invisible prompt's startSend() handle.
-        challengeAvailable={!challengeCtx && !!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")}
+        // Human Challenge SUSPENDED for launch — HIDDEN, not deleted (Collect-
+        // pattern: suspend the surface, preserve the engine). Forcing
+        // challengeAvailable=false means ChallengeButton never renders and REPLAY
+        // returns to the lone centered primary (the challengeAvailable=false row
+        // branch centers REPLAY at min(168px,50%)) — which also closes the
+        // off-center two-button bug for free. The mint/share engine
+        // (ChallengeSharePrompt + useChallengeShare + challengeSendRef + onChallenge)
+        // stays mounted and intact for a future re-home onto Boss results.
+        // Original gate: !challengeCtx && !!challengeTrigger && (RESULTS || WIN_CELEBRATION).
+        challengeAvailable={false}
         onChallenge={() => challengeSendRef.current?.startSend()}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
