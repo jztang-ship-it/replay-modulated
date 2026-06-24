@@ -4,9 +4,11 @@
  * Phase 2 (boss delivery consumer), Commit 3. GET /api/challenge/[id] must:
  *   - surface sender_kind (default 'player') and tough_day for the landing
  *     boss branch, and
- *   - keep the response a strict sender-facing ALLOWLIST: boss provenance
- *     columns (instance_key, boss_identity_id, boss_bank_version) and any
- *     generator internals must NOT leak, even though the row carries them.
+ *   - keep the response a strict sender-facing ALLOWLIST: housekeeping /
+ *     provenance columns (instance_key, boss_bank_version) and any generator
+ *     internals must NOT leak, even though the row carries them. (boss_identity_id
+ *     is now an INTENTIONAL sender-facing field — the boss page's story-map key,
+ *     Path B; it's the public boss identity, not a generator internal.)
  *
  * supabaseAdmin is mocked at the module boundary (challenge-attempt.test.ts
  * pattern).
@@ -101,15 +103,21 @@ describe("GET /api/challenge/[id] — boss fields + allowlist (Commit 3)", () =>
     expect(payload.created_by).toBeNull();
   });
 
-  it("does NOT leak boss provenance or housekeeping columns past the allowlist", async () => {
+  it("exposes boss_identity_id (story-map key) but NOT housekeeping/generator internals", async () => {
     mockState.row = bossRow();
     const res = makeRes();
     await handler(makeReq(BOSS_ID), res);
 
     const payload = res.json.mock.calls[0][0];
+    // boss_identity_id is now an INTENTIONAL sender-facing field (Path B): the
+    // boss page maps it (= bank id) → the authored story via the bundled story
+    // map. It's the public boss identity, not a generator internal — so it is
+    // promoted out of the firewall. instance_key / boss_bank_version stay
+    // firewalled (pure housekeeping/provenance), and generator internals never
+    // leak.
+    expect(payload.boss_identity_id).toBe("BOS-2324");
     for (const leaked of [
       "instance_key",
-      "boss_identity_id",
       "boss_bank_version",
       "hand_id",
       "slate_seed",

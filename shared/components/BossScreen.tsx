@@ -20,8 +20,14 @@
  * (H2HRecipientPlay), no fork. board=boss leaderboard endpoint untouched.
  */
 import { useEffect, useState, useCallback } from "react";
+// Path B: authored per-boss stories, generated from docs/boss-bank-v1.json
+// (keyed by bank id == boss_identity_id). Regen via scripts/gen-boss-stories.mjs;
+// a drift test keeps it synced to the bank.
+import bossStories from "@shared/data/bossStories.generated.json";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
+
+const BOSS_STORIES = bossStories as Record<string, string>;
 
 type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
 
@@ -143,11 +149,13 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
               basePlayerId: String(c.basePlayerId ?? ""),
             }))
           : [];
+        const mappedStory = d.boss_identity_id ? BOSS_STORIES[String(d.boss_identity_id)] : undefined;
         setBoss({
           display: String(d.challenger_name ?? "Today's Boss"),
-          // Prefer a richer authored `story` when present; else the flavor
-          // one-liner. Upgrades automatically when stories are plumbed through.
-          story: String(d.story ?? d.share_headline ?? ""),
+          // Prefer the authored per-boss story (bundled map, keyed by
+          // boss_identity_id); else a `story` row field if ever plumbed; else
+          // the flavor one-liner. Flavor stays the fallback for a missing entry.
+          story: String(mappedStory ?? d.story ?? d.share_headline ?? ""),
           target: typeof d.target_score === "number" ? d.target_score : null,
           cards,
         });
