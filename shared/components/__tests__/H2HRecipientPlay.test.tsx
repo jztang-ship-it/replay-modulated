@@ -207,7 +207,14 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(root?.getAttribute("data-playing-state")).toBe("deal_in");
   });
 
-  it("opponent strip is collapsed in Layout A (height:0, opacity:0, aria-hidden)", () => {
+  it("opponent strip is VISIBLE in deal_in (Option A locked layout — slot b shown from first screen)", () => {
+    // 2026-06-24 Option A (BEHAVIORAL CHANGE, glass item): the opponent
+    // mini-row (slot b) is now un-collapsed from deal_in/hold_select, not
+    // deferred to Layout B. This REVERSES the prior "Mike's box isn't empty
+    // during the bottom cascade" hide — see topStripVisible in
+    // H2HRecipientPlay.tsx (~:858, includes deal_in || hold_select). The
+    // wrapper is expanded (height = MINI_CELL_HEIGHT_PX = HAND_STRIP_HEIGHT_PX,
+    // opacity 1) and the collapsed/aria-hidden flags are absent.
     vi.useFakeTimers();
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
@@ -216,10 +223,10 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
       "[data-h2h-play-top-strip]",
     ) as HTMLElement | null;
     expect(stripWrapper).not.toBeNull();
-    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBe("true");
-    expect(stripWrapper?.getAttribute("aria-hidden")).toBe("true");
-    expect(stripWrapper?.style.height).toBe("0px");
-    expect(stripWrapper?.style.opacity).toBe("0");
+    expect(stripWrapper?.getAttribute("data-h2h-play-top-strip-collapsed")).toBeNull();
+    expect(stripWrapper?.getAttribute("aria-hidden")).toBeNull();
+    expect(stripWrapper?.style.height).toBe(`${HAND_STRIP_HEIGHT_PX}px`);
+    expect(stripWrapper?.style.opacity).toBe("1");
   });
 
   it("bottom-strip mini-cell height equals the imported HAND_STRIP_HEIGHT_PX (RD2 lockstep gate)", () => {

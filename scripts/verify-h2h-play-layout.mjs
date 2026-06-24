@@ -296,11 +296,15 @@ async function runPlayHarness(browser) {
   record(`Layout A top label contains "${CHALLENGER_NAME.toUpperCase()}"`, topLabel_s1.includes(CHALLENGER_NAME.toUpperCase()), `label="${topLabel_s1}"`);
   record(`Layout A bottom label is literal "YOU" (design-lock §5)`, bottomLabel_s1 === "YOU", `label="${bottomLabel_s1}"`);
 
-  // Opponent strip is ABSENT in Layout A (collapsed wrapper).
+  // 2026-06-24 Option A (BEHAVIORAL CHANGE, glass item): the opponent
+  // mini-row (slot b) is now VISIBLE from deal_in/hold_select, not deferred
+  // to Layout B. topStripVisible in H2HRecipientPlay.tsx (~:858) now includes
+  // deal_in || hold_select, so the wrapper is un-collapsed: the collapsed
+  // flag is absent (null) at initial Layout A entry.
   const topStripCollapsed_init = await page
     .locator(`[data-h2h-play-top-strip]`)
     .getAttribute("data-h2h-play-top-strip-collapsed");
-  record(`Layout A: opponent strip wrapper is collapsed`, topStripCollapsed_init === "true");
+  record(`Layout A: opponent strip wrapper is VISIBLE (Option A — slot b shown from first screen)`, topStripCollapsed_init === null, `collapsed=${topStripCollapsed_init}`);
 
   // Capture top/bottom/hero zone rects at initial Layout A entry.
   // (No longer used for the obsolete S1↔S4 no-shift assertion — kept

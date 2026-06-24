@@ -118,7 +118,7 @@ import { isRealName } from "@shared/utils/isRealName";
 import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
-  HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
+  HERO_CARD_ROW_HEIGHT_CSS,
   TargetCornerScore,
   ZONE_GAP_PX,
 } from "./H2HBoardShell";
@@ -235,11 +235,9 @@ const INTRO_FONT_CLAMP = "clamp(16px, 4.2vw, 22px)";
 const INTRO_LINE_HEIGHT = 1.28;
 const INTRO_3LINE_BUDGET_CSS = `calc((${INTRO_FONT_CLAMP}) * ${INTRO_LINE_HEIGHT} * 3)`;
 
-// (4) Fluid inter-zone margin: TOP_ZONE marginBottom shrinks on tight
-// viewports. Default (other states) remains 18 per the shell constant;
-// during hold_select the shell receives a clamp() override.
-const HOLD_SELECT_TOP_ZONE_MARGIN_CSS = "clamp(8px, 2.6vw, 18px)";
-const HOLD_SELECT_HERO_MARGIN_CSS = "clamp(2px, 1vw, 4px)";
+// (2026-06-24 Option A) The hold_select margin overrides
+// (HOLD_SELECT_TOP_ZONE_MARGIN_CSS / HOLD_SELECT_HERO_MARGIN_CSS) are retired —
+// play now uses the shell's default margins (12/12), matching result.
 
 // Hold-state visual — accent ring + light scale. Visual polish is
 // 2d-scope (re-scoped to VISUAL refinement per the 2026-05-30 EDIT);
@@ -835,16 +833,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // wrapper read height:HAND_STRIP_HEIGHT_PX and the shell read the
   // full hero min-height immediately on state entry, and the
   // transitions animate the TO values.
-  const inLayoutA =
-    state.kind === "loading" ||
-    state.kind === "deal_in" ||
-    state.kind === "hold_select" ||
-    state.kind === "redraw_running" ||
-    state.kind === "your_redraw_flip";
-  const inLayoutB =
-    state.kind === "ab_transition" ||
-    state.kind === "handoff_resolving" ||
-    state.kind === "arc";
+  // (2026-06-24 Option A) inLayoutA / inLayoutB are retired — the shell
+  // sizing/margin overrides they gated are gone (play now uses the shell
+  // defaults in every state). topStripVisible (below) drives the opponent
+  // strip directly by state.kind.
   // RD6.1-e (2026-06-12): the top strip becomes visible at
   // your_redraw_flip ENTRY (not deferred to ab_transition). It still
   // sits collapsed during loading / deal_in / hold_select /
@@ -855,7 +847,17 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // topStripFadeUpMs(rosterSize) (= the full bottom-cascade window). The
   // hero region's Layout-A→B expansion stays at ab_transition (per
   // inLayoutA above) — that's the bigger structural shift.
+  // 2026-06-24 Option A locked layout (BEHAVIORAL CHANGE — glass item):
+  // the opponent mini-row (slot b) is now visible from deal_in/hold_select,
+  // not just Layout B. This REVERSES the deliberate "Mike's box isn't empty
+  // during the bottom cascade" hide — John wants the opponent lineup shown up
+  // top so the player can size up the target from the first screen. The
+  // opponent cards are already wired (resolvedSenderHand.cards → TopStripCell);
+  // this only un-collapses the existing strip. The bottom deal-in cascade is
+  // untouched.
   const topStripVisible =
+    state.kind === "deal_in" ||
+    state.kind === "hold_select" ||
     state.kind === "your_redraw_flip" ||
     state.kind === "ab_transition" ||
     state.kind === "handoff_resolving" ||
@@ -1528,15 +1530,38 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           />
         </div>
       ) : state.kind === "hold_select" || state.kind === "deal_in" ? (
-        // Preview window. Either the previewed card (big, via
-        // renderBattlefieldCard) or a defined empty box with visible
-        // border. Card wrapped in a sized container so both states
-        // occupy the same vertical footprint (no layout jump on first
-        // preview tap). deal_in always renders the empty variant —
-        // the recipient hasn't tapped yet, and the design-lock §2
-        // calls for "Your single hero preview box — empty bordered
-        // box" during deal-in.
-        state.kind === "hold_select" && previewedSlotIndex !== null && previewedCard ? (
+        // 2026-06-24 Option A: 2-row hero (matches result/reveal). Row 1 =
+        // slot-c reserved at the locked one-card-row height (instructional
+        // text lands here in a later copy pass — reserved now so the c-row
+        // locks across states); row 2 = the my-hero preview card. The card's
+        // own footprint logic (big card vs empty bordered box, no jump on
+        // first preview tap) is unchanged — only re-parented into row 2.
+        <div
+          data-h2h-play-hero-2row="true"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: SETTLE_HERO_GAP_PX,
+            width: "100%",
+          }}
+        >
+          <div
+            data-h2h-play-slot-c="true"
+            style={{
+              width: "100%",
+              height: HERO_CARD_ROW_HEIGHT_CSS,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+            }}
+          >
+            {/* slot c — instructional-text zone; content is a LATER copy
+                pass. Reserved at the locked one-card-row height now. */}
+          </div>
+          {state.kind === "hold_select" && previewedSlotIndex !== null && previewedCard ? (
           <div
             data-h2h-play-preview="card"
             data-h2h-play-preview-slot={previewedSlotIndex}
@@ -1575,7 +1600,8 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
               boxSizing: "border-box",
             }}
           />
-        )
+        )}
+        </div>
       ) : (
         // loading / redraw_running / your_redraw_flip / arc: headline
         // div. arc fades to opacity 0 via the inner-content composite
@@ -1745,64 +1771,53 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerTransitionMs={ARC_COMPOSITE_CROSSFADE_MS}
         innerDataAttr="data-h2h-play-inner"
         compositeOverlay={compositeOverlay}
-        // Vertical-budget overrides — design-lock §6 / Carry-forward:
-        // the responsive sizing + scroll-floor rules now apply to BOTH
-        // Layout A AND Layout B (the prior lock scoped them to
-        // hold_select only). Hero floor stays compressed throughout
-        // Layout A (opponent strip absent; the single-card preview
-        // window sits at a smaller minHeight) and expands to the full
-        // two-card floor for Layout B (the expansion IS the §3 step 3
-        // "your strip slides down" — the flex layout pushes the bottom
-        // strip down naturally as the hero region grows). The shell's
-        // min-height transition (HERO_MIN_HEIGHT_TRANSITION_MS = 250ms)
-        // does the animation, synced with AB_TRANSITION_DURATION_MS.
-        //
-        // Inter-zone margins + scroll-fallback engage across ALL
-        // non-arc states. Layout B is denser (two strips + two empty
-        // hero slots in settle-pause; battlefield grid + scores +
-        // headline + CTAs in arc) — that's where the comfortable
-        // floor most engages and the prior img-5 CTA clip surfaces.
-        // Above the floor: no scroll, sticky degrades to relative,
-        // no visible change.
-        heroMinHeight={
-          inLayoutA ? HERO_MIN_HEIGHT_HOLD_SELECT_CSS : undefined
-        }
-        topZoneMarginBottom={
-          inLayoutA ? HOLD_SELECT_TOP_ZONE_MARGIN_CSS : undefined
-        }
-        heroMarginBottom={
-          inLayoutA ? HOLD_SELECT_HERO_MARGIN_CSS : undefined
-        }
+        // 2026-06-24 Option A locked geometry: the prior Layout-A
+        // vertical-budget overrides (compressed single-card hero +
+        // tighter margins for the hold_select preview window) are
+        // RETIRED. Play now passes NO heroMinHeight / topZoneMarginBottom
+        // / heroMarginBottom override, so every state falls to the shell
+        // defaults RESULT uses — HERO_MIN_HEIGHT_CSS (two card-rows),
+        // TOP_ZONE_MARGIN_BOTTOM_PX (12), HERO_MARGIN_BOTTOM_PX (12).
+        // The hero zone is now the 2-row form (slot-c one-card-row +
+        // my-hero) in EVERY state, so play / reveal / result share fixed
+        // slot positions and don't jump. (Measured fit at 375×667 /
+        // 360×640 — slot-c fills the zone's existing slack, net ~±1px.)
         // Scroll fallback engages across all NON-arc states (arc
         // composites the reveal shell over the playing inner, which
         // fades to opacity 0 — making the playing inner scrollable
         // beneath an invisible layer would only confuse touch routing).
         innerScrollable={!arcComposite}
         belowBoardSticky={!arcComposite}
+        // 2026-06-24 Option A (step iii): the x/3 round signage moves from a
+        // fixed bottom:18% sibling INTO the shell's roundSignage slot, which
+        // renders directly below the my-mini row (slot e) — the locked a–f
+        // position, "tucked closely below e". Gated off at arc (the reveal
+        // renders its own in-band signage there, same as before).
+        roundSignage={
+          state.kind !== "arc" ? (
+            <div
+              data-h2h-round-signage="true"
+              style={{
+                textAlign: "center",
+                pointerEvents: "none",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: 1.5,
+                color: "rgba(234,240,255,0.55)",
+                textTransform: "uppercase",
+              }}
+            >
+              {roundsUsed}/{maxRounds}
+            </div>
+          ) : undefined
+        }
       />
-      {/* Round-position signage — PLAY-phase only (gated off at arc). Approach
-          (a) step (i): at arc the reveal surface renders its OWN in-band signage
-          (riding the reveal's recipient row via H2HBoardShell.roundSignage), so
-          this fixed sibling GATES OFF at arc to avoid a double-render. The two
-          flip on the SAME arc state transition (atomic re-render) — no
-          double-render. NOTE (steps ii/iii, glass): this sibling still sits at
-          bottom:18% during play, a different Y than the reveal's in-band signage,
-          so the play→reveal handoff has a Y-JUMP at the arc until step (iii)
-          moves THIS into the play band at the aligned Y. Shows 1/3 → 2/3 → 3/3;
-          leads the flip (FIX 1). pointerEvents:none. */}
-      {state.kind !== "arc" && (
-        <div
-          data-h2h-round-signage="true"
-          style={{
-            position: "fixed", left: 0, right: 0, bottom: "18%",
-            textAlign: "center", pointerEvents: "none", zIndex: 9100,
-            fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
-            color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
-          }}
-        >
-          {roundsUsed}/{maxRounds}
-        </div>
-      )}
+      {/* Round-position signage now renders in-band via the shell's
+          roundSignage slot above (directly below slot e, the locked a–f
+          position). The former fixed bottom:18% sibling was removed
+          2026-06-24 (Option A step iii) — it double-rendered x/3 during
+          non-arc play. Arc still gated off there; the reveal renders its
+          own in-band signage at arc, unchanged. */}
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
           shell's flex children — it's a sibling of the shell. The

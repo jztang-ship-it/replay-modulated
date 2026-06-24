@@ -61,7 +61,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import { HAND_STRIP_HEIGHT_PX, HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
-import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore, H2HBoardShell } from "./H2HBoardShell";
+import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore, H2HBoardShell, HERO_CARD_ROW_HEIGHT_CSS } from "./H2HBoardShell";
 import {
   trashTalkBucket,
   type TrashTalkBucket,
@@ -191,7 +191,10 @@ const HERO_CARD_MAX_WIDTH = "min(125px, 28vw)"; // matches arc's BATTLEFIELD_CAR
 // Value: HERO_CARD_MAX_WIDTH × 478/329 (the hero card's aspect-ratio-
 // derived height). Step-1 no-jump assertion stays green because the
 // user hero in row 2 retains the exact X/Y it had before.
-const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed(6)})`;
+// 2026-06-24: sourced from the shell's locked-layout vocabulary so play /
+// reveal / result share ONE one-card-row height (value-identical to the prior
+// local calc(HERO_CARD_MAX_WIDTH * 478/329)).
+const HERO_ROW_HEIGHT_CSS = HERO_CARD_ROW_HEIGHT_CSS;
 
 // RD7.5 Move 4 (2026-06-14): verdict-row (grid row 1) MIN height. Pre-
 // RD7.5 the floor was HERO_ROW_HEIGHT_CSS (~158px @390) — a holdover
@@ -1306,7 +1309,14 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             //   (user hero card) stays a fixed HERO_ROW_HEIGHT track;
             //   auto-flow still drops the HeroCell into row 2 col 2
             //   (no-jump hero X/Y preserved).
-            gridTemplateRows: `minmax(${VERDICT_ROW_MIN_PX}px, auto) ${HERO_ROW_HEIGHT_CSS}`,
+            // 2026-06-24 Option A lock: slot-c (row 1) floors at the shared
+            // one-card-row height (HERO_ROW_HEIGHT_CSS = shell
+            // HERO_CARD_ROW_HEIGHT_CSS) — the SAME height play's slot-c and
+            // reveal's opponent-card row hold, so the c-row doesn't reflow
+            // across states. The verdict grows into the hero zone's existing
+            // ~80px slack (measured fit at 375×667 / 360×640); minmax keeps
+            // the anti-overflow `auto` growth for a worst-case 2–3-line line.
+            gridTemplateRows: `minmax(${HERO_ROW_HEIGHT_CSS}, auto) ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
