@@ -69,6 +69,7 @@ import { PLATINUM_BAND_GRADIENT } from "@shared/components/platinumBand";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import { useBossEntry } from "@shared/hooks/useBossEntry";
 import { BossEntryCta } from "@shared/components/BossEntryCta";
+import { BossScreen } from "@shared/components/BossScreen";
 import {
   useEmotionalReveal,
   DRAWING_DWELL_MS,
@@ -528,6 +529,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [betNonce, setBetNonce] = useState(0);
   const [showRawScore, setShowRawScore] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showBoss, setShowBoss] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   // OAuth-resume race guard — belt-and-suspenders companion to
@@ -3072,7 +3074,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter}
         onViewLeaderboard={() => {
-          setShowLeaderboard(true);
           setTrophyPulsing(false);
           setTrophyBurst(false);
           // Durable acknowledgement — kills the iconBlink pulse loop
@@ -3080,7 +3081,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // "0" and flips back to "1" (a fresh entry edge).
           try { localStorage.setItem("rm_board_ack", "1"); } catch { }
           setFtueCommentaryOverride(null);
-          track("leaderboard", "viewed", { source: "gamebar_trophy" });
+          // Trophy → BossScreen for basketball (the boss sport). Other sports
+          // have no boss, so they keep the daily leaderboard on the trophy
+          // (no cross-sport regression). Collect + post-hand openers still
+          // point at LeaderboardScreen everywhere (Option A — untouched).
+          if (sportKey === "basketball") {
+            setShowBoss(true);
+            track("boss", "boss_screen_opened", { source: "gamebar_trophy" });
+          } else {
+            setShowLeaderboard(true);
+            track("leaderboard", "viewed", { source: "gamebar_trophy" });
+          }
         }}
         legendPulsing={legendGold}
         trophyPulsing={trophyPulsing}
@@ -3112,6 +3123,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             currentUid={getPlayerUid()}
             sport={leaderboardScope}
             onClose={() => setShowLeaderboard(false)}
+          />
+        )}
+
+        {showBoss && (
+          <BossScreen
+            sport={leaderboardScope}
+            currentUid={getPlayerUid()}
+            bossChallengeId={bossEntry.bossChallengeId}
+            bossPlayerCount={bossEntry.bossPlayerCount}
+            onClose={() => setShowBoss(false)}
           />
         )}
 
