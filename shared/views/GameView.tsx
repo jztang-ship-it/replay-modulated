@@ -3231,6 +3231,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             currentUid={getPlayerUid()}
             bossChallengeId={bossEntry.bossChallengeId}
             bossPlayerCount={bossEntry.bossPlayerCount}
+            // Compact lineup headshots via the sport adapter; optional-chained
+            // so a sport without headshots falls back to name/position tiles.
+            headshotUrl={(id) => sportAdapter.getHeadshotUrl?.(id) ?? null}
             onClose={() => setShowBoss(false)}
           />
         )}

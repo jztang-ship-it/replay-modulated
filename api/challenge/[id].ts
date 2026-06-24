@@ -47,6 +47,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // internal — band/K/route/attempts/picks are NOT on the row and so
     // never reach this whitelist.
     tough_day: data.tough_day ?? null,
+    // Boss identity (= bank id, e.g. "DET-0304"; migration 014). Additive,
+    // null on human rows. The boss page maps this id → the authored story via
+    // the bundled story map (Path B — no DB column for the story itself).
+    boss_identity_id: data.boss_identity_id ?? null,
     challenger_name: data.challenger_name ?? "Anonymous",
     target_score: Number(data.target_fp),
     sport: data.sport,
