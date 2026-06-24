@@ -312,6 +312,58 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
   return json(res, 200, { ok: true });
 }
 
+// Boss leaderboard read (Delta-C). Returns the same { entries } shape the
+// LeaderboardScreen EntryRow consumes, scoped to a boss pool: today's boss
+// challenge_id by default, or an explicit challenge_id / referrer_token
+// (general form — serves future per-sender boards with no rewrite). Public-
+// read RLS on challenge_attempts (migration 006) allows the service-role read.
+async function handleBossBoard(
+  req: VercelRequest,
+  res: VercelResponse,
+  sport: string,
+  limit: number,
+) {
+  if (!supabaseServer) return json(res, 200, { entries: [], bossChallengeId: null });
+
+  const explicitReferrer = req.query.referrer_token ? String(req.query.referrer_token) : null;
+  const explicitChallenge = req.query.challenge_id ? String(req.query.challenge_id) : null;
+  let scopeCol: "challenge_id" | "referrer_token";
+  let scopeVal: string | null;
+  if (explicitReferrer) {
+    scopeCol = "referrer_token"; scopeVal = explicitReferrer;
+  } else if (explicitChallenge) {
+    scopeCol = "challenge_id"; scopeVal = explicitChallenge;
+  } else {
+    const boss = await resolveBoss(sport);
+    scopeCol = "challenge_id"; scopeVal = boss?.bossChallengeId ?? null;
+  }
+  const bossChallengeId = scopeCol === "challenge_id" ? scopeVal : null;
+  if (!scopeVal) return json(res, 200, { entries: [], bossChallengeId });
+
+  // Fetch score-desc (index-covered) and dedupe best-per-user in JS: the first
+  // row seen per identity is that user's MAX(score) — handles replays (multiple
+  // rows per user) without assuming one row/user.
+  const { data, error } = await supabaseServer
+    .from("challenge_attempts")
+    .select("user_id, anon_uid, user_name, score")
+    .eq(scopeCol, scopeVal)
+    .order("score", { ascending: false })
+    .limit(500);
+  if (error || !data) return json(res, 200, { entries: [], bossChallengeId });
+
+  const seen = new Set<string>();
+  const entries: { uid: string; nickname: string; score: number; session_id: string | null }[] = [];
+  for (const r of data as Array<{ user_id: string | null; anon_uid: string | null; user_name: string | null; score: number }>) {
+    const uid = (r.user_id ?? r.anon_uid ?? "") as string;
+    const key = uid || `name:${r.user_name ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    entries.push({ uid, nickname: String(r.user_name ?? "Anon"), score: Number(r.score), session_id: null });
+    if (entries.length >= limit) break;
+  }
+  return json(res, 200, { entries, bossChallengeId });
+}
+
 async function handleGet(req: VercelRequest, res: VercelResponse) {
   const sport = String(req.query.sport ?? "");
   const metric = String(req.query.metric ?? "streak");
@@ -320,6 +372,18 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
   const competition = req.query.competition ? String(req.query.competition) : undefined;
 
   if (!VALID_SPORTS.includes(sport as Sport)) return json(res, 400, { error: "Invalid sport" });
+
+  // Boss leaderboard (Delta-C) — a distinct read off challenge_attempts, not a
+  // KV metric. General grouping: scope by challenge_id (today's boss, the
+  // default) OR referrer_token (future per-sender / cross-instance boards);
+  // the (challenge_id, referrer_token, score DESC) partial index (migration
+  // 015) covers both shapes. Best-score-per-user (MAX over replays) is done in
+  // JS since supabase-js can't GROUP BY. Branches BEFORE the metric validation
+  // because board=boss carries no KV metric.
+  if (String(req.query.board ?? "") === "boss") {
+    return await handleBossBoard(req, res, sport, limit);
+  }
+
   if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
   const compErr = validateCompetition(sport, competition);
   if (compErr) return json(res, 400, { error: compErr });
