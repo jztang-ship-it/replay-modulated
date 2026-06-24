@@ -238,7 +238,19 @@ export function useChallengeShare(sportKey: string) {
       // never blocks the create result. Reuses the session fetched above for the
       // `verified` flag (no extra round-trip).
       try {
-        await ensureSenderHandLogRow(args, session ?? null);
+        const gapFill = await ensureSenderHandLogRow(args, session ?? null);
+        // MEASUREMENT ONLY — the deferred-flush fix is PARKED post-launch.
+        // outcome="written" ⇒ the lock-time hand_log persist FAILED for this
+        // hand (auth-race or bound-out) and the share-time backstop saved it;
+        // "exists" ⇒ lock-time write succeeded; "skipped-anon" ⇒ by-design (no
+        // real uid yet); "error" ⇒ backstop itself failed. The "written" rate
+        // over authed shares is the auth-race frequency that decides whether
+        // the parked fix is worth building. Off the money seam.
+        track("challenges", "sender_hand_log_gap_fill", {
+          sport: sportKey,
+          outcome: gapFill,
+          hand_id: args.handId,
+        });
       } catch {
         /* belt-and-suspenders — the helper already swallows; never break share */
       }
