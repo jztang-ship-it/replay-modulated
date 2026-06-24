@@ -24,6 +24,9 @@ import { useEffect, useState, useCallback } from "react";
 // (keyed by bank id == boss_identity_id). Regen via scripts/gen-boss-stories.mjs;
 // a drift test keeps it synced to the bank.
 import bossStories from "@shared/data/bossStories.generated.json";
+// Reuse the SAME tier-color source the gameplay cards (CardFront) use — not a
+// parallel recolor. getTier(tier) → { bg, bgEnd, frame, ... }.
+import { getTier } from "@shared/theme";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -31,7 +34,7 @@ const BOSS_STORIES = bossStories as Record<string, string>;
 
 type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
 
-type LineupCard = { name: string; position: string; photoCode: string | null; basePlayerId: string };
+type LineupCard = { name: string; position: string; photoCode: string | null; basePlayerId: string; tier: string };
 
 interface BossInfo {
   display: string;
@@ -92,26 +95,46 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
   const first = card.name.split(" ")[0] ?? "";
   const last = card.name.split(" ").slice(1).join(" ");
   const showImg = !!src && !imgFailed;
+  const t = getTier(card.tier);
   return (
     // flex:1 so the five tiles fill the content width edge-to-edge (the hero);
     // maxWidth caps them card-sized on wide screens. Real ~2:3 card aspect.
-    <div style={{ flex: 1, minWidth: 0, maxWidth: 76, display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+    <div style={{ flex: 1, minWidth: 0, maxWidth: 76, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {/* Composition B — a miniature of the gameplay card: the TIER GRADIENT is
+          the card body (getTier — same source as CardFront), tier frame border,
+          headshot anchored in the top region (NOT full-bleed) so the gradient
+          band reads at the bottom, and the name on that band over a slight dark
+          scrim (guaranteed-readable on every tier — see note). onError → the
+          gradient body + position glyph + name (a colored tile, not flat dark). */}
       <div style={{
         width: "100%", aspectRatio: "2 / 3", borderRadius: 8, overflow: "hidden",
-        background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
-        display: "flex", alignItems: "flex-end", justifyContent: "center",
+        background: `linear-gradient(to bottom, ${t.bg} 0%, ${t.bgEnd} 100%)`,
+        border: `1.5px solid ${t.frame}`,
+        display: "flex", flexDirection: "column",
       }}>
-        {showImg ? (
-          // NBA headshot is landscape; cover + top-center crops it to the
-          // portrait card showing the face. onError → fall back to the tile.
-          <img src={src!} alt="" onError={() => setImgFailed(true)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
-        ) : (
-          <span style={{ fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.5)", paddingBottom: 8 }}>{card.position}</span>
-        )}
+        <div style={{ flex: "1 1 auto", minHeight: 0, display: "flex", alignItems: "flex-end", justifyContent: "center", overflow: "hidden" }}>
+          {showImg ? (
+            // NBA headshot is landscape; cover + top-center crops it to the face.
+            // onError → fall back so a broken-image glyph never shows.
+            <img src={src!} alt="" onError={() => setImgFailed(true)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
+          ) : (
+            <span style={{ fontSize: 15, fontWeight: 900, color: "rgba(255,255,255,0.7)", paddingBottom: 10 }}>{card.position}</span>
+          )}
+        </div>
+        {/* Name band — light text on a slight dark scrim. NOTE: getTier's
+            `isLight` is a tier-RANK flag (WHITE=true) with a DARK gradient, and
+            even bgEnd luminance varies (teal/lime bright vs purple dark), so a
+            literal isLight→text-color would mis-contrast (esp. WHITE). The scrim
+            + light text is the robust read of "names stay readable on any tier." */}
+        <div style={{
+          flexShrink: 0, padding: "3px 4px",
+          background: "rgba(7,10,18,0.5)",
+          fontSize: 9, fontWeight: 900, color: "#F4F7FF",
+          textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.15,
+        }}>
+          {last || first}
+        </div>
       </div>
-      <span style={{ fontSize: 9, fontWeight: 800, color: "rgba(255,255,255,0.8)", width: "100%", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.1 }}>
-        {last || first}
-      </span>
     </div>
   );
 }
@@ -147,6 +170,7 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
               position: String(c.position ?? ""),
               photoCode: c.photoCode != null ? String(c.photoCode) : null,
               basePlayerId: String(c.basePlayerId ?? ""),
+              tier: String(c.tier ?? "WHITE"),
             }))
           : [];
         const mappedStory = d.boss_identity_id ? BOSS_STORIES[String(d.boss_identity_id)] : undefined;
