@@ -61,7 +61,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import { HAND_STRIP_HEIGHT_PX, HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
-import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore } from "./H2HBoardShell";
+import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore, H2HBoardShell, HERO_CARD_ROW_HEIGHT_CSS } from "./H2HBoardShell";
 import {
   trashTalkBucket,
   type TrashTalkBucket,
@@ -191,7 +191,10 @@ const HERO_CARD_MAX_WIDTH = "min(125px, 28vw)"; // matches arc's BATTLEFIELD_CAR
 // Value: HERO_CARD_MAX_WIDTH × 478/329 (the hero card's aspect-ratio-
 // derived height). Step-1 no-jump assertion stays green because the
 // user hero in row 2 retains the exact X/Y it had before.
-const HERO_ROW_HEIGHT_CSS = `calc(${HERO_CARD_MAX_WIDTH} * ${(478 / 329).toFixed(6)})`;
+// 2026-06-24: sourced from the shell's locked-layout vocabulary so play /
+// reveal / result share ONE one-card-row height (value-identical to the prior
+// local calc(HERO_CARD_MAX_WIDTH * 478/329)).
+const HERO_ROW_HEIGHT_CSS = HERO_CARD_ROW_HEIGHT_CSS;
 
 // RD7.5 Move 4 (2026-06-14): verdict-row (grid row 1) MIN height. Pre-
 // RD7.5 the floor was HERO_ROW_HEIGHT_CSS (~158px @390) — a holdover
@@ -331,130 +334,16 @@ export function selectOutcomeColor(delta: number): string {
 
 // ── Zone panel — glass chrome (matches arc) ──────────────────────────────
 
-function ZonePanel({ children, dataAttr, style }: { children: React.ReactNode; dataAttr?: string; style?: React.CSSProperties }) {
-  return (
-    <div
-      data-h2h-overlay-zone={dataAttr}
-      style={{
-        flex: "0 0 auto",
-        display: "flex",
-        flexDirection: "column",
-        gap: ZONE_GAP_PX,
-        borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.05)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.28)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        padding: "8px 12px",
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+// 2026-06-24 result→shell re-host (safe half): the private ZonePanel and
+// ZoneHeader recipes that hand-mirrored H2HBoardShell's chrome are RETIRED.
+// H2HResultsOverlay now consumes <H2HBoardShell>, so the shell's own
+// ZonePanel/ZoneHeader render the framed zones + name/score bands. The one
+// intended visual delta is the panel boxShadow (shell 0 4px 12px /0.20 vs
+// the old overlay 0 8px 24px /0.28) — drift-elimination, glass-verified.
 
-function ZoneHeader({
-  hand,
-  position,
-  score,
-}: {
-  hand: H2HHand;
-  position?: "top" | "bottom";
-  /** RD6.1 (2026-06-11): re-parented ScoreCell rendered absolute-right.
-   *  The score for both teams now LIVES in the box headers — pre-RD6.1
-   *  the right-rail ScoreCells were the live home and this band held
-   *  a placeholder span that the step-4 glide animated values into.
-   *  RD6.1 deletes the glide; the ScoreCell is the same component the
-   *  reveal renders in the same DOM position, so the reveal→results
-   *  no-snap upgrades to component+geometric identity. */
-  score?: React.ReactNode;
-}) {
-  // Outer + name recipe matches H2HBoardShell.ZoneHeader on the reveal
-  // side verbatim — padding "0 6px", height ZONE_HEADER_HEIGHT_PX, flex
-  // with justifyContent:center, font 18/900, color rgba(0.95),
-  // letterSpacing 1, uppercase. That parity is what the no-jump-name
-  // cross-surface assertion locks; same parity now extends to the
-  // score's position (absolute-right via the shared CORNER_SCORE_MIN_
-  // WIDTH_PX template).
-  return (
-    <div
-      data-h2h-overlay-zone-label={position}
-      style={{
-        position: "relative",                  // anchor for the absolute score
-        // RD6.2-prep-A2 (2026-06-12): header capped to the strip's
-        // intrinsic card-content span and centered with auto margins
-        // — mirrors H2HBoardShell.ZoneHeader so the reveal→results
-        // no-snap geometric parity holds. Pre-A2 the band bulged
-        // past the card edges on viewports above ~390 because the
-        // ZonePanel content box is wider than the centered card
-        // span. Padding zeroed so outer-left = first-card-left.
-        padding: 0,
-        width: "100%",
-        maxWidth: HAND_STRIP_CARD_CONTENT_WIDTH_PX,
-        marginLeft: "auto",
-        marginRight: "auto",
-        height: ZONE_HEADER_HEIGHT_PX,         // unchanged — strip Y depends on this
-        display: "flex",
-        alignItems: "center",
-        // RD6.2-prep-A (2026-06-12): name LEFT-aligned to match the
-        // reveal-side H2HBoardShell.ZoneHeader. Both surfaces anchor
-        // name to the left and score to the right edge so the
-        // reveal→results no-snap geometric parity holds and long
-        // names don't fight a centered total for the middle.
-        justifyContent: "flex-start",
-        flexShrink: 0,
-      }}
-    >
-      <span
-        style={{
-          // RD6.2-prep-A: unidirectional reserve (right side only) so
-          // a left-aligned name uses the full available width before
-          // truncating, mirroring H2HBoardShell.ZoneHeader. A2: 100%
-          // is now the strip card-content span (capped by outer
-          // maxWidth), so the reserve math is the same but the
-          // result aligns to the last-card-right edge.
-          maxWidth: score
-            ? `calc(100% - (${CORNER_SCORE_MIN_WIDTH_PX}px + 8px))`
-            : undefined,
-          overflow: score ? "hidden" : undefined,
-          textOverflow: score ? "ellipsis" : undefined,
-          whiteSpace: score ? "nowrap" : undefined,
-          // Reveal-matching recipe (verbatim from H2HBoardShell):
-          fontSize: 18,
-          fontWeight: 900,
-          color: "rgba(255,255,255,0.95)",
-          letterSpacing: 1,
-          textTransform: "uppercase",
-        }}
-      >
-        {hand.displayName}
-      </span>
-      {score && (
-        <div
-          data-h2h-overlay-corner-score={position}
-          data-h2h-overlay-corner-score-team={position === "top" ? "opponent" : "user"}
-          style={{
-            position: "absolute",
-            // RD6.2-prep-A2 (2026-06-12): flush to outer-right, which
-            // after A2's inset equals the last card's right edge.
-            right: 0,
-            top: 0,
-            bottom: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            minWidth: CORNER_SCORE_MIN_WIDTH_PX,
-            pointerEvents: "none",
-          }}
-        >
-          {score}
-        </div>
-      )}
-    </div>
-  );
-}
+// (private ZoneHeader retired — see the note above; the shell's exported
+//  ZoneHeader now renders the name/score band via topLabel/topScore and
+//  bottomLabel/bottomScore, emitting data-h2h-board-* attrs.)
 
 // ── Results strip — hand-strip-density cells, tap-to-flip ────────────────
 //
@@ -1327,139 +1216,37 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       data-h2h-overlay-selected-top={topSelectedCardId ?? ""}
       data-h2h-overlay-selected-bottom={bottomSelectedCardId ?? ""}
       style={{
+        // Slimmed wrapper (2026-06-24 re-host): a bare positioned/opacity
+        // carrier. The <H2HBoardShell> below provides the gradient / font /
+        // safe-area / overflow chrome. This wrapper keeps zIndex
+        // H2H_RESULTS_OVERLAY_Z (9100) so the result paints OVER the still-
+        // mounted arc during the reveal→result crossfade — the z-9000
+        // equalization is the SEPARATE gated step — and carries the whole-
+        // frame opacity fade (the shell has no outer-opacity prop; its
+        // innerOpacity fades only the inner column).
         position: "fixed",
         inset: 0,
         zIndex: H2H_RESULTS_OVERLAY_Z,
-        background: "linear-gradient(180deg, #070A12 0%, #0A1020 38%, #070A12 100%)",
-        color: "#EAF0FF",
-        fontFamily: "'Inter', system-ui, sans-serif",
-        userSelect: "none",
-        overflow: "hidden",
-        // Phase 4 amend3 (2026-05-27): floor reduced 36 → 20 to
-        // match the arc. Top strip sits close to the viewport top;
-        // the empty space below the bottom strip absorbs viewport
-        // slack instead of being top-and-bottom margin.
-        // RD6.2-prep-C (2026-06-12): added safe-area pad trimmed 20 → 8
-        // to match H2HBoardShell's parallel cut.
-        // RD6.2-prep-E (2026-06-12): trimmed 8 → 4 — mirrors the shell
-        // for no-snap parity. The +4 visual margin remains above env(),
-        // which handles the notch/home-indicator clearance natively.
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 4px)",
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)",
-        boxSizing: "border-box",
         opacity: visible ? 1 : 0,
         pointerEvents: visible ? "auto" : "none",
         transition: `opacity ${OVERLAY_CROSSFADE_MS}ms ease`,
       }}
     >
-      {/* × close button — same pattern as the prior sheet. */}
-      <button
-        type="button"
-        data-h2h-overlay-close="true"
-        onClick={onDismiss}
-        aria-label="Close result"
-        style={{
-          position: "absolute",
-          top: "calc(env(safe-area-inset-top, 0px) + 14px)",
-          right: 14,
-          width: 32,
-          height: 32,
-          borderRadius: 16,
-          background: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.55)",
-          fontSize: 16,
-          fontWeight: 700,
-          lineHeight: 1,
-          cursor: "pointer",
-          zIndex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        ×
-      </button>
-
-      {/* Inner column — Phase 4 fix 3 amend2 (2026-05-27): mirrors the
-          arc's flex-column layout EXACTLY so the top strip, both hero
-          slots, and the bottom strip render at identical Y positions
-          on both surfaces. Only the contents of the zones change:
-            - hero slots: arc shows active matchup; overlay shows
-              tap-to-flip card backs (per-strip, both can be filled
-              simultaneously).
-            - reserved bottom space: empty on arc; holds countdown
-              pill + primary CTA on overlay.
-            - left rail of the battlefield grid: empty on arc; holds
-              headline + trash-talk on overlay.
-            - right rail: FP totals on both; absolute matchup delta
-              floats between scores on arc only. */}
-      <div
-        data-h2h-overlay-inner="true"
-        style={{
-          width: "100%",
-          maxWidth: "min(480px, 100%)",
-          height: "100%",
-          margin: "0 auto",
-          paddingLeft: 16,
-          paddingRight: 16,
-          boxSizing: "border-box",
-          display: "flex",
-          flexDirection: "column",
-          // Bug 2 fix (Layout A/B restructure carry-forward §6): the
-          // overlay's composition (two strips + hero grid + reserved
-          // CTA) genuinely overflows the available height on tight
-          // viewports (390×700+ with URL bar, 390×664 mid-scroll,
-          // 360×590, 320×520, in-app webviews). The play shell solved
-          // this via H2HBoardShell's innerScrollable / belowBoardSticky
-          // props (overflow-y:auto on the inner column + sticky-bottom
-          // on the reserved-CTA wrapper). H2HResultsOverlay is hand-
-          // rolled (not an H2HBoardShell consumer), so it gets its own
-          // copy of the same rule. Adaptation is automatic — natural
-          // CSS behavior shows no scroll when content fits (control
-          // viewports above the comfortable floor stay unchanged);
-          // below the floor, overflow-y:auto engages and the reserved-
-          // bottom's sticky:bottom:0 keeps the CTA pinned. iOS momentum
-          // via -webkit-overflow-scrolling.
-          overflowY: "auto" as const,
-          WebkitOverflowScrolling: "touch" as const,
-          // Phase 4 amend3 (2026-05-27): the top-strip → hero-pair →
-          // bottom-strip block is a single TIGHT composition.
-          // Piece 2a (2026-05-28, doc lock a5d7e43): gap removed from
-          // the outer column; each child carries explicit marginBottom
-          // so per-pair gaps can be tuned independently. Top-strip →
-          // hero gap stays 18px (hero Y locked by phase 4). Hero →
-          // bottom-strip gap reduced 18 → 4 (Strategy α G1: bottom
-          // strip moves up by 14px). Bottom-strip → reserved gap
-          // reduced 18 → 0 (reserved gets 18px more height). Combined
-          // with reserved paddingTop 16 → 8, the CTA gets 40px more
-          // unclipped headroom on safe-area-inset viewports — the
-          // pre-existing clipping bug is resolved.
-          justifyContent: "flex-start",
-          alignItems: "stretch",
-          gap: 0,
-        }}
-      >
-        {/* RD7.1 (2026-06-13): in-flow global challenge header. First
-            child of the overlay's inner column → shifts the results
-            board DOWN by the same height the reveal shell does (identical
-            component), preserving reveal→results no-snap. No transform
-            (DON'T-BREAK #1). Only the recipient flow passes it. */}
-        {globalHeader}
-        {/* ── TOP STRIP — opponent's lineup ────────────────────────────
-            RD6.1-b: ZoneHeader moves BELOW the strip so the
-            name+Mike-total band sits at the box's INNER edge
-            (bottom-right). Mirrors the reveal-side reorder in
-            H2HBoardShell — corner-score wrapper stays component+
-            position identical across reveal-done and overlay-mount
-            frames. */}
-        {/* RD6.2-prep-C/D: see commit history.
-            RD6.2-prep-E (2026-06-12): 0 → 12 mirrors the shared
-            TOP_ZONE_MARGIN_BOTTOM_PX (now 12) in H2HBoardShell. The
-            paddingTop: 4 override mirrors the shell's strip-side
-            panel-pad trim. Net: top hero gap = panel pad-bot (8) +
-            margin (12) = 20px on BOTH surfaces. */}
-        <ZonePanel dataAttr="opponent" style={{ marginBottom: 12, paddingTop: 4 }}>
+      {/* 2026-06-24 result→shell re-host (safe half): the hand-rolled inner
+          column is RETIRED — H2HResultsOverlay now consumes H2HBoardShell, the
+          single source for the a–f inner layout (top strip / hero / bottom
+          strip / reserved CTA). innerScrollable + belowBoardSticky reproduce
+          the prior overflow-y:auto + sticky-CTA scroll fallback. The slimmed
+          outer wrapper above stays at z-9100 (above-arc paint order) + carries
+          the crossfade opacity (the shell has no outer-opacity prop). */}
+      <H2HBoardShell
+        surfaceKind="results-overlay"
+        innerScrollable
+        globalHeader={globalHeader}
+        /* TOP STRIP (b) — opponent lineup + name/score band. The shell's
+           ZonePanel renders the strip then the ZoneHeader (RD6.1-b
+           below-strip order) from topStrip/topLabel/topScore. */
+        topStrip={
           <ResultsStrip
             cards={sender.cards}
             renderCard={renderCard}
@@ -1467,30 +1254,28 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             onCardTap={handleTopCardTap}
             revealOrder={senderRevealOrder}
           />
-          <ZoneHeader
-            hand={sender}
-            position="top"
-            score={
-              // RD6.1-c: Mike's corner reads "Target: X" on the
-              // results surface too. Same ScoreCell as the reveal
-              // (data attrs untouched); only the surrounding label
-              // changes.
-              <TargetCornerScore
-                scoreCell={
-                  <ScoreCell
-                    total={sender.totalFp}
-                    displayTotal={reel ? reel.opp : undefined}
-                    state={oppCellState}
-                    sizeProgress={senderSizeProgress}
-                    surface="overlay"
-                    teamPosition="opponent"
-                  />
-                }
+        }
+        topLabel={sender.displayName}
+        topScore={
+          // RD6.1-c: Mike's corner reads "Target: X" on the results
+          // surface too. Same ScoreCell (surface="overlay"; data attrs
+          // untouched) — only its corner WRAPPER is now the shell's
+          // ZoneHeader (data-h2h-board-corner-score).
+          <TargetCornerScore
+            scoreCell={
+              <ScoreCell
+                total={sender.totalFp}
+                displayTotal={reel ? reel.opp : undefined}
+                state={oppCellState}
+                sizeProgress={senderSizeProgress}
+                surface="overlay"
+                teamPosition="opponent"
               />
             }
           />
-        </ZonePanel>
-
+        }
+        hero={
+        <>
         {/* ── HERO ZONE — 3-col × 2-row grid.
             Step 3 (results-page lock): opponent hero removed, commentary
             inserted in its place spanning [left rail + center] of row 1;
@@ -1524,7 +1309,14 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             //   (user hero card) stays a fixed HERO_ROW_HEIGHT track;
             //   auto-flow still drops the HeroCell into row 2 col 2
             //   (no-jump hero X/Y preserved).
-            gridTemplateRows: `minmax(${VERDICT_ROW_MIN_PX}px, auto) ${HERO_ROW_HEIGHT_CSS}`,
+            // 2026-06-24 Option A lock: slot-c (row 1) floors at the shared
+            // one-card-row height (HERO_ROW_HEIGHT_CSS = shell
+            // HERO_CARD_ROW_HEIGHT_CSS) — the SAME height play's slot-c and
+            // reveal's opponent-card row hold, so the c-row doesn't reflow
+            // across states. The verdict grows into the hero zone's existing
+            // ~80px slack (measured fit at 375×667 / 360×640); minmax keeps
+            // the anti-overflow `auto` growth for a worst-case 2–3-line line.
+            gridTemplateRows: `minmax(${HERO_ROW_HEIGHT_CSS}, auto) ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
@@ -1650,37 +1442,12 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               stays the same. */}
           <div aria-hidden="true" style={{ gridRow: 2, gridColumn: 3 }} />
         </div>
-
-        {/* ── BOTTOM STRIP — user's lineup ─────────────────────────────
-            Phase 4 amend3 (2026-05-27): bottom strip sits IMMEDIATELY
-            below the bottom hero. Piece 2a (2026-05-28, doc lock
-            a5d7e43): explicit marginBottom: 0 — no gap to the reserved
-            space below. The strip flushes directly against reserved,
-            which then provides paddingTop: 8 (was 16) for the CTA.
-            RD6.1-b: ZoneHeader moves ABOVE the strip so the
-            name+YOU-total band sits at the box's INNER (top) edge —
-            top-right of the bottom box, mirroring the reveal-side
-            reorder in H2HBoardShell. */}
-        {/* RD6.2-prep-E (2026-06-12): paddingBottom: 4 override
-            mirrors H2HBoardShell's bottom panel strip-side trim. The
-            hero-side (paddingTop) stays default 8, partnering with
-            HERO_MARGIN_BOTTOM_PX (now 12) for the 20px bottom hero
-            gap. */}
-        <ZonePanel dataAttr="user" style={{ marginBottom: RESERVED_BOTTOM_CLEARANCE_PX, paddingBottom: 4 }}>
-          <ZoneHeader
-            hand={recipient}
-            position="bottom"
-            score={
-              <AnimatedUserScore
-                total={recipient.totalFp}
-                state={userCellState}
-                sizeProgress={recipientSizeProgress}
-                displayTotal={reel ? reel.user : undefined}
-                revealNonce={revealNonce}
-                reducedMotion={reducedMotion}
-              />
-            }
-          />
+        </>
+        }
+        /* BOTTOM STRIP (e) — user lineup + name/score band. Shell renders
+           the ZoneHeader then the strip (RD6.1-b above-strip order) from
+           bottomLabel/bottomScore + bottomStrip. */
+        bottomStrip={
           <ResultsStrip
             cards={recipient.cards}
             renderCard={renderCard}
@@ -1688,60 +1455,38 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             onCardTap={handleBottomCardTap}
             revealOrder={recipientRevealOrder}
           />
-        </ZonePanel>
+        }
+        bottomLabel={recipient.displayName}
+        bottomScore={
+          <AnimatedUserScore
+            total={recipient.totalFp}
+            state={userCellState}
+            sizeProgress={recipientSizeProgress}
+            displayTotal={reel ? reel.user : undefined}
+            revealNonce={revealNonce}
+            reducedMotion={reducedMotion}
+          />
+        }
 
-        {/* ── RESERVED BOTTOM SPACE (holds CTA + countdown) ────────────
-            Phase 4 amend3 (2026-05-27): flex-grow region BELOW the
-            bottom strip. On the arc this is empty; on the overlay it
-            holds the LOSS_OPEN countdown (if applicable) and the
-            primary CTA. The reserved space matches the arc's exact
-            geometry — same flex-grow, same position — so the bottom
-            strip Y is identical on both surfaces. CTA is anchored
-            toward the bottom of the reserved space (flex-end) for a
-            comfortable thumb position, but the outer container's
-            safe-area paddingBottom keeps it off the viewport edge. */}
-        <div
-          data-h2h-overlay-reserved="true"
-          style={{
-            // Bug 2 fix (carry-forward of H2HBoardShell's
-            // belowBoardSticky pattern). The play harness already
-            // proved this exact mechanism in the play shell:
-            //   - flex:1 1 auto + minHeight:0 SHRINKS to 0 under
-            //     overflow (children render outside the box), so the
-            //     CTA wrapper renders BELOW the visible scroll-port.
-            //     That was the prior cause of the CTA clip.
-            //   - flex:0 0 auto sizes to content (~64px CTA + 8px
-            //     padding), so sticky's bounding box matches the CTA's
-            //     actual visual region.
-            //   - margin-top:auto pushes reserved-bottom to the bottom
-            //     of the flex column when there's leftover space
-            //     (= "no scroll / fits" case), so the CTA still
-            //     visually sits at the viewport bottom even on roomy
-            //     viewports — preserving the prior flex-end behavior.
-            //   - When content overflows, sticky:bottom:0 pins
-            //     reserved-bottom to the visible scroll-port bottom
-            //     (the CTA stays pinned through any scroll position).
-            flex: "0 0 auto",
-            marginTop: "auto",
-            position: "sticky" as const,
-            bottom: 0,
-            zIndex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "stretch",
-            justifyContent: "flex-start",
-            // RD6.1-g (2026-06-11): paddingTop 8 → 0. With
-            // RESERVED_BOTTOM_CLEARANCE_PX providing the visual gap
-            // above the CTA, the reserved-bottom area itself no longer
-            // needs its own top padding.
-            paddingTop: 0,
-            // Match the overlay outer's background so the sticky CTA
-            // strip has an opaque underlay when content scrolls behind
-            // it (otherwise the bottom strip would bleed through the
-            // CTA wrapper on tight viewports).
-            background: "linear-gradient(180deg, #070A12 0%, #070A12 100%)",
-          }}
-        >
+        /* RESERVED BOTTOM (f) — CTA region. The shell's belowBoardSticky
+           wrapper provides the flex:0 0 auto + marginTop:auto + sticky:bottom:0
+           mechanism that the hand-rolled reserved-bottom used to carry. */
+        belowBoard={
+          <div
+            data-h2h-overlay-reserved="true"
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              // G2 (must-handle): the CTA underlay gradient rides INSIDE
+              // belowBoard so it travels with the sticky CTA. The shell's
+              // reserved-bottom has no background of its own; without this the
+              // bottom strip can bleed through the sticky CTA on tight
+              // viewports. Verbatim from the prior reserved-bottom underlay.
+              background: "linear-gradient(180deg, #070A12 0%, #070A12 100%)",
+            }}
+          >
           {/* RD7.10-c (2026-06-15): the relocated "game logs" discoverability
               hint. Permanent footer row — FIRST child of the reserved band, so
               it sits BELOW the YOU mini-slot row and ABOVE the CTA. Full-width
@@ -1820,27 +1565,63 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             </div>
           )}
         </div>
-      </div>
-
-      {/* RD7.8 margin hero — the suspense instrument (rolling, sign hidden) +
-          the reveal's visual hero. Fixed top layer, OUTSIDE the inner column's
-          flow (zero layout impact). */}
-      {marginPhase !== "idle" && (
-        <MarginHero
-          phase={marginPhase}
-          value={reel ? reel.margin : finalMargin}
-          outcome={outcomeKind}
-          revealKey={revealNonce}
-        />
-      )}
-
-      {/* RD7.7 full-screen resolution celebration — a fixed TOP LAYER, OUTSIDE
-          the inner column's flow (it never wraps/scales/transforms the results
-          content underneath, so the no-scroll resting screen is untouched).
-          Self-clears after the animation, revealing the clean results screen. */}
-      {celebration && (
-        <ResolutionCelebration outcome={celebration.outcome} fireKey={celebration.key} />
-      )}
+        }
+        belowBoardSticky
+        compositeOverlay={
+          <>
+            {/* × close — frame overlay. Rides compositeOverlay (the shell's
+                slot for content inside its fixed frame, after the inner
+                column) rather than a bare wrapper sibling: the shell's
+                z-9000 stacking context would otherwise hide a z-1 sibling
+                ×. Button verbatim; paints over the board by DOM order. */}
+            <button
+              type="button"
+              data-h2h-overlay-close="true"
+              onClick={onDismiss}
+              aria-label="Close result"
+              style={{
+                position: "absolute",
+                top: "calc(env(safe-area-inset-top, 0px) + 14px)",
+                right: 14,
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.55)",
+                fontSize: 16,
+                fontWeight: 700,
+                lineHeight: 1,
+                cursor: "pointer",
+                zIndex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ×
+            </button>
+            {/* RD7.8 margin hero — the suspense instrument (rolling, sign
+                hidden) + the reveal's visual hero. Fixed top layer, OUTSIDE
+                the inner column's flow (zero layout impact). */}
+            {marginPhase !== "idle" && (
+              <MarginHero
+                phase={marginPhase}
+                value={reel ? reel.margin : finalMargin}
+                outcome={outcomeKind}
+                revealKey={revealNonce}
+              />
+            )}
+            {/* RD7.7 full-screen resolution celebration — a fixed TOP LAYER,
+                OUTSIDE the inner column's flow (never wraps/scales/transforms
+                the results content underneath). Self-clears after the
+                animation, revealing the clean results screen. */}
+            {celebration && (
+              <ResolutionCelebration outcome={celebration.outcome} fireKey={celebration.key} />
+            )}
+          </>
+        }
+      />
     </div>
   );
 }

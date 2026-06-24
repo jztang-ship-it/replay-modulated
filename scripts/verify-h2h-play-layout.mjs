@@ -135,23 +135,31 @@ async function newPage(browser) {
 
 async function loadAndWaitForReveal(page) {
   await page.goto(REVEAL_URL, { waitUntil: "networkidle", timeout: 30000 });
-  await page.waitForSelector(`[data-h2h-board-zone="top"]`, { timeout: 5000 });
-  await page.waitForSelector(`[data-h2h-board-zone="bottom"]`, { timeout: 5000 });
-  await page.waitForSelector(`[data-h2h-board-zone="hero"]`, { timeout: 5000 });
+  // Scoped to the reveal container: the reveal-mock route co-mounts the
+  // reveal AND the (now shell-based) results overlay, so a bare
+  // [data-h2h-board-zone="top"] is ambiguous (both emit it). Container scope
+  // disambiguates — selectors more specific, no assertion change.
+  await page.waitForSelector(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="top"]`, { timeout: 5000 });
+  await page.waitForSelector(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="bottom"]`, { timeout: 5000 });
+  await page.waitForSelector(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="hero"]`, { timeout: 5000 });
   // The reveal mock route is the static-end-state arc (no entrance
   // animation); let one frame settle.
   await page.waitForTimeout(100);
 }
 
 async function captureRevealRects(page) {
-  const topRect = await page.locator(`[data-h2h-board-zone="top"]`).boundingBox();
-  const bottomRect = await page.locator(`[data-h2h-board-zone="bottom"]`).boundingBox();
-  const heroRect = await page.locator(`[data-h2h-board-zone="hero"]`).boundingBox();
+  // Scoped to [data-h2h-board-surface=reveal] — the co-mounted overlay now shares
+  // the shell's data-h2h-board-zone vocabulary, so the reveal-surface queries
+  // must name the reveal container to stay unambiguous (selectors more
+  // specific; bounding-box comparison + label assertions unchanged).
+  const topRect = await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="top"]`).boundingBox();
+  const bottomRect = await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="bottom"]`).boundingBox();
+  const heroRect = await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="hero"]`).boundingBox();
   // Target the ZoneHeader spans directly (data-h2h-board-zone-label)
   // so the captured text is JUST the label, not the entire zone's
   // textContent (which would include strip-cell text too).
-  const topLabel = (await page.locator(`[data-h2h-board-zone-label="top"]`).first().textContent())?.trim() ?? "";
-  const bottomLabel = (await page.locator(`[data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim() ?? "";
+  const topLabel = (await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="top"]`).first().textContent())?.trim() ?? "";
+  const bottomLabel = (await page.locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="bottom"]`).first().textContent())?.trim() ?? "";
   return { topRect, bottomRect, heroRect, topLabel, bottomLabel };
 }
 
@@ -288,11 +296,15 @@ async function runPlayHarness(browser) {
   record(`Layout A top label contains "${CHALLENGER_NAME.toUpperCase()}"`, topLabel_s1.includes(CHALLENGER_NAME.toUpperCase()), `label="${topLabel_s1}"`);
   record(`Layout A bottom label is literal "YOU" (design-lock §5)`, bottomLabel_s1 === "YOU", `label="${bottomLabel_s1}"`);
 
-  // Opponent strip is ABSENT in Layout A (collapsed wrapper).
+  // 2026-06-24 Option A (BEHAVIORAL CHANGE, glass item): the opponent
+  // mini-row (slot b) is now VISIBLE from deal_in/hold_select, not deferred
+  // to Layout B. topStripVisible in H2HRecipientPlay.tsx (~:858) now includes
+  // deal_in || hold_select, so the wrapper is un-collapsed: the collapsed
+  // flag is absent (null) at initial Layout A entry.
   const topStripCollapsed_init = await page
     .locator(`[data-h2h-play-top-strip]`)
     .getAttribute("data-h2h-play-top-strip-collapsed");
-  record(`Layout A: opponent strip wrapper is collapsed`, topStripCollapsed_init === "true");
+  record(`Layout A: opponent strip wrapper is VISIBLE (Option A — slot b shown from first screen)`, topStripCollapsed_init === null, `collapsed=${topStripCollapsed_init}`);
 
   // Capture top/bottom/hero zone rects at initial Layout A entry.
   // (No longer used for the obsolete S1↔S4 no-shift assertion — kept
@@ -441,18 +453,18 @@ async function runPlayHarness(browser) {
   // After the untap above the state is: previewedSlotIndex=2, held=∅.
   //   Step 1: tap slot 2 → slot 2 is the already-previewed cell, not held
   //           → flips to held. State: previewed=2, held={2}.
-  //   Step 2: tap slot 5 → slot 5 not previewed → moves preview to 5.
-  //   Step 3: tap slot 5 again → slot 5 is now the previewed cell, not
-  //           held → flips to held. State: previewed=5, held={2,5}.
+  //   Step 2: tap slot 4 → slot 4 not previewed → moves preview to 4.
+  //   Step 3: tap slot 4 again → slot 4 is now the previewed cell, not
+  //           held → flips to held. State: previewed=4, held={2,4}.
   await page.locator(`[data-h2h-play-bottom-cell="2"]`).click();
   await page.waitForTimeout(20);
-  await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
+  await page.locator(`[data-h2h-play-bottom-cell="4"]`).click();
   await page.waitForTimeout(20);
-  await page.locator(`[data-h2h-play-bottom-cell="5"]`).click();
+  await page.locator(`[data-h2h-play-bottom-cell="4"]`).click();
   await page.waitForTimeout(50);
   const hBadgeCountTwoHeld = await page.locator(hBadgeSelectorBottom).count();
   record(
-    `H badge count == 2 after holding slots 2 and 5 (multi-hold tap)`,
+    `H badge count == 2 after holding slots 2 and 4 (multi-hold tap)`,
     hBadgeCountTwoHeld === 2,
     `count=${hBadgeCountTwoHeld}`,
   );
@@ -702,12 +714,12 @@ async function runPlayHarness(browser) {
   const playingMounted = (await page.locator("[data-h2h-recipient-play]").count()) === 1;
   record("Fix C2: playing canvas root STAYS mounted at arc state", playingMounted);
 
-  const revealDescendant = await page.locator("[data-h2h-recipient-play] [data-h2h-recipient-reveal]").count();
+  const revealDescendant = await page.locator("[data-h2h-recipient-play] [data-h2h-board-surface=reveal]").count();
   record("Fix C2: reveal mounted as descendant of playing root (single canvas)", revealDescendant >= 1);
 
   const revealSibling = await page.evaluate(() => {
     const playing = document.querySelector("[data-h2h-recipient-play]");
-    const allReveals = Array.from(document.querySelectorAll("[data-h2h-recipient-reveal]"));
+    const allReveals = Array.from(document.querySelectorAll("[data-h2h-board-surface=reveal]"));
     return allReveals.filter((r) => !playing?.contains(r)).length;
   });
   record("Fix C2: no reveal mounted OUTSIDE the playing root", revealSibling === 0);
@@ -781,7 +793,7 @@ async function runPlayHarness(browser) {
   // generous timeout.
   await page.waitForFunction(
     () => {
-      const reveals = document.querySelectorAll(`[data-h2h-recipient-reveal] [data-h2h-team-score]`);
+      const reveals = document.querySelectorAll(`[data-h2h-board-surface=reveal] [data-h2h-team-score]`);
       if (reveals.length < 2) return false;
       // Recipient score = second [data-h2h-team-score] inside the reveal.
       const recipientEl = reveals[1];
@@ -868,12 +880,12 @@ async function runPlayHarness(browser) {
   );
 
   // C/D regression-lock #2: ≥2 H badges in the recipient's reveal strip
-  // (we held slots 2 and 5 before Draw — both should be HOLD at reveal).
+  // (we held slots 2 and 4 before Draw — both should be HOLD at reveal).
   // Target the bottom zone INSIDE the reveal (recipient's strip) so we
   // don't conflate with the top (sender) strip's wasHeld badges, which
   // come from a different data path.
   const revealRecipientHBadgeCount = await page
-    .locator(`[data-h2h-recipient-reveal] [data-h2h-board-zone="bottom"] svg polygon[fill="#F5C850"]`)
+    .locator(`[data-h2h-board-surface=reveal] [data-h2h-board-zone="bottom"] svg polygon[fill="#F5C850"]`)
     .count();
   record(
     `C/D: ≥2 H badges on recipient reveal strip (2 cards were held pre-Draw)`,
@@ -893,7 +905,7 @@ async function runPlayHarness(browser) {
   // results-side delta column-shift bug was caught by a similar X-axis
   // guard, but the reveal-side had no equivalent).
   const revealDeltaSnap = await page.evaluate(() => {
-    const reveal = document.querySelector("[data-h2h-recipient-reveal]");
+    const reveal = document.querySelector("[data-h2h-board-surface=reveal]");
     const battlefield = reveal?.querySelector("[data-h2h-battlefield]");
     const float = reveal?.querySelector("[data-h2h-mid-rail-float]");
     // Query the ENTER (settled hero) cards specifically. BattlefieldSlot
@@ -1010,7 +1022,7 @@ async function runPlayHarness(browser) {
   );
 
   // ── #4 regression-lock (2026-05-30): strip LAYOUT = slotIndex, not revealOrder ──
-  // We held slots 2 and 5 pre-Draw. With the strip-sort fix, the H-badged
+  // We held slots 2 and 4 pre-Draw. With the strip-sort fix, the H-badged
   // cells must remain at DOM-positions 2 and 5 in the recipient reveal
   // strip — NOT clustered at the rightmost positions (which would happen
   // if revealOrder drove spatial layout: held cards go last in time, so
@@ -1018,12 +1030,12 @@ async function runPlayHarness(browser) {
   //
   // Strategy: walk the recipient strip's mini-cells in DOM order, record
   // which contain an H-badge polygon, and check rect.x ordering. Asserts:
-  //   (a) H-badge cells at DOM-indices {2, 5} (slotIndex layout), NOT
-  //       DOM-indices {4, 5} (revealOrder layout).
+  //   (a) H-badge cells at DOM-indices {2, 4} (slotIndex layout), NOT
+  //       DOM-indices {3, 4} (revealOrder layout).
   //   (b) Cell rect.x strictly increases left-to-right (sanity: no
   //       cells overlap, layout is a horizontal strip).
   const recipientMiniCells = await page
-    .locator(`[data-h2h-recipient-reveal] [data-h2h-hand-strip][data-side="recipient"] [data-h2h-mini-cell="true"]`)
+    .locator(`[data-h2h-board-surface=reveal] [data-h2h-hand-strip][data-side="recipient"] [data-h2h-mini-cell="true"]`)
     .all();
   const cellInfo = [];
   for (const cell of recipientMiniCells) {
@@ -1040,8 +1052,8 @@ async function runPlayHarness(browser) {
     .map((info, i) => (info.hasHBadge ? i : -1))
     .filter((i) => i >= 0);
   record(
-    `#4: held cells at DOM-indices {2, 5} (slotIndex layout) — NOT {4, 5} (revealOrder layout)`,
-    heldDomIndices.length === 2 && heldDomIndices[0] === 2 && heldDomIndices[1] === 5,
+    `#4: held cells at DOM-indices {2, 4} (slotIndex layout) — NOT {3, 4} (revealOrder layout)`,
+    heldDomIndices.length === 2 && heldDomIndices[0] === 2 && heldDomIndices[1] === 4,
     `got DOM-indices=${JSON.stringify(heldDomIndices)}`,
   );
   // Sanity: strictly-increasing rect.x left-to-right.
@@ -1092,9 +1104,9 @@ const HS_TAP_STATES = [
   { id: "HS-0", label: "baseline (post-deal)",            tapSelector: null },
   { id: "HS-1", label: "preview (tap slot 2)",            tapSelector: '[data-h2h-play-bottom-cell="2"]' },
   { id: "HS-2", label: "first-hold (tap slot 2 again)",   tapSelector: '[data-h2h-play-bottom-cell="2"]' },
-  { id: "HS-3", label: "move (tap slot 5)",               tapSelector: '[data-h2h-play-bottom-cell="5"]' },
-  { id: "HS-4", label: "multi-hold (tap slot 5 again)",   tapSelector: '[data-h2h-play-bottom-cell="5"]' },
-  { id: "HS-5", label: "unhold (tap slot 5 a third time)",tapSelector: '[data-h2h-play-bottom-cell="5"]' },
+  { id: "HS-3", label: "move (tap slot 4)",               tapSelector: '[data-h2h-play-bottom-cell="4"]' },
+  { id: "HS-4", label: "multi-hold (tap slot 4 again)",   tapSelector: '[data-h2h-play-bottom-cell="4"]' },
+  { id: "HS-5", label: "unhold (tap slot 4 a third time)",tapSelector: '[data-h2h-play-bottom-cell="4"]' },
 ];
 
 async function injectSafeArea(page, safeTop, safeBottom) {
@@ -1207,7 +1219,7 @@ async function runHoldSelectViewportSweep(browser, vp) {
   // assertions: the recipient strip + CTA must be contained-or-
   // reachable on tight viewports.
   //
-  // From hold_select with held={2,5} (HS-4 final state), tap Draw to
+  // From hold_select with held={2,4} (HS-4 final state), tap Draw to
   // drive into Layout B. Wait through redraw_running → your_redraw_flip
   // → ab_transition into the handoff_resolving settle-pause.
   await page.click("[data-h2h-play-cta][data-cta-label='Draw']");
@@ -1363,13 +1375,13 @@ async function runHoldSelectViewportSweep(browser, vp) {
     // shell's inner column.
     //
     // The reveal renders its own H2HBoardShell. It exposes its own
-    // [data-h2h-board-inner] inside [data-h2h-recipient-reveal]. We
+    // [data-h2h-board-inner] inside [data-h2h-board-surface=reveal]. We
     // measure containment against the viewport AND, if the strip/CTA
     // overflow, accept the failure ONLY IF the reveal-shell's inner
     // is scrollable AND the strip/CTA become reachable via scroll —
     // matching the §5b rule applied to Layout B.
     const arcMeasure = await page.evaluate(() => {
-      const reveal = document.querySelector("[data-h2h-recipient-reveal]");
+      const reveal = document.querySelector("[data-h2h-board-surface=reveal]");
       if (!reveal) return { ok: false, reason: "no reveal mounted" };
       // The reveal shell's inner — scope to the reveal subtree so we
       // don't pick up the playing shell's inner (which sits beneath).
@@ -1546,7 +1558,13 @@ async function captureOverlayRects(page) {
       const r = el.getBoundingClientRect();
       return { x: r.x, y: r.y, width: r.width, height: r.height };
     };
-    const inner = document.querySelector("[data-h2h-overlay-inner]");
+    // Scoped to [data-h2h-results-overlay] — RESULTS_OVERLAY_URL is the
+    // reveal-mock?overlay=1 page, which co-mounts the reveal AND the overlay.
+    // Both now emit the shell's data-h2h-board-* vocab, and document
+    // .querySelector returns the FIRST (DOM-order) match = the reveal's zone.
+    // Container scope keeps these measuring the OVERLAY's zones (selectors
+    // more specific; geometry comparison unchanged).
+    const inner = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-inner]");
     const innerInfo = inner
       ? {
           scrollTop: inner.scrollTop,
@@ -1556,9 +1574,9 @@ async function captureOverlayRects(page) {
         }
       : null;
     return {
-      topZone: get("[data-h2h-overlay-zone='opponent']"),
-      bottomZone: get("[data-h2h-overlay-zone='user']"),
-      bottomStrip: get("[data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]"),
+      topZone: get("[data-h2h-results-overlay] [data-h2h-board-zone='top']"),
+      bottomZone: get("[data-h2h-results-overlay] [data-h2h-board-zone='bottom']"),
+      bottomStrip: get("[data-h2h-results-overlay] [data-h2h-board-zone='bottom'] [data-h2h-overlay-strip]"),
       cta: get("[data-h2h-overlay-primary-cta]"),
       reserved: get("[data-h2h-overlay-reserved]"),
       innerInfo,
@@ -1568,7 +1586,7 @@ async function captureOverlayRects(page) {
 
 async function scrollOverlayInnerTo(page, where /* "top" | "bottom" */) {
   await page.evaluate((target) => {
-    const inner = document.querySelector("[data-h2h-overlay-inner]");
+    const inner = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-inner]");
     if (!inner) return;
     inner.scrollTo({
       top: target === "bottom" ? inner.scrollHeight : 0,
@@ -1611,7 +1629,7 @@ async function runResultsOverlayViewportSweep(browser, vp) {
   // read it from the first child (the name span) instead of the
   // whole zone-label.
   const bottomLabel = await page.evaluate(() => {
-    const el = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+    const el = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone-label='bottom']");
     const nameSpan = el?.firstElementChild;
     return nameSpan ? (nameSpan.textContent ?? "").trim() : null;
   });
@@ -1918,7 +1936,7 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     // Bug 5 guard (§5a no-scroll case): even when content fits, the
     // "YOU" label must not overlap the CTA. label.bottom <= cta.top.
     const labelVsCtaA = await page.evaluate(() => {
-      const label = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+      const label = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone-label='bottom']");
       const cta = document.querySelector("[data-h2h-overlay-primary-cta]");
       if (!label || !cta) return null;
       const lr = label.getBoundingClientRect();
@@ -1958,7 +1976,7 @@ async function runResultsOverlayViewportSweep(browser, vp) {
     // RESERVED_BOTTOM_CLEARANCE_PX (~100px) of marginBottom on the
     // user ZonePanel so the label clears the CTA's pinned region.
     const labelVsCta = await page.evaluate(() => {
-      const label = document.querySelector("[data-h2h-overlay-zone-label='bottom']");
+      const label = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone-label='bottom']");
       const cta = document.querySelector("[data-h2h-overlay-primary-cta]");
       if (!label || !cta) return null;
       const lr = label.getBoundingClientRect();
@@ -1975,8 +1993,8 @@ async function runResultsOverlayViewportSweep(browser, vp) {
 
     // Bottom strip reachable via scrollIntoView.
     const stripReachable = await page.evaluate(() => {
-      const strip = document.querySelector("[data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]")
-        ?? document.querySelector("[data-h2h-overlay-strip]");
+      const strip = document.querySelector("[data-h2h-results-overlay] [data-h2h-board-zone='bottom'] [data-h2h-overlay-strip]")
+        ?? document.querySelector("[data-h2h-results-overlay] [data-h2h-overlay-strip]");
       if (!strip) return { ok: false, reason: "strip not in DOM" };
       strip.scrollIntoView({ block: "center", behavior: "instant" });
       const r = strip.getBoundingClientRect();
@@ -2080,9 +2098,9 @@ async function runReducedMotionChargeCheck(browser) {
 //
 // Side mapping:
 //   sender    (top strip)    — reveal: [data-h2h-hand-strip][data-side="sender"]
-//                            — overlay: [data-h2h-overlay-zone='opponent'] [data-h2h-overlay-strip]
+//                            — overlay: [data-h2h-board-zone='top'] [data-h2h-overlay-strip]
 //   recipient (bottom strip) — reveal: [data-h2h-hand-strip][data-side="recipient"]
-//                            — overlay: [data-h2h-overlay-zone='user'] [data-h2h-overlay-strip]
+//                            — overlay: [data-h2h-board-zone='bottom'] [data-h2h-overlay-strip]
 
 // Matches H2HResultsOverlay.tsx:133 (export const OVERLAY_CROSSFADE_MS).
 const OVERLAY_CROSSFADE_MS_HARNESS = 350;
@@ -2137,8 +2155,8 @@ async function captureLineupStripGeometry(page, kind /* "reveal" | "overlay" */)
         outerSel = `[data-h2h-hand-strip="true"][data-side="${sideKey}"]`;
         cellSel = `${outerSel} > [data-h2h-mini-cell="true"]`;
       } else {
-        const zoneAttr = sideKey === "sender" ? "opponent" : "user";
-        outerSel = `[data-h2h-overlay-zone='${zoneAttr}'] [data-h2h-overlay-strip="true"]`;
+        const zoneAttr = sideKey === "sender" ? "top" : "bottom";
+        outerSel = `[data-h2h-results-overlay] [data-h2h-board-zone='${zoneAttr}'] [data-h2h-overlay-strip="true"]`;
         cellSel = `${outerSel} > [data-h2h-overlay-cell="true"]`;
       }
       const outer = document.querySelector(outerSel);
@@ -2175,9 +2193,9 @@ function assertNoJumpForSide(sideLabel, reveal, overlay) {
     );
     return;
   }
-  if (reveal.cells.length !== 6 || overlay.cells.length !== 6) {
+  if (reveal.cells.length !== 5 || overlay.cells.length !== 5) {
     record(
-      `no-jump ${sideLabel}: both strips have 6 cells`,
+      `no-jump ${sideLabel}: both strips have 5 cells`,
       false,
       `revealCells=${reveal.cells.length} overlayCells=${overlay.cells.length}`,
     );
@@ -2215,7 +2233,7 @@ function assertNoJumpForSide(sideLabel, reveal, overlay) {
   // Per-cell rect — each of the 6 cells in slotIndex order must land
   // at the same x/y/w/h on both surfaces. The strips both sort by
   // slotIndex, so cells[i] on reveal pairs with cells[i] on overlay.
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const rc = reveal.cells[i];
     const oc = overlay.cells[i];
     for (const f of RECT_FIELDS) {
@@ -2260,7 +2278,7 @@ function assertNoJumpForSide(sideLabel, reveal, overlay) {
   // DISPLAY_WIDTH = STRIP_HEIGHT × 329 / 478. Drift in either constant
   // (STRIP_HEIGHT_PX or STRIP_CARD_NATURAL_WIDTH_PX) re-derives the
   // scale differently per file.
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     const rs = reveal.innerScales[i].scale;
     const os = overlay.innerScales[i].scale;
     if (!rs || !os) {
@@ -2394,10 +2412,10 @@ async function runNoJumpAssertion(browser) {
     };
     const nameEl = (sel) => document.querySelector(sel)?.firstElementChild;
     return {
-      revealTop: fmt(nameEl(`[data-h2h-board-zone-label="top"]`)),
-      revealBottom: fmt(nameEl(`[data-h2h-board-zone-label="bottom"]`)),
-      overlayTop: fmt(nameEl(`[data-h2h-overlay-zone-label="top"]`)),
-      overlayBottom: fmt(nameEl(`[data-h2h-overlay-zone-label="bottom"]`)),
+      revealTop: fmt(nameEl(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="top"]`)),
+      revealBottom: fmt(nameEl(`[data-h2h-board-surface=reveal] [data-h2h-board-zone-label="bottom"]`)),
+      overlayTop: fmt(nameEl(`[data-h2h-results-overlay] [data-h2h-board-zone-label="top"]`)),
+      overlayBottom: fmt(nameEl(`[data-h2h-results-overlay] [data-h2h-board-zone-label="bottom"]`)),
     };
   });
 

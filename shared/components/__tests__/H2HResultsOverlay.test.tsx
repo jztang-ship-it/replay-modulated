@@ -422,7 +422,7 @@ describe("H2HResultsOverlay — per-strip flip", () => {
       />
     );
     const opponentStripCells = container.querySelectorAll(
-      '[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]'
+      '[data-h2h-board-zone="top"] [data-h2h-overlay-cell="true"]'
     );
     const firstCell = opponentStripCells[0] as HTMLElement;
     const firstCardId = firstCell.getAttribute("data-card-id")!;
@@ -456,10 +456,10 @@ describe("H2HResultsOverlay — per-strip flip", () => {
       />
     );
     const opponentCells = container.querySelectorAll(
-      '[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]'
+      '[data-h2h-board-zone="top"] [data-h2h-overlay-cell="true"]'
     );
     const userCells = container.querySelectorAll(
-      '[data-h2h-overlay-zone="user"] [data-h2h-overlay-cell="true"]'
+      '[data-h2h-board-zone="bottom"] [data-h2h-overlay-cell="true"]'
     );
     const opponentFirst = opponentCells[0] as HTMLElement;
     const userFirst = userCells[0] as HTMLElement;
@@ -496,7 +496,7 @@ describe("H2HResultsOverlay — per-strip flip", () => {
       />
     );
     const opponentCells = container.querySelectorAll(
-      '[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]'
+      '[data-h2h-board-zone="top"] [data-h2h-overlay-cell="true"]'
     );
     const first = opponentCells[0] as HTMLElement;
     const second = opponentCells[1] as HTMLElement;
@@ -542,7 +542,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
       />
     );
     const senderCell = container.querySelector(
-      `[data-h2h-overlay-zone="opponent"] [data-card-id="${sender.cards[3].cardId}"]`
+      `[data-h2h-board-zone="top"] [data-card-id="${sender.cards[3].cardId}"]`
     ) as HTMLElement;
     fireEvent.click(senderCell);
     const overlay = container.querySelector('[data-h2h-results-overlay="true"]');
@@ -566,7 +566,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
       />
     );
     const recipientCell = container.querySelector(
-      `[data-h2h-overlay-zone="user"] [data-card-id="${recipient.cards[2].cardId}"]`
+      `[data-h2h-board-zone="bottom"] [data-card-id="${recipient.cards[2].cardId}"]`
     ) as HTMLElement;
     fireEvent.click(recipientCell);
     const heroCells = container.querySelectorAll('[data-h2h-overlay-hero-cell="true"]');
@@ -611,7 +611,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     );
     // Select → front preview.
     fireEvent.click(container.querySelector(
-      `[data-h2h-overlay-zone="user"] [data-card-id="${targetId}"]`
+      `[data-h2h-board-zone="bottom"] [data-card-id="${targetId}"]`
     ) as HTMLElement);
     const heroSel = "[data-h2h-overlay-hero-flipped]";
     expect(container.querySelector(heroSel)?.getAttribute("data-h2h-overlay-hero-flipped")).toBe("false");
@@ -638,7 +638,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     );
     const heroSel = "[data-h2h-overlay-hero-flipped]";
     const cell = (id: string) => container.querySelector(
-      `[data-h2h-overlay-zone="user"] [data-card-id="${id}"]`
+      `[data-h2h-board-zone="bottom"] [data-card-id="${id}"]`
     ) as HTMLElement;
     const occupantId = () =>
       container.querySelector(`${heroSel} [data-card-id]`)?.getAttribute("data-card-id");
@@ -696,7 +696,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     // Select a card → footer hint UNCHANGED (always present, same copy); still
     // no hero caption.
     fireEvent.click(container.querySelector(
-      `[data-h2h-overlay-zone="user"] [data-card-id="${targetId}"]`
+      `[data-h2h-board-zone="bottom"] [data-card-id="${targetId}"]`
     ) as HTMLElement);
     expect(heroHint()).toBeNull();
     expect(footerHint()?.textContent).toContain("Tap any card for game logs");
@@ -746,8 +746,8 @@ describe("H2HResultsOverlay — strip + right-rail rendering", () => {
         state="WIN"
       />
     );
-    const opponentCells = container.querySelectorAll('[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]');
-    const userCells = container.querySelectorAll('[data-h2h-overlay-zone="user"] [data-h2h-overlay-cell="true"]');
+    const opponentCells = container.querySelectorAll('[data-h2h-board-zone="top"] [data-h2h-overlay-cell="true"]');
+    const userCells = container.querySelectorAll('[data-h2h-board-zone="bottom"] [data-h2h-overlay-cell="true"]');
     expect(opponentCells.length).toBe(6);
     expect(userCells.length).toBe(6);
   });
@@ -845,7 +845,7 @@ describe("H2HResultsOverlay — strip layout contract", () => {
       />
     );
     const opponentCells = container.querySelectorAll(
-      '[data-h2h-overlay-zone="opponent"] [data-h2h-overlay-cell="true"]'
+      '[data-h2h-board-zone="top"] [data-h2h-overlay-cell="true"]'
     );
     expect(opponentCells.length).toBe(6);
     // slotIndex order: A (0), C (1), D (2), E (3), F (4), B (5).
@@ -1009,8 +1009,8 @@ describe("RD3-C — reveal→results no-snap (ScoreCell DOM parity at the cross-
     // reveal-side rail; no overlay-side rail).
     const revealOppCorner = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-board-corner-score="top"]')!;
     const revealUserCorner = revealHarness.container.querySelector('[data-test-harness="reveal-done"] [data-h2h-board-corner-score="bottom"]')!;
-    const overlayOppCorner = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-corner-score="top"]')!;
-    const overlayUserCorner = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-overlay-corner-score="bottom"]')!;
+    const overlayOppCorner = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-board-corner-score="top"]')!;
+    const overlayUserCorner = overlayHarness.container.querySelector('[data-test-harness="overlay-mount"] [data-h2h-board-corner-score="bottom"]')!;
 
     expect(revealOppCorner, "reveal-side opponent box-corner wrapper").not.toBeNull();
     expect(revealUserCorner, "reveal-side user box-corner wrapper").not.toBeNull();
@@ -1039,7 +1039,7 @@ describe("RD3-C — reveal→results no-snap (ScoreCell DOM parity at the cross-
     expect(revealOutsideCorners.length, "no reveal-side ScoreCells outside box corners").toBe(0);
     const overlayOutsideCorners = Array.from(
       overlayHarness.container.querySelectorAll('[data-test-harness="overlay-mount"] [data-h2h-overlay-score-position]'),
-    ).filter((el) => !el.closest('[data-h2h-overlay-corner-score]'));
+    ).filter((el) => !el.closest('[data-h2h-board-corner-score]'));
     expect(overlayOutsideCorners.length, "no overlay-side ScoreCells outside box corners").toBe(0);
 
     // Surface-agnostic attrs that MUST match across the crossfade.

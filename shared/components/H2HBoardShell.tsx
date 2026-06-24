@@ -77,6 +77,16 @@ export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
  *  surfaces identically — H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH
  *  and H2HResultsOverlay.HERO_CARD_MAX_WIDTH change in lockstep.
  *  Asymmetry here = visible snap at the reveal→results crossfade. */
+/** Locked-layout vocabulary (2026-06-24): the height of ONE hero card-row —
+ *  min(125px,28vw) card width × the 478/329 card aspect ratio. This is the
+ *  single source of truth for slot-c's locked height across all challenge
+ *  states (play instructional text, reveal opponent hero card, result verdict):
+ *  the row is card-capable AND text-holding at this height. Result's
+ *  HERO_ROW_HEIGHT_CSS and the reveal battlefield card-row already resolve to
+ *  this exact value; they reference this constant so the three states can't
+ *  drift. HERO_MIN_HEIGHT_CSS below = two of these rows + 14px gap budget. */
+export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(125px, 28vw) * ${(478 / 329).toFixed(6)})`;
+
 export const HERO_MIN_HEIGHT_CSS = `calc(min(125px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
 /** Hero region's reduced minHeight during the hold_select preview window

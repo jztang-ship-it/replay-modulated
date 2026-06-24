@@ -118,9 +118,8 @@ import { isRealName } from "@shared/utils/isRealName";
 import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
-  HERO_MIN_HEIGHT_HOLD_SELECT_CSS,
+  HERO_CARD_ROW_HEIGHT_CSS,
   TargetCornerScore,
-  ZONE_GAP_PX,
 } from "./H2HBoardShell";
 import { PartsLine } from "./TierGauge";
 import { type Line } from "@shared/commentary/chadChallenge";
@@ -226,20 +225,17 @@ const RESERVED_MIN_HEIGHT_PX = 77;
 // Levers (1)–(5) are all state-scoped to hold_select. Outside
 // hold_select the surface renders exactly as today (lock §4).
 //
-// (1) Fluid intro text + 3-line clamp. INTRO_FONT_CLAMP scales the
-// font on viewport width so tight phones read 16px and roomy phones
-// read up to 22px. The 3-line budget is reserved at the container so
-// the stage-text height is DETERMINISTIC (kills the 64↔92px
-// randomization).
+// (1) Fluid intro text. INTRO_FONT_CLAMP scales the font on viewport
+// width so tight phones read 16px and roomy phones read up to 22px.
+// (The old INTRO_3LINE_BUDGET_CSS top-zone height-reservation was
+// removed 2026-06-24 when the stage text moved into slot c, which has
+// its own locked one-card-row height.)
 const INTRO_FONT_CLAMP = "clamp(16px, 4.2vw, 22px)";
 const INTRO_LINE_HEIGHT = 1.28;
-const INTRO_3LINE_BUDGET_CSS = `calc((${INTRO_FONT_CLAMP}) * ${INTRO_LINE_HEIGHT} * 3)`;
 
-// (4) Fluid inter-zone margin: TOP_ZONE marginBottom shrinks on tight
-// viewports. Default (other states) remains 18 per the shell constant;
-// during hold_select the shell receives a clamp() override.
-const HOLD_SELECT_TOP_ZONE_MARGIN_CSS = "clamp(8px, 2.6vw, 18px)";
-const HOLD_SELECT_HERO_MARGIN_CSS = "clamp(2px, 1vw, 4px)";
+// (2026-06-24 Option A) The hold_select margin overrides
+// (HOLD_SELECT_TOP_ZONE_MARGIN_CSS / HOLD_SELECT_HERO_MARGIN_CSS) are retired —
+// play now uses the shell's default margins (12/12), matching result.
 
 // Hold-state visual — accent ring + light scale. Visual polish is
 // 2d-scope (re-scoped to VISUAL refinement per the 2026-05-30 EDIT);
@@ -835,16 +831,10 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // wrapper read height:HAND_STRIP_HEIGHT_PX and the shell read the
   // full hero min-height immediately on state entry, and the
   // transitions animate the TO values.
-  const inLayoutA =
-    state.kind === "loading" ||
-    state.kind === "deal_in" ||
-    state.kind === "hold_select" ||
-    state.kind === "redraw_running" ||
-    state.kind === "your_redraw_flip";
-  const inLayoutB =
-    state.kind === "ab_transition" ||
-    state.kind === "handoff_resolving" ||
-    state.kind === "arc";
+  // (2026-06-24 Option A) inLayoutA / inLayoutB are retired — the shell
+  // sizing/margin overrides they gated are gone (play now uses the shell
+  // defaults in every state). topStripVisible (below) drives the opponent
+  // strip directly by state.kind.
   // RD6.1-e (2026-06-12): the top strip becomes visible at
   // your_redraw_flip ENTRY (not deferred to ab_transition). It still
   // sits collapsed during loading / deal_in / hold_select /
@@ -855,7 +845,17 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // topStripFadeUpMs(rosterSize) (= the full bottom-cascade window). The
   // hero region's Layout-A→B expansion stays at ab_transition (per
   // inLayoutA above) — that's the bigger structural shift.
+  // 2026-06-24 Option A locked layout (BEHAVIORAL CHANGE — glass item):
+  // the opponent mini-row (slot b) is now visible from deal_in/hold_select,
+  // not just Layout B. This REVERSES the deliberate "Mike's box isn't empty
+  // during the bottom cascade" hide — John wants the opponent lineup shown up
+  // top so the player can size up the target from the first screen. The
+  // opponent cards are already wired (resolvedSenderHand.cards → TopStripCell);
+  // this only un-collapses the existing strip. The bottom deal-in cascade is
+  // untouched.
   const topStripVisible =
+    state.kind === "deal_in" ||
+    state.kind === "hold_select" ||
     state.kind === "your_redraw_flip" ||
     state.kind === "ab_transition" ||
     state.kind === "handoff_resolving" ||
@@ -1149,60 +1149,15 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   //     directly (the recipient saw the lineup on the challenge landing
   //     page before accepting).
   //
-  // Polish #11 (carried forward, docs/11-preview-then-hold-design-lock.md
-  // §2/§10): the stage text (Stage 1 / Stage 2 / instructional headline)
-  // is relocated INTO the top ZonePanel during Layout A's hold_select
-  // sub-state, sitting directly under the opponent name label. The text
-  // container reserves a DETERMINISTIC 3-line budget
-  // (INTRO_3LINE_BUDGET_CSS) so different bank lines don't drive
-  // different topZone heights.
-  //
-  // Pass 1 (Layout A/B restructure) extends the stage-text region to
-  // render during deal_in too, as the deal-intro beat per §2 — Pass 1
-  // renders a placeholder (the existing headline) so the structure is
-  // in place; Pass 2 fills the placeholder with the templated
-  // {opponent}/{score} bank.
-  //
-  // BUG-1 FIX (strip-jump): the region's container has a deterministic
-  // INTRO_3LINE_BUDGET_CSS height (~63px), so its mount/unmount changes
-  // the top-zone height by exactly that amount, which shifts the
-  // recipient mini-strip's Y-position. The previous gate
-  // ({deal_in, hold_select}) unmounted the region the moment Draw
-  // was tapped (hold_select → redraw_running), jumping the strip UP
-  // by ~67px BEFORE the deliberate ab_transition slide-down. The fix:
-  // keep the container MOUNTED with its full height-budget across all
-  // Layout A states EXCEPT loading (loading has no stage-text content
-  // — the hero region hosts the loading copy). Strip Y is then
-  // byte-identical across hold_select / redraw_running /
-  // your_redraw_flip. The region content goes empty during
-  // redraw_running / your_redraw_flip (the hero zone shows "Drawing…")
-  // — the empty placeholder keeps the container's height stable so the
-  // strip doesn't shift. The intended slide fires only at
-  // ab_transition (where the hero region expands from the Layout A
-  // small floor back to the Layout B full floor and the opponent strip
-  // uncollapses — that's where the strip is SUPPOSED to move).
-  const showStageTextRegion =
-    state.kind === "deal_in" ||
-    state.kind === "hold_select" ||
-    state.kind === "redraw_running" ||
-    state.kind === "your_redraw_flip";
-  // RD6.1-f FIX 1 (2026-06-12): the stage-text WRAPPER stays mounted
-  // through your_redraw_flip (showStageTextRegion above) to keep
-  // layout structural across the redraw window, but the CONTENT
-  // collapses (height → 0 + negative marginBottom to cancel the
-  // parent's flex gap) the moment we enter your_redraw_flip — which
-  // is the same moment RD6.1-e expands the top strip from 0→80.
-  // Net: Mike's box drops from 198px (pre-fix, with the empty
-  // 70px stage-text reservation) to 124px (matches YOU's box) over
-  // a smooth 300ms transition synchronized with the top strip
-  // expansion. The empty 70px gap the user reported is gone; no
-  // instant jolt. The wrapper unmounts at ab_transition (when
-  // showStageTextRegion goes false); by then its height + margin
-  // are already 0, so unmount is a visual no-op.
-  const stageTextHasContent =
-    state.kind === "deal_in" ||
-    state.kind === "hold_select" ||
-    state.kind === "redraw_running";
+  // 2026-06-24 (b->c relocation): the instructional / intro stage text no
+  // longer renders in the top ZonePanel — it moved to slot c (hero-zone
+  // row 1). With slot b carrying no text in any state, the old
+  // showStageTextRegion / stageTextHasContent gates and their
+  // INTRO_3LINE_BUDGET_CSS height-reservation + RD6.1-f collapse dance
+  // (which existed only to keep the top-zone height — and thus the strip
+  // Y — stable as the in-zone text mounted/collapsed) are obsolete and
+  // removed. Slot b is now constant-height by construction. The deal_in /
+  // Stage-1 / Stage-2 / headline conditional lives in slot c verbatim.
   const topStripSlot = (
     <>
       <div
@@ -1252,114 +1207,17 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           );
         })}
       </div>
-      {/* Stage-text region in the top ZonePanel.
-          - hold_select: Stage 1 / Stage 2 / instructional headline
-            (carried forward from #11).
-          - deal_in: PASS 1 PLACEHOLDER — renders the existing headline
-            ("Here's the same starting hand as {challenger}.") in the
-            same slot. PASS 2 (deal-intro bank) fills this branch with
-            the templated {opponent}/{score} line; the dismiss-on-state-
-            transition (deal_in → hold_select replaces deal-intro with
-            Stage 1 via state advance) is already wired by the
-            showStageTextRegion gate below.
-          Lock §2(1): outer container reserves a deterministic 3-line
-          budget via INTRO_3LINE_BUDGET_CSS so the topZone height stays
-          stable regardless of which bank line was picked. */}
-      {showStageTextRegion && (
-        <div
-          data-h2h-play-stage-text="true"
-          data-h2h-play-stage-text-collapsed={!stageTextHasContent ? "true" : undefined}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            textAlign: "center",
-            paddingLeft: 12,
-            paddingRight: 12,
-            color: "#EAF0FF",
-            // Deterministic budget — kills the 64↔92px randomization.
-            // 3 lines at the fluid font-size's natural lineHeight.
-            // overflow:hidden caps any surprise long-line, but vetted
-            // banks fit within 3 lines. content-box so the line-clamp
-            // budget is the FULL height (padding doesn't eat into it).
-            //
-            // RD6.1-f FIX 1 (2026-06-12): height collapses to 0 the
-            // moment we enter your_redraw_flip (stageTextHasContent
-            // goes false). The negative marginBottom (= -ZONE_GAP_PX)
-            // cancels the ZonePanel's flex `gap` so the collapsed
-            // wrapper takes ZERO vertical space (gap + (-gap) = 0) —
-            // without this, the collapsed wrapper would still
-            // contribute a 4px gap and Mike's box would be 4px taller
-            // than YOU's. Both transitions run over
-            // AB_TRANSITION_DURATION_MS (300ms) so the collapse is
-            // synchronized with RD6.1-e's top-strip expansion — net
-            // top zone change is ~+10px over 300ms.
-            height: stageTextHasContent ? INTRO_3LINE_BUDGET_CSS : 0,
-            marginBottom: stageTextHasContent ? 0 : -ZONE_GAP_PX,
-            transition: `height ${AB_TRANSITION_DURATION_MS}ms ease, margin-bottom ${AB_TRANSITION_DURATION_MS}ms ease`,
-            boxSizing: "content-box",
-            overflow: "hidden",
-          }}
-        >
-          {/* RD6.1-c (2026-06-11): the redraw-target body-text line
-              ("<X> to beat." rendered through the intro typography
-              wrapper) is retired. Mike's box name line now renders
-              "Target: X" via TargetCornerScore — the single,
-              consistent home for the target across every screen.
-              The intro region falls through to the empty-headline
-              branch during redraw_running / your_redraw_flip, so
-              INTRO_3LINE_BUDGET_CSS still reserves the same vertical
-              footprint (no strip Y-shift between hold_select and the
-              redraw window). */}
-          {state.kind === "deal_in" ? (
-            // PASS 1 PLACEHOLDER — deal-intro beat. Pass 2 will replace
-            // this branch with a templated bank (selectRecipientDealIntro)
-            // that interpolates {opponent} and {score} via the existing
-            // substituteRecipientLine pipeline in chadChallenge.ts (the
-            // mechanism already supports {challengerName} / {targetScore}
-            // tokens — adding the bank + selector is the only Pass-2
-            // work needed here). For Pass 1, render the existing
-            // deriveHeadline copy ("Here's the same starting hand as
-            // {challenger}.") in the same slot so the structure is
-            // visually validated. The dismiss-on-state-transition is
-            // already wired: deal_in → hold_select naturally swaps in
-            // Stage 1 via the showStage1 branch below.
-            <div
-              data-h2h-play-intro="deal-intro-placeholder"
-              style={{ width: "100%" }}
-            >
-              <div data-h2h-play-headline="true" style={introTypography}>
-                {headline}
-              </div>
-            </div>
-          ) : showStage1 ? (
-            <div data-h2h-play-intro="stage1" style={{ width: "100%" }}>
-              <PartsLine
-                key="recipient-stage1"
-                parts={stage1Line}
-                rush
-                winTier={senderWinTier}
-                missTier={missTierLabel}
-                style={introTypography}
-              />
-            </div>
-          ) : showStage2 ? (
-            <div data-h2h-play-intro="stage2" style={{ width: "100%" }}>
-              <PartsLine
-                key="recipient-stage2"
-                parts={stage2Line}
-                rush
-                winTier={senderWinTier}
-                missTier={missTierLabel}
-                style={introTypography}
-              />
-            </div>
-          ) : (
-            <div data-h2h-play-headline="true" style={introTypography}>
-              {headline}
-            </div>
-          )}
-        </div>
-      )}
+      {/* 2026-06-24 (b->c relocation): the stage-text region that used to
+          stack the instructional / intro line UNDER the opponent mini-row
+          HERE (in the top ZonePanel) has moved to slot c — the hero-zone
+          row-1 text area (see data-h2h-play-slot-c below). Slot b is now a
+          stable rail: opponent mini-row only, with the shell's top ZonePanel
+          supplying the opponent name + Target band around it. No
+          instructional/explanatory text renders in b in any state, so the
+          old INTRO_3LINE_BUDGET_CSS height-reservation + RD6.1-f collapse
+          dance is gone — b is constant-height by construction. The exact
+          deal_in / Stage-1 / Stage-2 / headline conditional + its markers
+          were moved verbatim into slot c; behavior is unchanged. */}
     </>
   );
 
@@ -1528,15 +1386,85 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           />
         </div>
       ) : state.kind === "hold_select" || state.kind === "deal_in" ? (
-        // Preview window. Either the previewed card (big, via
-        // renderBattlefieldCard) or a defined empty box with visible
-        // border. Card wrapped in a sized container so both states
-        // occupy the same vertical footprint (no layout jump on first
-        // preview tap). deal_in always renders the empty variant —
-        // the recipient hasn't tapped yet, and the design-lock §2
-        // calls for "Your single hero preview box — empty bordered
-        // box" during deal-in.
-        state.kind === "hold_select" && previewedSlotIndex !== null && previewedCard ? (
+        // 2026-06-24 Option A: 2-row hero (matches result/reveal). Row 1 =
+        // slot-c reserved at the locked one-card-row height (instructional
+        // text lands here in a later copy pass — reserved now so the c-row
+        // locks across states); row 2 = the my-hero preview card. The card's
+        // own footprint logic (big card vs empty bordered box, no jump on
+        // first preview tap) is unchanged — only re-parented into row 2.
+        <div
+          data-h2h-play-hero-2row="true"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: SETTLE_HERO_GAP_PX,
+            width: "100%",
+          }}
+        >
+          <div
+            data-h2h-play-slot-c="true"
+            style={{
+              width: "100%",
+              height: HERO_CARD_ROW_HEIGHT_CSS,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              paddingLeft: 12,
+              paddingRight: 12,
+              boxSizing: "border-box",
+              // The text lives INSIDE the locked one-card-row height; height
+              // never grows (it stays HERO_CARD_ROW_HEIGHT_CSS whether c
+              // holds this text on play or the opponent card on reveal —
+              // the no-jump guarantee). overflow:hidden caps a surprise
+              // long line without changing the row's height.
+              overflow: "hidden",
+            }}
+          >
+            {/* slot c — 2026-06-24 (b->c relocation): the single text-area
+                for the non-reveal play states. The instructional / intro
+                line moved here OUT of slot b (now a stable rail). The exact
+                deal_in / Stage-1 / Stage-2 / headline conditional + markers
+                are preserved verbatim from the old top-zone region so the
+                behavior gates (introDismissed, heldCount) are unchanged —
+                only the parent zone moved. Copy itself is a later pass. */}
+            {state.kind === "deal_in" ? (
+              <div data-h2h-play-intro="deal-intro-placeholder" style={{ width: "100%" }}>
+                <div data-h2h-play-headline="true" style={introTypography}>
+                  {headline}
+                </div>
+              </div>
+            ) : showStage1 ? (
+              <div data-h2h-play-intro="stage1" style={{ width: "100%" }}>
+                <PartsLine
+                  key="recipient-stage1"
+                  parts={stage1Line}
+                  rush
+                  winTier={senderWinTier}
+                  missTier={missTierLabel}
+                  style={introTypography}
+                />
+              </div>
+            ) : showStage2 ? (
+              <div data-h2h-play-intro="stage2" style={{ width: "100%" }}>
+                <PartsLine
+                  key="recipient-stage2"
+                  parts={stage2Line}
+                  rush
+                  winTier={senderWinTier}
+                  missTier={missTierLabel}
+                  style={introTypography}
+                />
+              </div>
+            ) : (
+              <div data-h2h-play-headline="true" style={introTypography}>
+                {headline}
+              </div>
+            )}
+          </div>
+          {state.kind === "hold_select" && previewedSlotIndex !== null && previewedCard ? (
           <div
             data-h2h-play-preview="card"
             data-h2h-play-preview-slot={previewedSlotIndex}
@@ -1575,7 +1503,8 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
               boxSizing: "border-box",
             }}
           />
-        )
+        )}
+        </div>
       ) : (
         // loading / redraw_running / your_redraw_flip / arc: headline
         // div. arc fades to opacity 0 via the inner-content composite
@@ -1745,64 +1674,53 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         innerTransitionMs={ARC_COMPOSITE_CROSSFADE_MS}
         innerDataAttr="data-h2h-play-inner"
         compositeOverlay={compositeOverlay}
-        // Vertical-budget overrides — design-lock §6 / Carry-forward:
-        // the responsive sizing + scroll-floor rules now apply to BOTH
-        // Layout A AND Layout B (the prior lock scoped them to
-        // hold_select only). Hero floor stays compressed throughout
-        // Layout A (opponent strip absent; the single-card preview
-        // window sits at a smaller minHeight) and expands to the full
-        // two-card floor for Layout B (the expansion IS the §3 step 3
-        // "your strip slides down" — the flex layout pushes the bottom
-        // strip down naturally as the hero region grows). The shell's
-        // min-height transition (HERO_MIN_HEIGHT_TRANSITION_MS = 250ms)
-        // does the animation, synced with AB_TRANSITION_DURATION_MS.
-        //
-        // Inter-zone margins + scroll-fallback engage across ALL
-        // non-arc states. Layout B is denser (two strips + two empty
-        // hero slots in settle-pause; battlefield grid + scores +
-        // headline + CTAs in arc) — that's where the comfortable
-        // floor most engages and the prior img-5 CTA clip surfaces.
-        // Above the floor: no scroll, sticky degrades to relative,
-        // no visible change.
-        heroMinHeight={
-          inLayoutA ? HERO_MIN_HEIGHT_HOLD_SELECT_CSS : undefined
-        }
-        topZoneMarginBottom={
-          inLayoutA ? HOLD_SELECT_TOP_ZONE_MARGIN_CSS : undefined
-        }
-        heroMarginBottom={
-          inLayoutA ? HOLD_SELECT_HERO_MARGIN_CSS : undefined
-        }
+        // 2026-06-24 Option A locked geometry: the prior Layout-A
+        // vertical-budget overrides (compressed single-card hero +
+        // tighter margins for the hold_select preview window) are
+        // RETIRED. Play now passes NO heroMinHeight / topZoneMarginBottom
+        // / heroMarginBottom override, so every state falls to the shell
+        // defaults RESULT uses — HERO_MIN_HEIGHT_CSS (two card-rows),
+        // TOP_ZONE_MARGIN_BOTTOM_PX (12), HERO_MARGIN_BOTTOM_PX (12).
+        // The hero zone is now the 2-row form (slot-c one-card-row +
+        // my-hero) in EVERY state, so play / reveal / result share fixed
+        // slot positions and don't jump. (Measured fit at 375×667 /
+        // 360×640 — slot-c fills the zone's existing slack, net ~±1px.)
         // Scroll fallback engages across all NON-arc states (arc
         // composites the reveal shell over the playing inner, which
         // fades to opacity 0 — making the playing inner scrollable
         // beneath an invisible layer would only confuse touch routing).
         innerScrollable={!arcComposite}
         belowBoardSticky={!arcComposite}
+        // 2026-06-24 Option A (step iii): the x/3 round signage moves from a
+        // fixed bottom:18% sibling INTO the shell's roundSignage slot, which
+        // renders directly below the my-mini row (slot e) — the locked a–f
+        // position, "tucked closely below e". Gated off at arc (the reveal
+        // renders its own in-band signage there, same as before).
+        roundSignage={
+          state.kind !== "arc" ? (
+            <div
+              data-h2h-round-signage="true"
+              style={{
+                textAlign: "center",
+                pointerEvents: "none",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: 1.5,
+                color: "rgba(234,240,255,0.55)",
+                textTransform: "uppercase",
+              }}
+            >
+              {roundsUsed}/{maxRounds}
+            </div>
+          ) : undefined
+        }
       />
-      {/* Round-position signage — PLAY-phase only (gated off at arc). Approach
-          (a) step (i): at arc the reveal surface renders its OWN in-band signage
-          (riding the reveal's recipient row via H2HBoardShell.roundSignage), so
-          this fixed sibling GATES OFF at arc to avoid a double-render. The two
-          flip on the SAME arc state transition (atomic re-render) — no
-          double-render. NOTE (steps ii/iii, glass): this sibling still sits at
-          bottom:18% during play, a different Y than the reveal's in-band signage,
-          so the play→reveal handoff has a Y-JUMP at the arc until step (iii)
-          moves THIS into the play band at the aligned Y. Shows 1/3 → 2/3 → 3/3;
-          leads the flip (FIX 1). pointerEvents:none. */}
-      {state.kind !== "arc" && (
-        <div
-          data-h2h-round-signage="true"
-          style={{
-            position: "fixed", left: 0, right: 0, bottom: "18%",
-            textAlign: "center", pointerEvents: "none", zIndex: 9100,
-            fontSize: 12, fontWeight: 800, letterSpacing: 1.5,
-            color: "rgba(234,240,255,0.55)", textTransform: "uppercase",
-          }}
-        >
-          {roundsUsed}/{maxRounds}
-        </div>
-      )}
+      {/* Round-position signage now renders in-band via the shell's
+          roundSignage slot above (directly below slot e, the locked a–f
+          position). The former fixed bottom:18% sibling was removed
+          2026-06-24 (Option A step iii) — it double-rendered x/3 during
+          non-arc play. Arc still gated off there; the reveal renders its
+          own in-band signage at arc, unchanged. */}
       {/* Flip animation keyframe + 3D scaffold styles. Lives outside
           the shell so the <style> element doesn't interact with the
           shell's flex children — it's a sibling of the shell. The
