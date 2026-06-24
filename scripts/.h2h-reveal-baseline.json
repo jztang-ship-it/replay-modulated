@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-05-30T05:48:31.670Z",
+  "capturedAt": "2026-06-24T06:12:41.646Z",
   "sourceUrl": "http://localhost:5173/basketball/dev/h2h-reveal-mock",
   "viewport": {
     "width": 390,
@@ -8,21 +8,21 @@
   "revealZones": {
     "top": {
       "x": 16,
-      "y": 20,
+      "y": 4,
       "width": 358,
-      "height": 126
+      "height": 122
     },
     "bottom": {
       "x": 16,
-      "y": 544.625,
+      "y": 481.296875,
       "width": 358,
-      "height": 126
+      "height": 122
     },
     "hero": {
       "x": 16,
-      "y": 164,
+      "y": 138,
       "width": 358,
-      "height": 376.625
+      "height": 331.296875
     }
   },
   "labels": {
