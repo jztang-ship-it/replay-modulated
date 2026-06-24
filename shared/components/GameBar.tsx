@@ -1652,6 +1652,13 @@ export function GameBar({
               0%, 100% { opacity: 1; transform: scale(1); }
               50% { opacity: 0.3; transform: scale(0.92); }
             }
+            /* prefers-reduced-motion guard (the inline iconBlink/trophyBurst had
+               none): kill the pulse/burst on tagged icons so they fall back to
+               the steady-gold static treatment. !important beats the inline
+               animation. Helps the loud legend/qualify tier for free. */
+            @media (prefers-reduced-motion: reduce) {
+              [data-gb-anim] { animation: none !important; }
+            }
             @keyframes trophyBurst {
               0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,215,0,0); }
               25%  { transform: scale(1.4);  box-shadow: 0 0 0 4px rgba(255,215,0,0.65), 0 0 18px 8px rgba(255,215,0,0.5); }
@@ -1730,7 +1737,7 @@ export function GameBar({
                 pushed right via marginLeft:auto (in-flow); otherwise absolute-right
                 exactly as before so non-challenge rows are pixel-identical. */}
             <div style={{ display: "flex", alignItems: "center", gap: 6, ...(challengeAvailable ? { marginLeft: "auto" as const } : { position: "absolute" as const, right: 0 }) }}>
-              <button onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
+              <button data-gb-anim="true" onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
                 width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
                 background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
                 border: `2px solid ${legendPulsing ? "rgba(255,215,0,0.9)" : THEME.colors.surfaceStroke}`,
@@ -1742,6 +1749,7 @@ export function GameBar({
               {onViewLeaderboard && (
                 <button
                   type="button"
+                  data-gb-anim="true"
                   aria-label="View leaderboard"
                   onClick={() => { onViewLeaderboard(); onTrophyOpened?.(); }}
                   onAnimationEnd={(e) => {

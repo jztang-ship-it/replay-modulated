@@ -69,6 +69,7 @@ import { PLATINUM_BAND_GRADIENT } from "@shared/components/platinumBand";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import { useBossEntry } from "@shared/hooks/useBossEntry";
 import { BossScreen } from "@shared/components/BossScreen";
+import { getBossResult } from "@shared/utils/bossResultMemory";
 import {
   useEmotionalReveal,
   DRAWING_DWELL_MS,
@@ -464,6 +465,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const bossEntry = useBossEntry(sportKey);
   // Boss availability — drives the top BOSS pill (basketball-only) + its tell.
   const bossLive = !!bossEntry.bossChallengeId;
+  // Attempted-today is per-device local memory (getBossResult, presence ===
+  // attempted) — matches BossEntryCta, no new query. Drives the pill emphasis:
+  // unattempted → occasional glow pulse; attempted → steady gold.
+  const bossAttemptedToday = bossLive && !!getBossResult(bossEntry.bossChallengeId);
   const {
     gameState, setGameState,
     roundsUsed, setRoundsUsed,
@@ -2584,27 +2589,47 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     budget for chip+pill crowding. Emphasis/pulse is the next
                     commit. */}
                 {sportKey === "basketball" && bossLive && (
-                  <button
-                    type="button"
-                    data-testid="boss-pill"
-                    aria-label="Today's boss"
-                    onClick={() => {
-                      setShowBoss(true);
-                      track("boss", "boss_screen_opened", { source: "boss_pill" });
-                    }}
-                    style={{
-                      position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                      display: "inline-flex", alignItems: "center",
-                      padding: "4px 12px", borderRadius: 999,
-                      background: "rgba(255,215,0,0.12)",
-                      border: "1px solid rgba(255,215,0,0.5)",
-                      color: "#FFD700", fontSize: 11, fontWeight: 900,
-                      letterSpacing: 1, textTransform: "uppercase",
-                      cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
-                    }}
-                  >
-                    BOSS
-                  </button>
+                  <>
+                    {/* Pill emphasis: unattempted → an OCCASIONAL single glow
+                        pulse (one glow per ~18s, NOT a continuous blink);
+                        attempted → steady gold (animation:none). The keyframe
+                        animates box-shadow ONLY (never transform — the pill's
+                        translateY centering must survive). The media query is
+                        the prefers-reduced-motion guard: under reduced motion
+                        the pulse falls back to steady gold. */}
+                    <style>{`
+                      @keyframes rmBossPillPulse {
+                        0%, 88%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+                        94% { box-shadow: 0 0 9px 2px rgba(255,215,0,0.55); }
+                      }
+                      @media (prefers-reduced-motion: reduce) {
+                        .rm-boss-pill { animation: none !important; }
+                      }
+                    `}</style>
+                    <button
+                      type="button"
+                      data-testid="boss-pill"
+                      aria-label="Today's boss"
+                      className="rm-boss-pill"
+                      onClick={() => {
+                        setShowBoss(true);
+                        track("boss", "boss_screen_opened", { source: "boss_pill" });
+                      }}
+                      style={{
+                        position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                        display: "inline-flex", alignItems: "center",
+                        padding: "4px 12px", borderRadius: 999,
+                        background: "rgba(255,215,0,0.12)",
+                        border: "1px solid rgba(255,215,0,0.5)",
+                        color: "#FFD700", fontSize: 11, fontWeight: 900,
+                        letterSpacing: 1, textTransform: "uppercase",
+                        cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
+                        animation: bossAttemptedToday ? "none" : "rmBossPillPulse 18s ease-in-out infinite",
+                      }}
+                    >
+                      BOSS
+                    </button>
+                  </>
                 )}
               </>
             )}
