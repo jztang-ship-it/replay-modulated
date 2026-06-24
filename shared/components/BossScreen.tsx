@@ -80,8 +80,12 @@ function BossEntryRow({ e, rank, me }: { e: Entry; rank: number; me: boolean }) 
 function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id: string) => string | null }) {
   const id = card.photoCode || card.basePlayerId;
   const src = headshotUrl && id ? headshotUrl(id) : null;
+  // Track a failed LOAD (404/broken), not just a missing url — onError swaps
+  // to the name/position tile so a broken-image glyph never shows.
+  const [imgFailed, setImgFailed] = useState(false);
   const first = card.name.split(" ")[0] ?? "";
   const last = card.name.split(" ").slice(1).join(" ");
+  const showImg = !!src && !imgFailed;
   return (
     // flex:1 so the five tiles fill the content width edge-to-edge (the hero);
     // maxWidth caps them card-sized on wide screens. Real ~2:3 card aspect.
@@ -91,10 +95,10 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
         background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
       }}>
-        {src ? (
+        {showImg ? (
           // NBA headshot is landscape; cover + top-center crops it to the
-          // portrait card showing the face.
-          <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
+          // portrait card showing the face. onError → fall back to the tile.
+          <img src={src!} alt="" onError={() => setImgFailed(true)} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center" }} />
         ) : (
           <span style={{ fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.5)", paddingBottom: 8 }}>{card.position}</span>
         )}
