@@ -1,33 +1,46 @@
 /**
  * shared/components/BossScreen.tsx
  *
- * Full-screen overlay opened by the GameBar trophy (solo play). Two sections:
- *   (a) BOSS ENTRY — the reused BossEntryCta ("Fight Today's Boss" → the
- *       existing /{sport}/challenge/{id} open path → boss play; no fork).
- *   (b) TODAY'S BOSS LEADERBOARD — Delta-C: best-score-per-user for today's
- *       boss, from GET /api/leaderboard?board=boss. NO bonus-pool UI (no pool
- *       header, no $X sublines, no poolPct column).
+ * Full-screen overlay opened by the GameBar BOSS pill (solo basketball). The
+ * "A" layout — one meaning: "here's today's boss, take it," leaderboard as
+ * secondary context below. Top→bottom, centered:
+ *   1 header (DAILY BOSS + close) · 2 title (boss display) · 3 story slot
+ *   (context + Target) · 4 compact lineup strip · 5 TAKE THE BOSS CTA ·
+ *   6 today's-boss leaderboard (top 10, internal scroll) · 7 pinned your-rank bar.
  *
- * Shell modelled on LeaderboardScreen (fixed overlay + Done + skeleton), but
- * a SEPARATE component — LeaderboardScreen is left untouched (Option A: its
- * Collect / post-hand openers still point at it). The row is inlined here so
- * we don't export/refactor LeaderboardScreen's local EntryRow.
+ * Structure: fixed top chrome (1-5) + flex:1 middle (the leaderboard LIST, its
+ * own scroll) + pinned bottom rank bar (7). Chrome + rank bar never scroll.
  *
- * Boss must never be a dead end: when no boss resolves (bossChallengeId null),
- * the screen still opens with a graceful "no boss today" state.
+ * Data: boss identity/lineup come from GET /api/challenge/{bossChallengeId}
+ * (challenger_name=display, share_headline=flavor, target_score, initial_roster
+ * .cards=the five). The story slot prefers a richer `story` field if the GET
+ * ever carries one (authored boss stories land in docs/boss-bank-v1.json and
+ * will be plumbed through), else the flavor one-liner — so it upgrades
+ * automatically. Boss play = the existing /{sport}/challenge/{id} open path
+ * (H2HRecipientPlay), no fork. board=boss leaderboard endpoint untouched.
  */
 import { useEffect, useState, useCallback } from "react";
-import { BossEntryCta } from "./BossEntryCta";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
 type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
+
+type LineupCard = { name: string; position: string; photoCode: string | null; basePlayerId: string };
+
+interface BossInfo {
+  display: string;
+  story: string;          // story ?? flavor (see header note)
+  target: number | null;
+  cards: LineupCard[];
+}
 
 interface Props {
   sport: "basketball" | "baseball" | "football";
   currentUid: string;
   bossChallengeId: string | null;
   bossPlayerCount: number | null;
+  /** Optional headshot resolver (sport adapter). Absent → name/position tiles. */
+  headshotUrl?: (playerId: string) => string | null;
   onClose: () => void;
 }
 
@@ -41,7 +54,7 @@ function BossEntryRow({ e, rank, me }: { e: Entry; rank: number; me: boolean }) 
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: 6,
-      padding: "5px 8px", borderRadius: 6,
+      padding: "6px 8px", borderRadius: 6,
       background: me ? "rgba(255,177,74,0.12)" : "transparent",
       borderLeft: me ? "2px solid #FFB14A" : "2px solid transparent",
     }}>
@@ -64,26 +77,82 @@ function BossEntryRow({ e, rank, me }: { e: Entry; rank: number; me: boolean }) 
   );
 }
 
-export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, onClose }: Props) {
+function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id: string) => string | null }) {
+  const id = card.photoCode || card.basePlayerId;
+  const src = headshotUrl && id ? headshotUrl(id) : null;
+  const first = card.name.split(" ")[0] ?? "";
+  const last = card.name.split(" ").slice(1).join(" ");
+  return (
+    <div style={{ width: 48, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+      <div style={{
+        width: 46, height: 34, borderRadius: 6, overflow: "hidden",
+        background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+      }}>
+        {src ? (
+          <img src={src} alt="" width={46} height={34} style={{ objectFit: "cover", objectPosition: "top center" }} />
+        ) : (
+          <span style={{ fontSize: 9, fontWeight: 900, color: "rgba(255,255,255,0.5)", paddingBottom: 4 }}>{card.position}</span>
+        )}
+      </div>
+      <span style={{ fontSize: 8, fontWeight: 800, color: "rgba(255,255,255,0.75)", maxWidth: 48, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.1 }}>
+        {last || first}
+      </span>
+    </div>
+  );
+}
+
+export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, headshotUrl, onClose }: Props) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [boss, setBoss] = useState<BossInfo | null>(null);
   const sessId = typeof localStorage !== "undefined" ? localStorage.getItem("rm_session_id") : null;
 
+  // Leaderboard (board=boss — endpoint unchanged). Top 10.
   useEffect(() => {
-    fetch(`/api/leaderboard?sport=${sport}&board=boss&limit=20`)
+    fetch(`/api/leaderboard?sport=${sport}&board=boss&limit=10`)
       .then(r => r.json())
       .catch(() => ({ entries: [] }))
       .then((d) => { setEntries(d.entries ?? []); setLoaded(true); });
   }, [sport]);
 
-  // Lock body scroll while open.
+  // Boss identity + lineup. Best-effort: any failure leaves boss=null and the
+  // page falls back to generic chrome (never crashes / never a dead end).
+  useEffect(() => {
+    if (!bossChallengeId) { setBoss(null); return; }
+    let cancelled = false;
+    fetch(`/api/challenge/${bossChallengeId}`)
+      .then(r => (r.ok ? r.json() : null))
+      .catch(() => null)
+      .then((d) => {
+        if (cancelled || !d) return;
+        const rawCards = (d.initial_roster && (d.initial_roster as any).cards) || [];
+        const cards: LineupCard[] = Array.isArray(rawCards)
+          ? rawCards.slice(0, 5).map((c: any) => ({
+              name: String(c.name ?? ""),
+              position: String(c.position ?? ""),
+              photoCode: c.photoCode != null ? String(c.photoCode) : null,
+              basePlayerId: String(c.basePlayerId ?? ""),
+            }))
+          : [];
+        setBoss({
+          display: String(d.challenger_name ?? "Today's Boss"),
+          // Prefer a richer authored `story` when present; else the flavor
+          // one-liner. Upgrades automatically when stories are plumbed through.
+          story: String(d.story ?? d.share_headline ?? ""),
+          target: typeof d.target_score === "number" ? d.target_score : null,
+          cards,
+        });
+      });
+    return () => { cancelled = true; };
+  }, [bossChallengeId]);
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  // Close on Escape.
   const handleClose = useCallback(() => onClose(), [onClose]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -92,6 +161,9 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
   }, [onClose]);
 
   const myIdx = entries.findIndex(e => isMe(e, currentUid, sessId));
+  const topScore = entries.length > 0 ? entries[0].score : null;
+  const gapFromTop = myIdx >= 0 && topScore != null ? Math.max(0, topScore - entries[myIdx].score) : null;
+  const href = bossChallengeId ? `/${sport}/challenge/${bossChallengeId}` : null;
 
   return (
     <div
@@ -105,65 +177,98 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
         overflow: "hidden",
       }}
     >
-      {/* Header */}
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        padding: "14px 16px 8px",
-      }}>
-        <span style={{ fontSize: 16, fontWeight: 900, color: "#FFB14A", fontFamily: FF, letterSpacing: 1 }}>
-          TODAY'S BOSS
-        </span>
-        <button onClick={handleClose} style={{
-          background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-          borderRadius: 8, padding: "5px 10px", color: "rgba(255,255,255,0.5)",
-          fontSize: 12, cursor: "pointer",
-        }}>Done</button>
-      </div>
+      {/* ── Fixed top chrome (1-5) ── */}
+      <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        {/* 1 — Header: DAILY BOSS eyebrow + close */}
+        <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px 4px" }}>
+          <span style={{ width: 52 }} aria-hidden="true" />
+          <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,177,74,0.85)", fontFamily: FF, letterSpacing: 2, textTransform: "uppercase" }}>
+            Daily Boss
+          </span>
+          <button onClick={handleClose} style={{
+            width: 52, textAlign: "right",
+            background: "none", border: "none", color: "rgba(255,255,255,0.5)",
+            fontSize: 12, cursor: "pointer",
+          }}>Done</button>
+        </div>
 
-      {/* Boss entry (reused). Null boss → graceful empty state, never a dead end. */}
-      <div style={{ padding: "0 16px" }}>
-        {bossChallengeId ? (
-          <BossEntryCta sport={sport} bossChallengeId={bossChallengeId} bossPlayerCount={bossPlayerCount} />
+        {/* 2 — Title: boss display name */}
+        <div style={{ fontSize: 24, fontWeight: 950, color: "#EAF0FF", fontFamily: FF, letterSpacing: 0.5, textAlign: "center", padding: "8px 16px 0" }}>
+          {boss?.display ?? "Today's Boss"}
+        </div>
+
+        {/* 3 — Story slot: context + Target */}
+        <div style={{ maxWidth: 340, textAlign: "center", padding: "8px 16px 0" }}>
+          {boss?.story ? (
+            <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, color: "rgba(234,240,255,0.82)" }}>{boss.story}</div>
+          ) : bossPlayerCount != null && bossPlayerCount > 0 ? (
+            <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(234,240,255,0.6)" }}>{bossPlayerCount.toLocaleString()} players have tried</div>
+          ) : null}
+          {boss?.target != null && (
+            <div style={{ fontSize: 13, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, marginTop: 8 }}>
+              Target: {boss.target.toFixed(1)}
+            </div>
+          )}
+        </div>
+
+        {/* 4 — Lineup strip (compact, centered, h-scroll if needed) */}
+        {boss && boss.cards.length > 0 && (
+          <div style={{ width: "100%", display: "flex", justifyContent: "center", padding: "14px 12px 0" }}>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", maxWidth: "100%", padding: "0 2px 2px" }}>
+              {boss.cards.map((c, i) => <LineupTile key={`lu-${i}`} card={c} headshotUrl={headshotUrl} />)}
+            </div>
+          </div>
+        )}
+
+        {/* 5 — CTA: TAKE THE BOSS (centered, content-width) */}
+        {href ? (
+          <a
+            data-testid="boss-take-cta"
+            href={href}
+            style={{
+              margin: "16px 0 6px", padding: "11px 28px", borderRadius: 12,
+              background: "#FFB14A", color: "#070A12", textDecoration: "none",
+              fontWeight: 950, fontSize: 14, letterSpacing: 0.8, textTransform: "uppercase",
+            }}
+          >
+            Take the Boss
+          </a>
         ) : (
-          <div style={{
-            margin: "12px 0 4px", padding: "16px", borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)",
-            textAlign: "center", fontSize: 13, fontWeight: 700, color: "rgba(234,240,255,0.7)",
-          }}>
+          <div style={{ margin: "16px 16px 6px", padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", textAlign: "center", fontSize: 13, fontWeight: 700, color: "rgba(234,240,255,0.7)" }}>
             No boss today — check back tomorrow.
           </div>
         )}
       </div>
 
-      {/* Today's boss leaderboard — best score per user. No bonus-pool UI. */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "10px 16px 0", overflow: "hidden" }}>
-        <div style={{ fontSize: 11, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, padding: "0 4px 6px" }}>
+      {/* ── 6 — Leaderboard (own internal scroll) ── */}
+      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "12px 16px 0", overflow: "hidden" }}>
+        <div style={{ fontSize: 11, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, padding: "0 4px 6px", flexShrink: 0 }}>
           Boss Leaderboard
         </div>
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
           {!loaded ? (
-            [1, 2, 3].map(i => <div key={i} style={{ height: 30, borderRadius: 6, background: "rgba(255,255,255,0.03)" }} />)
+            [1, 2, 3].map(i => <div key={i} style={{ height: 32, borderRadius: 6, background: "rgba(255,255,255,0.03)", flexShrink: 0 }} />)
           ) : entries.length === 0 ? (
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", padding: "8px 4px" }}>
               Be the first to challenge today's boss.
             </div>
           ) : (
-            entries.slice(0, 20).map((e, i) => (
+            entries.slice(0, 10).map((e, i) => (
               <BossEntryRow key={`boss-${i}`} e={e} rank={i + 1} me={isMe(e, currentUid, sessId)} />
             ))
           )}
         </div>
       </div>
 
-      {/* Your position summary */}
-      <div style={{ padding: "10px 16px 16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      {/* ── 7 — Pinned your-rank bar (always visible) ── */}
+      <div style={{ flexShrink: 0, padding: "10px 16px 16px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
         {myIdx >= 0 ? (
           <div style={{ fontSize: 12, fontWeight: 800, color: "#FFB14A" }}>
-            You're #{myIdx + 1} on today's boss — {entries[myIdx].score.toFixed(1)}
+            Your rank: #{myIdx + 1}{gapFromTop != null && gapFromTop > 0 ? ` · −${gapFromTop.toFixed(1)} from top` : " · top of the board"}
           </div>
         ) : (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-            {bossChallengeId ? "Beat the boss to land on the board." : "No boss live right now."}
+          <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.45)" }}>
+            Not on the board yet — beat the boss to rank.
           </div>
         )}
       </div>
