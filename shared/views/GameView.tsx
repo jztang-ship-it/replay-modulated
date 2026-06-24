@@ -2500,14 +2500,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
         {/* 1 — Header */}
         <div style={{
-          // SOLO: grow by the safe-area inset so the full-bleed band can fill
-          // the notch strip without squeezing the 10dvh of header content;
-          // padding 0 so the band runs edge-to-edge. CHALLENGE: unchanged.
-          flex: !challengeCtx ? "0 0 calc(10dvh + env(safe-area-inset-top, 0px))" : "0 0 10dvh",
+          // SOLO: grow to ~13dvh (+ safe-area inset) so the band has real air
+          // below it before the year·players row, and the row has room to
+          // breathe (v2 rhythm) without clipping — the card stage below is
+          // flex:1 and absorbs the difference by scaling cards (RosterGridScaleFit),
+          // so this never clips the fixed bottom grid. padding 0 → band runs
+          // edge-to-edge. CHALLENGE: unchanged 10dvh.
+          flex: !challengeCtx ? "0 0 calc(13dvh + env(safe-area-inset-top, 0px))" : "0 0 10dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          gap: 4,
+          gap: !challengeCtx ? 10 : 4,
           padding: !challengeCtx ? 0 : "0 10px 0",
           boxSizing: "border-box",
           overflow: "hidden",
@@ -2564,7 +2567,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hasNewAchievements={newlyUnlockedAchievements.length > 0}
             />
           </div>
-          <div data-ftue-chrome="true" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
+          <div data-ftue-chrome="true" style={{
+            position: "relative", display: "flex", alignItems: "center",
+            // v2: chip stays CENTERED (true center of full width); the BOSS pill
+            // is absolute-right (below), so it doesn't shift the chip's centering.
+            // Solo gets vertical breathing inside the row + a wider side inset.
+            justifyContent: "center", gap: 8,
+            padding: !challengeCtx ? "6px 14px 4px" : "0 12px",
+          }}>
             {challengeCtx ? (
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -2630,17 +2640,28 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                         track("boss", "boss_screen_opened", { source: "boss_pill" });
                       }}
                       style={{
+                        // Quiet-right gold focal: absolute so it never shifts the
+                        // centered chip; richer gold fill/border + matched dark
+                        // bottom edge so it reads as a control pair with the chip.
                         position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                        display: "inline-flex", alignItems: "center",
-                        padding: "4px 12px", borderRadius: 999,
-                        background: "rgba(255,215,0,0.12)",
-                        border: "1px solid rgba(255,215,0,0.5)",
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        padding: "5px 12px", borderRadius: 999,
+                        background: "rgba(255,215,0,0.16)",
+                        border: "1px solid rgba(255,215,0,0.6)",
+                        borderBottom: "1px solid rgba(0,0,0,0.28)",
                         color: "#FFD700", fontSize: 11, fontWeight: 900,
                         letterSpacing: 1, textTransform: "uppercase",
                         cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
                         animation: bossAttemptedToday ? "none" : "rmBossPillPulse 18s ease-in-out infinite",
                       }}
                     >
+                      {/* Leading crown (gold) — pairs with the chip's cards glyph;
+                          carries the gold focal. Inline SVG (no icon dep). */}
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="#FFD700"
+                        stroke="#FFD700" strokeWidth="1.5" strokeLinejoin="round"
+                        aria-hidden="true" style={{ flexShrink: 0 }}>
+                        <path d="M12 6l4 6l5 -4l-2 10h-14l-2 -10l5 4z" />
+                      </svg>
                       BOSS
                     </button>
                   </>
@@ -2658,7 +2679,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           justifyContent: "center",
           minHeight: 0,
           maxHeight: 460,
-          padding: "4px 1px 2px 1px",
+          // SOLO: extra top breathing so the year·players row → cards has air
+          // (band→row→cards rhythm). flex:1 absorbs it by scaling cards via
+          // RosterGridScaleFit — never clips the fixed bottom grid. CHALLENGE: unchanged.
+          padding: !challengeCtx ? "14px 1px 2px 1px" : "4px 1px 2px 1px",
           boxSizing: "border-box",
           overflow: "hidden",
         }}>

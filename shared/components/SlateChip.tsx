@@ -76,10 +76,15 @@ export function SlateChip({ label, playerCount, children, sportKey, seasonLabel 
           display: "inline-flex",
           alignItems: "center",
           gap: 6,
-          padding: "4px 10px",
+          // v2 substance: a more present NEUTRAL raised fill + clearer border +
+          // a dark bottom edge for depth, so the chip reads as a pressable
+          // control (year = neutral substance; BOSS pill = the gold focal).
+          padding: "5px 11px",
           borderRadius: 999,
-          background: "rgba(201,168,76,0.10)",
-          border: "1px solid rgba(201,168,76,0.45)",
+          background: "rgba(255,255,255,0.09)",
+          border: "1px solid rgba(255,255,255,0.16)",
+          borderBottom: "1px solid rgba(0,0,0,0.28)",
+          boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
           color: "#F0F2F5",
           fontFamily: "'Inter', system-ui, sans-serif",
           fontSize: 11,
@@ -90,6 +95,15 @@ export function SlateChip({ label, playerCount, children, sportKey, seasonLabel 
           lineHeight: 1.1,
         }}
       >
+        {/* Leading cards glyph (muted) — makes "tappable" unmistakable and
+            pairs with the BOSS pill's crown. Inline SVG (no icon dep). */}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+          stroke="rgba(255,255,255,0.6)" strokeWidth="2"
+          strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true" style={{ flexShrink: 0 }}>
+          <rect x="8" y="3" width="11" height="16" rx="2" />
+          <path d="M5 6.5v11a2 2 0 0 0 2 2h7" />
+        </svg>
         {label && <span style={{ color: "#C9A84C", fontWeight: 900 }}>{label}</span>}
         {seasonLabel && (
           <>
@@ -98,7 +112,7 @@ export function SlateChip({ label, playerCount, children, sportKey, seasonLabel 
           </>
         )}
         {(label || seasonLabel) && <span aria-hidden="true" style={{ opacity: 0.6 }}>·</span>}
-        <span style={{ fontVariantNumeric: "tabular-nums" }}>{playerCount} players</span>
+        <span style={{ fontVariantNumeric: "tabular-nums", color: "rgba(255,255,255,0.62)" }}>{playerCount} players</span>
       </button>
 
       {open && (
