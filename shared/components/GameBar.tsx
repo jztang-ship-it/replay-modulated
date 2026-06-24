@@ -147,6 +147,11 @@ type Props = {
    *  glow ring) that chains into the iconBlink pulse loop. Fires when the
    *  player has just landed on the daily leaderboard. */
   trophyBurst?: boolean;
+  /** Boss-live tell: when a boss is available, the trophy carries the same
+   *  SUBTLE STATIC gold emphasis as trophyOnBoard (gold border + icon, NO
+   *  animation → inherently prefers-reduced-motion-safe). Below the loud
+   *  burst/pulse tier, above the dim default. Default false. */
+  bossLive?: boolean;
   /** Called when the trophyBurst keyframe animation completes (one-shot).
    *  Parent should clear its trophyBurst state so the in-memory flag does
    *  not persist across hands. The durable iconBlink pulse keeps running
@@ -1398,6 +1403,7 @@ export function GameBar({
   legendPulsing = false,
   trophyPulsing = false,
   trophyBurst = false,
+  bossLive = false,
   onBurstEnd,
   streak = 0,
   showStreak = true,
@@ -1469,8 +1475,8 @@ export function GameBar({
         height: 36,
         borderRadius: "50%",
         background: "transparent",
-        border: `1px solid ${trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
-        color: trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+        border: `1px solid ${(trophyOnBoard || bossLive) ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+        color: (trophyOnBoard || bossLive) ? "#FFD700" : "rgba(255,255,255,0.3)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -1748,8 +1754,8 @@ export function GameBar({
                   style={{
                     width: 32, height: 32, borderRadius: "50%",
                     background: (trophyBurst || trophyPulsing || pulseActive) ? "rgba(255,215,0,0.15)" : "transparent",
-                    border: `1px solid ${(trophyBurst || trophyPulsing || pulseActive) ? "rgba(255,215,0,0.7)" : trophyOnBoard ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
-                    color: (trophyBurst || trophyPulsing || pulseActive) ? "#FFD700" : trophyOnBoard ? "#FFD700" : "rgba(255,255,255,0.3)",
+                    border: `1px solid ${(trophyBurst || trophyPulsing || pulseActive) ? "rgba(255,215,0,0.7)" : (trophyOnBoard || bossLive) ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)"}`,
+                    color: (trophyBurst || trophyPulsing || pulseActive) ? "#FFD700" : (trophyOnBoard || bossLive) ? "#FFD700" : "rgba(255,255,255,0.3)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     cursor: "pointer", fontSize: 14, padding: 0,
                     animation: trophyBurst

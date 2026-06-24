@@ -3095,6 +3095,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         legendPulsing={legendGold}
         trophyPulsing={trophyPulsing}
         trophyBurst={trophyBurst}
+        // Boss-live tell: static gold on the trophy when a boss is available.
+        // Naturally false for non-basketball (useBossEntry returns null there).
+        bossLive={!!bossEntry.bossChallengeId}
         streak={streak}
         showStreak={streaksEnabled}
         economyEnabled={economyEnabled}
