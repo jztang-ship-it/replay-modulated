@@ -2512,6 +2512,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           }}>
             <AppHeader
               onLight={!challengeCtx}
+              // Solo play surface hides Play + Collect (kept in PRIMARY_TABS,
+              // parked pre-launch); profile + bell stay. Challenge-via-GameView
+              // header is left unchanged.
+              hiddenTabs={!challengeCtx ? ["home", "collect"] : []}
               onCollect={() => setShowCollect(true)}
               onProfile={() => {
                 setShowProfile(true);

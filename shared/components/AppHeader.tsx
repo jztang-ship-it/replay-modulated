@@ -44,6 +44,9 @@ type Props = {
   hasNewAchievements?: boolean;
   /** Platinum-band variant — dark-on-light inversion. Default OFF. */
   onLight?: boolean;
+  /** Primary tabs to hide at render (still kept in PRIMARY_TABS — parked, not
+   *  deleted). Used by the solo play surface to hide Play + Collect. Default []. */
+  hiddenTabs?: TabId[];
 };
 
 export function AppHeader({
@@ -55,6 +58,7 @@ export function AppHeader({
   unreadInboxCount = 0,
   hasNewAchievements,
   onLight = false,
+  hiddenTabs = [],
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("home");
   const [muted, setMuted] = useState(soundManager.isMuted());
@@ -126,7 +130,7 @@ export function AppHeader({
 
       {/* Right cluster: primary tabs · overflow · bell */}
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {PRIMARY_TABS.map(({ id, label, icon }) => {
+        {PRIMARY_TABS.filter(({ id }) => !hiddenTabs.includes(id)).map(({ id, label, icon }) => {
           const active   = activeTab === id;
           const isCollect = id === "collect";
           function handleClick() {
