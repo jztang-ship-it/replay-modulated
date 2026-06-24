@@ -462,6 +462,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Phase 2-mount Step 3/4: today's boss for the post-results entry CTA.
   // Basketball-only inside the hook; null elsewhere → CTA never renders.
   const bossEntry = useBossEntry(sportKey);
+  // Boss availability — drives the top BOSS pill (basketball-only) + its tell.
+  const bossLive = !!bossEntry.bossChallengeId;
   const {
     gameState, setGameState,
     roundsUsed, setRoundsUsed,
@@ -2543,7 +2545,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hasNewAchievements={newlyUnlockedAchievements.length > 0}
             />
           </div>
-          <div data-ftue-chrome="true" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
+          <div data-ftue-chrome="true" style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "0 12px" }}>
             {challengeCtx ? (
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
@@ -2575,6 +2577,35 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   />
                 )}
                 {SlateChipComponent && <SlateChipComponent />}
+                {/* BOSS pill — basketball-only, right-aligned in the year·players
+                    row. Absolutely positioned so the SlateChip stays centered;
+                    distinct from the slate-info chip (boss = a destination, gold).
+                    Opens BossScreen (the single boss door). Glass the 360 width
+                    budget for chip+pill crowding. Emphasis/pulse is the next
+                    commit. */}
+                {sportKey === "basketball" && bossLive && (
+                  <button
+                    type="button"
+                    data-testid="boss-pill"
+                    aria-label="Today's boss"
+                    onClick={() => {
+                      setShowBoss(true);
+                      track("boss", "boss_screen_opened", { source: "boss_pill" });
+                    }}
+                    style={{
+                      position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                      display: "inline-flex", alignItems: "center",
+                      padding: "4px 12px", borderRadius: 999,
+                      background: "rgba(255,215,0,0.12)",
+                      border: "1px solid rgba(255,215,0,0.5)",
+                      color: "#FFD700", fontSize: 11, fontWeight: 900,
+                      letterSpacing: 1, textTransform: "uppercase",
+                      cursor: "pointer", whiteSpace: "nowrap", lineHeight: 1,
+                    }}
+                  >
+                    BOSS
+                  </button>
+                )}
               </>
             )}
           </div>
