@@ -30,6 +30,10 @@ interface ChallengeData {
    *  for backward compat; the GET handler defaults it to "player".
    *  Normalized via normalizeSenderKind at the render boundary. */
   sender_kind?: string;
+  /** Boss claim-prompt (2026-06-26): the boss bank id (e.g. "DET-0304"), returned
+   *  by the GET handler (api/challenge/[id].ts). null on human rows. Threaded to
+   *  ChallengeCtx.bossIdentityId so the post-win claim card has its {team} token. */
+  boss_identity_id?: string | null;
   /** Boss "tough day" flag (sender-facing flavor); null on human rows. */
   tough_day?: boolean | null;
   challenger_name: string;
@@ -156,6 +160,10 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
       // so the play/comparison flow knows this is a boss target. Normalized
       // at this single read boundary, same pattern as triggerType.
       senderKind: normalizeSenderKind(data.sender_kind),
+      // Boss claim-prompt (2026-06-26): thread the boss bank id (already on the
+      // GET response) to the reveal surface so the post-win claim card has its
+      // {team} token. Additive, no migration — same boundary as senderKind.
+      bossIdentityId: data.boss_identity_id ?? undefined,
       // Phase 2-mount Step 4: thread the baked two-tier marquee flag (jsonb,
       // no migration) from initial_roster so the result flow can branch the
       // loss copy. Boss-only in practice; humans carry no marquee.

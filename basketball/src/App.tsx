@@ -20,6 +20,7 @@ import H2HPlayMockRoute from "./dev/H2HPlayMockRoute";
 import ChallengeLandingMockRoute from "./dev/ChallengeLandingMockRoute";
 import HeadlineMockRoute from "./dev/HeadlineMockRoute";
 import BossLandingMockRoute from "./dev/BossLandingMockRoute";
+import BossClaimMockRoute from "./dev/BossClaimMockRoute";
 import GameView from "./views/GameView";
 import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -128,6 +129,9 @@ function AppInner() {
   const devSlug = getDevRouteSlug();
   if (import.meta.env.DEV && devSlug === "h2h-reveal-mock") {
     return <H2HRevealMockRoute />;
+  }
+  if (import.meta.env.DEV && devSlug === "boss-claim-mock") {
+    return <BossClaimMockRoute />;
   }
   if (import.meta.env.DEV && devSlug === "h2h-play-mock") {
     return <H2HPlayMockRoute />;

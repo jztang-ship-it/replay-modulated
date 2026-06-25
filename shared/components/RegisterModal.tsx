@@ -43,6 +43,12 @@ interface RegisterModalProps {
    *  share-POST. NOT used on the Google path — that flow exits via the
    *  redirect; resume happens in ResumeShareSurface. */
   onChallengeAuthComplete?: (displayName: string) => void | Promise<void>;
+  /** Auth-cleanup 2026-06-26: optional claim/stake framing for the post-win boss
+   *  claim path. Overrides ONLY the normal sign-UP copy (not signInMode's
+   *  "Welcome back", not challenge-context strings) so the modal reads
+   *  consistently with the BossClaimPrompt card. Undefined for every existing
+   *  caller → default copy, unchanged. */
+  claim?: { heading?: string; subheading?: string };
 }
 
 /** Translate raw Supabase auth errors into friendly user-facing copy. */
@@ -72,7 +78,7 @@ function friendlyAuthError(err: AuthError | { message?: string }, isSignIn: bool
 
 export function RegisterModal({
   onClose, onSuccess, signUp, linkGoogle, signInMode, signIn, signInGoogle,
-  context = "normal", onBeforeGoogleRedirect, onChallengeAuthComplete,
+  context = "normal", onBeforeGoogleRedirect, onChallengeAuthComplete, claim,
 }: RegisterModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -211,14 +217,19 @@ export function RegisterModal({
   const heading = (() => {
     if (isChallengeContext && !isAnonymous) return "Add your name to send";
     if (isChallengeContext) return "Sign up/in to send to your friend";
-    return isSignIn ? "Welcome back" : "Save your progress";
+    if (isSignIn) return "Welcome back";
+    // Normal sign-up: claim framing overrides only here (challenge + signInMode
+    // above are untouched).
+    return claim?.heading ?? "Save your progress";
   })();
   const subheading = (() => {
     // Post-auth challenge context: brief continuation. Pre-auth challenge:
-    // friend-facing framing. Normal context: existing copy.
+    // friend-facing framing. signInMode + normal context: existing copy unless
+    // a claim framing is supplied (normal sign-up only).
     if (isChallengeContext && !isAnonymous) return "Confirm your name to finish.";
     if (isChallengeContext) return "Your friends need a way to find your challenge.";
-    return isSignIn ? "Sign in to restore your account" : "Play on any device. Never lose your wins.";
+    if (isSignIn) return "Sign in to restore your account";
+    return claim?.subheading ?? "Play on any device. Never lose your wins.";
   })();
 
   // U4-b revised: confirmation identifier. Prefer email (strongest identity

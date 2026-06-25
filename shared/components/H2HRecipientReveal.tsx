@@ -49,6 +49,8 @@ import {
 } from "./H2HResultsOverlay";
 import { isRealName } from "@shared/utils/isRealName";
 import { BossOutwardEnding } from "./BossOutwardEnding";
+import { BossClaimPrompt } from "./BossClaimPrompt";
+import { ensureClaimBaseline } from "@shared/utils/bossClaimPrompt";
 import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import { RoundSignage } from "./H2HBoardShell";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
@@ -235,7 +237,16 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // — sender's reveal is a standalone notification view and the deck
   // entrance is correct there. The standalone reveal mock route uses
   // initialPhase:"done" + no skipEntrance — phase-2 static end-state.
-  const reveal = useH2HReveal({ sender, recipient, reducedMotion, initialPhase: "idle", skipEntrance: true });
+  // Boss claim-prompt: wire onArcResolved (now bound — safe) as the resolve
+  // signal, and snapshot the after-launch baseline at MOUNT (the arc start) —
+  // BEFORE BossOutwardEnding's recordBossResult fires at arc-done, so the current
+  // boss's fresh win is never captured into the baseline.
+  const [arcResolved, setArcResolved] = useState(false);
+  useEffect(() => { ensureClaimBaseline(); }, []);
+  const reveal = useH2HReveal({
+    sender, recipient, reducedMotion, initialPhase: "idle", skipEntrance: true,
+    onArcResolved: () => setArcResolved(true),
+  });
 
   // Crossfade-in from the underlying GameView surface. setVisible
   // flips on the next animation frame so the CSS opacity transition
@@ -278,6 +289,19 @@ function H2HRecipientRevealInner(props: InnerProps) {
   }, [reveal.phase]);
   const showOverlay = reveal.phase === "done" && doneHoldElapsed;
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
+
+  // Boss claim-prompt breathe: let the win celebration (the results overlay)
+  // breathe ~1.5-2s before the claim card surfaces. Anchored on showOverlay (the
+  // celebration is visible), extending the doneHoldElapsed pattern — NOT
+  // END_OF_ARC_HOLD_MS (shared by all H2H reveals). Gated on arcResolved so a
+  // static end-state mount can't surface it without a real arc.
+  const CLAIM_BREATHE_MS = 1700;
+  const [claimBreatheElapsed, setClaimBreatheElapsed] = useState(false);
+  useEffect(() => {
+    if (!showOverlay) { setClaimBreatheElapsed(false); return undefined; }
+    const id = window.setTimeout(() => setClaimBreatheElapsed(true), CLAIM_BREATHE_MS);
+    return () => clearTimeout(id);
+  }, [showOverlay]);
 
   // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.
   // Pre-RD6.1 the reveal-side right-rail ScoreCells were hidden via a
@@ -351,16 +375,28 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // BossOutwardEnding make fresh === revisited.
           ctaSlot={
             challengeCtx.senderKind === "boss" ? (
-              <BossOutwardEnding
-                variant="cta-only"
-                sport={sport}
-                bossChallengeId={challengeCtx.challengeId}
-                freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
-                marquee={challengeCtx.marquee === true}
-                targetScore={challengeCtx.targetScore}
-                bossName={challengeCtx.challengerName}
-                onPlayAgain={onTryAgain}
-              />
+              <>
+                <BossOutwardEnding
+                  variant="cta-only"
+                  sport={sport}
+                  bossChallengeId={challengeCtx.challengeId}
+                  freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
+                  marquee={challengeCtx.marquee === true}
+                  targetScore={challengeCtx.targetScore}
+                  bossName={challengeCtx.challengerName}
+                  onPlayAgain={onTryAgain}
+                />
+                {/* Post-win claim prompt — sibling card, surfaces after the
+                    breathe. Self-gates on eligibility (won + after-launch
+                    baseline + anti-repeat + !registered, or ?claim=force in DEV);
+                    won = the inline live-win. */}
+                <BossClaimPrompt
+                  bossIdentityId={challengeCtx.bossIdentityId}
+                  won={myScore >= challengeCtx.targetScore}
+                  active={arcResolved && claimBreatheElapsed}
+                  onDismiss={() => { /* card self-hides via its latch */ }}
+                />
+              </>
             ) : undefined
           }
         />
