@@ -107,6 +107,7 @@ export function BossClaimPrompt({ bossIdentityId, won, active, onDismiss }: Prop
         <Suspense fallback={null}>
           <RegisterModal
             context="normal"
+            claim={{ heading: "Put it on the record", subheading: "It only counts if you save it." }}
             onClose={() => setShowModal(false)}
             onSuccess={() => { setShowModal(false); setShown(false); onDismiss(); }}
             signUp={signUp}

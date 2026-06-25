@@ -544,16 +544,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [showBoss, setShowBoss] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
-  // OAuth-resume race guard — belt-and-suspenders companion to
-  // `hasPendingResumeShare()`. The auth-nudge useCallback below
-  // (tryOpenAuthModal) schedules a delayed setShowRegisterModal(true);
-  // its own deps don't include isAnonymous (intentional — re-creating
-  // the callback on every auth state would invalidate the nudge effect
-  // gates), so the setTimeout closure reads `isAnonymousRef.current` at
-  // fire time to catch the case where INITIAL_SESSION lands AFTER the
-  // timer was scheduled but BEFORE it fires.
-  const isAnonymousRef = useRef(isAnonymous);
-  useEffect(() => { isAnonymousRef.current = isAnonymous; }, [isAnonymous]);
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   // Notification panel state + hook. Anonymous users skip the fetch
@@ -812,32 +802,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (!showNamePrompt) releaseAttention("name_prompt");
   }, [showNamePrompt, releaseAttention]);
 
-  // Unified auth-modal gate — fires at most once ever, across all trigger sources.
-  // Goes through tryClaimAttention("auth_modal"); if another surface owns the
-  // lock, defer to the next IDLE without burning rm_auth_modal_shown.
-  const tryOpenAuthModal = useCallback((trigger: string, delayMs: number, extraProps: Record<string, string | number> = {}) => {
-    if (localStorage.getItem("rm_auth_modal_shown") === "1") return;
-    if (!tryClaimAttention("auth_modal")) return; // another surface in-flight → defer to next IDLE
-    localStorage.setItem("rm_auth_modal_shown", "1");
-    const t = setTimeout(() => {
-      // OAuth-resume race guard (build lock rev 3). The nudge effects
-      // below gate on isAnonymous, but during the post-redirect first-
-      // render→INITIAL_SESSION window the Context value is transiently
-      // true even though a real session is about to land. The effects'
-      // own cleanup cancels this timer when isAnonymous flips for the
-      // hand_5 / big_win nudges, but the chad-chained call into
-      // tryOpenAuthModal at ~:872 is fire-and-forget — its cleanup is
-      // discarded. Re-check via the ref so any already-scheduled timer
-      // no-ops if the user is no longer anonymous when it fires (or if
-      // a resume payload is still pending — same intent as the upstream
-      // gates, applied here for completeness).
-      if (isAnonymousRef.current === false) return;
-      if (hasPendingResumeShare()) return;
-      track("auth", "signup_modal_shown", { trigger, hand_number: handCount, ...extraProps });
-      setShowRegisterModal(true);
-    }, delayMs);
-    return () => clearTimeout(t);
-  }, [handCount, tryClaimAttention]);
+  // Auto-pop auth-modal gate REMOVED (auth-cleanup 2026-06-26). The three weak-
+  // moment triggers (hand_5 / chad_* / big_win) that auto-opened RegisterModal are
+  // deleted; the only auth entry is now the reactive profile-button path (which
+  // emits its own signup_modal_shown with trigger:"profile_button"). The boss-win
+  // claim prompt is the deliberate post-win auth moment (see BossClaimPrompt).
 
   // First rookie win — fires at RESULTS. Skipped for challenge recipients
   // (their first impression of the game shouldn't be a tutorial-style
@@ -860,10 +829,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   useEffect(() => {
     if (challengeCtx || onChallengeUrl || gameState !== "IDLE") return;
     // OAuth-resume race guard (build lock rev 3): skip the entire chad
-    // pass while a resume payload is queued. The chained
-    // tryOpenAuthModal at ~:872 below is fire-and-forget — its cleanup
-    // is discarded by this effect, so blocking the whole pass here is
-    // the only place to keep the chained timer from being scheduled.
+    // pass while a resume payload is queued, so a chad bubble doesn't fire
+    // on top of the ResumeShareSurface modal flow.
     // Benign chad topics (leaderboard_explainer / mvp_thanks /
     // dev_4thwall) are suppressed in this window too; that's intentional
     // — the user is mid-OAuth-resume modal flow and wouldn't see the
@@ -904,61 +871,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       } else {
         setLegendGold(true);
       }
-      // INTENTIONAL HANDOFF: chad's chained auth-modal call (e.g. "you're
-      // on the leaderboard" → 4500ms read pause → sign-up modal). Chad
-      // currently holds the attention lock; we hand it off to the auth
-      // modal by releasing chad's claim, then letting tryOpenAuthModal
-      // re-claim under "auth_modal". Sibling tryOpenAuthModal calls in the
-      // same flush (MVP/LEGEND big_win at 2500ms, hand_5 at 3500ms) will
-      // see the lock held and defer to the next IDLE.
-      if (topic === "leaderboard_intro" || topic === "big_win" || topic === "retention") {
-        releaseAttention("chad_commentary");
-        tryOpenAuthModal(`chad_${topic}`, 4500);
-        // Re-claim chad's lock so the sticky bubble's dismissal still
-        // releases correctly via the ftueCommentaryOverride watcher.
-        // (If tryOpenAuthModal claimed "auth_modal", the lock is now held
-        // by auth_modal — re-claiming chad would fail and that's fine: the
-        // auth modal owns the moment, chad's bubble visually rides on top
-        // until it's tapped, after which the lock transfers cleanly.)
-        attentionLockRef.current ??= { surface: "chad_commentary", openedAt: Date.now() };
-      }
+      // Auto-pop auth handoff REMOVED (auth-cleanup 2026-06-26). Chad shows its
+      // bubble and keeps the chad_commentary lock until the bubble is dismissed
+      // (via the ftueCommentaryOverride watcher) — no chained sign-up modal.
       return;
     }
-  }, [gameState, handCount, isAnonymous, bigWinFired, tryOpenAuthModal, tryClaimAttention, releaseAttention]); // eslint-disable-line
+  }, [gameState, handCount, isAnonymous, bigWinFired, tryClaimAttention]); // eslint-disable-line
 
-  // [Auth:challenge-skip] Auth nudge — MVP+ hand while anonymous.
-  // Challenge recipients are guests landing through a deep link — pushing a
-  // sign-in modal kills the moment. Skip during ALL challenge flow:
-  //   - challengeCtx truthy   → post-Accept (replay in progress)
-  //   - challengeIdFromUrl    → pre-Accept (landing screen visible,
-  //                             challengeCtx still null but GameView
-  //                             is mounted underneath)
-  // Earlier versions only checked challengeCtx, which let the nudge fire
-  // for return users (handCount>=5) on the landing screen.
+  // onChallengeUrl — true when a challenge landing screen is open pre-Accept
+  // (challengeCtx still null but GameView is mounted underneath). Retained: the
+  // chad gate (above) uses it to suppress nudges during the challenge flow. The
+  // big_win and hand_5 auto-pop auth nudges that also used it were REMOVED
+  // (auth-cleanup 2026-06-26).
   const onChallengeUrl = typeof window !== "undefined" &&
     /\/basketball\/challenge\/[0-9a-f-]{36}/i.test(window.location.pathname);
-  useEffect(() => {
-    // OAuth-resume race guard (build lock rev 3): hasPendingResumeShare()
-    // covers the first-render→INITIAL_SESSION window where isAnonymous
-    // is transiently true. Without it, this effect schedules a timer
-    // while the ResumeShareSurface modal is queueing up — the timer's
-    // cleanup runs when isAnonymous flips false (so this specific
-    // nudge IS cancelled), but the belt-and-suspenders check keeps the
-    // intent local to this gate. Skip ordering matches the existing
-    // !isAnonymous gate's intent.
-    if (!isAnonymous || challengeCtx || onChallengeUrl || hasPendingResumeShare()) return;
-    if (gameState !== "IDLE") return;
-    if (winTier !== "MVP" && winTier !== "LEGEND") return;
-    return tryOpenAuthModal("big_win", 2500, { tier: winTier ?? "" });
-  }, [winTier, isAnonymous, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
-
-  // Auth nudge — fallback at hand 5. Same challenge-mode skip as above.
-  useEffect(() => {
-    if (!isAnonymous || challengeCtx || onChallengeUrl || hasPendingResumeShare()) return;
-    if (gameState !== "IDLE") return;
-    if (handCount < 5) return;
-    return tryOpenAuthModal("hand_5", 3500);
-  }, [handCount, isAnonymous, gameState, tryOpenAuthModal, challengeCtx, onChallengeUrl]);
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
