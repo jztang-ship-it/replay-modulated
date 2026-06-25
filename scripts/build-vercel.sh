@@ -24,6 +24,13 @@ npm install --no-audit --no-fund
 echo "── basketball install + build ──"
 ( cd basketball && npm install --no-audit --no-fund && npm run build )
 
+# Unbound-symbol gate (TS2304) — catches the class esbuild ships silently and the
+# spy-tested round machine never exercises (the logHandToDb bug). Runs after the
+# basketball install so tsc + ../shared resolution are available. Baseline-aware:
+# breaks only on NEW unbound names. set -e aborts the build on a non-zero exit.
+echo "── typecheck gate (unbound symbols) ──"
+node scripts/check-unbound-symbols.mjs
+
 echo "── baseball install + build ──"
 ( cd baseball && npm install --no-audit --no-fund && npm run build )
 

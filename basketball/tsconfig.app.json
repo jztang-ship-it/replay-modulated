@@ -24,5 +24,5 @@
     }
   },
   "include": ["src", "../shared"],
-  "exclude": ["src/utils/culture_update.ts", "src/utils/culture_review.ts"]
+  "exclude": ["src/utils/culture_update.ts", "src/utils/culture_review.ts", "src/utils/culture_pilot_review.ts"]
 }
