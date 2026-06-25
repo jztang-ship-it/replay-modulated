@@ -43,7 +43,7 @@
  * See docs/storage-keys-audit.md for the full enumeration.
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
 import type { PlayerCard } from "@shared/types";
 import { getPlayerUid, getNickname, getSessionId } from "@shared/utils/playerIdentity";
@@ -306,6 +306,31 @@ export function useSharedGameState(
   // premise. See docs/h2h-reveal-arc-design.md "handId threading fix".
   const currentHandIdRef = useRef<string | null>(null);
 
+  // B-lite (auth-race close): auth-verified state kept fresh OFF the hand path so
+  // logHandToDb can read it SYNCHRONOUSLY. Previously logHandToDb did
+  // `await supabase.auth.getSession()` INSIDE the bounded persist that gates the
+  // charge — a slow auth refresh flipped the charge gate (persist times out →
+  // entry_fee_skipped → no charge). Sourcing `verified` from this ref removes the
+  // only auth await from the gated path while the hand_log INSERT stays inside the
+  // bound (record-before-money invariant preserved). Seed once + subscribe; clean
+  // up on unmount. Defensive: auth is never allowed to throw into the hand path
+  // (mirrors AuthProvider; the test supabase mock returns a no-op subscription).
+  const verifiedRef = useRef(false);
+  useEffect(() => {
+    let active = true;
+    let unsubscribe: (() => void) | undefined;
+    try {
+      supabase.auth.getSession()
+        .then(({ data: { session } }) => { if (active) verifiedRef.current = !!session?.access_token; })
+        .catch(() => { /* keep prior value */ });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        verifiedRef.current = !!session?.access_token;
+      });
+      unsubscribe = () => subscription.unsubscribe();
+    } catch { /* auth never blanks the hand path */ }
+    return () => { active = false; try { unsubscribe?.(); } catch { /* ignore */ } };
+  }, []);
+
   const logHandToDb = useCallback(async (
     rosterArg: any[],
     totalFp: number,
@@ -327,8 +352,11 @@ export function useSharedGameState(
       const rosterIds = rosterArg
         .map((c: any) => String(c.basePlayerId ?? ""))
         .filter(Boolean);
-      const { data: { session } } = await supabase.auth.getSession();
-      const verified = !!session?.access_token;
+      // B-lite: read auth-verified SYNCHRONOUSLY from the off-hand-path ref — NO
+      // getSession await inside the charge-gating bounded persist (closes the
+      // parked auth-race). The insert below still awaits within the bound, so
+      // record-before-money holds.
+      const verified = verifiedRef.current;
       // final_roster: GeneratedCard-shaped per-card resolved data, populated
       // on every hand from 2026-05-26 forward. Consumed by the H2H reveal
       // arc data path (GET /api/challenge/{id}/sender-hand). Pre-cutover
