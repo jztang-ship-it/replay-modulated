@@ -1546,7 +1546,11 @@ export function GameBar({
     if (!showCelebContent || !onWinCelebrationComplete) return;
     if (celebFlying) return;
     const payout = celebration?.payout ?? 0;
-    if (payout > 0) {
+    // Economy-display gate: the gold coin-fly is an economy visual. When the
+    // economy is display-suppressed (basketball F2P), tapping the celebration
+    // just dismisses — no coin-fly. Payout still computes (seam untouched); this
+    // only silences the output. economyEnabled-ON sports are unchanged.
+    if (payout > 0 && economyEnabled) {
       setTapOrigin({ x: e.clientX, y: e.clientY });
       setCelebFlying(true);
       setTimeout(() => {
