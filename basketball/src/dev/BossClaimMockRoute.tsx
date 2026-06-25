@@ -20,7 +20,7 @@ import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types";
 import { h2hArcRenderer, h2hOverlayRenderer } from "../views/GameView";
 import { calculateWinTier } from "../utils/payoutLogic";
-import { SENDER_HAND, RECIPIENT_HAND } from "./h2hMockFixture";
+import { RECIPIENT_HAND } from "./h2hMockFixture";
 
 const MOCK_BOSS_CHALLENGE_ID = "dev-mock-boss-claim";
 // Drives the card's {team} token via split("-")[0] → "PHX". Any authoritative
@@ -28,24 +28,41 @@ const MOCK_BOSS_CHALLENGE_ID = "dev-mock-boss-claim";
 // example boss → the card reads "PHX down."
 const MOCK_BOSS_IDENTITY_ID = "PHX-0607";
 
-/** Boss-flavored ChallengeCtx — recipient (154) beats the boss target (152) so
- *  the inline live-win is true; resolvedSenderHand carries the boss five for the
- *  battlefield reveal; senderKind:"boss" + bossIdentityId gate the claim card. */
+// The REAL boss data shape: the baked revealedFive, RAW — no cardId / wasHeld /
+// actualFp / projectedFp (exactly what api/.../sender-hand.ts:62 returns for a
+// boss). This is the deterministic repro for the opponent-card misrender: with
+// the source fix, H2HRecipientReveal resolves identity onto these and the
+// opponent strip renders five distinct cards; without it, all five key to
+// undefined and collapse. (h2hMockFixture's SENDER_HAND carries cardId already,
+// so it papers the bug — hence the inline raw five here.)
+const PHX_0607_REVEALED_FIVE = [
+  { basePlayerId: "1890", name: "Shawn Marion", pos: "SF", salary: 54, tier: "PURPLE", fp: 28.3 },
+  { basePlayerId: "1952", name: "Raja Bell", pos: "PG", salary: 33, tier: "BLUE", fp: 11.7 },
+  { basePlayerId: "959", name: "Steve Nash", pos: "PG", salary: 55, tier: "PURPLE", fp: 35 },
+  { basePlayerId: "2405", name: "Amar'e Stoudemire", pos: "PF", salary: 51, tier: "PURPLE", fp: 18.6 },
+  { basePlayerId: "2571", name: "Leandro Barbosa", pos: "PG", salary: 41, tier: "BLUE", fp: 15.7 },
+];
+const PHX_0607_TARGET = 109.3; // = sum of the five fps (the baked target)
+
+/** Boss-flavored ChallengeCtx — recipient (154) beats the boss target (109.3) so
+ *  the inline live-win is true; resolvedSenderHand carries the RAW boss five
+ *  (no cardId — the real shape) for the battlefield reveal; senderKind:"boss" +
+ *  bossIdentityId gate the claim card. */
 function buildBossCtx(): ChallengeCtx {
   return {
     challengeId: MOCK_BOSS_CHALLENGE_ID,
     initialRoster: RECIPIENT_HAND.cards as unknown as GeneratedCard[],
-    targetScore: SENDER_HAND.totalFp,        // 152 — recipient 154 wins
+    targetScore: PHX_0607_TARGET,            // 109.3 — recipient 154 wins
     challengerName: "Seven Seconds or Less", // boss display name
     sport: "basketball",
     season: "0607",
     senderKind: "boss",
     bossIdentityId: MOCK_BOSS_IDENTITY_ID,
     resolvedSenderHand: {
-      handId: SENDER_HAND.handId,
-      totalFp: SENDER_HAND.totalFp,
-      tier: SENDER_HAND.tier,
-      cards: SENDER_HAND.cards as unknown as GeneratedCard[],
+      handId: MOCK_BOSS_CHALLENGE_ID,
+      totalFp: PHX_0607_TARGET,
+      tier: null as unknown as string,       // boss sender-hand returns tier:null
+      cards: PHX_0607_REVEALED_FIVE as unknown as GeneratedCard[],
     },
   };
 }
@@ -64,7 +81,7 @@ export default function BossClaimMockRoute() {
   }, []);
 
   const ctx = buildBossCtx();
-  const myScore = RECIPIENT_HAND.totalFp; // 154 ≥ 152 target → inline live-win
+  const myScore = RECIPIENT_HAND.totalFp; // 154 ≥ 109.3 target → inline live-win
 
   return (
     <H2HRecipientReveal
