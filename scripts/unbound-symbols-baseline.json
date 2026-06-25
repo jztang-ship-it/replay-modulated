@@ -1,0 +1,15 @@
+{
+  "_note": "Pre-existing non-test TS2304 'Cannot find name' (unbound symbol) errors, baselined so scripts/check-unbound-symbols.mjs fails ONLY on NEW ones. This gate would have caught the logHandToDb bug (an unbound value reference esbuild ships and the spy-tested round machine never exercised). FIX an entry and delete it from this list. The codebase also carries ~48 other pre-existing non-test type errors (TS2322/TS18048/etc.) that a full tsc gate would surface — out of scope for this gate, which targets only the unbound-symbol class.",
+  "allow": [
+    {
+      "file": "shared/commentary/selectCommentary.ts",
+      "symbol": "CommentaryRosterCard",
+      "note": "TYPE-ONLY — used in parameter type annotations (erased by esbuild); missing type import, harmless at runtime."
+    },
+    {
+      "file": "shared/components/useH2HReveal.ts",
+      "symbol": "newSenderTotal",
+      "note": "SUSPECTED REAL BUG — value reference (senderTotal: newSenderTotal passed to onArcResolved at the H2H final-matchup). Same class as the logHandToDb fix: at runtime this is a ReferenceError / undefined senderTotal on the boss/challenge reveal arc. Needs its own recon — NOT fixed in this brief."
+    }
+  ]
+}
