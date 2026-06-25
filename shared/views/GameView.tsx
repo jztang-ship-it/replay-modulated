@@ -504,6 +504,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     incrementHandCount,
     newlyUnlockedAchievements,
     clearNewlyUnlockedAchievements,
+    // Lock-time hand_log persist (sets currentHandIdRef, writes the audit row).
+    // Referenced by persistLock at the commitRound seam (~:1944); the binding was
+    // lost from this destructure, orphaning that call (esbuild ships unbound names;
+    // the spy-tested round machine never invoked the real wiring) — so every hand
+    // threw a swallowed ReferenceError: no handId, no hand_log row, entry_fee_skipped.
+    logHandToDb,
   } = shared;
 
   const {
