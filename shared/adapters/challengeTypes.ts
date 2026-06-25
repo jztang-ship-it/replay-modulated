@@ -69,6 +69,13 @@ export interface ChallengeCtx {
    *  flows through challengerName distinguished ONLY by this marker;
    *  isRealName stays the untouched player-name gate. */
   senderKind?: "player" | "boss";
+  /** Boss claim-prompt (2026-06-26): the boss bank id (e.g. "DET-0304") from the
+   *  GET response's boss_identity_id, threaded at the accept boundary exactly like
+   *  senderKind. The post-win claim card derives its team token via
+   *  bossIdentityId.split("-")[0] (the authoritative {TEAM}-{YYYY} convention,
+   *  same as BossScreen). Optional — undefined on human challenges and legacy boss
+   *  rows; the claim card no-ops without it. */
+  bossIdentityId?: string;
   /** Phase 2-mount Step 1 (2026-06-21): the recipient's starting-roster
    *  source. Undefined / "inherit" = the human shared-start (recipient is
    *  dealt the sender's five — the default). "draft-fresh" = Interpretation 3
