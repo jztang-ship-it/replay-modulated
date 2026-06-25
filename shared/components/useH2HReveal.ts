@@ -916,7 +916,14 @@ export function useH2HReveal(args: UseH2HRevealArgs): UseH2HRevealReturn {
                 // End-hold complete — settle to "done" and fire onArcResolved.
                 setPhase("done");
                 onArcResolvedRef.current?.({
-                  senderTotal: newSenderTotal,
+                  // RD3-C: JOHN/sender is a constant fixed bar at sender.totalFp
+                  // through the whole arc (mirrors the per-matchup callback above).
+                  // RD3-C deleted the accumulating sender running-total and updated
+                  // the other two references but missed this one, leaving an unbound
+                  // orphan here — inert in prod (real surfaces don't pass
+                  // onArcResolved, so the optional call short-circuits the arg) but a
+                  // throw the moment the auth track wires onArcResolved for timing.
+                  senderTotal: sender.totalFp,
                   recipientTotal: newRecipientTotal,
                 });
               }

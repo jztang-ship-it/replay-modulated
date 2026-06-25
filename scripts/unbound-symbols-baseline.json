@@ -5,11 +5,6 @@
       "file": "shared/commentary/selectCommentary.ts",
       "symbol": "CommentaryRosterCard",
       "note": "TYPE-ONLY — used in parameter type annotations (erased by esbuild); missing type import, harmless at runtime."
-    },
-    {
-      "file": "shared/components/useH2HReveal.ts",
-      "symbol": "newSenderTotal",
-      "note": "SUSPECTED REAL BUG — value reference (senderTotal: newSenderTotal passed to onArcResolved at the H2H final-matchup). Same class as the logHandToDb fix: at runtime this is a ReferenceError / undefined senderTotal on the boss/challenge reveal arc. Needs its own recon — NOT fixed in this brief."
     }
   ]
 }
