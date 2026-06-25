@@ -168,7 +168,26 @@ function H2HRecipientRevealInner(props: InnerProps) {
     handId: senderResolved.handId,
     totalFp: senderResolved.totalFp,
     tier: senderResolved.tier as H2HHand["tier"],
-    cards: senderResolved.cards as unknown as H2HCard[],
+    // Boss sender cards arrive as the raw baked revealedFive — no cardId /
+    // wasHeld / actualFp / projectedFp. Without identity, all five share
+    // key={undefined}: HandStrip collapses them, the cardId-keyed reveal maps
+    // (visibleFpMap / revealedCardIds / stageIndexByCardId / activeCardId)
+    // cross-feed, the entrance never fires (no per-card stage), and !wasHeld
+    // paints a SWAP pill on every boss card. Resolve identity here at the source.
+    // Assign-if-missing: human resolved sender hands already carry all four, so
+    // this is a no-op for them. cardId minted with a positional suffix so
+    // uniqueness is guaranteed at the source regardless of bank content.
+    cards: senderResolved.cards.map((c, i) => {
+      const card = c as unknown as Record<string, unknown>;
+      const fp = Number(card.fp ?? card.actualFp ?? 0);
+      return {
+        ...card,
+        cardId: card.cardId ?? `${String(card.basePlayerId ?? "boss")}-boss-${i}`,
+        wasHeld: card.wasHeld ?? false,
+        actualFp: card.actualFp ?? fp,
+        projectedFp: card.projectedFp ?? fp,
+      };
+    }) as unknown as H2HCard[],
     displayName: namedChallenger ?? "your friend",
   }), [senderResolved, namedChallenger]);
 
