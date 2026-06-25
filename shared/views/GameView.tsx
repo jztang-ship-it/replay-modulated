@@ -524,7 +524,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     weeklyTaskStates,
     perpetualTaskStates,
     recordLeaderboardViewed,
-  } = useEngagement();
+  } = useEngagement({ economyEnabled: adapter.economyEnabled ?? true });
 
   // ── UI / modal state (lifted from per-sport in Task 5) ────────────
   const [showCollect, setShowCollect] = useState(false);
@@ -1921,7 +1921,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           return { totalFp, tier: String(t), payout: (calculatePayoutWithStreak as any)(t, fee, strk) };
         },
         effects: {
-          telemetry: (ev, meta) => track("gameplay", ev, { sport: sportKey, hand_number: handCount, ...(meta ?? {}) }),
+          // Economy-emission gate: mute entry-fee events when the economy is
+          // display-suppressed (basketball). lineup_locked + all other gameplay
+          // events still emit (high-score signal). The seam still CALLS
+          // effects.telemetry; only this injected impl drops the forward — the
+          // commitRound choreography is untouched. economy-ON sports unchanged.
+          telemetry: (ev, meta) => {
+            if (!economyEnabled && (ev === "entry_fee_committed" || ev === "entry_fee_skipped")) return;
+            track("gameplay", ev, { sport: sportKey, hand_number: handCount, ...(meta ?? {}) });
+          },
           persistLock: (rec) => {
             const handId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
               ? crypto.randomUUID()
@@ -3067,6 +3075,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                         coins={coins}
                         xp={xp}
                         streakCount={streakCount}
+                        economyEnabled={economyEnabled}
                         bonusPlayers={bonusPlayers}
                         onViewLeaderboard={() => {
                           setShowCollect(false);

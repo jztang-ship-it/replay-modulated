@@ -178,7 +178,14 @@ function buildFullProgress(
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
-export function useEngagement(): EngagementState & EngagementActions {
+export function useEngagement(
+  opts?: { economyEnabled?: boolean },
+): EngagementState & EngagementActions {
+  // economyEnabled gates the COIN payload on engagement telemetry only — the
+  // engagement signal (task_completed) still fires for high-score products, just
+  // without the reward_coins value. Defaults true so economy-ON sports (and any
+  // caller that doesn't pass it) keep the full payload, unchanged.
+  const economyEnabled = opts?.economyEnabled ?? true;
   const todayKey = todayStr();
 
   const [loginStreak, setLoginStreak] = useState<number>(() =>
@@ -340,7 +347,9 @@ export function useEngagement(): EngagementState & EngagementActions {
         coinsEarned += task.rewardCoins;
         xpEarned    += task.rewardCoins;
         changed      = true;
-        track("engagement", "task_completed", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
+        track("engagement", "task_completed", economyEnabled
+          ? { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins }
+          : { task_id: task.id, cadence: task.cadence });
       }
     }
 
@@ -351,7 +360,9 @@ export function useEngagement(): EngagementState & EngagementActions {
         newlyDone.add(task.id);
         changed = true;
         // No coinsEarned — perpetual rewards are collected manually
-        track("engagement", "task_completed", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
+        track("engagement", "task_completed", economyEnabled
+          ? { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins }
+          : { task_id: task.id, cadence: task.cadence });
       }
     }
 

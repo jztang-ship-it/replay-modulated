@@ -65,6 +65,11 @@ interface CollectScreenProps {
   bonusPlayers?:        Array<{ name: string; bonus: number }>;
   onViewLeaderboard?:   () => void;
   recordLeaderboardViewed?: () => void;
+  /** When false (economy display-suppressed, e.g. basketball), mute the
+   *  coin-screen telemetry (task_collected, collect_screen_opened) fully — these
+   *  are intrinsically economy events with no high-score signal. Defaults true so
+   *  economy-ON sports are unchanged. */
+  economyEnabled?:      boolean;
 }
 
 // XP tier config — matches XPBar
@@ -333,6 +338,7 @@ export function CollectScreen({
   bonusPlayers,
   onViewLeaderboard,
   recordLeaderboardViewed,
+  economyEnabled = true,
 }: CollectScreenProps) {
   const uncollected = [
     ...taskStates,
@@ -352,6 +358,8 @@ export function CollectScreen({
   }, []);
 
   useEffect(() => {
+    // Coin-screen telemetry — muted fully when the economy is display-suppressed.
+    if (!economyEnabled) return;
     const coinsAvailable = [...taskStates, ...weeklyTaskStates, ...perpetualTaskStates]
       .filter(t => t.progress >= t.target && !t.collected)
       .reduce((sum, t) => sum + (t.rewardCoins ?? 0), 0);
@@ -366,7 +374,8 @@ export function CollectScreen({
 
   function handleCollect(taskId: string) {
     const task = [...taskStates, ...weeklyTaskStates, ...perpetualTaskStates].find(t => t.id === taskId);
-    if (task) {
+    // Coin-screen telemetry — muted fully when the economy is display-suppressed.
+    if (task && economyEnabled) {
       track("engagement", "task_collected", { task_id: task.id, cadence: task.cadence, reward_coins: task.rewardCoins });
     }
     onCollect(taskId);
