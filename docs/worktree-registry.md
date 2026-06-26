@@ -335,18 +335,18 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup).
 - **What it carries:** Boss Surface Consolidation Phase 3 (`docs/boss-surface-consolidation-spec.md`). Step 1 = in-app boss skips the redundant landing render. Step 2 = boss converges onto the unified `ChallengeTakeCardLanding` (internally gated boss-vs-human); `BossLandingView` retired as a render target; the `priorResult → BossOutwardEnding` revisit branch ported in (boss-gated). Interim card = neutral `HandCard` (held/discard gated off); step 3 = the one trimmed card (NOT started). Glass: `/basketball/dev/challenge-landing-mock?case=boss|boss_marquee|boss_revisit`.
 - **Equivalence on main:** fully merged via `88e660da` (steps 1+2). No unique work remains; branch safe to delete (`-d`, not `-D`).
-- **Intent:** SHIPPED — Consolidation Phase 3 steps 1+2. **Step 3 (the one trimmed card) was DROPPED for this ship and is PARKED** (boss renders through the interim neutral `HandCard`; pick up the trimmed card in a future session per `docs/boss-surface-consolidation-spec.md` §(C)).
+- **Intent:** SHIPPED — Consolidation Phase 3 steps 1+2. Step 3 was DROPPED for *this* ship and parked at the time (boss rendered through the interim neutral `HandCard`). **UPDATE 2026-06-27: Step 3 since SHIPPED** as the REAL hub-style card (not the trimmed variant) — merged at `main` `5802fb37`; see the `feat/boss-consolidation-p3-step3 — MERGED + SHIPPED` entry below. The trimmed/frameless card remains PARKED per `docs/boss-surface-consolidation-spec.md` §(C).
 - **Last reviewed:** 2026-06-26 (merged + shipped this session)
 
 ---
 
-### `feat/boss-consolidation-p3-step3` — active-parked (held for glass, do NOT push)
+### `feat/boss-consolidation-p3-step3` — MERGED + SHIPPED (worktree released)
 
-- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-p3-step3`
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-p3-step3` (removed after ship).
 - **Branch HEAD:** Consolidation Phase 3 **Step 3** (real card on the converged cold-link surface), branched off `main` `34d3703d` (= shipped `268c7992` SPA code + the Step-3 spec doc).
-- **Unique commits vs main:** Step 3 (this session). Fresh branch; the prior `feat/boss-consolidation-p3` worktree is REMOVED/closed.
-- **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup).
+- **Unique commits vs main:** none — merged to `main` via `--no-ff` at `5802fb37` (build commit `16c58be7`); branch deleted (`-d`, merged).
+- **Uncommitted state:** `M package-lock.json` only was npm-install drift (not build-needed; tri-sport build ran `npm install` and passed without it) — discarded with the worktree.
 - **What it carries:** the converged `ChallengeTakeCardLanding` boss branch renders REAL boss cards (headshot + FP + tier gradient) via the hub's `renderBossCard` (`h2hArcRenderer`), threaded App → shell → boss branch; reuses BossScreen's map + scaled card-in-slot scaffold verbatim; neutral `HandCard` fallback when the renderer is absent. NO `/api/challenge/{id}` change, NO `CardFront` fork. REAL hub-style card (notch intact) — the trimmed/frameless variant stays PARKED. Spec: `docs/boss-surface-consolidation-spec.md` §"Step-3 build".
-- **Equivalence on main:** none — held, unpushed.
-- **Intent:** held for phone glass on the cold-link real-card render (the surface that fooled us once — render-path divergence isn't caught by JSDOM). Do NOT push until glass passes.
-- **Last reviewed:** 2026-06-27
+- **Equivalence on main:** FULL — merge `5802fb37` carries the entire branch tree (base was `main` `34d3703d`, so merged tree == branch tree).
+- **Ship gate:** `npm test` 1465/1465 green; `scripts/build-vercel.sh` tri-sport green; Vercel deploy `replay-3tljevc3p` (`5802fb37`) **Ready** in production. Rollback rev: `34d3703d`.
+- **Last reviewed:** 2026-06-27 (shipped)
