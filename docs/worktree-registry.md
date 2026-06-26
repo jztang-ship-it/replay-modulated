@@ -327,11 +327,11 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 
 ---
 
-### `feat/boss-consolidation-p3` — mergeable (merged 2026-06-26)
+### `feat/boss-consolidation-p3` — REMOVED (merged + shipped 2026-06-26)
 
-- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-consolidation-p3` (worktree retained until merge confirmed clean; branch safe to `-d` after).
-- **Branch HEAD:** `60e6ae24` (step 2) on top of `5a59e57d` (step 1).
-- **Unique commits vs main:** 0 after merge (was 2: `5a59e57d` step 1 + `60e6ae24` step 2) — both landed on `main` via `--no-ff` merge `88e660da`. **Rollback point = `c5ea9ae0`.**
+- **Path:** ~~`~/Desktop/ReplayMod/.claude/worktrees/feat-boss-consolidation-p3`~~ — worktree removed 2026-06-26; branch `feat/boss-consolidation-p3` deleted (`git branch -d`, was `60e6ae24`; merged-safe, not `-D`).
+- **Branch HEAD (at deletion):** `60e6ae24` (step 2) on top of `5a59e57d` (step 1).
+- **Unique commits vs main:** 0 — both landed on `main` via `--no-ff` merge `88e660da`; shipped at `main` `268c7992`. **Rollback point = `c5ea9ae0`** (Vercel Ready: `dpl_7zhbrwTvC7F41xrGzZzFb7Wm52Cq` / `replay-qkn1qfxba`).
 - **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup).
 - **What it carries:** Boss Surface Consolidation Phase 3 (`docs/boss-surface-consolidation-spec.md`). Step 1 = in-app boss skips the redundant landing render. Step 2 = boss converges onto the unified `ChallengeTakeCardLanding` (internally gated boss-vs-human); `BossLandingView` retired as a render target; the `priorResult → BossOutwardEnding` revisit branch ported in (boss-gated). Interim card = neutral `HandCard` (held/discard gated off); step 3 = the one trimmed card (NOT started). Glass: `/basketball/dev/challenge-landing-mock?case=boss|boss_marquee|boss_revisit`.
 - **Equivalence on main:** fully merged via `88e660da` (steps 1+2). No unique work remains; branch safe to delete (`-d`, not `-D`).
