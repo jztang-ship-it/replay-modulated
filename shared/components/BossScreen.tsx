@@ -31,6 +31,9 @@ import bossStories from "@shared/data/bossStories.generated.json";
 import { getTier, TIER_POSITION_TEXT, type TierKey } from "@shared/theme";
 // Shared "0304" → "03-04" formatter (values-only; not CardFront's private copy).
 import { formatSeasonRange } from "@shared/utils/seasonRange";
+// Returning-player win-state — the SAME local key BossLandingView reads. Additive
+// display over existing data (no new fetch); getBossResult was previously ungrepped here.
+import { getBossResult, type BossResult } from "@shared/utils/bossResultMemory";
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
@@ -168,6 +171,10 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [boss, setBoss] = useState<BossInfo | null>(null);
+  // Returning-player result for THIS boss (won/score), read from the same local
+  // key BossLandingView uses. Sync localStorage read on the prop id — no fetch.
+  const [bossResult, setBossResult] = useState<BossResult | null>(null);
+  useEffect(() => { setBossResult(getBossResult(bossChallengeId)); }, [bossChallengeId]);
   const sessId = typeof localStorage !== "undefined" ? localStorage.getItem("rm_session_id") : null;
 
   // Leaderboard (board=boss — endpoint unchanged). Top 10.
@@ -286,9 +293,25 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
             <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(234,240,255,0.6)" }}>{bossPlayerCount.toLocaleString()} players have tried</div>
           ) : null}
           {boss?.target != null && (
-            <div style={{ fontSize: 13, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, marginTop: 8 }}>
-              Target: {boss.target.toFixed(1)}
-            </div>
+            <>
+              {/* Line 1 — standalone target to beat (always shown, first-timer + returner). */}
+              <div style={{ fontSize: 13, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, marginTop: 8 }}>
+                Target to beat: {boss.target.toFixed(1)}
+              </div>
+              {/* Line 2 — returning-player verdict + score, BELOW the target. Verdict
+                  copy matches BossOutwardEnding.tsx:74 verbatim (one voice across the
+                  hub + interstitial). Separate from the leaderboard rank (a distinct
+                  ahead-of-humans signal) — that section stays untouched. */}
+              {bossResult && (
+                <div
+                  data-testid="boss-verdict"
+                  data-won={bossResult.won ? "true" : "false"}
+                  style={{ fontSize: 13, fontWeight: 900, letterSpacing: 0.6, textTransform: "uppercase", color: bossResult.won ? "#4ADE80" : "#FF6B6B", marginTop: 4 }}
+                >
+                  {(bossResult.won ? "YOU BEAT TODAY'S BOSS" : "TODAY'S BOSS GOT YOU")} · {bossResult.score.toFixed(1)}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -314,7 +337,7 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
               fontWeight: 950, fontSize: 14, letterSpacing: 0.8, textTransform: "uppercase",
             }}
           >
-            Take the Boss
+            {bossResult ? "Play Again" : "Take the Boss"}
           </a>
         ) : (
           <div style={{ margin: "16px 16px 6px", padding: "12px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", textAlign: "center", fontSize: 13, fontWeight: 700, color: "rgba(234,240,255,0.7)" }}>
