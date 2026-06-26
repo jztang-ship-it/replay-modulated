@@ -57,22 +57,78 @@ The `BossLineupReveal` + adapter + count-up from `feat/boss-target-reveal-p1` ar
 
 ---
 
-## Consolidation Phase 2 — make the landing a non-destination (PROVISIONAL, own confirm)
+## Consolidation Phase 3 — converge boss onto the unified challenge surface (LOCKED 2026-06-26, recon-confirmed)
 
-The hub already owns leaderboard + rank + Target + CTA. The remaining consolidation is making `BossLandingView` **not experienced as a separate screen**: TAKE THE BOSS runs the accept→deal plumbing and lands the user in play, with the landing's now-redundant pre-play framing suppressed. **Behavior unchanged — only the landing's role as a visible destination is removed.** The 4-orphan risk checklist (below) applies here: each must survive the landing becoming non-destination. DETAILS TBD under the doc→confirm protocol.
+**This supersedes the prior provisional Phase 2 ("non-destination") + Phase 3 ("one-screen coherence") sections — they are folded into this one locked Phase 3.** Consolidation namespace — NOT Delivery Phase 3.
 
-**Risk checklist (the 4 red orphans — must each survive Phase 2):**
-- [ ] **accept→deal flow** intact: TAKE THE BOSS still reaches `dealFreshRoster(exclude five)` → `acceptProceed` → `H2HRecipientPlay` + degrade fallback + ref-token (`App.tsx:673-705`).
-- [ ] **share loop** intact: Challenge Someone / Copy Link (win-only) + telemetry + `/challenge/{bossId}` share-URL generation (still in the post-play `BossOutwardEnding`).
-- [ ] **`/challenge/{bossId}` external-link contract**: a COLD external shared link still lands on the boss flow.
-- [ ] **Play Again re-deal**: re-deals a fresh five (excl. boss), not a replay/dead-end.
-- [ ] marquee/tough_day framing carried; attempted-signal reconciled onto `getBossResult`.
+### Decision (recon-overturned)
+`ChallengeLandingScreen` is a **3-branch shell** (`SelfMatchView` / `BossLandingView` / `ChallengeTakeCardLanding`) serving boss, friend, and self-match — all off the same `/challenge/{id}` route + cold-link contract. **Phase 3 does NOT retire the shell.**
 
----
+**Core model: a boss challenge IS a friend challenge whose opponent is a boss. Both run on ONE framework.** Human-vs-human challenge UX is **TABLED** — build the framework to support it, but only boss is active now.
 
-## Consolidation Phase 3 — one-screen social/post-play coherence (PROVISIONAL, TBD)
+Phase 3 =
+- **(A)** in-app boss **skips the redundant landing render** (hub routes through deal-flow direct);
+- **(B)** boss **converges onto the unified take-card framework**, internally gated boss-vs-human; `BossLandingView` **retired as a render target** (its boss-only elements port + gate in);
+- **(C)** **ONE trimmed card** for both surfaces (boss + friend), replacing plain chips AND `HandCard`.
 
-With the hub as the front door and the landing as plumbing, Phase 3 ensures the social/post-play surfaces (result + share loop + Play-Again + leaderboard) read as ONE coherent experience rather than scattered. **No hub retirement** (that was the old direction). Definition pending its own doc→confirm.
+Cold external `/challenge/{bossId}` links **STILL land on a rendered surface** (the unified take-card surface) — NOT retired. Only **IN-APP** traffic stops rendering a landing.
+
+### Orphan ownership (recon-confirmed)
+- **accept→deal flow:** App.onAccept boss branch + shell `handleAccept` ctx. **SURVIVES FREE.**
+- **in-play share loop / in-play Play-Again:** App/reveal-bound. **SURVIVE FREE.**
+- **cold-link `/challenge/{bossId}`:** shell-resolved; convergence only changes which component the shell renders for boss. **SURVIVES FREE.**
+- **ONLY landing-render-bound piece:** `priorResult` → `BossOutwardEnding` revisit branch (`ChallengeLandingScreen.tsx:468-484`, carries landing share-loop entry + landing Play-Again). **MUST PORT** into the unified surface (boss-gated).
+
+### Boss-vs-human gating (the merged surface branches internally)
+- **name:** boss verbatim (bypass `isRealName`) | human `isRealName` downgrade
+- **headline:** boss authored `share_headline` | human `pickHeadlineAndCta` trigger banks
+- **card treatment:** boss has NO "held" concept | human held/discard
+- **boss-only:** eyebrow ("Daily Boss · Tough Day") + marquee label ("Brutal by Design", gated)
+- **revisit branch** (returning winner: share loop + Play Again) — **boss only**
+- Downstream readers key on `ctx.senderKind` (Reveal `H2HRecipientReveal:396` / Play `H2HRecipientPlay:1083` / App `App.tsx:254/400/677`), **NOT surface identity** — merge does not change `ctx.senderKind`, so a correctly-gated merge cannot regress friend/self-match.
+
+### Seams to preserve on the in-app hub-direct path (must not drop)
+- **telemetry:** `challenge_link_open`, `challenge_accept`, `challenge_attempt_start`
+- **`?ref` referral attribution** (`getRefToken` at `acceptProceed`) — load-bearing on cold links
+- **`SKIP_LANDING_KEY` / `skipReel`** session side-effects (inherited via `acceptProceed` — confirm)
+- **hub-direct path must route the HUB-RESOLVED TODAY id** (`bossEntry.bossChallengeId` from `useBossEntry`) — the GET `/challenge/[id]` has no today-guard, serves baked target verbatim — do NOT route a stale id
+
+### (C) Trimmed card spec — the parked card, now greenlit
+- Bespoke, **REUSES CardFront tokens** (`getTier` / TIER colors / headshot / FP). **NO CardFront fork, NO added props, NO refactor.** Precedent: `HandCard` already reuses CardFront tokens (incl. the H-badge glyph) without forking.
+- Built at **CORRECT PROPORTION** (a real rectangle). NOT a clip-crop — the prior clip-crop SQUASHED the card and was reverted. Proportioned build is the fix.
+- **Remove:** top notch / special-card shape; bottom empty color strip (under the black name strip).
+- **Keep:** black name strip (name-left / FP-right).
+- **Smaller** than the normal-game card.
+- **Content:** headshot, tier-color background, name, FP.
+- **ONE component** serves boss + friend (replaces plain chips AND `HandCard`).
+- Built **LAST**. Glass-gated. NOT live-iterated in chat — adjust via glass only.
+
+### DO-NOT-TOUCH (this phase)
+`CardFront` (no fork/props/refactor). `SelfMatchView` + human take-card behavior (no regression). `ctx.senderKind` downstream branching. The 4 orphans' App/shell-bound parts. Boss-target invariant. Money seam. Canonical boss resolver.
+
+### Build order + glass gates (each step holds for glass before the next)
+1. **Routing convergence.** GLASS: in-app boss tap drops straight into the game (no mid-page); cold `/challenge/{bossId}` link still renders a framed surface.
+2. **Surface merge** (boss gates into the unified framework; revisit branch ported; `BossLandingView` retired as render target). GLASS: boss cold-link shows name verbatim + authored headline + eyebrow/marquee + target line + NO held treatment; human challenge unchanged; self-match unchanged; returning winner shows share loop + Play Again.
+3. **Trimmed card** on both surfaces. GLASS: proportioned (not squashed), no notch, no bottom strip, black name strip kept, headshot+FP+tier color, smaller; verified on boss AND human.
+
+### Step-1 wiring seam (implementation, this build)
+In-app, no full-page nav (satisfies "no mid-page"); reuses the data the hub ALREADY fetched (no second fetch / no veil flash):
+- **shared `ChallengeLandingScreen`:** extract+export `buildChallengeCtx(data, { deserializeRoster, validateRosterSnapshot })` from `handleAccept`'s ctx-build. `handleAccept` calls it — cold path byte-identical (its `track()` calls stay inline).
+- **shared `BossScreen`:** retain the raw GET row (ref) from its existing fetch; add `onTakeBoss?: (raw) => void` prop. CTA renders a `<button onClick={() => onTakeBoss(raw)}>` when `onTakeBoss` is provided, else the existing `<a href>` (cold/other-sports fallback).
+- **shared `GameView`:** add `onTakeBoss?` prop; pass to `BossScreen`.
+- **basketball `GameView` wrapper:** thread `onTakeBoss` from App to shared `GameView`.
+- **basketball `App`:** extract the inline `ChallengeLandingScreen.onAccept` body into a named `handleChallengeAccept(ctx)` (cold path byte-identical); add an `onTakeBoss(raw)` handler that fires the 3 preserved `track()` events + `buildChallengeCtx(raw)` + `handleChallengeAccept(ctx)`; pass `onTakeBoss` to the GameView wrapper. The boss accept reuses the existing `senderKind==="boss"` branch (`dealFreshRoster` exclude five → `acceptProceed`) — no new deal logic.
+- Today-id: `onTakeBoss` is fed `bossEntry.bossChallengeId`'s resolved row (the hub's own fetch), never a stale id. **No render of `BossLandingView`/take-card on the in-app path.** Cold link unchanged.
+
+**Step-1 verification checklist (walk at completion):**
+- [ ] in-app boss CTA invokes `onTakeBoss` (no `<a href>` nav) → deal-flow direct
+- [ ] cold `/challenge/{bossId}` still renders `ChallengeLandingScreen` (BossLandingView this step; unchanged)
+- [ ] telemetry on in-app path: `challenge_link_open` + `challenge_accept` + `challenge_attempt_start` all fire
+- [ ] `?ref` capture preserved (acceptProceed `getRefToken`) on the in-app path
+- [ ] `SKIP_LANDING_KEY` set on accept (inherited via acceptProceed)
+- [ ] boss accept routes the hub-resolved TODAY id (not stale)
+- [ ] human + self-match cold paths byte-identical (extraction is pure)
+- [ ] `npm test` green; basketball build green
 
 ---
 

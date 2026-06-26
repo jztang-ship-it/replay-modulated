@@ -75,6 +75,13 @@ interface Props {
    *  fully self-contained (no backend, glassable under plain `vite`). */
   __devBoss?: BossInfo;
   __devEntries?: Entry[];
+  /** Consolidation Phase 3 step 1 — in-app boss-direct accept. When provided,
+   *  the TAKE THE BOSS CTA fires this with the raw GET row (the hub's OWN fetch)
+   *  instead of full-page-navigating to /challenge/{id}, so the in-app path skips
+   *  the redundant landing render. App builds the ctx (buildChallengeCtx) and runs
+   *  the existing boss accept. Absent (cold-link safety / other sports / dev mock)
+   *  → the CTA stays the <a href> nav. */
+  onTakeBoss?: (raw: unknown) => void;
   onClose: () => void;
 }
 
@@ -183,10 +190,16 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
   );
 }
 
-export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, headshotUrl, renderBossCard, __devBoss, __devEntries, onClose }: Props) {
+export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, headshotUrl, renderBossCard, __devBoss, __devEntries, onTakeBoss, onClose }: Props) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [boss, setBoss] = useState<BossInfo | null>(null);
+  // Raw GET row retained for the in-app boss-direct accept (Phase 3 step 1). The
+  // hub already fetches /api/challenge/{id} for the lineup/target; keeping the
+  // raw row lets onTakeBoss build the SAME ctx the cold landing does — no second
+  // fetch, no veil. State (not a ref) so the CTA re-renders into the in-app button
+  // once the row lands. null until the fetch resolves (CTA falls back to href).
+  const [rawData, setRawData] = useState<unknown>(null);
   // Returning-player result for THIS boss (won/score), read from the same local
   // key BossLandingView uses. Sync localStorage read on the prop id — no fetch.
   const [bossResult, setBossResult] = useState<BossResult | null>(null);
@@ -234,6 +247,7 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
       .catch(() => null)
       .then((d) => {
         if (cancelled || !d) return;
+        setRawData(d);  // retain for in-app onTakeBoss (Phase 3 step 1)
         const rawCards = (d.initial_roster && (d.initial_roster as any).cards) || [];
         const cards: LineupCard[] = Array.isArray(rawCards)
           ? rawCards.slice(0, 5).map((c: any) => ({
@@ -389,7 +403,24 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
         )}
 
         {/* 5 — CTA: TAKE THE BOSS (centered, content-width) */}
-        {href ? (
+        {/* In-app boss-direct (Phase 3 step 1): when onTakeBoss is wired AND the
+            hub's own row has landed, the CTA fires the deal-flow directly (no
+            full-page nav → no redundant landing render). Cold links / other
+            sports / the dev mock have no onTakeBoss → the <a href> nav stays. */}
+        {onTakeBoss && rawData ? (
+          <button
+            data-testid="boss-take-cta"
+            onClick={() => onTakeBoss(rawData)}
+            style={{
+              margin: "16px 0 6px", padding: "11px 28px", borderRadius: 12,
+              background: "#FFB14A", color: "#070A12", border: "none", cursor: "pointer",
+              fontWeight: 950, fontSize: 14, letterSpacing: 0.8, textTransform: "uppercase",
+              fontFamily: "inherit",
+            }}
+          >
+            {bossResult ? "Play Again" : "Take the Boss"}
+          </button>
+        ) : href ? (
           <a
             data-testid="boss-take-cta"
             href={href}

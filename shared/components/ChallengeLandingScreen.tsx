@@ -19,7 +19,7 @@ import { ChallengeTakeCardLanding } from "./ChallengeTakeCardLanding";
 import { getBossResult } from "@shared/utils/bossResultMemory";
 import { BossOutwardEnding } from "./BossOutwardEnding";
 
-interface ChallengeData {
+export interface ChallengeData {
   challenge_id: string;
   /** Challenger's auth user_id. Used to detect self-match — when the
    *  current viewer is the original challenger, we render an alternate
@@ -63,6 +63,42 @@ interface ChallengeData {
    *  field). The take-card-landing's TAKE renders this when present
    *  and falls back to takeCard.take otherwise. */
   authored_headline?: string | null;
+}
+
+/**
+ * Build the recipient-side ChallengeCtx from a fetched challenge row. Extracted
+ * from handleAccept (Consolidation Phase 3 step 1) so the IN-APP boss-direct
+ * path (BossScreen.onTakeBoss → App) builds the SAME ctx the cold landing does,
+ * without duplicating the field map. PURE — no telemetry, no state. Returns null
+ * when the roster snapshot is invalid (caller surfaces the error / degrades).
+ * The cold landing's handleAccept keeps its track() calls inline so its behavior
+ * is byte-identical; only the field map moves here.
+ */
+export function buildChallengeCtx(
+  data: ChallengeData,
+  deps: {
+    deserializeRoster: (snapshot: Record<string, unknown>) => GeneratedCard[];
+    validateRosterSnapshot: (snapshot: Record<string, unknown>) => boolean;
+  },
+): ChallengeCtx | null {
+  if (!deps.validateRosterSnapshot(data.initial_roster)) return null;
+  const initialRoster = deps.deserializeRoster(data.initial_roster);
+  return {
+    challengeId: data.challenge_id,
+    initialRoster,
+    targetScore: data.target_score,
+    challengerName: data.challenger_name,
+    sport: data.sport,
+    season: data.season,
+    triggerType: normalizeTriggerType(data.trigger_type),
+    nearMissGap: data.near_miss_gap ?? null,
+    nearMissNextTier: data.near_miss_next_tier ?? null,
+    anchorBasePlayerId: data.anchor_base_player_id ?? null,
+    topGameTier: data.top_game_tier ?? null,
+    senderKind: normalizeSenderKind(data.sender_kind),
+    bossIdentityId: data.boss_identity_id ?? undefined,
+    marquee: (data.initial_roster as { marquee?: boolean } | null)?.marquee === true,
+  };
 }
 
 interface Props {
@@ -129,46 +165,16 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
 
   function handleAccept() {
     if (!data) return;
-    if (!validateRosterSnapshot(data.initial_roster)) {
+    // Field map extracted to buildChallengeCtx (Phase 3 step 1) — shared with
+    // the in-app boss-direct path. null ⇒ invalid snapshot (same guard as before).
+    const ctx = buildChallengeCtx(data, { deserializeRoster, validateRosterSnapshot });
+    if (!ctx) {
       setError("Invalid challenge data. It may have expired.");
       return;
     }
-    const initialRoster = deserializeRoster(data.initial_roster);
     track("challenges", "challenge_accept", { challenge_id: challengeId, sport });
     track("challenges", "challenge_attempt_start", { challenge_id: challengeId, sport });
-    onAccept({
-      challengeId: data.challenge_id,
-      initialRoster,
-      targetScore: data.target_score,
-      challengerName: data.challenger_name,
-      sport: data.sport,
-      season: data.season,
-      // Phase 5c S1 (2026-05-31): thread trigger-detail through to the
-      // recipient flow. All optional/null-safe — the recipient intro
-      // selector handles null values via per-trigger generic fallback.
-      //
-      // Phase 1 trigger split (2026-06-03): legacy stored rows say
-      // "bad_beat"; normalizeTriggerType aliases that to "choke" at this
-      // single read boundary so every recipient-side branch downstream
-      // sees the renamed key. See challengeTypes.normalizeTriggerType.
-      triggerType: normalizeTriggerType(data.trigger_type),
-      nearMissGap: data.near_miss_gap ?? null,
-      nearMissNextTier: data.near_miss_next_tier ?? null,
-      anchorBasePlayerId: data.anchor_base_player_id ?? null,
-      topGameTier: data.top_game_tier ?? null,
-      // Phase 2 boss delivery (2026-06-21): thread the sender marker through
-      // so the play/comparison flow knows this is a boss target. Normalized
-      // at this single read boundary, same pattern as triggerType.
-      senderKind: normalizeSenderKind(data.sender_kind),
-      // Boss claim-prompt (2026-06-26): thread the boss bank id (already on the
-      // GET response) to the reveal surface so the post-win claim card has its
-      // {team} token. Additive, no migration — same boundary as senderKind.
-      bossIdentityId: data.boss_identity_id ?? undefined,
-      // Phase 2-mount Step 4: thread the baked two-tier marquee flag (jsonb,
-      // no migration) from initial_roster so the result flow can branch the
-      // loss copy. Boss-only in practice; humans carry no marquee.
-      marquee: (data.initial_roster as { marquee?: boolean } | null)?.marquee === true,
-    });
+    onAccept(ctx);
   }
 
   const cards: any[] = (data?.initial_roster as any)?.cards ?? [];
