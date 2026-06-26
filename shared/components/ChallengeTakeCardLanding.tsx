@@ -50,6 +50,7 @@ import { track } from "@shared/analytics/analytics";
 import { pickHeadlineAndCta, FALLBACK_CTA, type SealVisual } from "./landingHeadlines";
 import { getBossResult } from "@shared/utils/bossResultMemory";
 import { BossOutwardEnding } from "./BossOutwardEnding";
+import type { CardRenderer } from "./H2HRevealScreen";
 
 // ── Data shape coming in from the shell ────────────────────────────────
 
@@ -106,6 +107,14 @@ interface Props {
    *  same adapter. */
   calculateWinTier: (totalFp: number) => string;
   onAccept: () => void;
+  /** Consolidation Phase 3 step 3 — the sport's real-card renderer
+   *  (basketball `h2hArcRenderer`), threaded App → shell → here, the same
+   *  way GameView threads it to BossScreen. When present, the BOSS branch
+   *  renders REAL boss cards (headshot + FP + tier gradient) instead of the
+   *  neutral HandCard chip — matching the hub's card quality on the cold
+   *  link. Absent (non-basketball / unthreaded) → graceful neutral-chip
+   *  fallback. The human take-card path never uses it. */
+  renderBossCard?: CardRenderer;
   /** Phase 2e — optional supporting culture line below the take.
    *  OFF by default per the lock §"Optional supporting culture line" —
    *  the localhost loop screenshots it ON to decide keep/cut. Renders
@@ -302,6 +311,72 @@ function HandCard({ card, isHeld, neutral = false }: HandCardProps) {
   );
 }
 
+// ── Boss REAL cards (Consolidation Phase 3 step 3) ─────────────────────
+//
+// The converged cold-link boss surface renders REAL boss cards (headshot +
+// FP + tier gradient) via the hub's renderBossCard (basketball
+// h2hArcRenderer → <AthleteCard canFlip={false}>), matching the hub's card
+// quality. This REUSES the hub's mapping + scaled card-in-slot scaffold
+// verbatim (BossScreen.tsx:251-264 map + :391-400 render) — NOT a parallel
+// derivation (CLAUDE.md visual rule: reuse working scaffolds). The headshot
+// is resolved INSIDE AthleteCard, so only renderBossCard is threaded.
+//
+// Scaffold constants mirror BossScreen's REVEAL_CARD_W/H (the natural card
+// is 329×478; we render it at 150px wide and CSS-scale it to the slot width
+// via containerType:inline-size + scale(100cqw / 150px)).
+const BOSS_CARD_W = 150;
+const BOSS_CARD_H = (150 * 478) / 329;
+
+/** Render the boss five as REAL cards. `renderBossCard` is the sport's
+ *  CardRenderer (basketball h2hArcRenderer). The raw cold-link card shape
+ *  is { basePlayerId, fp, name, pos, salary, tier } — mapped to the render
+ *  arg with the SAME two steps the hub uses:
+ *    raw→lineup  (BossScreen:251-264): pos→position, photoCode??null,
+ *                tier??"WHITE", fp??actualFp??0
+ *    lineup→arg  (BossScreen:391-400 / H2HRecipientReveal:182-188):
+ *                +cardId `${basePlayerId}-boss-${i}`, wasHeld:false,
+ *                actualFp:fp, projectedFp:fp
+ *  Opts `{ revealed: true }` → static settled card (FP shown, no reveal
+ *  animation — that is a hub first-view affordance, not the cold link). */
+function BossRealCards({ cards, renderBossCard }: { cards: SnapshotCard[]; renderBossCard: CardRenderer }) {
+  return (
+    <div
+      data-testid="boss-real-cards"
+      style={{ display: "flex", gap: 6, marginBottom: 18, justifyContent: "center", alignItems: "flex-start" }}
+    >
+      {cards.map((c, i) => {
+        const raw = c as unknown as Record<string, unknown>;
+        const fp = Number(raw.fp ?? raw.actualFp ?? 0);
+        const basePlayerId = String(raw.basePlayerId ?? "boss");
+        const arg = {
+          ...raw,
+          name: raw.name,
+          position: String(raw.pos ?? raw.position ?? ""),
+          photoCode: raw.photoCode ?? null,
+          salary: Number(raw.salary ?? 0),
+          basePlayerId,
+          tier: String(raw.tier ?? "WHITE"),
+          fp,
+          cardId: `${basePlayerId}-boss-${i}`,
+          wasHeld: false,
+          actualFp: fp,
+          projectedFp: fp,
+        };
+        return (
+          <div
+            key={`boss-rv-${basePlayerId}-${i}`}
+            style={{ flex: 1, minWidth: 0, maxWidth: 76, aspectRatio: "329 / 478", containerType: "inline-size", position: "relative", overflow: "visible" }}
+          >
+            <div style={{ position: "absolute", top: 0, left: 0, width: BOSS_CARD_W, height: BOSS_CARD_H, transform: `scale(calc(100cqw / ${BOSS_CARD_W}px))`, transformOrigin: "top left" }}>
+              {renderBossCard(arg as never, { revealed: true } as never)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Phase 2e culture helpers ───────────────────────────────────────────
 
 /** FNV-1a 32-bit hash of the challengeId — same scheme the generator
@@ -332,7 +407,7 @@ function pickSupportingCultureLine(culture: CultureShape | null): string | null 
 
 // ── The component ─────────────────────────────────────────────────────
 
-export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, calculateWinTier, onAccept, showCultureLine = false }: Props) {
+export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, calculateWinTier, onAccept, renderBossCard, showCultureLine = false }: Props) {
   const trigger = (normalizeTriggerType(data.trigger_type) ?? "default") as TakeCardTrigger;
   const snapshot = (data.initial_roster ?? {}) as RosterSnapshot;
   const cards: SnapshotCard[] = snapshot.cards ?? [];
@@ -513,16 +588,24 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
             </div>
           )}
 
-          {/* EVIDENCE — the five boss cards through the unified HandCard, with
-              held/discard GATED OFF (neutral): all five render equal. */}
-          <div
-            data-testid="starting-hand"
-            style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18, justifyContent: "center" }}
-          >
-            {cards.map((card, i) => (
-              <HandCard key={card.basePlayerId ?? i} card={card} isHeld={false} neutral />
-            ))}
-          </div>
+          {/* EVIDENCE — the five boss cards. Step 3: when the sport's
+              real-card renderer is threaded (basketball), render REAL boss
+              cards (headshot + FP + tier gradient) via the hub's scaffold +
+              mapping — matching the hub's card quality on the cold link.
+              No renderer (non-basketball / unthreaded) → graceful neutral
+              HandCard chips (held/discard gated off). */}
+          {renderBossCard ? (
+            <BossRealCards cards={cards} renderBossCard={renderBossCard} />
+          ) : (
+            <div
+              data-testid="starting-hand"
+              style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18, justifyContent: "center" }}
+            >
+              {cards.map((card, i) => (
+                <HandCard key={card.basePlayerId ?? i} card={card} isHeld={false} neutral />
+              ))}
+            </div>
+          )}
 
           {priorResult ? (
             /* REVISIT — already played today: reconstruct the outward ending

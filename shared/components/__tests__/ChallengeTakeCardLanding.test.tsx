@@ -22,6 +22,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ChallengeTakeCardLanding, type ChallengeLandingData } from "../ChallengeTakeCardLanding";
 import { recordBossResult } from "@shared/utils/bossResultMemory";
+import type { CardRenderer } from "../H2HRevealScreen";
 import {
   resolveSeal,
   headlineContainsSealVocabulary,
@@ -650,5 +651,100 @@ describe("Boss convergence — merged surface branches internally on sender_kind
     render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
     const variantCalls = trackMock.mock.calls.filter(c => c[0] === "challenges" && c[1] === "challenge_landing_variant");
     expect(variantCalls.length).toBe(0);
+  });
+});
+
+// ── Boss REAL cards (Consolidation Phase 3 step 3) ─────────────────────
+//
+// When the sport's real-card renderer is threaded (basketball
+// h2hArcRenderer), the boss branch renders REAL boss cards via that
+// renderer instead of the neutral HandCard chip. JSDOM verifies the
+// render-path wiring + the hub mapping is applied (NOT the visual — the
+// scale/layout is glass-required per CLAUDE.md). Boss data uses the REAL
+// wire shape the GET handler returns: { basePlayerId, fp, name, pos,
+// salary, tier } — no `team`, no `position`, no `actualFp`.
+
+describe("Boss real cards (Phase 3 step 3) — renderBossCard wiring + hub mapping", () => {
+  beforeEach(() => {
+    try { localStorage.clear(); } catch { /* jsdom */ }
+  });
+
+  // Real boss wire shape (mirrors /api/challenge/{id} for a boss).
+  function realBossData(over: Partial<ChallengeLandingData> = {}): ChallengeLandingData {
+    return {
+      challenge_id: "ch_boss_real",
+      created_by: null,
+      sender_kind: "boss",
+      challenger_name: "Banner 18",
+      share_headline: "Tatum and Brown finish it",
+      tough_day: false,
+      target_score: 145.2,
+      sport: "basketball",
+      season: "2425",
+      trigger_type: "boss",
+      initial_roster: {
+        v: 1, sport: "basketball", holdsRecorded: false, marquee: false,
+        cards: [
+          { basePlayerId: "203999", name: "Nikola Jokić", pos: "C", salary: 80, tier: "RED", fp: 41.4 },
+          { basePlayerId: "201939", name: "Stephen Curry", pos: "G", salary: 75, tier: "RED", fp: 33.8 },
+          { basePlayerId: "1629029", name: "Luka Dončić", pos: "G", salary: 70, tier: "PURPLE", fp: 29.6 },
+          { basePlayerId: "203954", name: "Joel Embiid", pos: "C", salary: 60, tier: "PURPLE", fp: 22.1 },
+          { basePlayerId: "1628369", name: "Jayson Tatum", pos: "F", salary: 45, tier: "BLUE", fp: 18.3 },
+        ],
+      },
+      roster_size: 5,
+      attempt_count: 0, winner_count: 0, best_score: null, best_user_name: null,
+      near_miss_gap: null, near_miss_next_tier: null, anchor_base_player_id: null, top_game_tier: null,
+      ...over,
+    };
+  }
+
+  function recordingRenderer() {
+    const calls: Array<{ card: any; opts: any }> = [];
+    const renderer: CardRenderer = ((card: any, opts: any) => {
+      calls.push({ card, opts });
+      return <div data-testid="stub-boss-card" />;
+    }) as unknown as CardRenderer;
+    return { renderer, calls };
+  }
+
+  it("renders REAL cards via renderBossCard (one call per card), NOT neutral chips", () => {
+    const { renderer, calls } = recordingRenderer();
+    render(<ChallengeTakeCardLanding data={realBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} renderBossCard={renderer} />);
+    expect(screen.getByTestId("boss-real-cards")).toBeTruthy();
+    expect(screen.getAllByTestId("stub-boss-card")).toHaveLength(5);
+    // The neutral-chip path is NOT taken when the renderer is present.
+    expect(screen.queryByTestId("starting-hand")).toBeNull();
+    expect(screen.queryByTestId("hand-card-neutral")).toBeNull();
+    expect(calls.length).toBe(5);
+  });
+
+  it("applies the hub mapping verbatim (cardId, position←pos, wasHeld:false, fp→actual/projected) + static opts", () => {
+    const { renderer, calls } = recordingRenderer();
+    render(<ChallengeTakeCardLanding data={realBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} renderBossCard={renderer} />);
+    const first = calls[0].card;
+    expect(first.cardId).toBe("203999-boss-0");        // ${basePlayerId}-boss-${i}
+    expect(first.position).toBe("C");                   // pos → position
+    expect(first.wasHeld).toBe(false);                  // boss has no held concept
+    expect(first.actualFp).toBe(41.4);                  // fp → actualFp
+    expect(first.projectedFp).toBe(41.4);               // fp → projectedFp
+    expect(calls[0].opts.revealed).toBe(true);          // static settled card
+    // positional cardId stays unique across the five
+    expect(new Set(calls.map(c => c.card.cardId)).size).toBe(5);
+  });
+
+  it("falls back to the neutral HandCard chip when renderBossCard is ABSENT (graceful)", () => {
+    render(<ChallengeTakeCardLanding data={realBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.queryByTestId("boss-real-cards")).toBeNull();
+    expect(screen.getByTestId("starting-hand")).toBeTruthy();
+    expect(screen.getAllByTestId("hand-card-neutral")).toHaveLength(5);
+  });
+
+  it("the HUMAN take-card path never invokes renderBossCard (boss-gated only)", () => {
+    const { renderer, calls } = recordingRenderer();
+    render(<ChallengeTakeCardLanding data={makeData({ trigger: "choke", heldPair: ["emb", "voo"], challengerName: "John" })} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} renderBossCard={renderer} />);
+    expect(screen.getByTestId("take-headline")).toBeTruthy(); // human surface
+    expect(screen.queryByTestId("boss-real-cards")).toBeNull();
+    expect(calls.length).toBe(0);
   });
 });

@@ -93,6 +93,27 @@ function rosterSnapshot(cards: SnapshotCard[], holdsRecorded: boolean): Record<s
   };
 }
 
+// Phase 3 step 3 — boss five in the REAL wire shape the GET handler returns
+// for a boss: { basePlayerId, fp, name, pos, salary, tier } — NO team, NO
+// `position`, NO wasHeld/actualFp. Real NBA person ids so the glass resolves
+// real headshots through the basketball adapter. Mirrors prod so the mock
+// exercises the exact map BossRealCards runs on cold-link data.
+function bossFive(): Record<string, unknown> {
+  return {
+    v: 1,
+    sport: "basketball",
+    holdsRecorded: false,
+    marquee: false,
+    cards: [
+      { basePlayerId: "203999", name: "Nikola Jokić",      pos: "C", salary: 80, tier: "RED",    fp: 41.4 },
+      { basePlayerId: "201939", name: "Stephen Curry",     pos: "G", salary: 75, tier: "RED",    fp: 33.8 },
+      { basePlayerId: "1629029", name: "Luka Dončić",      pos: "G", salary: 70, tier: "PURPLE", fp: 29.6 },
+      { basePlayerId: "203954", name: "Joel Embiid",       pos: "C", salary: 60, tier: "PURPLE", fp: 22.1 },
+      { basePlayerId: "1628369", name: "Jayson Tatum",     pos: "F", salary: 45, tier: "BLUE",   fp: 18.3 },
+    ],
+  };
+}
+
 // ── Fixture cases ──────────────────────────────────────────────────────
 
 export type LandingMockCase =
@@ -483,7 +504,7 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
       trigger_type: "boss",
       // No held pair — the boss branch renders all five neutral regardless,
       // but keep the snapshot held-free so the data matches the rendering.
-      initial_roster: rosterSnapshot(baseSix({}), true),
+      initial_roster: bossFive(),
       anchor_base_player_id: null,
       near_miss_gap: null,
       near_miss_next_tier: null,
@@ -506,7 +527,7 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
       tough_day: false,
       target_score: 178.0,
       trigger_type: "boss",
-      initial_roster: { ...rosterSnapshot(baseSix({}), true), marquee: true },
+      initial_roster: { ...bossFive(), marquee: true },
       anchor_base_player_id: null,
       near_miss_gap: null,
       near_miss_next_tier: null,
@@ -531,7 +552,7 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
       tough_day: true,
       target_score: 145.2,
       trigger_type: "boss",
-      initial_roster: rosterSnapshot(baseSix({}), true),
+      initial_roster: bossFive(),
       anchor_base_player_id: null,
       near_miss_gap: null,
       near_miss_next_tier: null,

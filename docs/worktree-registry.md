@@ -337,3 +337,16 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **Equivalence on main:** fully merged via `88e660da` (steps 1+2). No unique work remains; branch safe to delete (`-d`, not `-D`).
 - **Intent:** SHIPPED — Consolidation Phase 3 steps 1+2. **Step 3 (the one trimmed card) was DROPPED for this ship and is PARKED** (boss renders through the interim neutral `HandCard`; pick up the trimmed card in a future session per `docs/boss-surface-consolidation-spec.md` §(C)).
 - **Last reviewed:** 2026-06-26 (merged + shipped this session)
+
+---
+
+### `feat/boss-consolidation-p3-step3` — active-parked (held for glass, do NOT push)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-p3-step3`
+- **Branch HEAD:** Consolidation Phase 3 **Step 3** (real card on the converged cold-link surface), branched off `main` `34d3703d` (= shipped `268c7992` SPA code + the Step-3 spec doc).
+- **Unique commits vs main:** Step 3 (this session). Fresh branch; the prior `feat/boss-consolidation-p3` worktree is REMOVED/closed.
+- **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup).
+- **What it carries:** the converged `ChallengeTakeCardLanding` boss branch renders REAL boss cards (headshot + FP + tier gradient) via the hub's `renderBossCard` (`h2hArcRenderer`), threaded App → shell → boss branch; reuses BossScreen's map + scaled card-in-slot scaffold verbatim; neutral `HandCard` fallback when the renderer is absent. NO `/api/challenge/{id}` change, NO `CardFront` fork. REAL hub-style card (notch intact) — the trimmed/frameless variant stays PARKED. Spec: `docs/boss-surface-consolidation-spec.md` §"Step-3 build".
+- **Equivalence on main:** none — held, unpushed.
+- **Intent:** held for phone glass on the cold-link real-card render (the surface that fooled us once — render-path divergence isn't caught by JSDOM). Do NOT push until glass passes.
+- **Last reviewed:** 2026-06-27
