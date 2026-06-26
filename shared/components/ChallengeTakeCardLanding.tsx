@@ -41,19 +41,32 @@
 
 import { useEffect } from "react";
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
-import { normalizeTriggerType } from "@shared/adapters/challengeTypes";
+import { normalizeTriggerType, normalizeSenderKind } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
 import { track } from "@shared/analytics/analytics";
 import { pickHeadlineAndCta, FALLBACK_CTA, type SealVisual } from "./landingHeadlines";
+import { getBossResult } from "@shared/utils/bossResultMemory";
+import { BossOutwardEnding } from "./BossOutwardEnding";
 
 // ── Data shape coming in from the shell ────────────────────────────────
 
 export interface ChallengeLandingData {
   challenge_id: string;
   created_by: string | null;
+  /** Consolidation Phase 3 step 2 (2026-06-26): boss convergence. "player"
+   *  (default) renders the human take-card hierarchy; "boss" renders the
+   *  authored-identity branch INSIDE this component (eyebrow + marquee +
+   *  verbatim name + authored flavor + neutral cards + revisit). Optional on
+   *  the wire / undefined on human rows; normalized via normalizeSenderKind.
+   *  This is the SAME field the shell carries — the merged surface branches on
+   *  it instead of the shell dispatching to a separate BossLandingView. */
+  sender_kind?: string;
+  /** Boss "tough day" sender-facing flavor flag; null/undefined on human rows.
+   *  Drives the " · Tough Day" eyebrow suffix on the boss branch only. */
+  tough_day?: boolean | null;
   challenger_name: string;
   target_score: number;
   sport: string;
@@ -184,6 +197,12 @@ function EvidenceSeal({ seal, trigger }: EvidenceSealProps) {
 interface HandCardProps {
   card: SnapshotCard;
   isHeld: boolean;
+  /** Consolidation Phase 3 step 2 — boss neutral mode. A boss five has NO
+   *  "held" concept (the boss didn't make hold decisions the recipient is
+   *  judging), so the held/discard saturation split is gated OFF: all five
+   *  render identically — full opacity, tier-colored, NO yellow-H glyph.
+   *  Interim card state; step 3 replaces HandCard with the one trimmed card. */
+  neutral?: boolean;
 }
 
 // Phase 2d: held cards saturated, unheld muted — but ALL six get their
@@ -193,18 +212,24 @@ interface HandCardProps {
 // real hand being dealt; the HOLD badge + saturation gap still marks
 // the held subset.
 
-function HandCard({ card, isHeld }: HandCardProps) {
+function HandCard({ card, isHeld, neutral = false }: HandCardProps) {
   const accent = TIER_ACCENT[card.tier] ?? "#9CA3AF";
   // muted = same hue, lower saturation/opacity. Keeping accent-derived
   // background + border, dialing alpha down so the card reads as the
   // same tier color, just dimmer.
-  const background = isHeld ? `${accent}26` : `${accent}10`;
-  const border = isHeld ? `2px solid ${accent}` : `1px solid ${accent}55`;
-  const opacity = isHeld ? 1 : 0.68;
+  // Neutral (boss) = no held/discard split: full opacity, tier-colored,
+  // a single mid-saturation treatment for all five. Between the held
+  // (26) and discard (10) alphas so it reads as a real, equal card.
+  const background = neutral ? `${accent}1A` : isHeld ? `${accent}26` : `${accent}10`;
+  const border = neutral ? `1.5px solid ${accent}` : isHeld ? `2px solid ${accent}` : `1px solid ${accent}55`;
+  const opacity = neutral ? 1 : isHeld ? 1 : 0.68;
+  // The yellow-H glyph marks a HELD card; it must never show in neutral
+  // (boss) mode even if a stray wasHeld rode along on the snapshot.
+  const showHoldBadge = isHeld && !neutral;
   return (
     <div
-      data-testid={isHeld ? "hand-card-held" : "hand-card-plain"}
-      data-was-held={isHeld ? "true" : "false"}
+      data-testid={neutral ? "hand-card-neutral" : isHeld ? "hand-card-held" : "hand-card-plain"}
+      data-was-held={showHoldBadge ? "true" : "false"}
       data-tier-accent={accent}
       style={{
         position: "relative",
@@ -216,11 +241,11 @@ function HandCard({ card, isHeld }: HandCardProps) {
         flex: "0 1 auto",
         textAlign: "center",
         opacity,
-        boxShadow: isHeld ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
+        boxShadow: isHeld && !neutral ? `0 1px 0 ${accent}33 inset, 0 4px 10px rgba(0,0,0,0.25)` : "none",
         overflow: "hidden", // contains the yellow-H corner glyph inside the rounded card
       }}
     >
-      {isHeld && (
+      {showHoldBadge && (
         // RD5.1 hold indicator — same yellow-H corner glyph the live game /
         // H2H card uses (CardFront.tsx:872-883). Triangle in the top-left
         // corner + "H" letter. Reuses the real glyph rather than a separate
@@ -314,6 +339,20 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
   const holdsRecorded = snapshot.holdsRecorded === true;
   const namedChallenger = isRealName(data.challenger_name);
 
+  // Consolidation Phase 3 step 2 — boss-vs-human gate. A boss challenge IS a
+  // friend challenge whose opponent is a boss; both run on this one framework,
+  // branched internally on senderKind. The boss branch is rendered via an early
+  // return below so the entire human hierarchy stays byte-identical (the human
+  // computations + return are untouched). marquee/priorResult are only read on
+  // the boss branch — getBossResult (localStorage) is NOT called for humans.
+  const isBoss = normalizeSenderKind(data.sender_kind) === "boss";
+  const marquee = (data.initial_roster as { marquee?: boolean } | null)?.marquee === true;
+  // REVISIT (returning player who already played today's boss): reconstruct
+  // the outward ending instead of re-offering accept. Same single source the
+  // post-play ChallengeComparisonScreen boss branch reads. Ported verbatim
+  // from the retired BossLandingView (boss-gated — never on the human path).
+  const priorResult = isBoss ? getBossResult(data.challenge_id) : null;
+
   // Locate the anchor card up-front — needed for the supporting culture
   // line's lookupCulture call below. RD5 retired the take-engine call
   // on this surface, so anchorName is no longer plumbed into a take.
@@ -394,13 +433,17 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
   // selection is deterministic for a given challenge so variantKey is
   // stable across re-renders of the same hand.
   useEffect(() => {
+    // Boss does not use the headline bank — it carries an authored share_headline
+    // and fires its own telemetry from the shell. Gate the human-only variant
+    // analytics OFF for boss so bank variant keys never leak onto boss rows.
+    if (isBoss) return;
     track("challenges", "challenge_landing_variant", {
       challenge_id: data.challenge_id,
       sport: data.sport,
       trigger,
       variant_key: headlineOutput.variantKey,
     });
-  }, [data.challenge_id, data.sport, trigger, headlineOutput.variantKey]);
+  }, [isBoss, data.challenge_id, data.sport, trigger, headlineOutput.variantKey]);
 
   // Target line — the one place the score appears on this screen.
   // Mirrors the spec §"Score rule": never in a headline; sole numeric.
@@ -412,6 +455,120 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
   // §"CTA — frame-aware, recipient path only").
   const recipientCta = headlineOutput.ctaLabel || FALLBACK_CTA;
   const ctaLabel = alreadyAttempted ? "Play Again" : recipientCta;
+
+  // ── BOSS BRANCH (Consolidation Phase 3 step 2) ───────────────────────
+  // Ported from the retired BossLandingView. A boss presents its AUTHORED
+  // identity verbatim — NO isRealName downgrade, NO trigger banks, NO seal,
+  // NO culture line, NO held/discard split. The card row / target line / CTA
+  // are the SAME framework scaffolds the human path uses (this is the
+  // convergence). Early return keeps the human hierarchy below untouched.
+  if (isBoss) {
+    return (
+      <div data-testid="challenge-take-card-landing">
+        <div data-testid="boss-take-card">
+          {/* Eyebrow — marks the surface as the daily boss (boss-only). */}
+          <div
+            data-testid="boss-eyebrow"
+            style={{
+              fontSize: 14, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
+              color: "rgba(255,177,74,0.85)", marginBottom: 8,
+            }}
+          >
+            Daily Boss{data.tough_day ? " · Tough Day" : ""}
+          </div>
+
+          {/* Marquee tier — "brutal by design", marquee-gated (boss-only). */}
+          {marquee && (
+            <div
+              data-testid="boss-marquee-label"
+              style={{
+                display: "inline-block", fontSize: 12, fontWeight: 900, letterSpacing: 1.2,
+                textTransform: "uppercase", color: "#FF5A5A",
+                border: "1px solid rgba(255,90,90,0.5)", borderRadius: 6,
+                padding: "3px 8px", marginBottom: 12,
+              }}
+            >
+              Brutal by Design
+            </div>
+          )}
+
+          {/* Boss name — authored identity, verbatim (bypasses isRealName). */}
+          <div
+            data-testid="boss-name"
+            style={{ fontSize: 30, fontWeight: 900, color: "#EAF0FF", marginBottom: 6, lineHeight: 1.2 }}
+          >
+            {data.challenger_name}
+          </div>
+
+          {/* Flavor — the authored share_headline, as the take. Omitted when empty. */}
+          {data.share_headline && (
+            <div
+              data-testid="boss-flavor"
+              style={{
+                fontSize: 15, color: "rgba(234,240,255,0.8)", fontStyle: "italic",
+                marginBottom: 16, lineHeight: 1.4, maxWidth: 560,
+              }}
+            >
+              {data.share_headline}
+            </div>
+          )}
+
+          {/* EVIDENCE — the five boss cards through the unified HandCard, with
+              held/discard GATED OFF (neutral): all five render equal. */}
+          <div
+            data-testid="starting-hand"
+            style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18, justifyContent: "center" }}
+          >
+            {cards.map((card, i) => (
+              <HandCard key={card.basePlayerId ?? i} card={card} isHeld={false} neutral />
+            ))}
+          </div>
+
+          {priorResult ? (
+            /* REVISIT — already played today: reconstruct the outward ending
+               (share loop + Play Again). Terminates outward; no re-accept CTA.
+               Play Again re-accepts → App boss branch → fresh draft. */
+            <BossOutwardEnding
+              sport={data.sport}
+              bossChallengeId={data.challenge_id}
+              marquee={marquee}
+              targetScore={data.target_score}
+              bossName={data.challenger_name}
+              onPlayAgain={onAccept}
+            />
+          ) : (
+            <>
+              {/* TARGET LINE — same framework scaffold as the human path. */}
+              <div
+                data-testid="target-line"
+                style={{
+                  fontSize: 14, fontWeight: 700, color: "rgba(234,240,255,0.85)",
+                  fontFamily: "'Rajdhani','Oswald','Arial Narrow',sans-serif",
+                  letterSpacing: 0.6, textAlign: "center", textTransform: "uppercase", marginBottom: 12,
+                }}
+              >
+                Target to beat: {targetFpFixed} FP
+              </div>
+
+              {/* CTA — boss copy ("Take the Boss" / "Play Again"). */}
+              <button
+                data-testid="accept-cta"
+                onClick={onAccept}
+                style={{
+                  width: "100%", padding: "16px", borderRadius: 14,
+                  background: "#FFB14A", border: "none", color: "#070A12",
+                  fontSize: 17, fontWeight: 900, letterSpacing: 0.5, cursor: "pointer",
+                  marginTop: 12, marginBottom: 10, textTransform: "uppercase",
+                }}
+              >
+                {alreadyAttempted ? "Play Again" : "Take the Boss"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div data-testid="challenge-take-card-landing">

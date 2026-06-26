@@ -130,6 +130,25 @@ In-app, no full-page nav (satisfies "no mid-page"); reuses the data the hub ALRE
 - [ ] human + self-match cold paths byte-identical (extraction is pure)
 - [ ] `npm test` green; basketball build green
 
+### Step-2 build (surface merge) — APPLIED, held for glass
+
+Boss converges onto `ChallengeTakeCardLanding`; `BossLandingView` retired as a render target.
+
+- **shell `ChallengeLandingScreen`:** removed the `sender_kind==="boss"` dispatch branch + deleted the `BossLandingView` function + dropped the now-unused `getBossResult` / `BossOutwardEnding` imports. Boss and player both fall through to `ChallengeTakeCardLanding`. `SelfMatchView` branch + `buildChallengeCtx` + `onAccept` ctx unchanged.
+- **shared `ChallengeTakeCardLanding`:** added `sender_kind?` / `tough_day?` to `ChallengeLandingData`; `HandCard` gained a `neutral` mode (held/discard gated off → all five full-opacity tier-colored, no yellow-H); an `isBoss` early-return renders the ported boss branch (eyebrow `Daily Boss[ · Tough Day]` + marquee `Brutal by Design` (marquee-gated) + name verbatim + authored `share_headline` flavor + neutral cards + revisit/`BossOutwardEnding` OR target+`Take the Boss`). The human hierarchy below the early return is byte-identical; the `challenge_landing_variant` analytics is gated OFF for boss.
+- **internal gating (the recon-5 hazard — human-only logic must not leak onto boss):** name (verbatim vs `isRealName` downgrade) · headline (authored `share_headline` vs `pickHeadlineAndCta` banks) · card (`neutral` vs held/discard) · eyebrow + marquee (boss-only) · revisit (boss-only).
+- **downstream readers unchanged:** Reveal `H2HRecipientReveal:396` / Play `H2HRecipientPlay:1083` / App `App.tsx:254` key on `ctx.senderKind` (built by the untouched `buildChallengeCtx`), NOT surface identity — a correctly-gated merge cannot regress friend/self-match.
+- **glass:** `/basketball/dev/challenge-landing-mock?case=boss` (beatable, tough-day eyebrow, no held) · `?case=boss_marquee` (Brutal by Design) · `?case=boss_revisit` (ported revisit → BossOutwardEnding; route seeds a win result). Cold `/challenge/{bossId}` now renders this merged surface (boss branch).
+- **interim card state:** boss renders through the existing `HandCard` (neutral). **NOT** the trimmed card — that is step 3 (replaces both `HandCard` and the chips).
+
+**Step-2 verification checklist (glass-required rows marked):**
+- [ ] (glass) boss cold-link: name verbatim + authored flavor + eyebrow/marquee + target line + NO held treatment
+- [ ] (glass) human challenge surface unchanged (headline bank + seal + held/discard)
+- [ ] (glass) self-match surface unchanged
+- [ ] (glass) returning winner: revisit branch shows share loop + Play Again
+- [x] JSDOM: boss renders `boss-take-card` (not `take-headline`); 6 neutral cards, 0 held; CTA copy; revisit reconstructs `boss-outward-ending`; no variant analytics
+- [ ] `npm test` green; basketball build green; `typecheck:unbound` clean
+
 ---
 
 ## Build protocol
