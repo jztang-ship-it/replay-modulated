@@ -29,6 +29,10 @@ import { buildAll, loadBand, REPO, type TeamSeason, type OverrideMap } from "./b
 export const K = 15;
 export const COOLDOWN = 5;
 export const P_LO = 60, P_HI = 85;
+// Bounded deterministic re-roll budget for the floor-guarantee fallback (below).
+// Only consumed when the first K rolls miss the band; advances the same seeded
+// PRNG, so the regenerated bank stays reproducible (drift-guarded).
+export const FLOOR_SCAN = 4000;
 // SINGLE SOURCE OF TRUTH for the daily-rotation epoch (design-decisions §4).
 // scheduleHeadline's era anti-repeat cooldown makes the canonical pick for a
 // day depend on the run from a FIXED start, so this must be one constant the
@@ -75,14 +79,27 @@ export function rollBoss(b: Boss, day: string, slot: number, mode: RollMode, ban
     all.push(r);
     if (accept(r.total)) return { status: mode === "daily" ? "in_band" : "raid", total: r.total, picks: r.picks, attempts: attempt + 1 };
   }
-  // HEADLINE NEVER SWAPS. Daily best-effort: easiest roll (min total) + tough-day
-  // flag — whether structural (floor>band) or stochastic (low-daily-hit, missed K).
-  if (mode === "daily") {
-    const easiest = all.reduce((m, r) => r.total < m.total ? r : m);
-    return { status: "tough_day", total: easiest.total, picks: easiest.picks, attempts: k };
+  // FALLBACK — FLOOR GUARANTEE (folded sub-floor clamp, 2026-06-26). The baked
+  // target must never fall below the band FLOOR (band[0]), and must always equal a
+  // REAL rollable lineup sum (total === Σ picks.fp) — so we re-SELECT a real roll
+  // rather than clamping the bare number (which would desync target from the five).
+  // Re-roll deterministically past K (the PRNG just advances) over a bounded scan,
+  // keep the rolls that clear the floor, and take the easiest (daily) / hardest
+  // (raid) such lineup. HEADLINE NEVER SWAPS — same boss, just a floor-respecting
+  // roll. If the roster genuinely can't reach the floor within the scan (ceiling <
+  // floor), take the closest achievable — still a real lineup sum, never synthetic.
+  const floor = band[0];
+  const wide = all.slice();
+  for (let attempt = k; attempt < FLOOR_SCAN; attempt++) wide.push(rollGames(b, day, slot, attempt));
+  const cleared = wide.filter(r => r.total >= floor);
+  if (cleared.length > 0) {
+    const pick = mode === "daily"
+      ? cleared.reduce((m, r) => r.total < m.total ? r : m)  // easiest that still clears the floor
+      : cleared.reduce((m, r) => r.total > m.total ? r : m); // raid: hardest available
+    return { status: mode === "daily" ? "tough_day" : "raid", total: pick.total, picks: pick.picks, attempts: FLOOR_SCAN };
   }
-  const top = all.reduce((m, r) => r.total > m.total ? r : m); // raid: closest to clearing P85
-  return { status: "out_of_band", total: top.total, picks: top.picks, attempts: k };
+  const top = wide.reduce((m, r) => r.total > m.total ? r : m); // ceiling < floor: closest achievable
+  return { status: mode === "daily" ? "tough_day" : "out_of_band", total: top.total, picks: top.picks, attempts: FLOOR_SCAN };
 }
 
 // Empirical roll distribution (uniform one-game-per-starter).

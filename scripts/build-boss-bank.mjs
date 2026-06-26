@@ -63,6 +63,35 @@ function salTier(season, basePlayerId) {
   return m.get(String(basePlayerId)) ?? { salary: 0, tier: "WHITE" };
 }
 
+// ── Per-boss roster reach (re-anchor soft-cap) ────────────────────────────────
+// The re-anchored band targets OPTIMISED play, but the boss TARGET = the boss's
+// fixed roster sum (invariant). So a season band only "takes" where the roster can
+// reach it. We MC the roster's own realised distribution and cap the band at its
+// P90 (its reachable strong roll): effLo=min(P25,rosterP90), effHi=min(P40,rosterP90),
+// marquee target=min(P50,rosterP90). A soft roster (e.g. SAS-1314, P90 below its
+// season P25) naturally falls to its reachable max — an easier "easy-day" boss —
+// never a sub-floor or an unrollable number. Deterministic per-boss seed → drift-safe.
+const ROSTER_MC_SEED = 0x9e3779b9;
+const ROSTER_MC_N = 20000;
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function seedFromKey(key) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h >>> 0;
+}
+/** Boss roster's realised-FP P90 — each starter scores a uniformly-random qualifying
+ *  game (identical scoring to rollGames). Deterministic via a per-boss key seed. */
+function rosterP90(b) {
+  const rng = mulberry32((seedFromKey(b.key) ^ ROSTER_MC_SEED) >>> 0);
+  const t = [];
+  for (let i = 0; i < ROSTER_MC_N; i++) { let fp = 0; for (const s of b.starters) fp += s.gamePool[Math.floor(rng() * s.gamePool.length)]; t.push(fp); }
+  t.sort((x, y) => x - y);
+  return t[Math.min(t.length - 1, Math.floor(0.90 * t.length))];
+}
+
 /**
  * Build the trimmed artifact object — ONLY the fields the request path reads:
  *   - scheduleHeadline: era_id (anti-repeat), tier (weight)
@@ -107,7 +136,26 @@ export function buildBossBankArtifact() {
       // (fail-closed; never served with a null/fallback target).
       if (!seasonBand || !CANDIDATES.has(b.key)) return { ...base, marquee: MARQUEE.has(b.key), target: null, revealedFive: null };
       const marquee = MARQUEE.has(b.key);
-      const roll = rollBoss(b, SCHEDULE_EPOCH, 0, marquee ? "raid" : "daily", [seasonBand.lo, seasonBand.hi], K);
+      // Re-anchor (2026-06-26): aim the roll at the best-N band, capped at the
+      // roster's reachable strong roll (rosterP90). Daily = window [P25,P40];
+      // marquee = P50 target via raid mode. effLo is the floor rollBoss guarantees
+      // (re-roll-to-≥floor); both bounds capped so the target never exceeds what the
+      // roster can roll (graceful degradation — soft rosters fall to their reach).
+      const p90 = rosterP90(b);
+      // Both daily and marquee roll in DAILY mode so the floor-respecting fallback
+      // lands the target AT the band floor (easiest roll >= floor), not above it.
+      // Raid mode returns the FIRST roll >= threshold, which overshoots (a marquee
+      // P50 target drifted to ~26% win); daily-mode-at-P50 hits the locked ~50%.
+      let rollBand;
+      if (marquee) {
+        const tgt = Math.min(seasonBand.p50, p90); // ~50% win (2A), capped at roster reach
+        rollBand = [tgt, tgt];
+      } else {
+        const effLo = Math.min(seasonBand.lo, p90);                 // P25 (75% win), or rosterP90 if soft
+        const effHi = Math.max(effLo, Math.min(seasonBand.hi, p90)); // P40 (60% win), capped at roster reach
+        rollBand = [effLo, effHi];
+      }
+      const roll = rollBoss(b, SCHEDULE_EPOCH, 0, "daily", rollBand, K);
       const revealedFive = b.starters.map((s, i) => {
         const st = salTier(b.season, s.basePlayerId);
         return {

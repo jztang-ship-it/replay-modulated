@@ -40,6 +40,12 @@ const SALARY_CAP = 250; // basketballConfig.salaryCap
 const ROSTER_SIZE = 5;
 const N_LINEUPS = 20000;
 const P_LO = 60, P_HI = 85;
+// RE-ANCHOR (2026-06-26): the band now calibrates against OPTIMISED play
+// (best-N-of-roster), not random legal lineups. Daily band = [P25, P40] of the
+// season's best-N realised distribution (≈75%→60% win vs optimised play); P50 is
+// the marquee target (≈50% win). bestN selection = the cap-constrained max-Σ-projFp
+// lineup; realised spread = each starter scores a uniformly-random qualifying game.
+const P_FLOOR = 25, P_CEIL = 40, P_MID = 50;
 const MIN_GAMES_THIS_SEASON = 30; // matches the game's getEligiblePool (and the global band's runSimulator eligibility) — parity, not tuning
 const SEED = 1729;
 
@@ -60,6 +66,35 @@ function mulberry32(seed) {
 }
 function pctile(sorted, p) {
   return sorted[Math.min(sorted.length - 1, Math.max(0, Math.floor((p / 100) * sorted.length)))];
+}
+
+// Exact 0/1 knapsack: EXACTLY `size` distinct players, salary sum <= cap, maximise
+// total projFp (meanFp) — the expected-value-optimal lineup ("optimised play").
+// Stores the actual distinct player-index set per (k,c) so reconstruction is
+// distinct-safe (parent pointers are not). Salaries rounded to int for the DP.
+function bestNLineup(pool, cap, size) {
+  const NEG = -Infinity;
+  const dp = Array.from({ length: size + 1 }, () => new Float64Array(cap + 1).fill(NEG));
+  const setOf = Array.from({ length: size + 1 }, () => new Array(cap + 1).fill(null));
+  dp[0][0] = 0; setOf[0][0] = [];
+  for (let pi = 0; pi < pool.length; pi++) {
+    const s = Math.round(pool[pi].salary), m = pool[pi].meanFp;
+    if (s <= 0 || s > cap) continue;
+    for (let k = size; k >= 1; k--) for (let c = cap; c >= s; c--) {
+      const prev = dp[k - 1][c - s];
+      if (prev !== NEG && prev + m > dp[k][c]) { dp[k][c] = prev + m; setOf[k][c] = [...setOf[k - 1][c - s], pi]; }
+    }
+  }
+  let bestC = -1, bestV = NEG;
+  for (let c = 0; c <= cap; c++) if (dp[size][c] > bestV) { bestV = dp[size][c]; bestC = c; }
+  return setOf[size][bestC].map((i) => pool[i]);
+}
+// Realised-FP distribution of a FIXED lineup (each card scores a uniformly-random
+// qualifying game — identical scoring to the boss roll / random band).
+function mcFixed(lineup, n, rng) {
+  const t = [];
+  for (let i = 0; i < n; i++) { let fp = 0; for (const pl of lineup) fp += pl.gamePool[Math.floor(rng() * pl.gamePool.length)]; t.push(fp); }
+  return t.sort((a, b) => a - b);
 }
 
 /** Build the eligible draft pool for a season: per player {id, salary, meanFp, gamePool}.
@@ -101,31 +136,19 @@ export function buildSeasonPool(season) {
   return pool;
 }
 
-/** Monte-Carlo the season's random-legal-lineup FP distribution → [P60,P85]. */
+/** Monte-Carlo the season's BEST-N (optimised-play) realised-FP distribution →
+ *  lo=P25 (daily floor, ~75% win), hi=P40 (daily ceiling, ~60% win), p50=P50
+ *  (marquee target, ~50% win). bestN lineup is deterministic; the spread is the
+ *  realised game-variance of that one optimal lineup. */
 function bandForSeason(season, rng) {
   const pool = buildSeasonPool(season);
   if (pool.length < ROSTER_SIZE * 4) throw new Error(`thin pool for ${season}: ${pool.length}`);
-  const totals = [];
-  for (let i = 0; i < N_LINEUPS; i++) {
-    // random legal lineup: 5 distinct under cap (re-pick on over-cap, like runSimulator's cap check)
-    let cost = 0, picked = [];
-    const used = new Set();
-    let guard = 0;
-    while (picked.length < ROSTER_SIZE && guard++ < 200) {
-      const c = pool[Math.floor(rng() * pool.length)];
-      if (used.has(c.id)) continue;
-      if (cost + c.salary > SALARY_CAP) continue;
-      used.add(c.id); picked.push(c); cost += c.salary;
-    }
-    if (picked.length < ROSTER_SIZE) continue;
-    let fp = 0;
-    for (const c of picked) fp += c.gamePool[Math.floor(rng() * c.gamePool.length)];
-    totals.push(fp);
-  }
-  totals.sort((a, b) => a - b);
+  const lineup = bestNLineup(pool, SALARY_CAP, ROSTER_SIZE);
+  const totals = mcFixed(lineup, N_LINEUPS, rng);
   return {
-    lo: Math.round(pctile(totals, P_LO) * 10) / 10,
-    hi: Math.round(pctile(totals, P_HI) * 10) / 10,
+    lo: Math.round(pctile(totals, P_FLOOR) * 10) / 10,
+    hi: Math.round(pctile(totals, P_CEIL) * 10) / 10,
+    p50: Math.round(pctile(totals, P_MID) * 10) / 10,
     mean: Math.round((totals.reduce((a, b) => a + b, 0) / totals.length) * 10) / 10,
     poolSize: pool.length,
     n: totals.length,
@@ -138,11 +161,11 @@ export function buildBossBandsArtifact() {
   for (const season of BAND_SEASONS) bands[season] = bandForSeason(season, rng);
   return {
     _meta: {
-      method: "per-season random-legal-lineup Monte-Carlo; FP=bossData.canonicalFp (play-parity); band=[P60,P85]",
+      method: "per-season BEST-N (optimised-play) realised-FP Monte-Carlo; bestN=cap-constrained max-Σ-projFp lineup, scored by uniformly-random qualifying game (FP=bossData.canonicalFp, play-parity); daily band=[P25,P40], marquee target=P50",
       cap: SALARY_CAP, rosterSize: ROSTER_SIZE, nLineups: N_LINEUPS, seed: SEED,
-      pLo: P_LO, pHi: P_HI, minGamesThisSeason: MIN_GAMES_THIS_SEASON,
+      pFloor: P_FLOOR, pCeil: P_CEIL, pMid: P_MID, minGamesThisSeason: MIN_GAMES_THIS_SEASON,
       generatedBy: "scripts/build-boss-bands.mjs",
-      note: "Regenerate via `npm run build:boss-bands` + commit. Drift-guarded byte-match.",
+      note: "Regenerate via `npm run build:boss-bands` + commit. Drift-guarded byte-match. Re-anchored 2026-06-26 from random-legal to best-N optimised play.",
     },
     bands,
   };
@@ -156,12 +179,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const obj = buildBossBandsArtifact();
   writeFileSync(ARTIFACT_PATH, JSON.stringify(obj) + "\n");
   console.log("wrote", ARTIFACT_PATH, "\n");
-  // Validation anchor: modern season 2425 should reproduce the global band (~132–159.6).
+  // Validation anchor: best-N 2425 daily band ≈ [197, 209], marquee P50 ≈ 217
+  // (from the re-anchor recon). Drift far from that → the model is wrong.
   const m = obj.bands["2425"];
-  console.log(`VALIDATION 2425 band [${m.lo}, ${m.hi}] (mean ${m.mean}) vs global [132, 159.6] — pool ${m.poolSize}`);
-  console.log("\nper-season bands:");
+  console.log(`VALIDATION 2425 best-N daily [${m.lo}, ${m.hi}] marquee ${m.p50} (mean ${m.mean}) vs recon ~[197, 209]/217 — pool ${m.poolSize}`);
+  console.log("\nper-season best-N bands (daily [P25,P40] / marquee P50):");
   for (const s of BAND_SEASONS) {
     const b = obj.bands[s];
-    console.log(`  ${s}  [${String(b.lo).padStart(6)}, ${String(b.hi).padStart(6)}]  mean ${String(b.mean).padStart(6)}  pool ${b.poolSize}`);
+    console.log(`  ${s}  [${String(b.lo).padStart(6)}, ${String(b.hi).padStart(6)}]  mq ${String(b.p50).padStart(6)}  mean ${String(b.mean).padStart(6)}  pool ${b.poolSize}`);
   }
 }
