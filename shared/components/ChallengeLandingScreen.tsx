@@ -16,6 +16,7 @@ import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
 //  a hint label for the CTA, never as a block.)
 import { isRealName } from "@shared/utils/isRealName";
 import { ChallengeTakeCardLanding } from "./ChallengeTakeCardLanding";
+import type { CardRenderer } from "./H2HRevealScreen";
 
 export interface ChallengeData {
   challenge_id: string;
@@ -119,6 +120,12 @@ interface Props {
   calculateWinTier: (totalFp: number) => string;
   onAccept: (ctx: ChallengeCtx) => void;
   onClose: () => void;
+  /** Consolidation Phase 3 step 3 — sport real-card renderer, threaded
+   *  from App (basketball `h2hArcRenderer`). Forwarded to the converged
+   *  take-card surface so its BOSS branch renders real cards on the cold
+   *  link, matching the hub. Optional — absent → neutral-chip fallback;
+   *  the human take-card path never reads it. */
+  renderBossCard?: CardRenderer;
 }
 
 function challengeStatsLine(data: ChallengeData): string | null {
@@ -139,7 +146,7 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-export function ChallengeLandingScreen({ challengeId, sport, currentUserId, deserializeRoster, validateRosterSnapshot, calculateWinTier, onAccept, onClose }: Props) {
+export function ChallengeLandingScreen({ challengeId, sport, currentUserId, deserializeRoster, validateRosterSnapshot, calculateWinTier, onAccept, onClose, renderBossCard }: Props) {
   const [data, setData] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -234,6 +241,7 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
             alreadyAttempted={alreadyAttempted}
             calculateWinTier={calculateWinTier}
             onAccept={handleAccept}
+            renderBossCard={renderBossCard}
           />
         );
       })()}

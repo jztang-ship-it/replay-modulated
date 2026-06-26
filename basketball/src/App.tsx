@@ -730,6 +730,9 @@ function AppInner() {
           calculateWinTier={calculateWinTier as (totalFp: number) => string}
           onAccept={handleChallengeAccept}
           onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
+          /* Phase 3 step 3 — real boss cards on the cold-link surface (same
+             renderer the hub uses; headshot resolved inside AthleteCard). */
+          renderBossCard={h2hArcRenderer}
         />
       )}
       {/* OAuth-resume sender confirmation. Mounted at App level so it

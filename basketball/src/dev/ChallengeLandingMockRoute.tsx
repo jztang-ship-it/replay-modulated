@@ -28,6 +28,7 @@ import { ChallengeTakeCardLanding } from "@shared/components/ChallengeTakeCardLa
 import { LANDING_MOCK_FIXTURES, getMockCaseFromUrl } from "./challengeLandingMockFixture";
 import { calculateWinTier } from "../utils/payoutLogic";
 import { recordBossResult } from "@shared/utils/bossResultMemory";
+import { h2hArcRenderer } from "../views/GameView";
 
 function getBoolParam(name: string): boolean {
   if (typeof window === "undefined") return false;
@@ -130,6 +131,9 @@ export default function ChallengeLandingMockRoute() {
         calculateWinTier={calculateWinTier as (totalFp: number) => string}
         onAccept={() => { console.warn("[challenge-landing-mock] onAccept clicked (dev no-op)"); }}
         showCultureLine={showCultureLine}
+        /* Phase 3 step 3 — glass the boss real cards (?case=boss|boss_marquee|
+           boss_revisit). Human cases ignore it (boss-branch-only). */
+        renderBossCard={h2hArcRenderer}
       />
     </div>
   );
