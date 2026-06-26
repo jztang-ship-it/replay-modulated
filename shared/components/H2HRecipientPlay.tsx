@@ -465,7 +465,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   if (instructionRef.current.sig !== introSig) {
     instructionRef.current = {
       sig: introSig,
-      line: ["Three rounds to beat your opponent, tap once to preview, tap again to hold the players from each round"],
+      line: ["Three rounds to beat your opponent. Tap once to preview, tap again to hold."],
     };
   }
   const instructionLine = instructionRef.current.line;
