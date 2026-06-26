@@ -651,7 +651,7 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
     await waitFor(
       () => {
         const el = container.querySelector('[data-h2h-play-intro="instruction"]');
-        expect(el?.textContent ?? "").toMatch(/tap once to preview, tap again to hold/);
+        expect(el?.textContent ?? "").toMatch(/Tap once to preview, tap again to hold\./);
       },
       { timeout: 2000 },
     );
