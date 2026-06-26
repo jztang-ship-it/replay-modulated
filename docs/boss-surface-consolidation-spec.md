@@ -51,7 +51,9 @@ The `BossLineupReveal` + adapter + count-up from `feat/boss-target-reveal-p1` ar
 
 **Phase 1 does NOT:** change routing, touch the accept→deal flow, render/alter the share loop, or change Play Again. No new fetch (the hub already has target + five). No DB/migration.
 
-**Locked surface specifics (from John, prior round):** reveal fires on **first VIEW of a boss only** (once-per-boss `rm_boss_reveal_seen_{id}`, set-once); returning players see static real cards + the kept verdict; `?reveal=force` DEV override. **Open item from glass:** `?reveal=force` is `import.meta.env.DEV`-gated and went **inert under `vercel dev`** (SPA likely served as a prod build, `DEV===false`). The hub re-aim must provide a glass hook that survives `vercel dev` (e.g. not DEV-gate the force read, or a dev-route).
+**Locked surface specifics (from John, prior round):** reveal fires on **first VIEW of a boss only** (once-per-boss `rm_boss_reveal_seen_{id}`, set-once); returning players see static real cards + the kept verdict; `?reveal=force` DEV override. **Resolved from glass:** `?reveal=force` was `DEV`-gated + the mock route reached `/api` (which `vercel dev`/Vite proxies to the deployed preview → stale/404); the glass route is now **self-contained** — `BossHubMockRoute` injects a fixture via `BossScreen`'s `__devBoss`/`__devEntries` props (no `/api`), glassable under plain `npm run dev:basketball` at `/basketball/dev/boss-hub-mock?reveal=force`.
+
+**Parked to polish (NOT iterated live) — see `docs/open-followups.md` (2026-06-26 boss-card cosmetics):** (1) the accent-strip trim must be a proper short/frameless card VARIANT (correct proportion), not a clip-crop of the full card (the clip squashed it; reverted to the natural `329/478` aspect). (2) the clean boss-reveal card format (drop the normal-game special-card shape/tier treatment) isn't achieved. Both need a non-fork CardFront variant. **Phase 1 mechanics are done and held (un-squashed real cards interim); the card visual is polish-stage.**
 
 ---
 

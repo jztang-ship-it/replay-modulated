@@ -2,6 +2,14 @@
 
 Living document. Each entry: short title, context, priority hint, suggested next action. Address in dedicated sessions, not bundled.
 
+## Open from 2026-06-26 (boss hub reveal — parked cosmetics)
+
+Context: Consolidation Phase 1 (the boss-hub first-view reveal, branch `feat/boss-hub-reveal-p1`) shipped its MECHANICS — real `AthleteCard`s, per-card blast, FP→target count-up with the snap-to-`target == Σ five` invariant, one-state (no LineupTile swap). Two CARD-VISUAL items are parked to the polish stage (not iterated live). Both touch the card's appearance; CardFront is reuse-only (no fork), so polish must find a non-fork variant. Glass via `npm run dev:basketball` → `/basketball/dev/boss-hub-mock?reveal=force` (self-contained fixture, no `/api`).
+
+- **Squash-free accent-strip trim (the tier-colored under-lip).** The boss-reveal card should NOT carry the tier-colored accent strip below the black name strip. The first attempt clipped the full card into a shorter box (cell `aspectRatio 329/412` + `overflow:hidden`) — this **squashed** the card (a crop of a natural-ratio card distorts the headshot/content into an unnatural shape). **REVERTED** — interim is the full real card at its natural `329/478` aspect (un-squashed, accent strip present). Polish fix: render the card at a CORRECT proportion WITHOUT the accent strip — a proper frameless/short card VARIANT (e.g. a CardFront variant prop, or a non-fork wrapper that re-lays-out rather than crops), NOT a clip of the full card. Accent strip element = `CardFront.tsx:621` (`background: tier.accent`, `top:86.2%→100%`); black name strip to keep = `CardFront.tsx:546`.
+
+- **Clean boss-reveal card format (drop the normal-game "special card shape"/tier treatment).** The reveal cards still read as the normal gameplay card (the special card shape + tier gradient/frame treatment); the intended clean boss-reveal format isn't achieved. Polish: a dedicated boss-reveal card look (cleaner shape/treatment) — again via a non-fork CardFront variant or a boss-specific render path, not a fork of CardFront. Pairs with the trim item above (same variant likely covers both).
+
 ## Open from 2026-05-25 (smoke-driven post-amend findings)
 
 - **PURPLE-tier inclusion question for bad_beat predicate** — User-flagged 2026-05-24: hands with 2+ PURPLE held cards on BUST/ROOKIE feel bad-beat-worthy to user, but current predicate requires RED/ORANGE. Decision deferred to calibration arc — broadening to PURPLE may push bad_beat frequency too high. Decide post-frequency-analysis: if current rate <30%, consider broadening; if >50%, keep narrow.
