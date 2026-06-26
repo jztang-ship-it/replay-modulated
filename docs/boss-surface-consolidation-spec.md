@@ -149,6 +149,45 @@ Boss converges onto `ChallengeTakeCardLanding`; `BossLandingView` retired as a r
 - [x] JSDOM: boss renders `boss-take-card` (not `take-headline`); 6 neutral cards, 0 held; CTA copy; revisit reconstructs `boss-outward-ending`; no variant analytics
 - [ ] `npm test` green; basketball build green; `typecheck:unbound` clean
 
+### Step-3 build (real card on the converged cold-link surface) — SPEC (locked 2026-06-27)
+
+Closes the cold-link card-quality gap found in post-ship glass: the converged `ChallengeTakeCardLanding` boss branch renders the interim neutral `HandCard` chip (name + tier border, no headshot/FP), while the hub renders real boss cards. **The cold link should match the hub's card quality.** Built on a fresh branch off shipped main (`268c7992` SPA code); the retired `feat/boss-consolidation-p3` worktree is closed.
+
+**Diagnosis recap (measured, done — do not re-litigate):** `/api/challenge/{id}` already returns enough for a real boss card (`basePlayerId, fp, name, pos, salary, tier`); the **hub renders real cards from this exact endpoint** (`BossScreen.tsx:251-264` map + `:391-400` render). So the fix is **RENDER-SIDE — NO `/api/challenge/{id}` change.** If a data/API change becomes tempting, STOP and report — it contradicts the diagnosis.
+
+**Goal:** the converged boss branch renders REAL boss cards (headshot + FP + tier gradient), replacing the neutral chip. This is the REAL hub-style card (**notch + bottom strip intact**) — NOT the trimmed/frameless variant, which stays PARKED (spec §(C)).
+
+**Method — REUSE, do not invent:**
+- **Renderer threading:** thread `renderBossCard` (the `CardRenderer` = basketball `adapter.h2hArcRenderer`) **App → shell (`ChallengeLandingScreen`) → boss branch**, the same way `GameView` threads it to `BossScreen` (`GameView.tsx:3187`). `h2hArcRenderer` (`GameView.tsx:127`) renders `<AthleteCard … canFlip={false}>` and **resolves the headshot INTERNALLY** — so **only `renderBossCard` needs threading; `headshotUrl` is NOT separately consumed** by the renderer (the hub threads `headshotUrl` only for its non-renderer `LineupTile` fallback, `BossScreen:383`). [refinement of the brief's "renderer + headshotUrl" — surfaced from recon, not a data change.]
+- **Mapping (verbatim from the hub — `BossScreen:251-264` + `:391-400`, mirrored by `H2HRecipientReveal:182-188`):** per raw cold-link card, index `i`:
+  - `position = pos ?? position ?? ""`, `photoCode = photoCode ?? null`, `tier = tier ?? "WHITE"`, `fp = fp ?? actualFp ?? 0`; keep `name`/`salary`/`basePlayerId`.
+  - render arg = `{ ...mapped, cardId: ` + "`${basePlayerId}-boss-${i}`" + `, wasHeld: false, actualFp: fp, projectedFp: fp }`.
+  - `boss_identity_id → team` is available but the hub's render call **omits team** (AthleteCard doesn't require it); include only if the card visibly needs it — default omit, matching the hub.
+- **Render opts:** `{ revealed: true }` → static settled card (FP shown, `staticEndState` true). **No reveal/count-up** on the cold link (that is a hub first-view affordance).
+- **Scaffold (reuse the working one — CLAUDE.md visual rule):** copy the hub's scaled card-in-slot scaffold verbatim (`BossScreen:391-393`): outer slot `aspectRatio 329/478, containerType: inline-size, maxWidth 76, overflow visible`; inner `width 150, height 150*478/329, transform scale(calc(100cqw/150px)), transformOrigin top-left`; row `flex, gap 6, justify center, align flex-start`. Do NOT hand-derive a parallel scaffold.
+- `canFlip=false` (h2hArcRenderer hardcodes it); neutral (no held/discard — boss has no held concept).
+
+**Hard constraints:**
+- NO `/api/challenge/{id}` change. NO `CardFront` fork (reuse only, as the hub does).
+- REAL card (hub-style, notch + bottom strip intact) — NOT the trimmed/frameless variant (parked). Do not remove notch / bottom strip / resize.
+- Human take-card path **byte-identical** (friend challenge suspended, code preserved). Boss-gated only.
+- **Graceful fallback:** when `renderBossCard` is absent (non-basketball, or unthreaded), keep the neutral `HandCard` — no crash, no blank.
+
+**Threading (files):**
+- `basketball/src/App.tsx` → `<ChallengeLandingScreen renderBossCard={h2hArcRenderer}>` (already imported, `App:47`).
+- `shared/components/ChallengeLandingScreen.tsx` → add `renderBossCard?: CardRenderer`, pass to `ChallengeTakeCardLanding`.
+- `shared/components/ChallengeTakeCardLanding.tsx` → add `renderBossCard?: CardRenderer`; boss branch renders real cards when present, neutral `HandCard` otherwise.
+- Glass: `basketball/src/dev/ChallengeLandingMockRoute.tsx` passes `renderBossCard={h2hArcRenderer}` so `?case=boss|boss_marquee|boss_revisit` render real cards.
+
+**Step-3 verification checklist (glass-required marked — render-path divergence is exactly what JSDOM can't catch):**
+- [ ] (glass) cold `/challenge/{bossId}`: five REAL boss cards (headshot + FP + tier gradient), hub-quality — not chips
+- [ ] (glass) cards scale correctly in the row (no squash, no clip, inside viewport) — real-browser bbox check
+- [ ] (glass) human challenge surface unchanged (headline + seal + held/discard chips)
+- [ ] (glass) self-match unchanged
+- [ ] JSDOM: boss branch invokes `renderBossCard` 5× with mapped cards when provided; neutral `HandCard` fallback when absent; human path unchanged
+- [ ] `npm test` green; basketball build green; `typecheck:unbound` clean
+- [ ] NO `api/challenge/[id].ts` diff; NO `CardFront.tsx` diff
+
 ---
 
 ## Build protocol
