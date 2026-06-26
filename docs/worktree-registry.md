@@ -327,13 +327,13 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 
 ---
 
-### `feat/boss-consolidation-p3` — active-parked (held for glass, do NOT push)
+### `feat/boss-consolidation-p3` — mergeable (merged 2026-06-26)
 
-- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-consolidation-p3`
-- **Branch HEAD:** Consolidation Phase 3 step-2 (surface merge) committed on top of `5a59e57d` (step-1: in-app boss routes deal-flow direct).
-- **Unique commits vs main:** step 1 (`5a59e57d`) + step 2 (this session). Branched off `main` (`c5ea9ae0`).
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-consolidation-p3` (worktree retained until merge confirmed clean; branch safe to `-d` after).
+- **Branch HEAD:** `60e6ae24` (step 2) on top of `5a59e57d` (step 1).
+- **Unique commits vs main:** 0 after merge (was 2: `5a59e57d` step 1 + `60e6ae24` step 2) — both landed on `main` via `--no-ff` merge `88e660da`. **Rollback point = `c5ea9ae0`.**
 - **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup).
 - **What it carries:** Boss Surface Consolidation Phase 3 (`docs/boss-surface-consolidation-spec.md`). Step 1 = in-app boss skips the redundant landing render. Step 2 = boss converges onto the unified `ChallengeTakeCardLanding` (internally gated boss-vs-human); `BossLandingView` retired as a render target; the `priorResult → BossOutwardEnding` revisit branch ported in (boss-gated). Interim card = neutral `HandCard` (held/discard gated off); step 3 = the one trimmed card (NOT started). Glass: `/basketball/dev/challenge-landing-mock?case=boss|boss_marquee|boss_revisit`.
-- **Equivalence on main:** none — held arc, unpushed. The whole arc (steps 1→3) merges at the end.
-- **Intent:** held for phone glass on the step-2 merged surface (3 branches: boss cold-link / human unchanged / self-match unchanged + returning-winner revisit). Do NOT push; do NOT start step 3 until step 2 glass passes.
-- **Last reviewed:** 2026-06-26
+- **Equivalence on main:** fully merged via `88e660da` (steps 1+2). No unique work remains; branch safe to delete (`-d`, not `-D`).
+- **Intent:** SHIPPED — Consolidation Phase 3 steps 1+2. **Step 3 (the one trimmed card) was DROPPED for this ship and is PARKED** (boss renders through the interim neutral `HandCard`; pick up the trimmed card in a future session per `docs/boss-surface-consolidation-spec.md` §(C)).
+- **Last reviewed:** 2026-06-26 (merged + shipped this session)
