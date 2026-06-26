@@ -19,7 +19,7 @@
  * automatically. Boss play = the existing /{sport}/challenge/{id} open path
  * (H2HRecipientPlay), no fork. board=boss leaderboard endpoint untouched.
  */
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 // Path B: authored per-boss stories, generated from docs/boss-bank-v1.json
 // (keyed by bank id == boss_identity_id). Regen via scripts/gen-boss-stories.mjs;
 // a drift test keeps it synced to the bank.
@@ -33,17 +33,24 @@ import { getTier, TIER_POSITION_TEXT, type TierKey } from "@shared/theme";
 import { formatSeasonRange } from "@shared/utils/seasonRange";
 // Returning-player win-state — the SAME local key BossLandingView reads. Additive
 // display over existing data (no new fetch); getBossResult was previously ungrepped here.
-import { getBossResult, type BossResult } from "@shared/utils/bossResultMemory";
+import { getBossResult, hasSeenBossReveal, markBossRevealSeen, bossRevealForce, type BossResult } from "@shared/utils/bossResultMemory";
+import { useBossReveal } from "@shared/hooks/useBossReveal";
+import type { CardRenderer } from "@shared/components/H2HRevealScreen";
+
+// First-view reveal renders the boss five as REAL cards scaled into the strip slot
+// (recon B); mirrors the H2H strip's natural-card box (width + height + absolute).
+const REVEAL_CARD_W = 150;
+const REVEAL_CARD_H = (150 * 478) / 329;
 
 const FF = "'Rajdhani', 'Arial Narrow', sans-serif";
 
 const BOSS_STORIES = bossStories as Record<string, string>;
 
-type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
+export type Entry = { uid: string; nickname: string; score: number; session_id?: string | null };
 
-type LineupCard = { name: string; position: string; salary: number; photoCode: string | null; basePlayerId: string; tier: string };
+type LineupCard = { name: string; position: string; salary: number; photoCode: string | null; basePlayerId: string; tier: string; fp: number };
 
-interface BossInfo {
+export interface BossInfo {
   display: string;
   story: string;          // story ?? flavor (see header note)
   target: number | null;
@@ -59,6 +66,15 @@ interface Props {
   bossPlayerCount: number | null;
   /** Optional headshot resolver (sport adapter). Absent → name/position tiles. */
   headshotUrl?: (playerId: string) => string | null;
+  /** Sport card renderer (basketball: h2hArcRenderer, via the GameAdapter) — used
+   *  ONLY by the first-view reveal to render the five as real cards. Absent → the
+   *  reveal is skipped and the LineupTile strip shows as today. */
+  renderBossCard?: CardRenderer;
+  /** DEV-only fixture injection (the boss-hub-mock glass route). When provided,
+   *  BossScreen uses these directly and SKIPS both /api fetches — so the mock is
+   *  fully self-contained (no backend, glassable under plain `vite`). */
+  __devBoss?: BossInfo;
+  __devEntries?: Entry[];
   onClose: () => void;
 }
 
@@ -167,7 +183,7 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
   );
 }
 
-export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, headshotUrl, onClose }: Props) {
+export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, headshotUrl, renderBossCard, __devBoss, __devEntries, onClose }: Props) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [boss, setBoss] = useState<BossInfo | null>(null);
@@ -175,19 +191,42 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
   // key BossLandingView uses. Sync localStorage read on the prop id — no fetch.
   const [bossResult, setBossResult] = useState<BossResult | null>(null);
   useEffect(() => { setBossResult(getBossResult(bossChallengeId)); }, [bossChallengeId]);
+
+  // Consolidation Phase 1 (hub) — first-VIEW reveal arming. Fires once per boss
+  // (rm_boss_reveal_seen_{id}); returning players (priorResult) never reveal;
+  // ?reveal=force (DEV, via the boss-hub-mock route) re-fires. Waits for the boss
+  // fetch so the target/five are present. Display-only — no deal/share/routing.
+  const [armReveal, setArmReveal] = useState(false);
+  // Decide arming SYNCHRONOUSLY on the first render the boss is available — so the
+  // count-up starts from 0 with no target-flash (a state+effect would paint `target`
+  // for one frame first). Latch keyed on the boss id (re-decides on a new boss). The
+  // seen-flag WRITE happens in the effect below so it can't un-arm a live reveal.
+  const armDecidedForRef = useRef<string | null>(null);
+  if (armDecidedForRef.current !== bossChallengeId && boss && boss.target != null && bossChallengeId && renderBossCard) {
+    armDecidedForRef.current = bossChallengeId;
+    const eligible = bossRevealForce() || (!getBossResult(bossChallengeId) && !hasSeenBossReveal(bossChallengeId));
+    setArmReveal(eligible);
+  }
+  useEffect(() => {
+    // Consume the once-per-boss flag once armed (not on force — leave it re-glassable).
+    if (armReveal && bossChallengeId && !bossRevealForce()) markBossRevealSeen(bossChallengeId);
+  }, [armReveal, bossChallengeId]);
+  const reveal = useBossReveal(armReveal, boss?.target ?? 0, bossChallengeId ?? "");
   const sessId = typeof localStorage !== "undefined" ? localStorage.getItem("rm_session_id") : null;
 
   // Leaderboard (board=boss — endpoint unchanged). Top 10.
   useEffect(() => {
+    if (__devEntries) { setEntries(__devEntries); setLoaded(true); return; } // DEV fixture — no fetch
     fetch(`/api/leaderboard?sport=${sport}&board=boss&limit=10`)
       .then(r => r.json())
       .catch(() => ({ entries: [] }))
       .then((d) => { setEntries(d.entries ?? []); setLoaded(true); });
-  }, [sport]);
+  }, [sport, __devEntries]);
 
   // Boss identity + lineup. Best-effort: any failure leaves boss=null and the
   // page falls back to generic chrome (never crashes / never a dead end).
   useEffect(() => {
+    if (__devBoss) { setBoss(__devBoss); return; }                            // DEV fixture — no fetch
     if (!bossChallengeId) { setBoss(null); return; }
     let cancelled = false;
     fetch(`/api/challenge/${bossChallengeId}`)
@@ -206,6 +245,8 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
               photoCode: c.photoCode != null ? String(c.photoCode) : null,
               basePlayerId: String(c.basePlayerId ?? ""),
               tier: String(c.tier ?? "WHITE"),
+              // fp — needed by the first-view reveal (per-card roll + Σ == target).
+              fp: Number(c.fp ?? c.actualFp ?? 0),
             }))
           : [];
         const mappedStory = d.boss_identity_id ? BOSS_STORIES[String(d.boss_identity_id)] : undefined;
@@ -227,7 +268,7 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
         });
       });
     return () => { cancelled = true; };
-  }, [bossChallengeId]);
+  }, [bossChallengeId, __devBoss]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -294,9 +335,11 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
           ) : null}
           {boss?.target != null && (
             <>
-              {/* Line 1 — standalone target to beat (always shown, first-timer + returner). */}
-              <div style={{ fontSize: 13, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, marginTop: 8 }}>
-                Target to beat: {boss.target.toFixed(1)}
+              {/* Line 1 — standalone target to beat. On a first VIEW this counts
+                  0→target with the lineup reveal and snaps to the baked target
+                  (reveal.running == boss.target when not revealing). */}
+              <div data-testid="boss-target" style={{ fontSize: 13, fontWeight: 900, color: "#FFB14A", letterSpacing: 0.5, marginTop: 8, fontVariantNumeric: "tabular-nums" }}>
+                Target to beat: {(armReveal ? reveal.running : boss.target).toFixed(1)}
               </div>
               {/* Line 2 — returning-player verdict + score, BELOW the target. Verdict
                   copy matches BossOutwardEnding.tsx:74 verbatim (one voice across the
@@ -320,8 +363,27 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
           <div style={{ width: "100%", padding: "16px 14px 0", boxSizing: "border-box" }}>
             {/* The lineup is the page hero: five flex:1 cards fill the row
                 edge-to-edge, one row, no scroll, all five visible. */}
-            <div style={{ display: "flex", gap: 6, width: "100%", justifyContent: "center", alignItems: "flex-start" }}>
-              {boss.cards.map((c, i) => <LineupTile key={`lu-${i}`} card={c} headshotUrl={headshotUrl} />)}
+            <div data-testid="boss-lineup" data-revealing={armReveal && reveal.phase !== "settled" ? "true" : "false"} style={{ display: "flex", gap: 6, width: "100%", justifyContent: "center", alignItems: "flex-start" }}>
+              {!renderBossCard
+                ? /* No card renderer (other sports): the compact LineupTile miniatures. */
+                  boss.cards.map((c, i) => <LineupTile key={`lu-${i}`} card={c} headshotUrl={headshotUrl} />)
+                : /* ONE state — the real AthleteCards ARE the resting state: first-VIEW
+                     reveals (present → blast → count-up → settle-and-stay), returning/seen
+                     show the same cards static. INTERIM: the full real card at its natural
+                     329/478 aspect (un-squashed). The accent-strip trim + clean boss-card
+                     format are PARKED to polish (see docs/boss-surface-consolidation-spec.md
+                     — clipping into a shorter box squashed the card; needs a proper
+                     frameless/short variant, not a crop). CardFront untouched. */
+                  boss.cards.map((c, i) => (
+                    <div key={`rv-${i}`} style={{ flex: 1, minWidth: 0, maxWidth: 76, aspectRatio: "329 / 478", containerType: "inline-size", position: "relative", overflow: "visible" }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, width: REVEAL_CARD_W, height: REVEAL_CARD_H, transform: `scale(calc(100cqw / ${REVEAL_CARD_W}px))`, transformOrigin: "top left" }}>
+                        {renderBossCard!(
+                          { ...c, cardId: `${c.basePlayerId || "boss"}-hub-${i}`, wasHeld: false, actualFp: c.fp, projectedFp: c.fp } as never,
+                          reveal.optsFor(c) as never,
+                        )}
+                      </div>
+                    </div>
+                  ))}
             </div>
           </div>
         )}

@@ -3177,6 +3177,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             // Compact lineup headshots via the sport adapter; optional-chained
             // so a sport without headshots falls back to name/position tiles.
             headshotUrl={(id) => sportAdapter.getHeadshotUrl?.(id) ?? null}
+            // First-view reveal renderer (basketball: h2hArcRenderer via the
+            // GameAdapter). Absent (other sports) → the LineupTile strip shows as today.
+            renderBossCard={adapter.h2hArcRenderer}
             onClose={() => setShowBoss(false)}
           />
         )}
