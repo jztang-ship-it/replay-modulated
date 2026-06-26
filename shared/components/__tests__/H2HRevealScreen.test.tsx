@@ -199,7 +199,7 @@ describe("H2HRevealScreen — static layout", () => {
     expect(innerStyle).toMatch(/scale\(calc\(100cqw\s*\/\s*150px\)\)/);
   });
 
-  it("shows the SWAP pill on non-held battlefield card", () => {
+  it("renders NO SWAP pill on the battlefield card (removed 2026-06-26)", () => {
     const sender = makeHand({
       cards: [
         makeCard({ slotIndex: 0, cardId: "c-held", wasHeld: true, name: "Held One" }),
@@ -209,10 +209,13 @@ describe("H2HRevealScreen — static layout", () => {
     });
     const recipient = makeHand();
     render(<H2HRevealScreen sender={sender} recipient={recipient} renderCard={makeStub()} />);
-    // Battlefield default slot is the max slotIndex (5) which is a
-    // non-held filler card → SWAP pill should appear.
-    const swapPills = screen.queryAllByText("SWAP");
-    expect(swapPills.length).toBeGreaterThan(0);
+    // The reveal-screen SWAP pill was removed: hold-vs-swap is encoded by the
+    // gold "H" corner indicator drawn inside CardFront (locked=card.wasHeld), so
+    // the pill was redundant on the player's own lineup — and it must never
+    // render on the opponent hero (boss cards carry no wasHeld). No pill in any
+    // state now. (The H indicator itself is CardFront-drawn; this test stubs
+    // renderCard, so it verifies only the pill's absence.)
+    expect(screen.queryAllByText("SWAP").length).toBe(0);
   });
 
   // Phase 4 fix 2 amend2 (2026-05-27): the final-margin pill (TIE /

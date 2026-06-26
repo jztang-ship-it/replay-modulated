@@ -115,6 +115,7 @@ import { ScoreCell } from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
+import { formatSeasonRange } from "@shared/utils/seasonRange";
 import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
@@ -440,11 +441,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
 
   const [state, setState] = useState<PlayingState>({ kind: "loading" });
 
-  // Phase 5c S3 — recipient contextual intro. Flag flips true on first
-  // hold-tap; sticky so Stage 1 doesn't re-appear if the user un-holds
-  // every card back to held.size === 0. Past `hold_select`, both Stage 1
-  // and Stage 2 collapse — VS treatment + existing headline take over.
-  const [introDismissed, setIntroDismissed] = useState(false);
+  // RD8 (2026-06-26): the intro-dismiss flag is retired. The unified
+  // instruction line is round-gated (rounds 1–2), not tap-gated, so there's
+  // no "dismiss on first tap" state to track.
 
   // Static recipient commentary (lock: docs/h2h-recipient-static-commentary-lock.md).
   // Dynamic per-draw picks (selectRecipientIntro / selectRecipientDealNudge) were
@@ -457,30 +456,19 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     String(challengeCtx.targetScore),
   ].join("|");
 
-  const stage1Ref = useRef<{ sig: string; line: Line }>({ sig: "", line: [""] });
-  if (stage1Ref.current.sig !== introSig) {
-    stage1Ref.current = {
+  // RD8 (2026-06-26): the two-stage Stage-1/Stage-2 intro collapses into ONE
+  // unified instruction line, shown across the whole hold_select window of
+  // rounds 1–2 (round 3 is the reveal — no instruction). The line no longer
+  // keys on held-count or preview/hold taps; it's a persistent round guide.
+  // The ref/sig pin stays — it gives PartsLine the identity-keyed reset.
+  const instructionRef = useRef<{ sig: string; line: Line }>({ sig: "", line: [""] });
+  if (instructionRef.current.sig !== introSig) {
+    instructionRef.current = {
       sig: introSig,
-      // RD7.9.2b (2026-06-15): initial instruction.
-      line: ["Same hand to start — tap the cards you want to hold"],
+      line: ["Three rounds to beat your opponent, tap once to preview, tap again to hold the players from each round"],
     };
   }
-  const stage1Line = stage1Ref.current.line;
-
-  const stage2Ref = useRef<{ sig: string; line: Line }>({ sig: "", line: [""] });
-  if (stage2Ref.current.sig !== introSig) {
-    stage2Ref.current = {
-      sig: introSig,
-      // RD6.1-c (2026-06-11): the body-text target mention is retired
-      // — Mike's box name line now renders "Target: X" via
-      // TargetCornerScore. Stage 2 drops the redundant number and
-      // keeps a CTA framing only. Keeps the Stage 2 intro band
-      // reserved (preserves the vertical layout) without echoing the
-      // target value twice on screen.
-      line: ["Draw the rest when you're ready."],
-    };
-  }
-  const stage2Line = stage2Ref.current.line;
+  const instructionLine = instructionRef.current.line;
 
   // Stable callback refs — prevent effect cleanups from clearing
   // pending timers when parent re-renders churn prop identity.
@@ -1064,7 +1052,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     // Prior-round holds are PERMANENTLY locked — never toggleable now (the
     // commit-lock happens at Next, not at tap; see the lockedHeld threading).
     if (state.lockedHeld.has(i)) return;
-    setIntroDismissed(true);
     setState((s) => {
       if (s.kind !== "hold_select") return s;
       if (s.lockedHeld.has(i)) return s; // prior-round lock (stale-closure guard)
@@ -1086,9 +1073,21 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // byte-identical to what H2HRecipientReveal computes downstream
   // (no flicker across the S3→S4 boundary). Per doc EDIT B3 (lock
   // e6fe662): name labels show in ALL states, not only at reveal.
-  const topLabel = isRealName(challengeCtx.challengerName)
-    ? (challengeCtx.challengerName as string)
-    : "your friend";
+  // Title: for a BOSS challenge the header reads the boss identity — team +
+  // season (e.g. "PHX 06-07") parsed from bossIdentityId — NOT the boss
+  // display name. Friend challenges stay byte-identical (real challenger
+  // name, else "your friend"). The reveal (S4) owns its own boss-identity
+  // header via the senderKind branch, so this play-surface label and the
+  // reveal surface don't fight over the boss case.
+  const topLabel = (() => {
+    if (challengeCtx.senderKind === "boss" && challengeCtx.bossIdentityId) {
+      const [team, season] = String(challengeCtx.bossIdentityId).split("-");
+      return season ? `${team} ${formatSeasonRange(season)}` : team;
+    }
+    return isRealName(challengeCtx.challengerName)
+      ? (challengeCtx.challengerName as string)
+      : "your friend";
+  })();
   // Design-lock §1 / §2 / §4 / §5: bottom-zone label is the literal
   // string "YOU" across all states — not the random handle. The
   // getNickname() resolution previously seeded a random nickname into
@@ -1109,9 +1108,11 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // is DETERMINISTIC regardless of which bank line was picked —
   // killing the 64↔92px randomization that wedged the prior layout.
   // Words are unchanged; this is display-only.
-  const heldCount = state.kind === "hold_select" ? state.held.size : 0;
-  const showStage2 = state.kind === "hold_select" && heldCount > 0;
-  const showStage1 = state.kind === "hold_select" && heldCount === 0 && !introDismissed;
+  // RD8: the unified instruction line shows across the entire hold_select
+  // window of rounds 1–2 (roundsUsed jumps to maxRounds at the locking
+  // commit, so roundsUsed<=2 == "still choosing"); round 3 is the reveal,
+  // which gets no instruction text.
+  const showInstruction = state.kind === "hold_select" && roundsUsed <= 2;
   const senderWinTier = challengeCtx.resolvedSenderHand?.tier;
   const missTierLabel = challengeCtx.nearMissNextTier ?? undefined;
   const introTypography: React.CSSProperties = {
@@ -1428,30 +1429,19 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
                 line moved here OUT of slot b (now a stable rail). The exact
                 deal_in / Stage-1 / Stage-2 / headline conditional + markers
                 are preserved verbatim from the old top-zone region so the
-                behavior gates (introDismissed, heldCount) are unchanged —
-                only the parent zone moved. Copy itself is a later pass. */}
+                behavior gate (round-gated showInstruction) drives the
+                stage-text region. */}
             {state.kind === "deal_in" ? (
               <div data-h2h-play-intro="deal-intro-placeholder" style={{ width: "100%" }}>
                 <div data-h2h-play-headline="true" style={introTypography}>
                   {headline}
                 </div>
               </div>
-            ) : showStage1 ? (
-              <div data-h2h-play-intro="stage1" style={{ width: "100%" }}>
+            ) : showInstruction ? (
+              <div data-h2h-play-intro="instruction" style={{ width: "100%" }}>
                 <PartsLine
-                  key="recipient-stage1"
-                  parts={stage1Line}
-                  rush
-                  winTier={senderWinTier}
-                  missTier={missTierLabel}
-                  style={introTypography}
-                />
-              </div>
-            ) : showStage2 ? (
-              <div data-h2h-play-intro="stage2" style={{ width: "100%" }}>
-                <PartsLine
-                  key="recipient-stage2"
-                  parts={stage2Line}
+                  key="recipient-instruction"
+                  parts={instructionLine}
                   rush
                   winTier={senderWinTier}
                   missTier={missTierLabel}
@@ -1806,9 +1796,9 @@ function deriveHeadline(
       // "same hand" framing once hold_select begins).
       return "";
     case "hold_select":
-      // RD7.9.2b: the headline-fallback shown once a card is previewed but
-      // none is held yet (heldCount===0 && introDismissed).
-      return "Tap once to preview, tap again to hold";
+      // RD8 (2026-06-26): no headline fallback for hold_select — the unified
+      // instruction line (round-gated, rounds 1–2) owns this copy now.
+      return "";
     case "redraw_running":
     case "your_redraw_flip":
       // RD3 (2026-06-11): the "Drawing…" headline beat is dead — the

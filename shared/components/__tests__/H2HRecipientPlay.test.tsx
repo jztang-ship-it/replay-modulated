@@ -625,12 +625,14 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
     resolveRedraw({ roster: makeFinalRoster(makeRoster(), new Set([2])) });
   });
 
-  it("stage-2 intro renders the RD6.1-c target-free CTA copy (no 'Draw to beat <X>')", async () => {
-    // RD6.1-c: Stage 2 used to read "Draw to beat <targetScore>." —
-    // now Mike's box name line hosts "Target: X" instead and Stage 2
-    // is a target-free CTA frame ("Draw the rest when you're ready.").
-    // Real timers throughout so PartsLine's typewriter rush paints
-    // (same reason the prior anti-drift test ran on real timers).
+  it("hold_select renders the unified instruction line (RD8 — one round guide, not Stage 1/2)", async () => {
+    // RD8 (2026-06-26): Stage 1/Stage 2 collapse into ONE instruction line
+    // shown across the whole hold_select window of rounds 1–2. The line is
+    // round-gated, not held-count gated — it mounts on hold_select entry with
+    // no taps, and persists through preview + hold taps. Real timers so
+    // PartsLine's typewriter rush paints. NOTE: this verbatim line reintroduces
+    // the "to beat" framing that RD6.1-c had retired from the body copy — John's
+    // RD8 copy supersedes that decision.
     vi.useRealTimers();
     const props = baseProps();
     const { container } = render(
@@ -644,22 +646,26 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
       },
       { timeout: 3000 },
     );
-    // Confirm hold of slot 2 (tap-tap). Stage 2 mounts.
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    // Wait for the typewriter rush to paint Stage 2.
+    // Mounts on hold_select entry — no taps required. Wait for the typewriter
+    // rush to paint the full line (the tail paints last).
     await waitFor(
       () => {
-        const el = container.querySelector('[data-h2h-play-intro="stage2"]');
-        expect(el?.textContent ?? "").toMatch(/Draw the rest/);
+        const el = container.querySelector('[data-h2h-play-intro="instruction"]');
+        expect(el?.textContent ?? "").toMatch(/tap once to preview, tap again to hold/);
       },
       { timeout: 2000 },
     );
-    // Negative assertion: no "to beat" in Stage 2 — the target now
-    // lives in Mike's name-line corner only.
-    const stage2Text = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
-    expect(stage2Text).not.toMatch(/to beat/);
-    expect(stage2Text).not.toMatch(/\d+\.\d+/); // no decimal number — the target is gone
+    const text = container.querySelector('[data-h2h-play-intro="instruction"]')?.textContent ?? "";
+    expect(text).toMatch(/Three rounds to beat your opponent/);
+    // Persists through a preview + hold (round-gated, not tap-gated): the old
+    // Stage-1-dismisses / Stage-2-swaps-in behavior is gone.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // preview
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2")); // hold
+    const after = container.querySelector('[data-h2h-play-intro="instruction"]')?.textContent ?? "";
+    expect(after).toMatch(/Three rounds to beat your opponent/);
+    // No legacy two-stage attrs survive.
+    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
   });
 });
 
@@ -1480,50 +1486,34 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     });
   }
 
-  it("mounts Stage 1 intro during hold_select entry (no holds yet)", async () => {
+  it("mounts the unified instruction line on hold_select entry (RD8 — no holds yet)", async () => {
     const { container } = await dealThroughCtx(s3Ctx());
-    const stage1 = container.querySelector('[data-h2h-play-intro="stage1"]');
-    expect(stage1).not.toBeNull();
-    // Existing instructional headline is displaced by the intro.
+    const instruction = container.querySelector('[data-h2h-play-intro="instruction"]');
+    expect(instruction).not.toBeNull();
+    // The instruction line displaces the instructional headline.
     expect(container.querySelector("[data-h2h-play-headline]")).toBeNull();
   });
 
-  // Polish #11 (§6): Stage 1 dismisses on FIRST PREVIEW tap; Stage 2
-  // swaps in on FIRST CONFIRMED HOLD (second tap on same cell).
-  it("first preview tap dismisses Stage 1 (but Stage 2 does NOT fire yet — no held card)", async () => {
+  // RD8 (2026-06-26): the old Polish-#11 two-stage behavior — Stage 1
+  // dismisses on first preview tap, Stage 2 swaps in on first confirmed hold —
+  // is GONE. The single instruction line is round-gated, not tap-gated, so it
+  // persists across both preview and hold taps within rounds 1–2. (This one
+  // test replaces the three deleted stage-transition tests.)
+  it("instruction line persists through preview + hold taps (RD8 — no dismiss, no swap)", async () => {
     const { container } = await dealThroughCtx(s3Ctx());
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
-    // 1st tap → preview only. Stage 1 dismisses; Stage 2 NOT yet.
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).not.toBeNull();
+    // 1st tap (preview-only) — the old behavior dismissed Stage 1 here.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).not.toBeNull();
+    // 2nd tap (confirmed hold) — the old behavior swapped in Stage 2 here.
+    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).not.toBeNull();
+    // No legacy two-stage attrs survive.
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
-    // The instructional headline ("Tap a card to preview…") takes over
-    // during this preview-not-yet-held interval.
-    expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
   });
 
-  it("Stage 2 swaps in on first confirmed hold (second tap on previewed cell)", async () => {
-    const { container } = await dealThroughCtx(s3Ctx());
-    // 1st tap: preview slot 2.
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    // 2nd tap on same cell: hold. Stage 2 fires.
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
-  });
-
-  it("Stage 1 dismisses on a preview-only tap (sticky); held.size 0 → headline, not Stage 2", async () => {
-    const { container } = await dealThroughCtx(s3Ctx());
-    // A single preview tap (no hold committed) dismisses the intro — sticky on
-    // first tap. held.size stays 0 (preview-only), so the instructional headline
-    // shows, NOT Stage 1 (dismissed) or Stage 2 (needs a confirmed hold).
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
-    expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
-  });
-
-  it("does not mount Stage 1 / Stage 2 during deal_in (deal-intro placeholder slot occupies that beat instead)", () => {
+  it("does not mount the instruction line during deal_in (deal-intro placeholder occupies that beat)", () => {
     vi.useFakeTimers();
     const { container } = render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={s3Ctx()} />,
@@ -1532,11 +1522,12 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     // the stage-text region exists but renders the deal-intro-placeholder
     // branch — NOT Stage 1 / Stage 2.
     expect(container.querySelector('[data-h2h-play-intro="deal-intro-placeholder"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
   });
 
-  it("collapses past hold_select (handoff_resolving → settle-pause; Stage 1/2 unmounted)", async () => {
+  it("collapses the instruction line past hold_select (handoff_resolving → settle-pause)", async () => {
     const ctx = s3Ctx();
     const props = baseProps();
     const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
@@ -1552,27 +1543,25 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     // Polish #11: tap-tap to confirm hold of slot 1.
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-1"));
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).not.toBeNull();
     fireEvent.click(screen.getByText("Next"));
     // Eventually transitions past hold_select; the settle-pause empty-
-    // hero composition mounts and intro stages collapse.
+    // hero composition mounts and the instruction line collapses.
     await waitFor(
       () => expect(container.querySelector("[data-h2h-play-settle-hero]")).not.toBeNull(),
       { timeout: 6000 },
     );
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).toBeNull();
   });
 
-  it("mounts Stage 1 via the legacy chadChallengeIntro path when triggerType is absent", async () => {
-    // T5 level 4 fallback: no triggerType, no anchor, no resolvedSenderHand
-    // → selectRecipientIntro returns a single-string Line wrapping
-    // chadChallengeIntro. The mount still fires. Content of the
-    // legacy line (challenger name + target) is verified in
-    // recipientIntro.test.ts; here we only confirm the mount survives
-    // the legacy data shape (no flat error / null Line).
+  it("mounts the instruction line on hold_select even when triggerType is absent (RD8 — static copy)", async () => {
+    // RD8: the instruction line is a fixed string, not selected from
+    // selectRecipientIntro, so it mounts regardless of the ctx data shape
+    // (no triggerType / anchor / resolvedSenderHand). Previously this path
+    // exercised the legacy chadChallengeIntro selection; the static line
+    // makes selection moot, but the mount must still fire.
     const { container } = await dealThroughCtx(makeCtx());
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
+    expect(container.querySelector('[data-h2h-play-intro="instruction"]')).not.toBeNull();
   });
 });
 
@@ -1691,47 +1680,17 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     expect(callArg.lockedCardIds.has("init-2")).toBe(false);
   });
 
-  // ── §9 — intro dismiss on first preview ────────────────────────────
-  it("§9 — Stage 1 dismisses on first preview tap; Stage 2 does NOT fire until first confirmed hold", async () => {
-    vi.useFakeTimers();
-    const ctx = makeCtx({
-      triggerType: "big_score",
-      resolvedSenderHand: makeSenderHand(),
-      anchorBasePlayerId: "p3",
-    });
-    const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
-    // Layout A/B restructure: pre_deal is killed; the loading →
-    // deal_in auto-advance fires synchronously inside the useEffect
-    // chain that render()'s act() flushes. The deal_in cascade is
-    // scheduled at that point — no Deal-button tap.
-    await act(async () => {
-      vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
-    });
-    // Stage 1 mounted on hold_select entry.
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).not.toBeNull();
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
-
-    // First PREVIEW tap dismisses Stage 1; Stage 2 not yet (no hold).
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(container.querySelector('[data-h2h-play-intro="stage1"]')).toBeNull();
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
-    expect(container.querySelector("[data-h2h-play-headline]")).not.toBeNull();
-
-    // Second tap on same cell = HOLD → Stage 2 fires.
-    fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
-    expect(container.querySelector('[data-h2h-play-intro="stage2"]')).not.toBeNull();
-  });
-
-  // ── §9 — introSig-pinned lines stable across preview taps (S3 regression guard) ──
-  it("§9 — introSig-pinned Stage 2 line stays byte-stable when preview moves to a different cell", async () => {
-    // The ref-pinning invariant (S3): the picked Stage 1/2 line is locked
-    // into a useRef keyed on introSig, which derives PURELY from ctx
-    // fields. Local state changes (held, previewedSlotIndex) must NOT
-    // re-trigger pickWithAntiRepeat. Verify this by confirming hold of
-    // one card → Stage 2 mounts → move preview to another card (no held
-    // change) → Stage 2 text is byte-identical. If the ref pin broke
-    // and pickWithAntiRepeat re-fired on the preview tap, the random
-    // selector would (probably) swap the line.
+  // ── §9 — introSig-pinned line stable across preview taps (S3 regression guard) ──
+  it("§9 — introSig-pinned instruction line stays byte-stable when preview moves to a different cell", async () => {
+    // RD8: the old §9 "Stage 1 dismisses on first preview / Stage 2 on hold"
+    // test is removed — that transient two-stage behavior no longer exists
+    // (the instruction line is round-gated and persists; covered by the
+    // persistence test in section 12). This regression guard survives,
+    // adapted: the ref-pinning invariant (S3) still applies. The instruction
+    // line is locked into a useRef keyed on introSig, which derives PURELY
+    // from ctx fields. Local state changes (held, previewedSlotIndex) must NOT
+    // re-trigger a line recompute. Confirm a hold → instruction line mounts →
+    // move preview to another card (no held change) → text is byte-identical.
     vi.useRealTimers(); // Typewriter rush needs real timers to paint
     const ctx = makeCtx({
       triggerType: "big_score",
@@ -1752,34 +1711,31 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
       { timeout: 3000 },
     );
 
-    // Confirm hold of slot 2 (tap-tap). Stage 2 mounts.
+    // Confirm hold of slot 2 (tap-tap). Instruction line stays mounted.
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     fireEvent.click(screen.getByTestId("bottom-strip-up-2"));
     await waitFor(
       () => {
-        const el = container.querySelector('[data-h2h-play-intro="stage2"]');
-        // Threshold tracks the static stage-2 line introduced by the
-        // 2026-06-08 subtraction (docs/h2h-recipient-static-commentary-lock.md):
-        // placeholder is [""] (length 0), painted line is `Draw to beat <target>.`
-        // (~19 chars for target=175). > 0 still guarantees the line painted.
+        const el = container.querySelector('[data-h2h-play-intro="instruction"]');
+        // RD8: placeholder is [""] (length 0); the painted line is the unified
+        // "Three rounds to beat your opponent…" copy. > 0 guarantees it painted.
         expect(el?.textContent?.length ?? 0).toBeGreaterThan(0);
       },
       { timeout: 2000 },
     );
-    const stage2A = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
+    const instructionA = container.querySelector('[data-h2h-play-intro="instruction"]')?.textContent ?? "";
 
     // Move preview to slot 4 (no hold change; held.size still 1).
     fireEvent.click(screen.getByTestId("bottom-strip-up-4"));
-    // Stage 2 still mounted (heldCount > 0). Text must be byte-identical
-    // — the introSig key is ctx-derived and the preview tap didn't
-    // touch ctx.
-    const stage2B = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
-    expect(stage2B).toBe(stage2A);
+    // Instruction line still mounted (round-gated). Text must be byte-identical
+    // — the introSig key is ctx-derived and the preview tap didn't touch ctx.
+    const instructionB = container.querySelector('[data-h2h-play-intro="instruction"]')?.textContent ?? "";
+    expect(instructionB).toBe(instructionA);
 
     // Move preview again to slot 0. Still no hold change. Still pinned.
     fireEvent.click(screen.getByTestId("bottom-strip-up-0"));
-    const stage2C = container.querySelector('[data-h2h-play-intro="stage2"]')?.textContent ?? "";
-    expect(stage2C).toBe(stage2A);
+    const instructionC = container.querySelector('[data-h2h-play-intro="instruction"]')?.textContent ?? "";
+    expect(instructionC).toBe(instructionA);
   });
 
   // ── Settle-pause overrides preview render (post-VS restructure) ───

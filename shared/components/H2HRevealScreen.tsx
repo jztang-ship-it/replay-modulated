@@ -935,35 +935,11 @@ function BattlefieldCard({ card, renderCard, visibleFp, revealed, shakeType, glo
       }}
     >
       {renderCard(card, { visibleFp, revealed, shakeType, glowActive, glowTier, glowDurationMs })}
-      {/* SWAP indicator — top-right corner pill on non-held cards. The
-          held indicator (gold corner triangle) is drawn inside CardFront
-          itself when locked={card.wasHeld} is passed. The SWAP pill's
-          visual is deliberately quieter than the held triangle so the
-          two indicators read as a clear distinction: bold gold = held;
-          subtle pill = swap. */}
-      {!card.wasHeld && (
-        <div
-          style={{
-            position: "absolute",
-            top: 6,
-            right: 6,
-            zIndex: 70,
-            padding: "2px 6px",
-            background: "rgba(0,0,0,0.65)",
-            border: "1px solid rgba(255,255,255,0.25)",
-            borderRadius: 999,
-            fontSize: 8,
-            fontWeight: 900,
-            color: "rgba(255,255,255,0.85)",
-            letterSpacing: 1.2,
-            pointerEvents: "none",
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-          }}
-        >
-          SWAP
-        </div>
-      )}
+      {/* SWAP pill removed (2026-06-26): the H hold-indicator (gold corner
+          triangle + "H", drawn inside CardFront when locked={card.wasHeld}) already
+          encodes hold-vs-swap on the player's own lineup — no H means swapped, self-
+          evident — so the pill was redundant there, and it should never have shown
+          on the opponent (boss cards carry no wasHeld). One delete kills both. */}
     </div>
   );
 }
