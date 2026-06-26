@@ -35,7 +35,8 @@ import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
 import { AchievementWall } from "@shared/components/AchievementWall";
 import { useAchievements } from "@shared/hooks/useAchievements";
-import { ChallengeLandingScreen } from "@shared/components/ChallengeLandingScreen";
+import { ChallengeLandingScreen, buildChallengeCtx, type ChallengeData } from "@shared/components/ChallengeLandingScreen";
+import { track } from "@shared/analytics/analytics";
 import { H2HRecipientPlay } from "@shared/components/H2HRecipientPlay";
 import type { ChallengeCtx, ChallengeBackCtx } from "@shared/adapters/challengeTypes";
 import { sportAdapter } from "./adapters/SportAdapter";
@@ -298,220 +299,13 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [h2hPlayingMode, !!challengeCtx, view]);
 
-  return (
-    <>
-      {/* Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
-          2caa7a3): path-β resume controller. Anonymous user → Challenge a
-          Friend → Google → redirect → tree rebuilds → this surface picks
-          up the persisted share state and renders the post-auth half of
-          the unified modal. Silent no-op when there's no pending share. */}
-      <ResumeShareSurface onResumeChallengeCreated={setResumeSent} />
-      {/* Phase 5b piece 1 U4-g (2026-05-28, doc lock 8004211): password
-          recovery surface. Self-managed state machine: email-entry
-          (triggered by RegisterModal's Forgot password link via
-          AuthContext counter), confirmation, recovery-landing (triggered
-          by Supabase PASSWORD_RECOVERY event). Silent no-op otherwise. */}
-      <PasswordResetSurface />
-      {showDebug && (
-        <div style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100000,
-          background: "rgba(0,0,0,0.85)", color: "#7FFF00", fontFamily: "monospace",
-          fontSize: 10, padding: "6px 8px", lineHeight: 1.4, wordBreak: "break-all",
-          pointerEvents: "none",
-        }}>
-          isAnon={String(isAnonymous)} | view={view} | skipLanding={String(skipLanding)}<br/>
-          uid={uid?.slice(0, 16) || "none"} | email={user?.email || "none"} | confirmed={user?.email_confirmed_at ? "Y" : "N"} | provider={(user?.app_metadata as any)?.provider || "none"}<br/>
-          stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"}
-        </div>
-      )}
-      {/* ?debug=1 challenge overlay — renders on every route, not just
-          in-game. challengeId resolves to:
-            1. challengeCtx after Accept (in-game)
-            2. otherwise the URL slug if the user is on a /challenge/:id
-               path (pre-accept landing screen)
-            3. otherwise the most recently attempted challenge id from
-               localStorage so the panel still surfaces "what was I
-               testing" even on the home/chooser route.
-          When all three miss, the panel hides the Current Challenge
-          section and shows identity + last API call only. */}
-      {showDebug && (
-        <ChallengeDebugPanel
-          challengeId={
-            challengeCtx?.challengeId
-            ?? challengeIdFromUrl
-            ?? (typeof window !== "undefined" ? mostRecentAttemptedChallengeId() : undefined)
-            ?? undefined
-          }
-          userId={uid || undefined}
-          userName={getNickname() || "anonymous"}
-        />
-      )}
-      {h2hPlayingMode && challengeCtx ? (
-        /* Phase 5b piece 2b+2c (2026-05-30): recipient-play surface.
-           Replaces GameView for the entire challenge play through
-           reveal + overlay. The inner H2HRecipientReveal mounts after
-           the 800ms slot-6-fill hold + resolveRoster. CTA handlers
-           drop back to GameView with appropriate state (clear ctx +
-           h2hPlayingMode for Dismiss/PlayOwnHand; set challengeBackCtx
-           for Send It Back; key bump for Try Again). */
-        <H2HRecipientPlay
-          key={h2hPlayKey}
-          challengeCtx={challengeCtx}
-          sport={SPORT}
-          /* 4a SWAP: the recipient inherits the sender's five and runs the full
-             3 rounds (docs §"Score-Is-The-Object + 3-round universal"). Mirrors
-             the basketball GameAdapter's maxRounds:3 (basketball/src/views/
-             GameView.tsx:241); default in the component is 1 (single-shot). */
-          maxRounds={3}
-          redrawRoster={redrawRoster}
-          resolveRoster={resolveRoster}
-          calculateWinTier={calculateWinTier as (totalFp: number) => string}
-          /* h2hArcRenderer's pre-reveal branch (revealed=false →
-             isRevealing=true on AthleteCard) is exactly the rich
-             pre-reveal visual the playing-mode strip wants — photo,
-             salary, position, AVG, no FP. Reusing it avoids a
-             second strip renderer on the basketball side. */
-          renderPlayingStripCard={h2hArcRenderer}
-          renderBattlefieldCard={h2hArcRenderer}
-          renderOverlayCard={h2hOverlayRenderer}
-          onSendItBack={() => {
-            // Mirror GameView.handleSendItBack: set rivalry context
-            // so the fresh-hand RESULTS share prompt frames as
-            // challenge-back. challengeCtx clears so the next IDLE
-            // deal is a fresh hand, not a snapshot replay.
-            chDebug("setChallengeCtx", {
-              from: "onSendItBack",
-              prev: { challengeId: challengeCtx.challengeId, h2hPlayingMode },
-              next: { challengeId: null, h2hPlayingMode: false },
-            });
-            setChallengeBackCtx({
-              challengerUserId: null,
-              challengerName: challengeCtx.challengerName ?? null,
-              originatingChallengeId: challengeCtx.challengeId,
-            });
-            setChallengeCtx(null);
-            setH2hPlayingMode(false);
-          }}
-          onTryAgain={() => {
-            // Rule 1 (boss fully replayable): a BOSS "Play Again" re-drafts a
-            // FRESH five (draft-fresh re-entry) rather than replaying the same
-            // hand. HUMAN challenges keep the same-five key-bump retake — gated
-            // on senderKind so human behavior is unchanged.
-            if (challengeCtx?.senderKind === "boss") {
-              replayBossFreshDraft();
-              return;
-            }
-            // Key bump re-mounts H2HRecipientPlay with fresh state
-            // (state machine resets to loading → deal_in per the
-            // Layout A/B restructure; pre_deal was killed). The
-            // recipient plays the same challenge snapshot again.
-            setH2hPlayKey(k => k + 1);
-          }}
-          onPlayOwnHand={() => {
-            // Drop into normal game with a fresh deal (no challenge).
-            chDebug("setChallengeCtx", {
-              from: "onPlayOwnHand",
-              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
-              next: { challengeId: null, h2hPlayingMode: false },
-            });
-            setChallengeCtx(null);
-            setH2hPlayingMode(false);
-          }}
-          onDismiss={() => {
-            // Exit H2H entirely. challengeCtx clears; user lands in
-            // normal game-view IDLE state.
-            chDebug("setChallengeCtx", {
-              from: "onDismiss",
-              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
-              next: { challengeId: null, h2hPlayingMode: false },
-            });
-            setChallengeCtx(null);
-            setH2hPlayingMode(false);
-          }}
-        />
-      ) : view === "landing" ? (
-        <LandingPage
-          onPlay={handlePlay}
-          onShowProfile={() => setShowProfile(true)}
-          onShowSignIn={() => setShowSignIn(true)}
-        />
-      ) : (
-        <DailySeasonReelGate
-          bypass={!!challengeCtx}
-          /* Recipients of a challenge link skip the reel for the whole
-             session — pre-Accept they're on the landing screen which has
-             its own era caption (data.share_headline above the score),
-             post-Accept challengeCtx kicks in (covered by bypass above),
-             and after dismiss skipReel keeps the bypass from flipping
-             off mid-session so the reel doesn't surprise-fire. Resolved
-             via the normal manifest path so today's daily season is
-             still pinned for any later non-challenge hands they play. */
-          skipReel={!!challengeIdFromUrl}
-          /* When the bypass is fired by challengeCtx (recipient accepted
-             a challenge), pin the data engine to the CHALLENGE'S season,
-             not FTUE_SEASON_KEY. Without this, retired players in the
-             snapshot (e.g. Aldridge in a 1617 challenge) score 0 FP
-             because logsByKey only contains 2024-25 entries. FTUE
-             bypass passes null here so the gate falls back to its
-             FTUE_SEASON_KEY default. */
-          bypassSeasonKey={challengeCtx?.season ?? null}
-        >
-          <GameView
-            challengeCtx={challengeCtx ?? undefined}
-            challengeBackCtx={challengeBackCtx ?? undefined}
-            clearChallengeCtx={() => {
-              chDebug("setChallengeCtx", {
-                from: "GameView.clearChallengeCtx",
-                prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
-                next: { challengeId: null, h2hPlayingMode },
-              });
-              setChallengeCtx(null);
-            }}
-            setChallengeBackCtx={(ctx) => setChallengeBackCtx(ctx)}
-            clearChallengeBackCtx={() => setChallengeBackCtx(null)}
-          />
-        </DailySeasonReelGate>
-      )}
-      {showSignIn && (
-        <RegisterModal
-          signInMode
-          onClose={() => setShowSignIn(false)}
-          onSuccess={() => setShowSignIn(false)}
-          signUp={signUp}
-          linkGoogle={linkGoogle}
-          signIn={signIn}
-          signInGoogle={signInGoogle}
-        />
-      )}
-      {showProfile && (
-        <ProfileScreen
-          currentUid={uid || getPlayerUid()}
-          sport={SPORT}
-          economyEnabled={false} // basketball F2P layer: economy off (matches the adapter); hides the money_won rank
-          onClose={() => setShowProfile(false)}
-          isAnonymous={isAnonymous}
-          onSaveAccount={() => { setShowProfile(false); setShowSignIn(true); }}
-          onOpenFeedback={() => { window.location.href = "mailto:wayzztoai@gmail.com"; }}
-        />
-      )}
-      {showChallengeLanding && challengeIdFromUrl && (
-        <ChallengeLandingScreen
-          challengeId={challengeIdFromUrl}
-          sport={SPORT}
-          currentUserId={isAuthenticated && !isAnonymous ? (uid ?? null) : null}
-          deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}
-          validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
-          calculateWinTier={calculateWinTier as (totalFp: number) => string}
-          onAccept={(ctx) => {
-            // Phase 2-mount Step 1 (draft-fresh): the accept tail below is
-            // extracted into acceptProceed(c) so the HUMAN path stays
-            // behaviorally byte-identical (called synchronously with ctx),
-            // while the BOSS path first drafts a FRESH OWN roster from the
-            // boss's season — excluding the boss five, which stays the
-            // opponent via resolvedSenderHand — and swaps it onto
-            // initialRoster before running the same tail. async deal: the
-            // landing stays up until the draft lands; on deal failure we
-            // degrade to the inherited five (never block the user).
+  // Consolidation Phase 3 step 1 — the challenge-accept handler, LIFTED from the
+  // ChallengeLandingScreen.onAccept inline arrow so it is reachable by both the
+  // cold landing (onAccept={handleChallengeAccept}) AND the in-app boss-direct
+  // path (handleTakeBossInApp below). Body is byte-identical to the prior inline
+  // arrow — acceptProceed tail + boss draft-fresh branch unchanged — so the human
+  // and self-match cold paths are behaviorally untouched.
+  const handleChallengeAccept = (ctx: ChallengeCtx) => {
             const acceptProceed = (c: ChallengeCtx) => {
             chDebug("setChallengeCtx", {
               from: "onAccept",
@@ -707,7 +501,234 @@ function AppInner() {
               return;
             }
             acceptProceed(ctx);
+  };
+
+  // Consolidation Phase 3 step 1 — in-app boss-direct accept. The hub (BossScreen,
+  // inside GameView) already fetched this row for its lineup/target; here we build
+  // the SAME ctx the cold landing builds and run handleChallengeAccept directly —
+  // NO landing render, NO refetch. Telemetry: the cold path fires link_open on the
+  // landing mount + accept/attempt_start in handleAccept; the in-app path has no
+  // landing mount, so fire the same trio here (same args, same boundary).
+  const handleTakeBossInApp = (raw: unknown) => {
+    const data = raw as ChallengeData;
+    if (!data || !data.challenge_id) return;
+    track("challenges", "challenge_link_open", { challenge_id: data.challenge_id, sport: SPORT });
+    track("challenges", "challenge_accept", { challenge_id: data.challenge_id, sport: SPORT });
+    track("challenges", "challenge_attempt_start", { challenge_id: data.challenge_id, sport: SPORT });
+    const ctx = buildChallengeCtx(data, {
+      deserializeRoster: (snap) => sportAdapter.deserializeRoster(snap),
+      validateRosterSnapshot: (snap) => sportAdapter.validateRosterSnapshot(snap),
+    });
+    if (!ctx) return; // invalid/expired baked data — abort (hub stays up, never blanks)
+    handleChallengeAccept(ctx);
+  };
+
+  return (
+    <>
+      {/* Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
+          2caa7a3): path-β resume controller. Anonymous user → Challenge a
+          Friend → Google → redirect → tree rebuilds → this surface picks
+          up the persisted share state and renders the post-auth half of
+          the unified modal. Silent no-op when there's no pending share. */}
+      <ResumeShareSurface onResumeChallengeCreated={setResumeSent} />
+      {/* Phase 5b piece 1 U4-g (2026-05-28, doc lock 8004211): password
+          recovery surface. Self-managed state machine: email-entry
+          (triggered by RegisterModal's Forgot password link via
+          AuthContext counter), confirmation, recovery-landing (triggered
+          by Supabase PASSWORD_RECOVERY event). Silent no-op otherwise. */}
+      <PasswordResetSurface />
+      {showDebug && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100000,
+          background: "rgba(0,0,0,0.85)", color: "#7FFF00", fontFamily: "monospace",
+          fontSize: 10, padding: "6px 8px", lineHeight: 1.4, wordBreak: "break-all",
+          pointerEvents: "none",
+        }}>
+          isAnon={String(isAnonymous)} | view={view} | skipLanding={String(skipLanding)}<br/>
+          uid={uid?.slice(0, 16) || "none"} | email={user?.email || "none"} | confirmed={user?.email_confirmed_at ? "Y" : "N"} | provider={(user?.app_metadata as any)?.provider || "none"}<br/>
+          stickyFlag={typeof window !== "undefined" ? localStorage.getItem(SKIP_LANDING_KEY) || "unset" : "ssr"}
+        </div>
+      )}
+      {/* ?debug=1 challenge overlay — renders on every route, not just
+          in-game. challengeId resolves to:
+            1. challengeCtx after Accept (in-game)
+            2. otherwise the URL slug if the user is on a /challenge/:id
+               path (pre-accept landing screen)
+            3. otherwise the most recently attempted challenge id from
+               localStorage so the panel still surfaces "what was I
+               testing" even on the home/chooser route.
+          When all three miss, the panel hides the Current Challenge
+          section and shows identity + last API call only. */}
+      {showDebug && (
+        <ChallengeDebugPanel
+          challengeId={
+            challengeCtx?.challengeId
+            ?? challengeIdFromUrl
+            ?? (typeof window !== "undefined" ? mostRecentAttemptedChallengeId() : undefined)
+            ?? undefined
+          }
+          userId={uid || undefined}
+          userName={getNickname() || "anonymous"}
+        />
+      )}
+      {h2hPlayingMode && challengeCtx ? (
+        /* Phase 5b piece 2b+2c (2026-05-30): recipient-play surface.
+           Replaces GameView for the entire challenge play through
+           reveal + overlay. The inner H2HRecipientReveal mounts after
+           the 800ms slot-6-fill hold + resolveRoster. CTA handlers
+           drop back to GameView with appropriate state (clear ctx +
+           h2hPlayingMode for Dismiss/PlayOwnHand; set challengeBackCtx
+           for Send It Back; key bump for Try Again). */
+        <H2HRecipientPlay
+          key={h2hPlayKey}
+          challengeCtx={challengeCtx}
+          sport={SPORT}
+          /* 4a SWAP: the recipient inherits the sender's five and runs the full
+             3 rounds (docs §"Score-Is-The-Object + 3-round universal"). Mirrors
+             the basketball GameAdapter's maxRounds:3 (basketball/src/views/
+             GameView.tsx:241); default in the component is 1 (single-shot). */
+          maxRounds={3}
+          redrawRoster={redrawRoster}
+          resolveRoster={resolveRoster}
+          calculateWinTier={calculateWinTier as (totalFp: number) => string}
+          /* h2hArcRenderer's pre-reveal branch (revealed=false →
+             isRevealing=true on AthleteCard) is exactly the rich
+             pre-reveal visual the playing-mode strip wants — photo,
+             salary, position, AVG, no FP. Reusing it avoids a
+             second strip renderer on the basketball side. */
+          renderPlayingStripCard={h2hArcRenderer}
+          renderBattlefieldCard={h2hArcRenderer}
+          renderOverlayCard={h2hOverlayRenderer}
+          onSendItBack={() => {
+            // Mirror GameView.handleSendItBack: set rivalry context
+            // so the fresh-hand RESULTS share prompt frames as
+            // challenge-back. challengeCtx clears so the next IDLE
+            // deal is a fresh hand, not a snapshot replay.
+            chDebug("setChallengeCtx", {
+              from: "onSendItBack",
+              prev: { challengeId: challengeCtx.challengeId, h2hPlayingMode },
+              next: { challengeId: null, h2hPlayingMode: false },
+            });
+            setChallengeBackCtx({
+              challengerUserId: null,
+              challengerName: challengeCtx.challengerName ?? null,
+              originatingChallengeId: challengeCtx.challengeId,
+            });
+            setChallengeCtx(null);
+            setH2hPlayingMode(false);
           }}
+          onTryAgain={() => {
+            // Rule 1 (boss fully replayable): a BOSS "Play Again" re-drafts a
+            // FRESH five (draft-fresh re-entry) rather than replaying the same
+            // hand. HUMAN challenges keep the same-five key-bump retake — gated
+            // on senderKind so human behavior is unchanged.
+            if (challengeCtx?.senderKind === "boss") {
+              replayBossFreshDraft();
+              return;
+            }
+            // Key bump re-mounts H2HRecipientPlay with fresh state
+            // (state machine resets to loading → deal_in per the
+            // Layout A/B restructure; pre_deal was killed). The
+            // recipient plays the same challenge snapshot again.
+            setH2hPlayKey(k => k + 1);
+          }}
+          onPlayOwnHand={() => {
+            // Drop into normal game with a fresh deal (no challenge).
+            chDebug("setChallengeCtx", {
+              from: "onPlayOwnHand",
+              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+              next: { challengeId: null, h2hPlayingMode: false },
+            });
+            setChallengeCtx(null);
+            setH2hPlayingMode(false);
+          }}
+          onDismiss={() => {
+            // Exit H2H entirely. challengeCtx clears; user lands in
+            // normal game-view IDLE state.
+            chDebug("setChallengeCtx", {
+              from: "onDismiss",
+              prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+              next: { challengeId: null, h2hPlayingMode: false },
+            });
+            setChallengeCtx(null);
+            setH2hPlayingMode(false);
+          }}
+        />
+      ) : view === "landing" ? (
+        <LandingPage
+          onPlay={handlePlay}
+          onShowProfile={() => setShowProfile(true)}
+          onShowSignIn={() => setShowSignIn(true)}
+        />
+      ) : (
+        <DailySeasonReelGate
+          bypass={!!challengeCtx}
+          /* Recipients of a challenge link skip the reel for the whole
+             session — pre-Accept they're on the landing screen which has
+             its own era caption (data.share_headline above the score),
+             post-Accept challengeCtx kicks in (covered by bypass above),
+             and after dismiss skipReel keeps the bypass from flipping
+             off mid-session so the reel doesn't surprise-fire. Resolved
+             via the normal manifest path so today's daily season is
+             still pinned for any later non-challenge hands they play. */
+          skipReel={!!challengeIdFromUrl}
+          /* When the bypass is fired by challengeCtx (recipient accepted
+             a challenge), pin the data engine to the CHALLENGE'S season,
+             not FTUE_SEASON_KEY. Without this, retired players in the
+             snapshot (e.g. Aldridge in a 1617 challenge) score 0 FP
+             because logsByKey only contains 2024-25 entries. FTUE
+             bypass passes null here so the gate falls back to its
+             FTUE_SEASON_KEY default. */
+          bypassSeasonKey={challengeCtx?.season ?? null}
+        >
+          <GameView
+            challengeCtx={challengeCtx ?? undefined}
+            challengeBackCtx={challengeBackCtx ?? undefined}
+            clearChallengeCtx={() => {
+              chDebug("setChallengeCtx", {
+                from: "GameView.clearChallengeCtx",
+                prev: { challengeId: challengeCtx?.challengeId ?? null, h2hPlayingMode },
+                next: { challengeId: null, h2hPlayingMode },
+              });
+              setChallengeCtx(null);
+            }}
+            setChallengeBackCtx={(ctx) => setChallengeBackCtx(ctx)}
+            clearChallengeBackCtx={() => setChallengeBackCtx(null)}
+            onTakeBoss={handleTakeBossInApp}
+          />
+        </DailySeasonReelGate>
+      )}
+      {showSignIn && (
+        <RegisterModal
+          signInMode
+          onClose={() => setShowSignIn(false)}
+          onSuccess={() => setShowSignIn(false)}
+          signUp={signUp}
+          linkGoogle={linkGoogle}
+          signIn={signIn}
+          signInGoogle={signInGoogle}
+        />
+      )}
+      {showProfile && (
+        <ProfileScreen
+          currentUid={uid || getPlayerUid()}
+          sport={SPORT}
+          economyEnabled={false} // basketball F2P layer: economy off (matches the adapter); hides the money_won rank
+          onClose={() => setShowProfile(false)}
+          isAnonymous={isAnonymous}
+          onSaveAccount={() => { setShowProfile(false); setShowSignIn(true); }}
+          onOpenFeedback={() => { window.location.href = "mailto:wayzztoai@gmail.com"; }}
+        />
+      )}
+      {showChallengeLanding && challengeIdFromUrl && (
+        <ChallengeLandingScreen
+          challengeId={challengeIdFromUrl}
+          sport={SPORT}
+          currentUserId={isAuthenticated && !isAnonymous ? (uid ?? null) : null}
+          deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}
+          validateRosterSnapshot={(snap) => sportAdapter.validateRosterSnapshot(snap)}
+          calculateWinTier={calculateWinTier as (totalFp: number) => string}
+          onAccept={handleChallengeAccept}
           onClose={() => { setShowChallengeLanding(false); window.history.pushState({}, "", "/basketball/"); }}
         />
       )}

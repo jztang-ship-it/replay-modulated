@@ -373,6 +373,11 @@ interface Props {
   /** Clears challengeBackCtx once the rivalry-continuation hand resolves
    *  + the user shares or dismisses. */
   clearChallengeBackCtx?: () => void;
+  /** Consolidation Phase 3 step 1 — in-app boss-direct accept. Threaded to
+   *  BossScreen's CTA so TAKE THE BOSS runs the deal-flow directly (skips the
+   *  redundant landing render) with the hub's OWN fetched row. Absent → the
+   *  hub CTA stays the <a href> nav (cold-link/other-sport safe). */
+  onTakeBoss?: (raw: unknown) => void;
 }
 
 function createPlaceholders(rosterSize: number): PlayerCard[] {
@@ -417,7 +422,7 @@ function hasPendingResumeShare(): boolean {
   }
 }
 
-export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallengeCtx, setChallengeBackCtx, clearChallengeBackCtx }: Props) {
+export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallengeCtx, setChallengeBackCtx, clearChallengeBackCtx, onTakeBoss }: Props) {
   const {
     sportKey,
     sportAdapter,
@@ -3180,6 +3185,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             // First-view reveal renderer (basketball: h2hArcRenderer via the
             // GameAdapter). Absent (other sports) → the LineupTile strip shows as today.
             renderBossCard={adapter.h2hArcRenderer}
+            onTakeBoss={onTakeBoss}
             onClose={() => setShowBoss(false)}
           />
         )}

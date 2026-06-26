@@ -324,3 +324,16 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **What it carried:** season coupling — the basketball daily slate season follows the daily boss (one coherent season/day). Precomputed `shared/data/bossSchedule.generated.json` (same canonical `scheduleHeadline` resolver, drift + anti-fork guarded) + the gate pin in `DailySeasonReelGate`.
 - **Equivalence on main:** fully merged via `54c309a` (batched with card-format `redesign/boss-card-colors`); no unique work remains. Safe to delete branch.
 - **Last reviewed:** 2026-06-25 (merged + worktree removed this session)
+
+---
+
+### `feat/boss-consolidation-p3` — active-parked (held for glass, do NOT push)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-consolidation-p3`
+- **Branch HEAD:** Consolidation Phase 3 step-2 (surface merge) committed on top of `5a59e57d` (step-1: in-app boss routes deal-flow direct).
+- **Unique commits vs main:** step 1 (`5a59e57d`) + step 2 (this session). Branched off `main` (`c5ea9ae0`).
+- **Uncommitted state:** `M package-lock.json` only (npm-install drift from worktree setup).
+- **What it carries:** Boss Surface Consolidation Phase 3 (`docs/boss-surface-consolidation-spec.md`). Step 1 = in-app boss skips the redundant landing render. Step 2 = boss converges onto the unified `ChallengeTakeCardLanding` (internally gated boss-vs-human); `BossLandingView` retired as a render target; the `priorResult → BossOutwardEnding` revisit branch ported in (boss-gated). Interim card = neutral `HandCard` (held/discard gated off); step 3 = the one trimmed card (NOT started). Glass: `/basketball/dev/challenge-landing-mock?case=boss|boss_marquee|boss_revisit`.
+- **Equivalence on main:** none — held arc, unpushed. The whole arc (steps 1→3) merges at the end.
+- **Intent:** held for phone glass on the step-2 merged surface (3 branches: boss cold-link / human unchanged / self-match unchanged + returning-winner revisit). Do NOT push; do NOT start step 3 until step 2 glass passes.
+- **Last reviewed:** 2026-06-26

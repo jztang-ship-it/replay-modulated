@@ -21,6 +21,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ChallengeTakeCardLanding, type ChallengeLandingData } from "../ChallengeTakeCardLanding";
+import { recordBossResult } from "@shared/utils/bossResultMemory";
 import {
   resolveSeal,
   headlineContainsSealVocabulary,
@@ -532,5 +533,122 @@ describe("Supporting culture line (preserved knownFor path)", () => {
       <ChallengeTakeCardLanding data={makeData({ trigger: "choke", heldPair: ["emb", "voo"] })} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} showCultureLine={true} />,
     );
     expect(screen.queryByTestId("supporting-culture-line")).toBeNull();
+  });
+});
+
+// ── Boss convergence (Consolidation Phase 3 step 2) ────────────────────
+//
+// Boss CONVERGES onto this unified surface, branched internally on
+// sender_kind. These assert the gating contract (the visual/layout is
+// glass-required per CLAUDE.md — JSDOM proves presence/absence, not pixels):
+//   - name verbatim (bypasses isRealName) + authored flavor (share_headline),
+//   - boss-only eyebrow (+ tough-day suffix) + marquee label (marquee-gated),
+//   - held/discard GATED OFF — all five cards render neutral, no yellow-H,
+//   - human-only logic does NOT leak: no take-headline, no seal, no variant
+//     analytics,
+//   - the revisit branch (returning player) reconstructs BossOutwardEnding,
+//   - CTA copy is the boss family ("Take the Boss" / "Play Again").
+
+describe("Boss convergence — merged surface branches internally on sender_kind", () => {
+  beforeEach(() => {
+    try { localStorage.clear(); } catch { /* jsdom */ }
+  });
+
+  function makeBossData(over: Partial<ChallengeLandingData> = {}): ChallengeLandingData {
+    const base = makeData({ trigger: "boss", heldPair: ["emb", "voo"], challengeId: "ch_boss_unit" });
+    return {
+      ...base,
+      sender_kind: "boss",
+      created_by: null,
+      // A non-real name string — the human path would downgrade this to
+      // "THE CHALLENGER"; the boss path must show it verbatim.
+      challenger_name: "Banner 18",
+      share_headline: "Tatum and Brown finish it",
+      tough_day: false,
+      ...over,
+    };
+  }
+
+  it("renders the boss branch (boss-take-card), not the human headline path", () => {
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("challenge-take-card-landing")).toBeTruthy();
+    expect(screen.getByTestId("boss-take-card")).toBeTruthy();
+    expect(screen.queryByTestId("take-headline")).toBeNull();
+    expect(screen.queryByTestId("evidence-seal")).toBeNull();
+    expect(screen.queryByTestId("landing-badge")).toBeNull();
+  });
+
+  it("shows the authored name VERBATIM (bypasses the isRealName downgrade)", () => {
+    render(<ChallengeTakeCardLanding data={makeBossData({ challenger_name: "73-9 Warriors" })} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("boss-name").textContent).toBe("73-9 Warriors");
+    // The human path's downgrade string must NOT appear.
+    expect(screen.getByTestId("challenge-take-card-landing").textContent).not.toContain("THE CHALLENGER");
+  });
+
+  it("uses the authored share_headline as the flavor (not the headline bank)", () => {
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("boss-flavor").textContent).toBe("Tatum and Brown finish it");
+  });
+
+  it("eyebrow carries the tough-day suffix only when tough_day is set", () => {
+    const { unmount } = render(<ChallengeTakeCardLanding data={makeBossData({ tough_day: true })} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("boss-eyebrow").textContent).toBe("Daily Boss · Tough Day");
+    unmount();
+    render(<ChallengeTakeCardLanding data={makeBossData({ tough_day: false })} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("boss-eyebrow").textContent).toBe("Daily Boss");
+  });
+
+  it("marquee label is gated on the baked marquee flag", () => {
+    const marqueeData = makeBossData({
+      challenger_name: "73-9 Warriors",
+      initial_roster: { ...makeBossData().initial_roster, marquee: true },
+    });
+    const { unmount } = render(<ChallengeTakeCardLanding data={marqueeData} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("boss-marquee-label").textContent).toMatch(/brutal by design/i);
+    unmount();
+    // Beatable boss (no marquee) → no label.
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.queryByTestId("boss-marquee-label")).toBeNull();
+  });
+
+  it("cards render NEUTRAL — held/discard gated off, no yellow-H glyph", () => {
+    // The fixture marks emb+voo wasHeld; the boss branch must ignore it.
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getAllByTestId("hand-card-neutral")).toHaveLength(6);
+    expect(screen.queryByTestId("hand-card-held")).toBeNull();
+    expect(screen.queryByTestId("hand-card-plain")).toBeNull();
+    expect(screen.queryByTestId("hold-badge")).toBeNull();
+  });
+
+  it("CTA is the boss family: 'Take the Boss' fresh, 'Play Again' when alreadyAttempted", () => {
+    const { unmount } = render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("accept-cta").textContent).toBe("Take the Boss");
+    unmount();
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={true} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("accept-cta").textContent).toBe("Play Again");
+  });
+
+  it("the target line + CTA fire onAccept (the shared framework scaffold)", () => {
+    const onAccept = vi.fn();
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={onAccept} />);
+    expect(screen.getByTestId("target-line").textContent).toContain("142.0 FP");
+    fireEvent.click(screen.getByTestId("accept-cta"));
+    expect(onAccept).toHaveBeenCalledTimes(1);
+  });
+
+  it("REVISIT — a prior boss result reconstructs the outward ending, no accept CTA", () => {
+    recordBossResult("ch_boss_revisit_unit", { score: 188.0, won: true });
+    render(<ChallengeTakeCardLanding data={makeBossData({ challenge_id: "ch_boss_revisit_unit" })} statsLine={null} alreadyAttempted={true} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    expect(screen.getByTestId("boss-take-card")).toBeTruthy();
+    expect(screen.getByTestId("boss-outward-ending")).toBeTruthy();
+    // Revisit replaces the accept affordance — no target line / accept CTA.
+    expect(screen.queryByTestId("accept-cta")).toBeNull();
+    expect(screen.queryByTestId("target-line")).toBeNull();
+  });
+
+  it("does NOT fire the human variant analytics for a boss row", () => {
+    render(<ChallengeTakeCardLanding data={makeBossData()} statsLine={null} alreadyAttempted={false} calculateWinTier={testWinTier} onAccept={() => {}} />);
+    const variantCalls = trackMock.mock.calls.filter(c => c[0] === "challenges" && c[1] === "challenge_landing_variant");
+    expect(variantCalls.length).toBe(0);
   });
 });

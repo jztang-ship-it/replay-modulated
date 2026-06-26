@@ -202,7 +202,9 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
     expect(ctx.triggerType).toBe("choke");
   });
 
-  it("boss row renders the BossLandingView (authored identity), NOT the player take-card", async () => {
+  it("boss row CONVERGES onto the merged take-card surface (authored identity), NOT the player headline path", async () => {
+    // Consolidation Phase 3 step 2: boss + player both render
+    // ChallengeTakeCardLanding; the boss branch is gated internally.
     // @ts-expect-error global fetch stub
     globalThis.fetch = vi.fn(() => Promise.resolve({
       ok: true, json: () => Promise.resolve(makeApiResponse({
@@ -225,12 +227,19 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
         onClose={() => {}}
       />
     );
-    await waitFor(() => expect(screen.getByTestId("boss-landing")).toBeTruthy());
+    // The unified surface mounts; the boss branch (not the human headline) is shown.
+    await waitFor(() => expect(screen.getByTestId("boss-take-card")).toBeTruthy());
+    expect(screen.getByTestId("challenge-take-card-landing")).toBeTruthy();
     // Authored boss identity shown verbatim (no real-name "your friend" downgrade).
     expect(screen.getByTestId("boss-name").textContent).toBe("Banner 18");
     expect(screen.getByTestId("boss-flavor").textContent).toBe("Tatum and Brown finish it");
-    // The player take-card hierarchy is NOT mounted for a boss.
-    expect(screen.queryByTestId("challenge-take-card-landing")).toBeNull();
+    // Boss-only eyebrow carries the tough-day suffix.
+    expect(screen.getByTestId("boss-eyebrow").textContent).toBe("Daily Boss · Tough Day");
+    // The human take-card headline / bank path is NOT mounted for a boss.
+    expect(screen.queryByTestId("take-headline")).toBeNull();
+    // No held/discard treatment — boss cards render neutral.
+    expect(screen.queryByTestId("hand-card-held")).toBeNull();
+    expect(screen.queryAllByTestId("hand-card-neutral").length).toBe(6);
   });
 
   it("boss REVISIT (already played today) reconstructs the outward ending, not the accept CTA", async () => {
@@ -254,9 +263,11 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
       />
     );
     await waitFor(() => expect(screen.getByTestId("boss-outward-ending")).toBeTruthy());
+    // Revisit branch ported into the merged surface (boss-gated).
+    expect(screen.getByTestId("boss-take-card")).toBeTruthy();
     // Outward ending reconstructed from memory; no re-accept CTA.
     expect(screen.getByText(/TODAY'S BOSS GOT YOU/)).toBeTruthy();
-    expect(screen.queryByTestId("boss-accept-cta")).toBeNull();
+    expect(screen.queryByTestId("accept-cta")).toBeNull();
   });
 
   it("boss accept threads senderKind:'boss' through onAccept", async () => {
@@ -278,8 +289,9 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
         onClose={() => {}}
       />
     );
-    await waitFor(() => expect(screen.getByTestId("boss-accept-cta")).toBeTruthy());
-    fireEvent.click(screen.getByTestId("boss-accept-cta"));
+    await waitFor(() => expect(screen.getByTestId("accept-cta")).toBeTruthy());
+    expect(screen.getByTestId("accept-cta").textContent).toBe("Take the Boss");
+    fireEvent.click(screen.getByTestId("accept-cta"));
     await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
     const ctx = onAccept.mock.calls[0][0];
     expect(ctx.senderKind).toBe("boss");
@@ -301,7 +313,7 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
         onAccept={() => {}} onClose={() => {}}
       />
     );
-    await waitFor(() => expect(screen.getByTestId("boss-landing")).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId("boss-take-card")).toBeTruthy());
     expect(screen.getByText(/brutal by design/i)).toBeTruthy();
     unmount();
 
@@ -319,7 +331,7 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
         onAccept={() => {}} onClose={() => {}}
       />
     );
-    await waitFor(() => expect(screen.getByTestId("boss-landing")).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId("boss-take-card")).toBeTruthy());
     expect(screen.queryByText(/brutal by design/i)).toBeNull();
   });
 
@@ -339,8 +351,8 @@ describe("ChallengeLandingScreen shell — neighbors intact (loading / error / s
         onAccept={onAccept} onClose={() => {}}
       />
     );
-    await waitFor(() => expect(screen.getByTestId("boss-accept-cta")).toBeTruthy());
-    fireEvent.click(screen.getByTestId("boss-accept-cta"));
+    await waitFor(() => expect(screen.getByTestId("accept-cta")).toBeTruthy());
+    fireEvent.click(screen.getByTestId("accept-cta"));
     await waitFor(() => expect(onAccept).toHaveBeenCalledTimes(1));
     expect(onAccept.mock.calls[0][0].marquee).toBe(true);
   });

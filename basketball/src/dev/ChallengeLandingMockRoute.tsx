@@ -27,6 +27,7 @@
 import { ChallengeTakeCardLanding } from "@shared/components/ChallengeTakeCardLanding";
 import { LANDING_MOCK_FIXTURES, getMockCaseFromUrl } from "./challengeLandingMockFixture";
 import { calculateWinTier } from "../utils/payoutLogic";
+import { recordBossResult } from "@shared/utils/bossResultMemory";
 
 function getBoolParam(name: string): boolean {
   if (typeof window === "undefined") return false;
@@ -52,6 +53,14 @@ export default function ChallengeLandingMockRoute() {
   const dataWithSeed = seedOverride
     ? { ...fixture.data, challenge_id: seedOverride }
     : fixture.data;
+
+  // boss_revisit glass: seed a boss result for this challenge_id so the
+  // ported revisit branch (getBossResult → BossOutwardEnding) lights up.
+  // DEV-only; idempotent (recordBossResult keeps best/sticky-win). Runs
+  // during render so the child's getBossResult read in the same pass hits it.
+  if (caseKey === "boss_revisit") {
+    recordBossResult(dataWithSeed.challenge_id, { score: 188.4, won: true });
+  }
 
   return (
     <div
@@ -95,7 +104,7 @@ export default function ChallengeLandingMockRoute() {
         }}
       >
         DEV mock · case=<code>{caseKey}</code>{showCultureLine ? " · showCultureLine=ON" : ""} · try:{" "}
-        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "choke_bad_beat_normalized", "replay_already_attempted"] as const).map((c) => {
+        {(["choke", "choke_anchor_tanked", "choke_culture_rich", "choke_generic_no_culture", "miss", "big_score", "rare_pull", "default", "choke_bad_beat_normalized", "replay_already_attempted", "boss", "boss_marquee", "boss_revisit"] as const).map((c) => {
           const next = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
           next.set("case", c);
           return (

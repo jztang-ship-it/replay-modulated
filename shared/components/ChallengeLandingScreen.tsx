@@ -16,10 +16,8 @@ import { hasAttemptedChallenge } from "@shared/hooks/useChallengeShare";
 //  a hint label for the CTA, never as a block.)
 import { isRealName } from "@shared/utils/isRealName";
 import { ChallengeTakeCardLanding } from "./ChallengeTakeCardLanding";
-import { getBossResult } from "@shared/utils/bossResultMemory";
-import { BossOutwardEnding } from "./BossOutwardEnding";
 
-interface ChallengeData {
+export interface ChallengeData {
   challenge_id: string;
   /** Challenger's auth user_id. Used to detect self-match — when the
    *  current viewer is the original challenger, we render an alternate
@@ -63,6 +61,42 @@ interface ChallengeData {
    *  field). The take-card-landing's TAKE renders this when present
    *  and falls back to takeCard.take otherwise. */
   authored_headline?: string | null;
+}
+
+/**
+ * Build the recipient-side ChallengeCtx from a fetched challenge row. Extracted
+ * from handleAccept (Consolidation Phase 3 step 1) so the IN-APP boss-direct
+ * path (BossScreen.onTakeBoss → App) builds the SAME ctx the cold landing does,
+ * without duplicating the field map. PURE — no telemetry, no state. Returns null
+ * when the roster snapshot is invalid (caller surfaces the error / degrades).
+ * The cold landing's handleAccept keeps its track() calls inline so its behavior
+ * is byte-identical; only the field map moves here.
+ */
+export function buildChallengeCtx(
+  data: ChallengeData,
+  deps: {
+    deserializeRoster: (snapshot: Record<string, unknown>) => GeneratedCard[];
+    validateRosterSnapshot: (snapshot: Record<string, unknown>) => boolean;
+  },
+): ChallengeCtx | null {
+  if (!deps.validateRosterSnapshot(data.initial_roster)) return null;
+  const initialRoster = deps.deserializeRoster(data.initial_roster);
+  return {
+    challengeId: data.challenge_id,
+    initialRoster,
+    targetScore: data.target_score,
+    challengerName: data.challenger_name,
+    sport: data.sport,
+    season: data.season,
+    triggerType: normalizeTriggerType(data.trigger_type),
+    nearMissGap: data.near_miss_gap ?? null,
+    nearMissNextTier: data.near_miss_next_tier ?? null,
+    anchorBasePlayerId: data.anchor_base_player_id ?? null,
+    topGameTier: data.top_game_tier ?? null,
+    senderKind: normalizeSenderKind(data.sender_kind),
+    bossIdentityId: data.boss_identity_id ?? undefined,
+    marquee: (data.initial_roster as { marquee?: boolean } | null)?.marquee === true,
+  };
 }
 
 interface Props {
@@ -129,46 +163,16 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
 
   function handleAccept() {
     if (!data) return;
-    if (!validateRosterSnapshot(data.initial_roster)) {
+    // Field map extracted to buildChallengeCtx (Phase 3 step 1) — shared with
+    // the in-app boss-direct path. null ⇒ invalid snapshot (same guard as before).
+    const ctx = buildChallengeCtx(data, { deserializeRoster, validateRosterSnapshot });
+    if (!ctx) {
       setError("Invalid challenge data. It may have expired.");
       return;
     }
-    const initialRoster = deserializeRoster(data.initial_roster);
     track("challenges", "challenge_accept", { challenge_id: challengeId, sport });
     track("challenges", "challenge_attempt_start", { challenge_id: challengeId, sport });
-    onAccept({
-      challengeId: data.challenge_id,
-      initialRoster,
-      targetScore: data.target_score,
-      challengerName: data.challenger_name,
-      sport: data.sport,
-      season: data.season,
-      // Phase 5c S1 (2026-05-31): thread trigger-detail through to the
-      // recipient flow. All optional/null-safe — the recipient intro
-      // selector handles null values via per-trigger generic fallback.
-      //
-      // Phase 1 trigger split (2026-06-03): legacy stored rows say
-      // "bad_beat"; normalizeTriggerType aliases that to "choke" at this
-      // single read boundary so every recipient-side branch downstream
-      // sees the renamed key. See challengeTypes.normalizeTriggerType.
-      triggerType: normalizeTriggerType(data.trigger_type),
-      nearMissGap: data.near_miss_gap ?? null,
-      nearMissNextTier: data.near_miss_next_tier ?? null,
-      anchorBasePlayerId: data.anchor_base_player_id ?? null,
-      topGameTier: data.top_game_tier ?? null,
-      // Phase 2 boss delivery (2026-06-21): thread the sender marker through
-      // so the play/comparison flow knows this is a boss target. Normalized
-      // at this single read boundary, same pattern as triggerType.
-      senderKind: normalizeSenderKind(data.sender_kind),
-      // Boss claim-prompt (2026-06-26): thread the boss bank id (already on the
-      // GET response) to the reveal surface so the post-win claim card has its
-      // {team} token. Additive, no migration — same boundary as senderKind.
-      bossIdentityId: data.boss_identity_id ?? undefined,
-      // Phase 2-mount Step 4: thread the baked two-tier marquee flag (jsonb,
-      // no migration) from initial_roster so the result flow can branch the
-      // loss copy. Boss-only in practice; humans carry no marquee.
-      marquee: (data.initial_roster as { marquee?: boolean } | null)?.marquee === true,
-    });
+    onAccept(ctx);
   }
 
   const cards: any[] = (data?.initial_roster as any)?.cards ?? [];
@@ -215,32 +219,14 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
           );
         }
 
-        // Phase 2 boss delivery (2026-06-21): a boss is an ownerless
-        // challenge presented with an AUTHORED identity (name + flavor),
-        // not a human take. Branch here on the normalized sender_kind and
-        // render the dedicated boss surface — the player take-card
-        // hierarchy (trigger banks, isRealName "your friend" downgrade,
-        // pickHeadlineAndCta) stays UNTOUCHED below for sender_kind
-        // "player". A boss has created_by null, so isSelfMatch above is
-        // always false for it.
-        if (normalizeSenderKind(data.sender_kind) === "boss") {
-          return (
-            <BossLandingView
-              data={data}
-              cards={cards}
-              statsLine={statsLine}
-              alreadyAttempted={alreadyAttempted}
-              onAccept={handleAccept}
-              sport={sport}
-              onClose={onClose}
-            />
-          );
-        }
-
-        // Phase 2b: V2 hierarchy lives in ChallengeTakeCardLanding.
-        // This shell only routes data + accept-click; the score-first
-        // anti-pattern (giant 68px FP at the top, "Think you can beat
-        // it?") is gone — replaced by the take-card hierarchy.
+        // Consolidation Phase 3 step 2 (2026-06-26): boss CONVERGES onto the
+        // unified take-card framework. The shell no longer dispatches boss to a
+        // separate BossLandingView (retired) — boss and player both render
+        // ChallengeTakeCardLanding, which branches INTERNALLY on data.sender_kind
+        // (authored name verbatim / authored flavor / neutral cards / eyebrow +
+        // marquee / revisit). A boss has created_by null, so isSelfMatch above is
+        // always false for it; senderKind on the accepted ctx is unchanged
+        // (buildChallengeCtx), so downstream Reveal/Play/App readers don't move.
         return (
           <ChallengeTakeCardLanding
             data={data}
@@ -372,137 +358,5 @@ function SelfMatchView({ data, cards, statsLine, challengeId, sport, onBack }: S
         }}
       >Back to game</button>
     </>
-  );
-}
-
-// ── Boss landing surface ───────────────────────────────────────────────────
-//
-// Phase 2 boss delivery (2026-06-21). A boss is an ownerless challenge with an
-// AUTHORED identity: challenger_name carries the boss display ("Banner 18"),
-// share_headline carries the authored flavor ("Tatum and Brown finish it").
-// This surface presents that identity directly — it does NOT route through the
-// player take-card hierarchy (no isRealName "your friend" downgrade, no
-// trigger banks, no pickHeadlineAndCta). isRealName is deliberately untouched:
-// it remains the player-name gate; the boss name is distinguished only by
-// sender_kind === "boss".
-//
-// Layout reuses the SelfMatchView card-spread scaffold verbatim (plain
-// flex-wrap flow, no transforms / scale / absolute positioning) per the
-// reuse-working-scaffolds rule. Real-browser bounding-box verification is
-// pending device glass at review (this is a hold-for-review build).
-
-interface BossLandingProps {
-  data: ChallengeData;
-  cards: any[];
-  statsLine: string | null;
-  alreadyAttempted: boolean;
-  onAccept: () => void;
-  sport: string;
-  onClose: () => void;
-}
-
-function BossLandingView({ data, cards, statsLine, alreadyAttempted, onAccept, sport, onClose }: BossLandingProps) {
-  // Phase 2-mount Step 5 — REVISIT reconstruction (build-flag 1: the outward
-  // ending is owned by the result view, so it must rebuild whenever the result
-  // is viewed, not only at resolution). When the user already has a boss result
-  // for today (getBossResult — the SAME single source the post-play
-  // ChallengeComparisonScreen boss branch reads), the landing reconstructs the
-  // outward ending instead of re-offering the accept CTA. Fresh and revisited
-  // are byte-identical (both render BossOutwardEnding from getBossResult).
-  const priorResult = getBossResult(data.challenge_id);
-  // Phase 2-mount Step 4 — two-tier framing. The baked marquee flag rides on
-  // initial_roster (jsonb). marquee → a "brutal by design" label pre-play (the
-  // impossible tier; the near-miss is the draw) + margin-based loss copy in the
-  // outward ending. Beatable bosses carry neither.
-  const marquee = (data.initial_roster as { marquee?: boolean } | null)?.marquee === true;
-  return (
-    <div data-testid="boss-landing">
-      {/* Eyebrow — marks the surface as the daily boss. */}
-      <div style={{
-        fontSize: 14, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase",
-        color: "rgba(255,177,74,0.85)", marginBottom: 8,
-      }}>Daily Boss{data.tough_day ? " · Tough Day" : ""}</div>
-
-      {/* Marquee tier — "brutal by design" (Step 4). Shown pre-play so the
-          impossible boss is framed before the attempt. */}
-      {marquee && (
-        <div data-testid="boss-marquee-label" style={{
-          display: "inline-block", fontSize: 12, fontWeight: 900, letterSpacing: 1.2,
-          textTransform: "uppercase", color: "#FF5A5A",
-          border: "1px solid rgba(255,90,90,0.5)", borderRadius: 6,
-          padding: "3px 8px", marginBottom: 12,
-        }}>Brutal by Design</div>
-      )}
-
-      {/* Boss name — the authored identity, verbatim (no real-name gate). */}
-      <div data-testid="boss-name" style={{
-        fontSize: 30, fontWeight: 900, color: "#EAF0FF", marginBottom: 6, lineHeight: 1.2,
-      }}>{data.challenger_name}</div>
-
-      {/* Flavor — the authored one-liner, as the take. Omitted when empty. */}
-      {data.share_headline && (
-        <div data-testid="boss-flavor" style={{
-          fontSize: 15, color: "rgba(234,240,255,0.8)", fontStyle: "italic",
-          marginBottom: 16, lineHeight: 1.4, maxWidth: 560,
-        }}>{data.share_headline}</div>
-      )}
-
-      {statsLine && (
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginBottom: 18 }}>{statsLine}</div>
-      )}
-
-      {/* Card spread — same visual scaffold as SelfMatchView. */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 24, justifyContent: "center" }}>
-        {cards.map((card: any, i: number) => (
-          <div key={i} style={{
-            background: "rgba(255,255,255,0.04)", border: `1.5px solid ${TIER_ACCENT[card.tier] ?? "#9CA3AF"}`,
-            borderRadius: 10, padding: "10px 14px", minWidth: 120, textAlign: "center",
-          }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, color: TIER_ACCENT[card.tier] ?? "#9CA3AF", textTransform: "uppercase", marginBottom: 4 }}>{card.tier}</div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#EAF0FF" }}>{card.name}</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{card.team}{card.salary != null ? ` · $${card.salary}` : ""}</div>
-          </div>
-        ))}
-      </div>
-
-      {priorResult ? (
-        /* REVISIT — already played today: reconstruct the outward ending
-           (terminates outward; no re-accept CTA). Same single source as the
-           post-play sheet. */
-        <BossOutwardEnding
-          sport={sport}
-          bossChallengeId={data.challenge_id}
-          marquee={marquee}
-          targetScore={data.target_score}
-          bossName={data.challenger_name}
-          /* Rule 1 (boss fully replayable): the revisit ending's "Play Again"
-             RE-ACCEPTS (onAccept → App boss branch → dealFreshRoster → a FRESH
-             draft) instead of closing to solo. Same fresh-draft replay as the
-             live ending (App.onTryAgain boss branch). The result screen still
-             shows on revisit (Option B) — only its action is rewired. */
-          onPlayAgain={onAccept}
-        />
-      ) : (
-        <>
-          {/* Target line — the score to beat. */}
-          <div style={{
-            fontSize: 14, fontWeight: 700, color: "rgba(234,240,255,0.85)",
-            letterSpacing: 0.6, textAlign: "center", textTransform: "uppercase", marginBottom: 12,
-          }}>Target to beat: {data.target_score.toFixed(1)} FP</div>
-
-          {/* Accept CTA. */}
-          <button
-            data-testid="boss-accept-cta"
-            onClick={onAccept}
-            style={{
-              width: "100%", padding: "16px", borderRadius: 14,
-              background: "#FFB14A", border: "none",
-              color: "#070A12", fontSize: 17, fontWeight: 900, cursor: "pointer",
-              textTransform: "uppercase", letterSpacing: 0.5,
-            }}
-          >{alreadyAttempted ? "Play Again" : "Take the Boss"}</button>
-        </>
-      )}
-    </div>
   );
 }

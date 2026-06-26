@@ -170,6 +170,8 @@ interface GameViewWrapperProps {
   clearChallengeCtx?: () => void;
   setChallengeBackCtx?: (ctx: import("@shared/adapters/challengeTypes").ChallengeBackCtx) => void;
   clearChallengeBackCtx?: () => void;
+  /** Phase 3 step 1 — in-app boss-direct accept, passed through to shared GameView. */
+  onTakeBoss?: (raw: unknown) => void;
 }
 
 export default function GameView({
@@ -178,6 +180,7 @@ export default function GameView({
   clearChallengeCtx,
   setChallengeBackCtx,
   clearChallengeBackCtx,
+  onTakeBoss,
 }: GameViewWrapperProps) {
   // Track active season + FTUE state so the adapter rebuilds with the right
   // win-tier thresholds when:
@@ -285,6 +288,7 @@ export default function GameView({
       clearChallengeCtx={clearChallengeCtx}
       setChallengeBackCtx={setChallengeBackCtx}
       clearChallengeBackCtx={clearChallengeBackCtx}
+      onTakeBoss={onTakeBoss}
     />
   );
 }

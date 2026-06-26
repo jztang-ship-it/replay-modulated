@@ -105,7 +105,11 @@ export type LandingMockCase =
   | "rare_pull"
   | "default"
   | "choke_bad_beat_normalized"
-  | "replay_already_attempted";
+  | "replay_already_attempted"
+  // Consolidation Phase 3 step 2 — boss convergence onto the merged surface.
+  | "boss"
+  | "boss_marquee"
+  | "boss_revisit";
 
 interface LandingMockFixture {
   /** ChallengeData shape, ready to pass into ChallengeTakeCardLanding's
@@ -456,6 +460,84 @@ export const LANDING_MOCK_FIXTURES: Record<LandingMockCase, LandingMockFixture> 
       top_game_tier: null,
     },
     statsLine: "3 attempts · 67% failed",
+    alreadyAttempted: true,
+  },
+
+  // ── Boss convergence (Consolidation Phase 3 step 2) ──────────────────
+  // Boss now renders THROUGH the merged ChallengeTakeCardLanding surface
+  // (the shell no longer dispatches a separate BossLandingView). These
+  // fixtures glass the boss branch: authored name verbatim + authored
+  // flavor + eyebrow (+ tough-day) + neutral cards (no held/discard) +
+  // target line + "Take the Boss" CTA. sender_kind:"boss" is the gate.
+  // beatable boss — tough-day eyebrow, no marquee label.
+  boss: {
+    data: {
+      challenge_id: "ch_mock_boss",
+      created_by: null,
+      ...baseAttribution,
+      challenger_name: "Banner 18",
+      share_headline: "Tatum and Brown finish it.",
+      sender_kind: "boss",
+      tough_day: true,
+      target_score: 145.2,
+      trigger_type: "boss",
+      // No held pair — the boss branch renders all five neutral regardless,
+      // but keep the snapshot held-free so the data matches the rendering.
+      initial_roster: rosterSnapshot(baseSix({}), true),
+      anchor_base_player_id: null,
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: null,
+    alreadyAttempted: false,
+  },
+
+  // marquee boss — adds the "Brutal by Design" label (marquee:true on the
+  // baked snapshot). The impossible tier; the draw is the near-miss.
+  boss_marquee: {
+    data: {
+      challenge_id: "ch_mock_boss_marquee",
+      created_by: null,
+      ...baseAttribution,
+      challenger_name: "73-9 Warriors",
+      share_headline: "The greatest regular season ever assembled.",
+      sender_kind: "boss",
+      tough_day: false,
+      target_score: 178.0,
+      trigger_type: "boss",
+      initial_roster: { ...rosterSnapshot(baseSix({}), true), marquee: true },
+      anchor_base_player_id: null,
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: null,
+    alreadyAttempted: false,
+  },
+
+  // revisit boss — returning player who already played today. The route
+  // (ChallengeLandingMockRoute) seeds a boss result for this challenge_id
+  // so getBossResult resolves and the ported revisit branch reconstructs
+  // BossOutwardEnding (share loop + Play Again) instead of the accept CTA.
+  boss_revisit: {
+    data: {
+      challenge_id: "ch_mock_boss_revisit",
+      created_by: null,
+      ...baseAttribution,
+      challenger_name: "Banner 18",
+      share_headline: "Tatum and Brown finish it.",
+      sender_kind: "boss",
+      tough_day: true,
+      target_score: 145.2,
+      trigger_type: "boss",
+      initial_roster: rosterSnapshot(baseSix({}), true),
+      anchor_base_player_id: null,
+      near_miss_gap: null,
+      near_miss_next_tier: null,
+      top_game_tier: null,
+    },
+    statsLine: null,
     alreadyAttempted: true,
   },
 };
