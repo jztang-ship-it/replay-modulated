@@ -18,7 +18,7 @@
 //
 // Layout is plain in-flow flex (glass-safe scaffold). Device glass at the Gate.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { recordBossResult, getBossResult, type BossResult } from "@shared/utils/bossResultMemory";
 import { track } from "@shared/analytics/analytics";
 import { getOrMintReferrerToken } from "@shared/utils/referrerToken";
@@ -27,6 +27,22 @@ import { getOrMintReferrerToken } from "@shared/utils/referrerToken";
 // this many FP of the boss target reads as a near-miss ("run it back") rather
 // than a plain retry. Single source of truth for the close-vs-far loss split.
 const NEAR_MISS_MARGIN = 5;
+
+// boss-winscreen-cta (direction A): WIN-action button tiers. Exactly one amber
+// primary per state. Presentation only — handlers/labels/testids unchanged.
+const WIN_PRIMARY_BTN: CSSProperties = {
+  width: "100%", maxWidth: 420, padding: "14px", borderRadius: 12, border: "none",
+  background: "#FFB14A", color: "#070A12", fontSize: 15, fontWeight: 900, cursor: "pointer",
+};
+const WIN_OUTLINE_BTN: CSSProperties = {
+  width: "100%", maxWidth: 420, padding: "14px", borderRadius: 12,
+  background: "transparent", border: "1px solid rgba(255,255,255,0.25)",
+  color: "#EAF0FF", fontSize: 15, fontWeight: 800, cursor: "pointer",
+};
+const WIN_TEXT_BTN: CSSProperties = {
+  background: "transparent", border: "none", color: "rgba(255,255,255,0.6)",
+  fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "8px 12px",
+};
 
 interface Props {
   sport: string;
@@ -54,9 +70,15 @@ interface Props {
    *  headline/score/sub would duplicate it. Same share + result-memory
    *  machinery in both modes — only the verdict chrome is dropped. */
   variant?: "full" | "cta-only";
+  /** boss-winscreen-cta (direction A): WIN-action emphasis. "primary" (default,
+   *  SOCIAL state) = Challenge someone is the single amber primary. "secondary"
+   *  (CLAIM state) = the claim card owns the amber, so Challenge demotes to
+   *  outline and Copy link demotes to a text link. Presentation only — no
+   *  handler/gate/label change. Revisit landing leaves the default (SOCIAL). */
+  challengeTier?: "primary" | "secondary";
 }
 
-export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full" }: Props) {
+export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full", challengeTier = "primary" }: Props) {
   const [result, setResult] = useState<BossResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -177,30 +199,46 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
           shows NO forward affordance; it offers run-it-back (replay the same
           boss) instead. */}
       {result.won ? (
-        <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
+        // boss-winscreen-cta (direction A, LEAN): exactly one amber primary per
+        // state, and the CLAIM moment shows only its true peak.
+        //  • SOCIAL (challengeTier="primary"): Challenge amber → Copy link outline
+        //    → Play again text. The full share block.
+        //  • CLAIM (challengeTier="secondary"): the claim card owns the amber, so
+        //    ONLY Challenge (outline) renders here — Copy link + Play again are
+        //    NOT composed (they live in SOCIAL, one "Maybe later" tap away). This
+        //    is the lean swap that supersedes the full-vertical stack (251→~170).
+        // Divider dropped; handlers/labels/testids unchanged.
+        <>
           <button
             data-testid="boss-challenge-someone"
             onClick={challengeSomeone}
-            style={{
-              flex: 1, padding: "14px", borderRadius: 12, border: "none",
-              background: "#FFB14A", color: "#070A12", fontSize: 15, fontWeight: 900, cursor: "pointer",
-            }}
+            style={challengeTier === "primary" ? WIN_PRIMARY_BTN : WIN_OUTLINE_BTN}
           >
             Challenge Someone
           </button>
-          <button
-            data-testid="boss-copy-link"
-            onClick={copyLink}
-            style={{
-              flex: 1, padding: "14px", borderRadius: 12, cursor: "pointer",
-              background: "transparent", border: "1px solid rgba(255,255,255,0.25)",
-              color: "#EAF0FF", fontSize: 15, fontWeight: 800,
-            }}
-          >
-            {copied ? "Link Copied ✓" : "Copy Link"}
-          </button>
-        </div>
+          {challengeTier === "primary" && (
+            <>
+              <button
+                data-testid="boss-copy-link"
+                onClick={copyLink}
+                style={WIN_OUTLINE_BTN}
+              >
+                {copied ? "Link Copied ✓" : "Copy Link"}
+              </button>
+              {/* Play Again — tertiary text, SOCIAL only (win path keeps it). */}
+              <button
+                data-testid="boss-play-again"
+                onClick={onPlayAgain}
+                style={WIN_TEXT_BTN}
+              >
+                Play Again
+              </button>
+            </>
+          )}
+        </>
       ) : (
+        // LOSS — untouched. Single run-it-back CTA is the whole affordance
+        // (it already replays via onPlayAgain); no Play Again, no share.
         <button
           data-testid="boss-run-it-back"
           onClick={onPlayAgain}
@@ -211,31 +249,6 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
         >
           {isNearMiss ? "Run it back" : "Try again"}
         </button>
-      )}
-
-      {/* The line + below-line "Play Again" — WIN ONLY. On a loss the single
-          above-line run-it-back CTA is the whole affordance (it already replays
-          the boss via onPlayAgain), so we deliberately drop the below-line
-          "Play Again" to avoid two identical buttons. This is an INTENTIONAL,
-          John-approved loss-branch exception to the "Play Again below the line,
-          never deleted" invariant — do NOT "restore" it on the loss path. */}
-      {result.won && (
-        <>
-          {/* The line — replay is the spine, branch is above it. */}
-          <div style={{ width: "100%", maxWidth: 420, height: 1, background: "rgba(255,255,255,0.14)", margin: "12px 0 4px" }} />
-
-          {/* Play Again — BELOW the line, never alone, never deleted (win path). */}
-          <button
-            data-testid="boss-play-again"
-            onClick={onPlayAgain}
-            style={{
-              background: "transparent", border: "none", color: "rgba(255,255,255,0.6)",
-              fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "8px 12px",
-            }}
-          >
-            Play Again
-          </button>
-        </>
       )}
     </div>
   );

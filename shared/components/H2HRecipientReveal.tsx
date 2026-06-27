@@ -315,6 +315,10 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // static end-state mount can't surface it without a real arc.
   const CLAIM_BREATHE_MS = 1700;
   const [claimBreatheElapsed, setClaimBreatheElapsed] = useState(false);
+  // boss-winscreen-cta (direction A): mirrors BossClaimPrompt's `shown` latch so
+  // the merged boss ctaSlot re-ranks (CLAIM ↔ SOCIAL) without re-evaluating the
+  // gate or reading auth in the parent. Presentation state only.
+  const [claimVisible, setClaimVisible] = useState(false);
   useEffect(() => {
     if (!showOverlay) { setClaimBreatheElapsed(false); return undefined; }
     const id = window.setTimeout(() => setClaimBreatheElapsed(true), CLAIM_BREATHE_MS);
@@ -390,15 +394,20 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // BossOutwardEnding make fresh === revisited.
           ctaSlot={
             challengeCtx.senderKind === "boss" ? (
-              // boss-mobile-fit §2 (2026-06-27): MERGED anon-win CTA scaffold.
-              // One chromeless column hosting BossOutwardEnding (cta-only) AND
-              // the claim's buttons (BossClaimPrompt embedded). Was two stacked
-              // cards (~277px: ending 126 + claim card 141 + 10 margin); the
-              // embedded claim drops its border/padding + heading/body (~−80),
-              // both action sets kept. When the claim isn't eligible it returns
-              // null → only BossOutwardEnding renders → NO empty merged scaffold
-              // (this container is transparent + gap:0, invisible with one child).
-              // Branch condition unchanged; only what the boss branch renders.
+              // boss-winscreen-cta (direction A), stacked on the mobile-fit merged
+              // scaffold. ONE amber primary per state, re-ranked by claim presence:
+              //  • CLAIM (claimVisible): the claim card is the single amber primary
+              //    at the TOP (render order = claim-first); BossOutwardEnding's
+              //    Challenge demotes to outline (challengeTier="secondary"); helper
+              //    reads "This win is yours to keep."
+              //  • SOCIAL (!claimVisible): no save UI in the DOM (BossClaimPrompt
+              //    returns null); Challenge is the amber primary; helper reads
+              //    "Share what you just did."
+              // claimVisible mirrors BossClaimPrompt's own `shown` latch via
+              // onVisibilityChange — no second eligibility eval, no auth in the
+              // parent, gate + RegisterModal invocation untouched. senderKind
+              // branch condition unchanged. Helper shown on WIN only (loss = the
+              // run-it-back button alone, no helper, out of scope).
               <div
                 data-testid="boss-win-cta-merged"
                 style={{
@@ -406,8 +415,30 @@ function H2HRecipientRevealInner(props: InnerProps) {
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
                 }}
               >
+                {myScore >= challengeCtx.targetScore && (
+                  <div
+                    data-testid="boss-win-cta-helper"
+                    style={{ fontSize: 13, fontWeight: 600, color: "rgba(234,240,255,0.7)", textAlign: "center" }}
+                  >
+                    {claimVisible ? "This win is yours to keep." : "Share what you just did."}
+                  </div>
+                )}
+                {/* CLAIM primary (top) — self-gates; returns null in SOCIAL
+                    (registered / already-claimed / anon-dismissed) → no save UI
+                    composed into the DOM. onVisibilityChange drives the re-rank. */}
+                <BossClaimPrompt
+                  embedded
+                  bossIdentityId={challengeCtx.bossIdentityId}
+                  won={myScore >= challengeCtx.targetScore}
+                  active={arcResolved && claimBreatheElapsed}
+                  onVisibilityChange={setClaimVisible}
+                  onDismiss={() => { /* card self-hides via its latch; SOCIAL takes over */ }}
+                />
+                {/* Social block — Challenge is the amber primary in SOCIAL,
+                    demoted to outline in CLAIM (the claim owns the amber). */}
                 <BossOutwardEnding
                   variant="cta-only"
+                  challengeTier={claimVisible ? "secondary" : "primary"}
                   sport={sport}
                   bossChallengeId={challengeCtx.challengeId}
                   freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
@@ -415,18 +446,6 @@ function H2HRecipientRevealInner(props: InnerProps) {
                   targetScore={challengeCtx.targetScore}
                   bossName={challengeCtx.challengerName}
                   onPlayAgain={onTryAgain}
-                />
-                {/* Post-win claim — EMBEDDED (chromeless) into the merged
-                    scaffold. Self-gates on eligibility (won + after-launch
-                    baseline + anti-repeat + !registered, or ?claim=force in DEV);
-                    returns null when not eligible (registered/already-claimed)
-                    → the merged container then holds only the ending. */}
-                <BossClaimPrompt
-                  embedded
-                  bossIdentityId={challengeCtx.bossIdentityId}
-                  won={myScore >= challengeCtx.targetScore}
-                  active={arcResolved && claimBreatheElapsed}
-                  onDismiss={() => { /* card self-hides via its latch */ }}
                 />
               </div>
             ) : undefined
