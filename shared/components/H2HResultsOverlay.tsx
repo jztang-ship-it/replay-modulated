@@ -1244,6 +1244,16 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       <H2HBoardShell
         surfaceKind="results-overlay"
         innerScrollable
+        // boss-mobile-fit §1.4 (RE-CORRECTED, 2026-06-28): the missing half of
+        // the result-hero content-size. The shell's default hero floor is
+        // HERO_MIN_HEIGHT_CSS (~331px, two card-rows) which floored the band
+        // regardless of the grid → §1.4's grid Row1→auto (above) saved ~0 on its
+        // own. Lower the floor to one card-row (HERO_ROW_HEIGHT_CSS, ~159) so the
+        // now-content-sized grid (verdict row + user hero card ≈ 237) determines
+        // the band: 331→~237, −~94 on every result state. Scoped to THIS overlay
+        // shell call only — the play-surface duel hero keeps the full 2-row
+        // HERO_MIN_HEIGHT_CSS (§1.5).
+        heroMinHeight={HERO_ROW_HEIGHT_CSS}
         globalHeader={globalHeader}
         /* TOP STRIP (b) — opponent lineup + name/score band. The shell's
            ZonePanel renders the strip then the ZoneHeader (RD6.1-b

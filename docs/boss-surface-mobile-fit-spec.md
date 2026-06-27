@@ -55,12 +55,12 @@ Omit the `globalHeader={<GlobalChallengeHeader/>}` prop at the 3 mount sites: `H
 **1.3 Play CTA reserve — trim (−17).**
 `RESERVED_MIN_HEIGHT_PX` 77 → **60** (`H2HRecipientPlay.tsx:221`). Button itself is ~52, so 60 is a safe floor.
 
-**1.4 Result hero — content-size Row 1 (−~115–145, verdict-length-dependent). [CORRECTED — original mechanism was wrong.]**
-The result hero is the overlay's **own** CSS grid (`H2HResultsOverlay.tsx:1290`), `gridTemplateRows: minmax(HERO_ROW_HEIGHT_CSS, auto) HERO_ROW_HEIGHT_CSS` (`:1319`). **Row 1** = the verdict line sitting on a full `HERO_ROW_HEIGHT` floor (~159/175px) while the text is only ~40px. **Row 2** = the user hero card (`HeroCell`, `:1439`). The over-reservation is Row 1's floor — **not** a droppable empty row.
-- **Lever (in-place, no fork — allowed):** at `H2HResultsOverlay.tsx:1319`, change Row 1's track from `minmax(HERO_ROW_HEIGHT_CSS, auto)` → `auto` (content-size the verdict). Keep Row 2 = `HERO_ROW_HEIGHT_CSS` (user hero card untouched). Reclaims ~115–145px.
-- This does **not** use `heroMinHeight` — a parent `minHeight` can't shrink below the grid's intrinsic 331px (saves only ~14px). The unused shell props stay unused.
-- `minmax(...,auto)` does not grow on the live 2-line verdict; the floor is the whole cost, so content-sizing Row 1 removes it cleanly.
-- **Watch — NOT this pass:** on states with no played card (the loss result John glassed), Row 2's `HeroCell` is the empty battlefield slot. Reclaiming that is a further ~159px but it's state-dependent (Row 2 holds a real card on win states) — parked as a follow-up, out of scope here.
+**1.4 Result hero — content-size BOTH the grid AND the shell floor (−~94). [RE-CORRECTED — needs both levers; either alone saves ~0.]**
+Two independent things floor the result hero band at 331px; you must lower both:
+1. **Overlay grid** (`H2HResultsOverlay.tsx:1290/1319`): `gridTemplateRows: minmax(HERO_ROW_HEIGHT_CSS, auto) HERO_ROW_HEIGHT_CSS`. Change Row 1 → `auto` (content-size the verdict), keep Row 2 = `HERO_ROW_HEIGHT_CSS` (user hero card). Grid intrinsic 331→~237. *(Already on the branch.)*
+2. **Shell wrapper** (`H2HBoardShell.tsx:574`): `minHeight: HERO_MIN_HEIGHT_CSS` (331.31px) floors the band regardless of the grid. Pass a **content-sized `heroMinHeight`** on the overlay's `H2HBoardShell` call so the floor drops to ~237. *(The missing half.)*
+- **Both required.** Measured: grid→auto alone left the band at 331 (shell floor won); heroMinHeight alone can't beat the grid's old 331 intrinsic (grid won). Together: −94 on every result state. This is the union of the original spec lever (heroMinHeight) and the first correction (grid→auto) — each was half-right.
+- **Scope `heroMinHeight` to the overlay's shell call only** — do NOT touch the play-surface shell call; the active-round duel keeps its full 2-row `HERO_MIN_HEIGHT_CSS`.
 
 **1.5 Active round keeps the full 2-row hero.** Duel cards stay full-size (decision 3). Do **not** apply 1.4 to the active round.
 
@@ -91,16 +91,20 @@ Tower 277 → ~197. Combined with Track 1 on the anon-win result: 977 → **~614
 
 ---
 
-## Expected post-fix (optimistic — glass confirms; result hero saving is now ~130, not ~159)
+## Expected post-fix — scoped re-measure [CORRECTED: earlier result numbers measured the wrong surface]
 
-| State | @390 after | @430 after | Note |
+**Measurement bug:** the reveal-mock mounts TWO `[data-h2h-board-inner]` nodes (reveal screen + results overlay); the first self-measure used an unscoped selector and read the reveal screen *behind* the overlay. **All overlay measurements must scope to the overlay's own board-inner.** (mock≠real / don't-trust-Playwright — cemented again.)
+
+Real scoped baselines (pre-fix) and post-§1.4 (−94 hero):
+
+| State | scoped now | after §1.4 | ≤650? |
 |---|---|---|---|
-| Intro / active | ~603 | ~628 | unchanged by §1.4 |
-| Loss result | ~480 | ~490 | comfortable |
-| Registered win | ~595 | ~615 | fits |
-| Anonymous win | ~655 | ~670 | **TIGHT / at the optimistic edge — the binding case** |
+| Intro / active (no overlay) | ~625 / 628 | n/a | ✅ measured correctly (single board-inner) |
+| Loss result | 606 | ~512 | ✅ |
+| Registered / social win | ~735 | ~641 | ✅ (tight) |
+| Anon-win (CLAIM) | 819 | ~725 | ❌ — still over; CTA is the remaining lever |
 
-**Anon-win @430 is the watch case.** With Row 1 saving ~130 (not 159), it sits at the edge of the optimistic budget, so a real device may scroll. **Glass-contingent fallback (CC may apply in the same build if self-measure shows anon-win > ~640 @430):** tighten strip cells 60→56 and the merged-card vertical padding. **Do NOT** drop actions (John kept both) or shrink duel cards to get there — those are locked.
+§1.4 clears loss + social win. **Anon-win still overflows after §1.4** — handled in the winscreen spec (the redesign's vertical hierarchy made the CTA *taller*, 181→251, not lighter; that CTA is where the remaining ~75px comes from). Strip cells 60→56 remain an authorized fallback for margin; do **not** drop actions or shrink duel cards.
 
 ---
 
