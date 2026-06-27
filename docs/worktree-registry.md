@@ -350,3 +350,16 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 - **Equivalence on main:** FULL — merge `5802fb37` carries the entire branch tree (base was `main` `34d3703d`, so merged tree == branch tree).
 - **Ship gate:** `npm test` 1465/1465 green; `scripts/build-vercel.sh` tri-sport green; Vercel deploy `replay-3tljevc3p` (`5802fb37`) **Ready** in production. Rollback rev: `34d3703d`.
 - **Last reviewed:** 2026-06-27 (shipped)
+
+---
+
+### `feat/boss-mobile-fit` — ACTIVE (HOLD for glass; not merged)
+
+- **Path:** `~/Desktop/ReplayMod/.claude/worktrees/feat-boss-mobile-fit`
+- **Branch:** `feat/boss-mobile-fit`, branched off `main` `f3baa94b` (base-guard PASS: local==origin/main, 0/0). **Rollback rev = `f3baa94b`.**
+- **Unique commits vs main:** 1 (the boss-mobile-fit build). NOT pushed, NOT merged.
+- **Uncommitted state:** `M package-lock.json` (npm-install drift, NOT committed); untracked throwaway recon scripts `scripts/_recon-fit-postfix.mjs`, `scripts/_recon-truecontent.mjs`.
+- **What it carries:** mobile no-scroll fit for the boss reveal/play cold-link surface, per `docs/boss-surface-mobile-fit-spec.md`. Track 1 (shell tightening, in-place): §1.1 banner dropped at the 3 mount sites (`H2HRecipientPlay`, `H2HRecipientReveal` ×2; `GlobalChallengeHeader` internals untouched), §1.2 `HAND_STRIP_HEIGHT_PX` 80→60 + `ZONE_HEADER_HEIGHT_PX` 24→18, §1.3 `RESERVED_MIN_HEIGHT_PX` 77→60, §1.4 result-hero Row-1 content-sized (`H2HResultsOverlay` gridTemplateRows `minmax(HERO_ROW_HEIGHT,auto)`→`auto`; CORRECTED lever — the spec's original `heroMinHeight` mechanism could not work), §1.7 duel-card cap `min(125px,28vw)`→`min(110px,28vw)` lockstep across shell/reveal/overlay/play. §1.6 SKIPPED (intro→active is action-gated but intro already fits). Track 2: anon-win CTA merged into one chromeless scaffold via a new `embedded` prop on `BossClaimPrompt` (drops its card chrome + heading/body, keeps both action sets + gate exactly); composed in the `H2HRecipientReveal` boss ctaSlot. No fork of any component; `CardFront` untouched; `senderKind` branch condition unchanged.
+- **Self-measure (Playwright, optimistic — env safe-area=0):** all 5 states ≤650 both widths. intro/active 625/628, loss 547/550, registered-win 518/521, anon-win 573/576. §-table fallback NOT triggered (anon-win @430 576 < 640). basketball build green; 230/230 H2H+Boss component tests green.
+- **NOT done (HOLD gate):** John's device glass on the real cold link (today's live boss UUID via hub resolver), both widths, all 5 states incl. incognito/`?claim=force` for the anon-win merged card. Full `npm test` + tri-sport build are the MERGE gate (not run yet — basketball-only for hold).
+- **Last reviewed:** 2026-06-27 (built, held for glass)

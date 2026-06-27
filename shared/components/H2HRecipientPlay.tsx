@@ -103,7 +103,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import { H2HRecipientReveal } from "./H2HRecipientReveal";
-import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import {
   HAND_STRIP_HEIGHT_PX,
   TIER_ACCENT,
@@ -219,7 +218,9 @@ const TOP_STRIP_MARGIN_BOTTOM_PX = 18;
 const HERO_ZONE_MARGIN_BOTTOM_PX = 4;
 const BOTTOM_STRIP_MARGIN_BOTTOM_PX = 0;
 const RESERVED_PADDING_TOP_PX = 8;
-const RESERVED_MIN_HEIGHT_PX = 77;
+// boss-mobile-fit §1.3 (2026-06-27): 77 → 60 (−17). The CTA button is ~52px,
+// so 60 is a safe floor with breathing room above it.
+const RESERVED_MIN_HEIGHT_PX = 60;
 
 // hold_select vertical-budget fix
 // (docs/holdselect-vertical-budget-design-lock.md §2, 2026-06-01).
@@ -1285,7 +1286,9 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // min(145px, 32vw)); must stay equal to BATTLEFIELD_CARD_MAX_WIDTH /
   // HERO_CARD_MAX_WIDTH so the hold-select preview pop matches the
   // hero footprint.
-  const previewCardWidthCss = "min(125px, 28vw)";
+  // boss-mobile-fit §1.7 (2026-06-27): 125 → 110 cap, lockstep with the shell
+  // HERO_* + reveal BATTLEFIELD + overlay HERO_CARD_MAX_WIDTH (asymmetry snaps).
+  const previewCardWidthCss = "min(110px, 28vw)";
   const previewCardHeightCss = `calc(${previewCardWidthCss} * ${(478 / 329).toFixed(6)})`;
   const previewedSlotIndex =
     state.kind === "hold_select" ? state.previewedSlotIndex : null;
@@ -1609,13 +1612,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     <>
       <H2HBoardShell
         surfaceKind="playing"
-        // RD7.1 (2026-06-13): in-flow global challenge header on the play
-        // states (Hold / Challenge intro / Draw). During arc the play
-        // shell's inner subtree fades to opacity 0, so the visible header
-        // there comes from the composited reveal/results surfaces (which
-        // mount their own identical GlobalChallengeHeader). No transform —
-        // DON'T-BREAK #1.
-        globalHeader={<GlobalChallengeHeader />}
+        // boss-mobile-fit §1.1 (2026-06-27): globalHeader prop OMITTED here
+        // (and at the two H2HRecipientReveal mounts) to reclaim ~60px on the
+        // play/reveal/result surface. GlobalChallengeHeader internals stay
+        // LOCKED (DO-NOT-TOUCH) — this is an opt-in prop mounted nowhere else,
+        // so omitting it removes the banner from the whole surface with no
+        // global blast radius. The wordmark moment now lives on the landing.
         topLabel={topLabel}
         bottomLabel={bottomLabel}
         topStrip={topStripSlot}

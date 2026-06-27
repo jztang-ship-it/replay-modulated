@@ -38,9 +38,16 @@ interface Props {
   active: boolean;
   /** parent close (clears the card region). */
   onDismiss: () => void;
+  /** boss-mobile-fit §2 (2026-06-27): when true, render CHROMELESS — drop the
+   *  bordered card (border/bg/padding/margin) and the heading/body ("{team}
+   *  down." / "Want it on the record?"), keeping ONLY the claim button row
+   *  (+ RegisterModal). Used by the merged anon-win CTA so the claim sits in
+   *  the shared scaffold instead of a second bordered card. Gate/latch/dismiss
+   *  logic is identical in both modes — composition, not a fork. */
+  embedded?: boolean;
 }
 
-export function BossClaimPrompt({ bossIdentityId, won, active, onDismiss }: Props) {
+export function BossClaimPrompt({ bossIdentityId, won, active, onDismiss, embedded = false }: Props) {
   const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const [shown, setShown] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -66,19 +73,34 @@ export function BossClaimPrompt({ bossIdentityId, won, active, onDismiss }: Prop
   return (
     <div
       data-testid="boss-claim-prompt"
-      style={{
-        width: "100%", maxWidth: 420, margin: "10px auto 0",
-        padding: "14px 16px", borderRadius: 14,
-        border: "1px solid rgba(255,177,74,0.45)", background: "rgba(255,177,74,0.08)",
-        display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 4,
-      }}
+      data-embedded={embedded ? "true" : undefined}
+      style={
+        embedded
+          ? {
+              // boss-mobile-fit §2: chromeless — no border/bg/padding/margin,
+              // no heading/body. Just the button row, inside the merged
+              // scaffold (the merged container owns spacing).
+              width: "100%", maxWidth: 420, margin: "0 auto",
+              display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+            }
+          : {
+              width: "100%", maxWidth: 420, margin: "10px auto 0",
+              padding: "14px 16px", borderRadius: 14,
+              border: "1px solid rgba(255,177,74,0.45)", background: "rgba(255,177,74,0.08)",
+              display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 4,
+            }
+      }
     >
-      <div style={{ fontSize: 19, fontWeight: 950, color: "#EAF0FF", fontFamily: FF, letterSpacing: 0.4, textTransform: "uppercase" }}>
-        {team} down.
-      </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(234,240,255,0.75)", marginBottom: 8 }}>
-        Want it on the record?
-      </div>
+      {!embedded && (
+        <div style={{ fontSize: 19, fontWeight: 950, color: "#EAF0FF", fontFamily: FF, letterSpacing: 0.4, textTransform: "uppercase" }}>
+          {team} down.
+        </div>
+      )}
+      {!embedded && (
+        <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(234,240,255,0.75)", marginBottom: 8 }}>
+          Want it on the record?
+        </div>
+      )}
       <div style={{ display: "flex", gap: 10, width: "100%" }}>
         <button
           data-testid="boss-claim-primary"

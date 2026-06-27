@@ -181,7 +181,9 @@ const HERO_ROW_GAP_PX = 14;
 // H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH, H2HBoardShell.HERO_MIN_HEIGHT_CSS,
 // H2HBoardShell.HERO_MIN_HEIGHT_HOLD_SELECT_CSS, and the hold-select
 // preview-card override in H2HRecipientPlay all carry the same value.
-const HERO_CARD_MAX_WIDTH = "min(125px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
+// boss-mobile-fit §1.7 (2026-06-27): 125 → 110 cap, lockstep with arc's
+// BATTLEFIELD_CARD_MAX_WIDTH + shell HERO_* + play preview (asymmetry snaps).
+const HERO_CARD_MAX_WIDTH = "min(110px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
 
 // Step 3: explicit per-row hero height for the hero grid. Pinning each
 // row to this prevents row-1 from collapsing when the opponent HeroCell
@@ -1316,7 +1318,15 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             // across states. The verdict grows into the hero zone's existing
             // ~80px slack (measured fit at 375×667 / 360×640); minmax keeps
             // the anti-overflow `auto` growth for a worst-case 2–3-line line.
-            gridTemplateRows: `minmax(${HERO_ROW_HEIGHT_CSS}, auto) ${HERO_ROW_HEIGHT_CSS}`,
+            // boss-mobile-fit §1.4 (2026-06-27): Row 1 floor was a full
+            // HERO_ROW_HEIGHT card-row (~159/175px) holding a ~40px verdict
+            // line — over-reservation, not an empty row. Content-size it:
+            // minmax(HERO_ROW_HEIGHT_CSS, auto) → auto. Reclaims ~115–145px on
+            // the RESULT surface (the binding overflow case). Row 2 (user hero
+            // card) stays HERO_ROW_HEIGHT_CSS — hero X/Y untouched. This
+            // deliberately drops the 2026-06-24 Option A cross-state floor on
+            // the result only (result is action-reached, not an in-place jump).
+            gridTemplateRows: `auto ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip

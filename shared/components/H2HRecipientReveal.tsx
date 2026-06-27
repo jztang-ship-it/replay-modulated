@@ -51,7 +51,6 @@ import { isRealName } from "@shared/utils/isRealName";
 import { BossOutwardEnding } from "./BossOutwardEnding";
 import { BossClaimPrompt } from "./BossClaimPrompt";
 import { ensureClaimBaseline } from "@shared/utils/bossClaimPrompt";
-import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import { RoundSignage } from "./H2HBoardShell";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
 import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
@@ -352,10 +351,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
         renderCard={renderBattlefieldCard}
         reveal={reveal}
         roundSignage={roundSignageLabel ? <RoundSignage label={roundSignageLabel} /> : undefined}
-        // RD7.1 (2026-06-13): recipient-flow Reveal screen header. Same
-        // component the results overlay below mounts → identical height →
-        // reveal→results no-snap preserved.
-        globalHeader={<GlobalChallengeHeader />}
+        // boss-mobile-fit §1.1 (2026-06-27): globalHeader OMITTED (reveal +
+        // overlay both, in lockstep so reveal→results no-snap is preserved —
+        // neither has the banner now). −60px. GlobalChallengeHeader locked.
       />
       {overlayCrossfade.mounted && (
         <H2HResultsOverlay
@@ -369,10 +367,8 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // RD7.12 — displayExplanation = validated LLM Flavor if ready, else
           // the RD7.11 deterministic line (never-block swap-in).
           explanation={displayExplanation}
-          // RD7.1 (2026-06-13): recipient-flow Results screen header.
-          // Identical GlobalChallengeHeader → same height as the reveal
-          // shell's header → reveal→results no-snap preserved.
-          globalHeader={<GlobalChallengeHeader />}
+          // boss-mobile-fit §1.1 (2026-06-27): globalHeader OMITTED here too
+          // (lockstep with the reveal shell above).
           onSendItBack={onSendItBack}
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}
@@ -394,7 +390,22 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // BossOutwardEnding make fresh === revisited.
           ctaSlot={
             challengeCtx.senderKind === "boss" ? (
-              <>
+              // boss-mobile-fit §2 (2026-06-27): MERGED anon-win CTA scaffold.
+              // One chromeless column hosting BossOutwardEnding (cta-only) AND
+              // the claim's buttons (BossClaimPrompt embedded). Was two stacked
+              // cards (~277px: ending 126 + claim card 141 + 10 margin); the
+              // embedded claim drops its border/padding + heading/body (~−80),
+              // both action sets kept. When the claim isn't eligible it returns
+              // null → only BossOutwardEnding renders → NO empty merged scaffold
+              // (this container is transparent + gap:0, invisible with one child).
+              // Branch condition unchanged; only what the boss branch renders.
+              <div
+                data-testid="boss-win-cta-merged"
+                style={{
+                  width: "100%", maxWidth: 420, margin: "0 auto",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                }}
+              >
                 <BossOutwardEnding
                   variant="cta-only"
                   sport={sport}
@@ -405,17 +416,19 @@ function H2HRecipientRevealInner(props: InnerProps) {
                   bossName={challengeCtx.challengerName}
                   onPlayAgain={onTryAgain}
                 />
-                {/* Post-win claim prompt — sibling card, surfaces after the
-                    breathe. Self-gates on eligibility (won + after-launch
+                {/* Post-win claim — EMBEDDED (chromeless) into the merged
+                    scaffold. Self-gates on eligibility (won + after-launch
                     baseline + anti-repeat + !registered, or ?claim=force in DEV);
-                    won = the inline live-win. */}
+                    returns null when not eligible (registered/already-claimed)
+                    → the merged container then holds only the ending. */}
                 <BossClaimPrompt
+                  embedded
                   bossIdentityId={challengeCtx.bossIdentityId}
                   won={myScore >= challengeCtx.targetScore}
                   active={arcResolved && claimBreatheElapsed}
                   onDismiss={() => { /* card self-hides via its latch */ }}
                 />
-              </>
+              </div>
             ) : undefined
           }
         />

@@ -31,8 +31,11 @@ import { HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
 
 // ── Geometry constants (moved from H2HRevealScreen) ─────────────────
 
-/** Zone header (name label) height — 24px tall band above/below the strip. */
-export const ZONE_HEADER_HEIGHT_PX = 24;
+/** Zone header (name label) height — band above/below the strip.
+ *  boss-mobile-fit §1.2 (2026-06-27): 24 → 18 (−12 across top+bottom zones).
+ *  Drives the rendered ZoneHeader on every H2H surface (play/reveal/overlay
+ *  all consume this shell's ZoneHeader). */
+export const ZONE_HEADER_HEIGHT_PX = 18;
 
 /** Gap between the zone header and the strip area inside a ZonePanel. */
 export const ZONE_GAP_PX = 4;
@@ -85,9 +88,13 @@ export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
  *  HERO_ROW_HEIGHT_CSS and the reveal battlefield card-row already resolve to
  *  this exact value; they reference this constant so the three states can't
  *  drift. HERO_MIN_HEIGHT_CSS below = two of these rows + 14px gap budget. */
-export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(125px, 28vw) * ${(478 / 329).toFixed(6)})`;
+// boss-mobile-fit §1.7 (2026-06-27): card-width cap 125 → 110, in lockstep with
+// H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH, H2HResultsOverlay.HERO_CARD_MAX_WIDTH,
+// and H2HRecipientPlay.previewCardWidthCss (asymmetry = reveal→results snap).
+// At 390 unchanged (28vw≈109<110); at 430 ~8% smaller. Row height drops with it.
+export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(110px, 28vw) * ${(478 / 329).toFixed(6)})`;
 
-export const HERO_MIN_HEIGHT_CSS = `calc(min(125px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
+export const HERO_MIN_HEIGHT_CSS = `calc(min(110px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
 /** Hero region's reduced minHeight during the hold_select preview window
  *  (docs/holdselect-vertical-budget-design-lock.md §2(3)). One hero-card
@@ -98,7 +105,9 @@ export const HERO_MIN_HEIGHT_CSS = `calc(min(125px, 28vw) * ${((478 / 329) * 2).
  *  hold_select — sized so the restoration finishes inside one
  *  COLUMN_FLIP_DURATION_MS window (~250ms), absorbed into column_flip's
  *  natural choreography so the recipient strip doesn't visibly lurch. */
-export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(125px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
+// (Dead constant — zero importers, confirmed in boss-mobile-fit recon. Kept in
+//  lockstep with the 110 cap above only so the card-width family stays coherent.)
+export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(110px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
 
 /** Duration of the hero-region minHeight restore transition. Synced with
  *  COLUMN_FLIP_DURATION_MS (250ms) per the design lock so the expansion

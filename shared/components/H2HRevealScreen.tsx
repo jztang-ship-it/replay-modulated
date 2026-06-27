@@ -252,7 +252,11 @@ const TIER_ACCENT: Record<string, string> = {
 //     surface that defines the floor).
 // Single source of truth. Drift across surfaces is impossible without
 // removing an import — value-agnostic coupling tests gate the lock.
-export const HAND_STRIP_HEIGHT_PX = 80;
+// boss-mobile-fit §1.2 (2026-06-27): 80 → 60. Trims both strips (~52 across
+// top+bottom) on every H2H surface — play/reveal/overlay all key off this one
+// constant. Cell narrows on the locked 329/478 aspect; the container-query
+// scale(100cqw/150px) keeps card content un-clipped (no scale clawback).
+export const HAND_STRIP_HEIGHT_PX = 60;
 const HAND_STRIP_GAP_PX = 4;
 
 // RD6.2-prep-A2 (2026-06-12): natural horizontal span of the strip's
@@ -327,7 +331,11 @@ const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 // H2HResultsOverlay.HERO_CARD_MAX_WIDTH (and the shell's HERO_MIN_HEIGHT_*
 // constants that derive from this value) or the reveal→results crossfade
 // snaps. The aspect-ratio derived row height drops proportionally.
-const BATTLEFIELD_CARD_MAX_WIDTH = "min(125px, 28vw)";
+// boss-mobile-fit §1.7 (2026-06-27): cap 125 → 110 (lockstep with
+// H2HBoardShell HERO_* + H2HResultsOverlay HERO_CARD_MAX_WIDTH + play preview).
+// At 390, 28vw≈109 < cap → unchanged. At 430, 28vw≈120 → clamps to 110
+// (~8% smaller duel cards on wide screens only). Breakpoint-free.
+const BATTLEFIELD_CARD_MAX_WIDTH = "min(110px, 28vw)";
 
 // Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
 // reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail
