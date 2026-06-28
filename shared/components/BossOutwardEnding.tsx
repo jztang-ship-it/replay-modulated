@@ -83,9 +83,15 @@ interface Props {
    *  landing leaves lean=false (keeps Copy outline + Play Again). Presentation
    *  only — handlers/labels/testids unchanged. */
   lean?: boolean;
+  /** boss-result-share-payload (Option B): the sharer's just-played attempt uuid.
+   *  When present, appended to the forwarded link as &attempt={id} so the
+   *  recipient can read this exact attempt (picks + cap + score) for the taunt
+   *  overlay / OG card. Opaque uuid (gen_random_uuid), safe in a URL. Additive
+   *  to ?ref — absent ⇒ byte-identical bare link. */
+  attemptRef?: string;
 }
 
-export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full", challengeTier = "primary", lean = false }: Props) {
+export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full", challengeTier = "primary", lean = false, attemptRef }: Props) {
   const [result, setResult] = useState<BossResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -143,7 +149,11 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
   function buildForwardUrl(): string {
     if (!shareUrl) return "";
     const ref = getOrMintReferrerToken();
-    const url = `${shareUrl}?ref=${encodeURIComponent(ref)}`;
+    let url = `${shareUrl}?ref=${encodeURIComponent(ref)}`;
+    // boss-result-share-payload (Option B): carry the sharer's attempt uuid so
+    // the recipient lands on the same boss seeing this exact result as the taunt.
+    // Additive — absent ⇒ unchanged bare link.
+    if (attemptRef) url += `&attempt=${encodeURIComponent(attemptRef)}`;
     if (import.meta.env.DEV) {
       // Layer-C glass harness — surfaces the produced forward URL (with ?ref) so
       // it's readable on a forward. DEV-only.

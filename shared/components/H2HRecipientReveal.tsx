@@ -504,6 +504,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
                     targetScore={challengeCtx.targetScore}
                     bossName={challengeCtx.challengerName}
                     onPlayAgain={onTryAgain}
+                    // boss-result-share-payload: carry THIS attempt's uuid onto the
+                    // forwarded link so the recipient sees this exact result.
+                    attemptRef={attempt.attemptResult?.attempt_id}
                   />
                 )}
               </div>

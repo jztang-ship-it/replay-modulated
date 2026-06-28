@@ -99,6 +99,16 @@ function getRefToken(): string | null {
   return raw && raw.length > 0 ? raw : null;
 }
 
+/** boss-result-share-payload (Option B): the sharer's attempt uuid off a
+ *  forwarded boss link's &attempt param (beside ?ref). "attempt" is not in the
+ *  HANDOFF strip list, so it survives to the landing. Null when absent → no
+ *  taunt overlay (byte-identical bare link). */
+function getAttemptRef(): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("attempt");
+  return raw && raw.length > 0 ? raw : null;
+}
+
 /** Dev-only route detector. Matches /basketball/dev/<slug> paths and
  *  returns the slug. Production users have no entry point here.
  *
@@ -723,6 +733,7 @@ function AppInner() {
       {showChallengeLanding && challengeIdFromUrl && (
         <ChallengeLandingScreen
           challengeId={challengeIdFromUrl}
+          attemptRef={getAttemptRef() ?? undefined}
           sport={SPORT}
           currentUserId={isAuthenticated && !isAnonymous ? (uid ?? null) : null}
           deserializeRoster={(snap) => sportAdapter.deserializeRoster(snap)}

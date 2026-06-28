@@ -43,6 +43,7 @@ import { useEffect } from "react";
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
 import { normalizeTriggerType, normalizeSenderKind } from "@shared/adapters/challengeTypes";
 import { isRealName } from "@shared/utils/isRealName";
+import { useSharerAttempt } from "@shared/hooks/useSharerAttempt";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
@@ -121,6 +122,12 @@ interface Props {
    *  the anchor's knownFor (always) or a controversySafe pick (when
    *  curated; ships empty). Drops cleanly when no culture available. */
   showCultureLine?: boolean;
+  /** boss-result-share-payload (Option B): the sharer's attempt uuid off the
+   *  forwarded link. When present on the BOSS branch, the sharer's result
+   *  renders as a taunt overlay above the take card ("{name} beat today's boss
+   *  by {margin} with ${cap} — your turn"). Read-only client fetch; never
+   *  reconciled with the boss target_fp (fence §8). Absent ⇒ no overlay. */
+  attemptRef?: string;
 }
 
 // ── Snapshot card shape (Phase 0 enrichment fields) ────────────────────
@@ -405,9 +412,35 @@ function pickSupportingCultureLine(culture: CultureShape | null): string | null 
   return null;
 }
 
+/** boss-result-share-payload (Option B): the sharer's result as a taunt overlay
+ *  on the recipient's boss landing. Reads the named attempt client-side (public
+ *  RLS, no API function). FENCE §8: the sharer's score is social pressure ONLY —
+ *  the bar the recipient must clear stays the boss target_fp (`targetScore`),
+ *  never reconciled with this number. Boss share is beat-to-send (win-only), so
+ *  a sub-target attempt renders nothing. */
+function SharerTaunt({ attemptRef, targetScore }: { attemptRef: string; targetScore: number }) {
+  const sharer = useSharerAttempt(attemptRef);
+  if (!sharer) return null;
+  const margin = Math.round((sharer.score - targetScore) * 10) / 10;
+  if (margin < 0) return null; // didn't clear the boss → no taunt
+  const who = isRealName(sharer.userName) ? sharer.userName : "Someone";
+  return (
+    <div
+      data-testid="sharer-taunt"
+      style={{
+        marginBottom: 14, padding: "10px 14px", borderRadius: 12,
+        border: "1px solid rgba(255,177,74,0.4)", background: "rgba(255,177,74,0.08)",
+        fontSize: 14, fontWeight: 700, lineHeight: 1.35, color: "rgba(234,240,255,0.92)",
+      }}
+    >
+      <span style={{ color: "#FFB14A", fontWeight: 900 }}>{who}</span> beat today’s boss by {margin} with ${sharer.capSpend} — your turn.
+    </div>
+  );
+}
+
 // ── The component ─────────────────────────────────────────────────────
 
-export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, calculateWinTier, onAccept, renderBossCard, showCultureLine = false }: Props) {
+export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, calculateWinTier, onAccept, renderBossCard, showCultureLine = false, attemptRef }: Props) {
   const trigger = (normalizeTriggerType(data.trigger_type) ?? "default") as TakeCardTrigger;
   const snapshot = (data.initial_roster ?? {}) as RosterSnapshot;
   const cards: SnapshotCard[] = snapshot.cards ?? [];
@@ -541,6 +574,10 @@ export function ChallengeTakeCardLanding({ data, statsLine, alreadyAttempted, ca
     return (
       <div data-testid="challenge-take-card-landing">
         <div data-testid="boss-take-card">
+          {/* boss-result-share-payload (Option B): sharer-result taunt overlay,
+              shown only when the forwarded link carried &attempt. Read-only;
+              the bar-to-beat stays the boss target below. */}
+          {attemptRef && <SharerTaunt attemptRef={attemptRef} targetScore={data.target_score} />}
           {/* Eyebrow — marks the surface as the daily boss (boss-only). */}
           <div
             data-testid="boss-eyebrow"

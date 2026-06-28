@@ -102,6 +102,10 @@ export function buildChallengeCtx(
 
 interface Props {
   challengeId: string;
+  /** boss-result-share-payload (Option B): the sharer's attempt uuid off the
+   *  forwarded link's &attempt param. Threaded to the boss take-card so it can
+   *  read + render the sharer's result as a taunt overlay. Undefined ⇒ no overlay. */
+  attemptRef?: string;
   sport: string;
   /** Current signed-in user's auth uid, or null for anonymous viewers.
    *  When non-null and matches challenge.created_by, the screen renders
@@ -146,7 +150,7 @@ const TIER_ACCENT: Record<string, string> = {
   BLUE: "#3B82F6", GREEN: "#22C55E", WHITE: "#9CA3AF",
 };
 
-export function ChallengeLandingScreen({ challengeId, sport, currentUserId, deserializeRoster, validateRosterSnapshot, calculateWinTier, onAccept, onClose, renderBossCard }: Props) {
+export function ChallengeLandingScreen({ challengeId, attemptRef, sport, currentUserId, deserializeRoster, validateRosterSnapshot, calculateWinTier, onAccept, onClose, renderBossCard }: Props) {
   const [data, setData] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -242,6 +246,7 @@ export function ChallengeLandingScreen({ challengeId, sport, currentUserId, dese
             calculateWinTier={calculateWinTier}
             onAccept={handleAccept}
             renderBossCard={renderBossCard}
+            attemptRef={attemptRef}
           />
         );
       })()}

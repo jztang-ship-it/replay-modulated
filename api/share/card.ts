@@ -56,16 +56,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (error || !challenge) return res.status(404).end();
 
-  const cards: any[] = (challenge.initial_roster as any)?.cards ?? [];
+  const bossCards: any[] = (challenge.initial_roster as any)?.cards ?? [];
   const targetFp = Number(challenge.target_fp).toFixed(1);
-  const challengerName = challenge.challenger_name ?? "Anonymous";
-  const namedChallenger = isRealName(challengerName);
-  // Named: keep stored headline. Unnamed: use a name-less variant so the
-  // card doesn't read "Player_8923 scored…" anywhere.
-  const headline = namedChallenger
-    ? (challenge.share_headline || `${targetFp} FP. Same slate. Beat them.`)
-    : `${targetFp} FP. Same slate. Beat it.`;
-  const rows = getRows(cards, "3+2");
+
+  // boss-result-share-payload (Option B): when the link carried &attempt, the
+  // card goes ATTEMPT-FORWARD — the sharer's name / score / five / cap become
+  // the brag. FENCE §8: the boss target_fp stays a SEPARATE, labelled bar — the
+  // two numbers are shown, never summed or substituted in the game (this is a
+  // poster, not the game bar). challenge_attempts is public-read; read it via
+  // supabaseAdmin — extends this existing renderer, NO new function (12/12 cap).
+  const attemptId = typeof req.query.attempt === "string" ? req.query.attempt : null;
+  let sharer: { name: string | null; score: string; cards: any[]; capSpend: number } | null = null;
+  if (attemptId) {
+    const { data: a } = await supabaseAdmin
+      .from("challenge_attempts")
+      .select("user_name, score, score_breakdown")
+      .eq("attempt_id", attemptId)
+      .maybeSingle();
+    if (a) {
+      const picks: any[] = Array.isArray(a.score_breakdown) ? (a.score_breakdown as any[]) : [];
+      sharer = {
+        name: typeof a.user_name === "string" ? a.user_name : null,
+        score: Number(a.score).toFixed(1),
+        cards: picks,
+        capSpend: picks.reduce((s: number, c: any) => s + (Number(c?.salary) || 0), 0),
+      };
+    }
+  }
+
+  // Sign-off (2): anon-with-no-real-name → NO attempt-forward — fall back to the
+  // bare boss card entirely. No "Someone cleared it" framing. So attempt-forward
+  // requires BOTH an attempt AND a real sharer name.
+  const attemptForward = sharer !== null && isRealName(sharer.name);
+  // Sign-off (1): the BOSS TARGET stays the hero/bar (unambiguous). On the
+  // attempt card the sharer's SCORE is DEMOTED to a brag line; the boss bar is
+  // eyebrow-labelled so it reads as the boss's number, not the sharer's.
+  const heroNumber = targetFp;
+  const heroEyebrow = attemptForward ? "TODAY'S BOSS" : null;
+  const bragLine = attemptForward ? `Cleared it · ${sharer!.score} FP` : null;
+  const nameToShow = attemptForward
+    ? sharer!.name
+    : (isRealName(challenge.challenger_name ?? "Anonymous") ? (challenge.challenger_name ?? null) : null);
+  const gridCards = attemptForward ? sharer!.cards : bossCards;
+  const headline = attemptForward
+    ? `${sharer!.name}'s five, under $${sharer!.capSpend}. Same boss, same slate — your turn.`
+    : (isRealName(challenge.challenger_name ?? "Anonymous")
+        ? ((challenge.share_headline as string) || `${targetFp} FP. Same slate. Beat them.`)
+        : `${targetFp} FP. Same slate. Beat it.`);
+  const ctaPrimary = attemptForward ? "Same boss. Your five." : "Same starting cards.";
+  const ctaSecondary = attemptForward ? `Beat the ${targetFp}.` : "Your hold/draw decisions.";
+  const rows = getRows(gridCards, "3+2");
 
   // Build JSX element for satori (must be plain object style — no imports)
   const element = {
@@ -99,19 +139,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           props: {
             style: { display: "flex", flexDirection: "column", gap: "16px", marginBottom: "56px" },
             children: [
-              ...(namedChallenger
-                ? [{ type: "div", props: { style: { fontSize: "52px", fontWeight: 900, color: "#EAF0FF" }, children: challengerName } }]
+              ...(nameToShow
+                ? [{ type: "div", props: { style: { fontSize: "52px", fontWeight: 900, color: "#EAF0FF" }, children: nameToShow } }]
+                : []),
+              // Eyebrow labels the hero as the BOSS bar (sign-off 1: boss target
+              // is the hero; the sharer's score is the demoted brag line below).
+              ...(heroEyebrow
+                ? [{ type: "div", props: { style: { fontSize: "26px", fontWeight: 800, letterSpacing: "3px", color: "rgba(255,255,255,0.5)" }, children: heroEyebrow } }]
                 : []),
               {
                 type: "div",
                 props: {
                   style: { display: "flex", alignItems: "baseline", gap: "12px" },
                   children: [
-                    { type: "span", props: { style: { fontSize: "100px", fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }, children: targetFp } },
+                    { type: "span", props: { style: { fontSize: "100px", fontWeight: 950, color: "#FFB14A", lineHeight: 1, fontStyle: "italic" }, children: heroNumber } },
                     { type: "span", props: { style: { fontSize: "36px", fontWeight: 700, color: "rgba(255,255,255,0.5)" }, children: "FP" } },
                   ],
                 },
               },
+              // Demoted sharer score — the brag line, distinct from the boss bar
+              // above (two numbers, never merged; fence §8).
+              ...(bragLine
+                ? [{ type: "div", props: { style: { fontSize: "40px", fontWeight: 800, color: "#22C55E" }, children: bragLine } }]
+                : []),
             ],
           },
         },
@@ -157,8 +207,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               textAlign: "center",
             },
             children: [
-              { type: "div", props: { style: { fontSize: "44px", fontWeight: 900, color: "#FFB14A" }, children: "Same starting cards." } },
-              { type: "div", props: { style: { fontSize: "40px", fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: "8px" }, children: "Your hold/draw decisions." } },
+              { type: "div", props: { style: { fontSize: "44px", fontWeight: 900, color: "#FFB14A" }, children: ctaPrimary } },
+              { type: "div", props: { style: { fontSize: "40px", fontWeight: 700, color: "rgba(255,255,255,0.7)", marginTop: "8px" }, children: ctaSecondary } },
             ],
           },
         },
