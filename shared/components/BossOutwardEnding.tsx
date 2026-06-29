@@ -76,9 +76,16 @@ interface Props {
    *  outline and Copy link demotes to a text link. Presentation only — no
    *  handler/gate/label change. Revisit landing leaves the default (SOCIAL). */
   challengeTier?: "primary" | "secondary";
+  /** boss-winscreen-cta DELTA (Lever B): leanest WIN footer for the unified
+   *  results overlay — Copy Link renders as a TEXT link (not an outline button)
+   *  and Play Again is DROPPED. Used only by the cta-only overlay slot to claw
+   *  back the height the reveal→results no-snap hero costs. The "full" revisit
+   *  landing leaves lean=false (keeps Copy outline + Play Again). Presentation
+   *  only — handlers/labels/testids unchanged. */
+  lean?: boolean;
 }
 
-export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full", challengeTier = "primary" }: Props) {
+export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayAgain, marquee, targetScore, bossName, variant = "full", challengeTier = "primary", lean = false }: Props) {
   const [result, setResult] = useState<BossResult | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -218,21 +225,26 @@ export function BossOutwardEnding({ sport, bossChallengeId, freshResult, onPlayA
           </button>
           {challengeTier === "primary" && (
             <>
+              {/* DELTA Lever B: Copy Link is a TEXT link when lean (overlay),
+                  an outline button otherwise (revisit landing). */}
               <button
                 data-testid="boss-copy-link"
                 onClick={copyLink}
-                style={WIN_OUTLINE_BTN}
+                style={lean ? WIN_TEXT_BTN : WIN_OUTLINE_BTN}
               >
                 {copied ? "Link Copied ✓" : "Copy Link"}
               </button>
-              {/* Play Again — tertiary text, SOCIAL only (win path keeps it). */}
-              <button
-                data-testid="boss-play-again"
-                onClick={onPlayAgain}
-                style={WIN_TEXT_BTN}
-              >
-                Play Again
-              </button>
+              {/* Play Again — tertiary text. DROPPED when lean (overlay footer
+                  budget, Lever B); kept on the revisit landing (full variant). */}
+              {!lean && (
+                <button
+                  data-testid="boss-play-again"
+                  onClick={onPlayAgain}
+                  style={WIN_TEXT_BTN}
+                >
+                  Play Again
+                </button>
+              )}
             </>
           )}
         </>

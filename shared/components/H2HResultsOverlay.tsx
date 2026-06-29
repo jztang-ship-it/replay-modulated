@@ -1253,16 +1253,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       <H2HBoardShell
         surfaceKind="results-overlay"
         innerScrollable
-        // boss-mobile-fit §1.4 (RE-CORRECTED, 2026-06-28): the missing half of
-        // the result-hero content-size. The shell's default hero floor is
-        // HERO_MIN_HEIGHT_CSS (~331px, two card-rows) which floored the band
-        // regardless of the grid → §1.4's grid Row1→auto (above) saved ~0 on its
-        // own. Lower the floor to one card-row (HERO_ROW_HEIGHT_CSS, ~159) so the
-        // now-content-sized grid (verdict row + user hero card ≈ 237) determines
-        // the band: 331→~237, −~94 on every result state. Scoped to THIS overlay
-        // shell call only — the play-surface duel hero keeps the full 2-row
-        // HERO_MIN_HEIGHT_CSS (§1.5).
-        heroMinHeight={HERO_ROW_HEIGHT_CSS}
+        // DELTA (reveal→results no-snap, Lever B): §1.4 had shrunk this hero to
+        // ONE card-row to fit, but the REVEAL hero is the full TWO-row
+        // HERO_MIN_HEIGHT_CSS — the 100px mismatch was the device jump (results
+        // hero shrank, YOU strip leapt up 100px). Drop the override so this hero
+        // = the shell default = the reveal hero → ZERO snap across reveal→results.
+        // The +100px is paid back by leaning the footer (one primary + one text
+        // link; no helper/Play Again) so cards stay FULL and it still fits ≤650.
         globalHeader={globalHeader}
         /* TOP STRIP (b) — opponent lineup + name/score band. The shell's
            ZonePanel renders the strip then the ZoneHeader (RD6.1-b
@@ -1345,11 +1342,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             // card) stays HERO_ROW_HEIGHT_CSS — hero X/Y untouched. This
             // deliberately drops the 2026-06-24 Option A cross-state floor on
             // the result only (result is action-reached, not an in-place jump).
-            // DELTA D3 (no-jump): row 1 FIXED at the 2-line verdict height (was
-            // §1.4 `auto`, which grew the hero on verdict wrap). Row 2 = the user
-            // hero card (HERO_ROW_HEIGHT_CSS, unchanged). The hero zone is now a
-            // constant height regardless of verdict length → hero slot locked.
-            gridTemplateRows: `${VERDICT_ROW_2LINE_PX}px ${HERO_ROW_HEIGHT_CSS}`,
+            // DELTA (reveal→results no-snap, Lever B): row 1 = a FULL card-row
+            // (HERO_ROW_HEIGHT_CSS) so the results hero = the reveal hero (whose
+            // row 1 is the opponent card) → the user card (row 2) and the YOU
+            // strip below sit at the IDENTICAL Y in both surfaces → zero snap.
+            // The verdict (still clamped to 2 lines, D3) centers in row 1. Row 1
+            // is deterministic (fixed card-row), so verdict length never reflows.
+            gridTemplateRows: `${HERO_ROW_HEIGHT_CSS} ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
@@ -1357,11 +1356,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             // creating reserved-space room for the CTA.
             // RD6.2-prep-C (2026-06-12): 4 → 0 mirrors HERO_MARGIN_BOTTOM_PX
             // shared cut.
-            // RD6.2-prep-E (2026-06-12): 0 → 12 mirrors HERO_MARGIN_BOTTOM_PX
-            // (now 12) — gives the bottom hero a real-phone-visible
-            // breathing gap to the bottom strip. With the bottom panel's
-            // paddingTop staying at 8, total bottom hero gap = 20.
-            marginBottom: 12,
+            // RD6.2-prep-E (2026-06-12): 0 → 12 for breathing room.
+            // DELTA (no-snap): 12 → 0. This grid-level marginBottom was EXTRA on
+            // top of the shell's hero marginBottom, so the overlay hero zone ran
+            // 12px taller than the reveal's (which has no such extra) — the 12px
+            // residual snap (results YOU strip 12px lower). The hero→bottom gap
+            // still comes from the shell + bottom-panel padding (same as reveal).
+            marginBottom: 0,
           }}
         >
           {/* Row 1: commentary block — spans LEFT RAIL + CENTER (278px at

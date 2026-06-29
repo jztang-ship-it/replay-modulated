@@ -413,28 +413,21 @@ function H2HRecipientRevealInner(props: InnerProps) {
                 style={{
                   width: "100%", maxWidth: 420, margin: "0 auto",
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
-                  // DELTA D1: RESERVE a fixed footer height = the taller final
-                  // sub-state (SOCIAL: helper + Challenge + Copy + Play ≈ 169px;
-                  // CLAIM: helper + Put + Maybe later ≈ 115px). Content swaps
-                  // INSIDE this fixed box (top-aligned) so the footer's outer
-                  // height — and the helper/primary Y — never change between
-                  // claim ↔ share. Buttons are fixed-px (not vw), so one value
-                  // holds at 390 and 430.
-                  minHeight: 170,
+                  // DELTA (Lever B): LEAN footer — one primary button + one text
+                  // link per state, NO helper line, NO Play Again. This claws
+                  // back the +100px the no-snap hero restore costs, so the duel
+                  // cards stay FULL and the result still fits ≤650. Reserve the
+                  // taller final sub-state (CLAIM: Put + Maybe later ≈ 82; SOCIAL:
+                  // Challenge + Copy-text ≈ 76) so the footer outer height is
+                  // constant across claim↔share (the D1 no-jump still holds).
+                  minHeight: 86,
                   justifyContent: "flex-start",
                 }}
               >
-                {myScore >= challengeCtx.targetScore && (
-                  <div
-                    data-testid="boss-win-cta-helper"
-                    style={{ fontSize: 13, fontWeight: 600, color: "rgba(234,240,255,0.7)", textAlign: "center" }}
-                  >
-                    {claimVisible ? "This win is yours to keep." : "Share what you just did."}
-                  </div>
-                )}
                 {/* CLAIM primary (top) — self-gates; returns null in SOCIAL
                     (registered / already-claimed / anon-dismissed) → no save UI
-                    composed into the DOM. onVisibilityChange drives the re-rank. */}
+                    composed into the DOM. onVisibilityChange drives the re-rank.
+                    DELTA: helper line dropped (Lever B). */}
                 <BossClaimPrompt
                   embedded
                   bossIdentityId={challengeCtx.bossIdentityId}
@@ -443,17 +436,16 @@ function H2HRecipientRevealInner(props: InnerProps) {
                   onVisibilityChange={setClaimVisible}
                   onDismiss={() => { /* card self-hides via its latch; SOCIAL takes over */ }}
                 />
-                {/* DELTA D4/D5: the social block renders in SOCIAL ONLY.
-                    CLAIM = Put it on the record (primary) + Maybe later
-                    (secondary) — "Challenge Someone" is REMOVED from CLAIM (it
-                    appeared in both states, the incoherence the delta cuts).
-                    SOCIAL = Challenge (amber primary) + Copy Link (outline
-                    secondary) + Play Again (tertiary text). One primary + one
-                    secondary (+ one text link) per state. */}
+                {/* SOCIAL only. DELTA Lever B: `lean` drops Play Again and makes
+                    Copy Link a text link → one primary (Challenge) + one text
+                    secondary (Copy). CLAIM (above) = Put it on the record
+                    (primary) + Maybe later (text). One primary + one text link
+                    per state; "Challenge Someone" only in SOCIAL. */}
                 {!claimVisible && (
                   <BossOutwardEnding
                     variant="cta-only"
                     challengeTier="primary"
+                    lean
                     sport={sport}
                     bossChallengeId={challengeCtx.challengeId}
                     freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
