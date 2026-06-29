@@ -198,6 +198,15 @@ const HERO_CARD_MAX_WIDTH = "min(110px, 28vw)"; // matches arc's BATTLEFIELD_CAR
 // local calc(HERO_CARD_MAX_WIDTH * 478/329)).
 const HERO_ROW_HEIGHT_CSS = HERO_CARD_ROW_HEIGHT_CSS;
 
+// boss-winscreen-cta DELTA D3: the verdict row is FIXED at exactly two lines
+// (fontSize 16 × lineHeight 1.35 × 2 ≈ 43px, +breathing). The §1.4 `auto` row
+// grew the hero zone when the verdict wrapped 1→2→3 lines, reflowing the YOU
+// strip + footer (the #1 no-jump invariant). Fixing the row + clamping the
+// verdict text to 2 lines makes the hero zone deterministic across every verdict
+// length — the hero card slot never moves. NOT a type-size change; the shared
+// 60→56 strip constant is untouched (that's a fence).
+const VERDICT_ROW_2LINE_PX = 46;
+
 // RD7.5 Move 4 (2026-06-14): verdict-row (grid row 1) MIN height. Pre-
 // RD7.5 the floor was HERO_ROW_HEIGHT_CSS (~158px @390) — a holdover
 // from when row 1 held the opponent hero card; RD7.4 kept it as the
@@ -1336,7 +1345,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
             // card) stays HERO_ROW_HEIGHT_CSS — hero X/Y untouched. This
             // deliberately drops the 2026-06-24 Option A cross-state floor on
             // the result only (result is action-reached, not an in-place jump).
-            gridTemplateRows: `auto ${HERO_ROW_HEIGHT_CSS}`,
+            // DELTA D3 (no-jump): row 1 FIXED at the 2-line verdict height (was
+            // §1.4 `auto`, which grew the hero on verdict wrap). Row 2 = the user
+            // hero card (HERO_ROW_HEIGHT_CSS, unchanged). The hero zone is now a
+            // constant height regardless of verdict length → hero slot locked.
+            gridTemplateRows: `${VERDICT_ROW_2LINE_PX}px ${HERO_ROW_HEIGHT_CSS}`,
             rowGap: HERO_ROW_GAP_PX,
             width: "100%",
             // Piece 2a (2026-05-28, doc lock a5d7e43): hero → bottom-strip
@@ -1423,6 +1436,13 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
                 lineHeight: 1.35,
                 wordBreak: "break-word",
                 textAlign: "center",
+                // DELTA D3: clamp to 2 lines — deterministic with the fixed
+                // VERDICT_ROW_2LINE_PX track above; a long @390 verdict can no
+                // longer overflow/grow the hero zone or force a scroll.
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical" as const,
+                overflow: "hidden",
                 // RD7.6 stagger: fade + small rise in AFTER the score beat
                 // resolves (outcome first, then "why"). Opacity/transform on
                 // this leaf line only — no reflow, no height change, the

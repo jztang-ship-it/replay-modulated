@@ -413,6 +413,15 @@ function H2HRecipientRevealInner(props: InnerProps) {
                 style={{
                   width: "100%", maxWidth: 420, margin: "0 auto",
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                  // DELTA D1: RESERVE a fixed footer height = the taller final
+                  // sub-state (SOCIAL: helper + Challenge + Copy + Play ≈ 169px;
+                  // CLAIM: helper + Put + Maybe later ≈ 115px). Content swaps
+                  // INSIDE this fixed box (top-aligned) so the footer's outer
+                  // height — and the helper/primary Y — never change between
+                  // claim ↔ share. Buttons are fixed-px (not vw), so one value
+                  // holds at 390 and 430.
+                  minHeight: 170,
+                  justifyContent: "flex-start",
                 }}
               >
                 {myScore >= challengeCtx.targetScore && (
@@ -434,19 +443,26 @@ function H2HRecipientRevealInner(props: InnerProps) {
                   onVisibilityChange={setClaimVisible}
                   onDismiss={() => { /* card self-hides via its latch; SOCIAL takes over */ }}
                 />
-                {/* Social block — Challenge is the amber primary in SOCIAL,
-                    demoted to outline in CLAIM (the claim owns the amber). */}
-                <BossOutwardEnding
-                  variant="cta-only"
-                  challengeTier={claimVisible ? "secondary" : "primary"}
-                  sport={sport}
-                  bossChallengeId={challengeCtx.challengeId}
-                  freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
-                  marquee={challengeCtx.marquee === true}
-                  targetScore={challengeCtx.targetScore}
-                  bossName={challengeCtx.challengerName}
-                  onPlayAgain={onTryAgain}
-                />
+                {/* DELTA D4/D5: the social block renders in SOCIAL ONLY.
+                    CLAIM = Put it on the record (primary) + Maybe later
+                    (secondary) — "Challenge Someone" is REMOVED from CLAIM (it
+                    appeared in both states, the incoherence the delta cuts).
+                    SOCIAL = Challenge (amber primary) + Copy Link (outline
+                    secondary) + Play Again (tertiary text). One primary + one
+                    secondary (+ one text link) per state. */}
+                {!claimVisible && (
+                  <BossOutwardEnding
+                    variant="cta-only"
+                    challengeTier="primary"
+                    sport={sport}
+                    bossChallengeId={challengeCtx.challengeId}
+                    freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
+                    marquee={challengeCtx.marquee === true}
+                    targetScore={challengeCtx.targetScore}
+                    bossName={challengeCtx.challengerName}
+                    onPlayAgain={onTryAgain}
+                  />
+                )}
               </div>
             ) : undefined
           }
