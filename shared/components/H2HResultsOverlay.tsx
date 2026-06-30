@@ -183,7 +183,7 @@ const HERO_ROW_GAP_PX = 14;
 // preview-card override in H2HRecipientPlay all carry the same value.
 // boss-mobile-fit §1.7 (2026-06-27): 125 → 110 cap, lockstep with arc's
 // BATTLEFIELD_CARD_MAX_WIDTH + shell HERO_* + play preview (asymmetry snaps).
-const HERO_CARD_MAX_WIDTH = "min(81px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
+const HERO_CARD_MAX_WIDTH = "min(96px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
 
 // Step 3: explicit per-row hero height for the hero grid. Pinning each
 // row to this prevents row-1 from collapsing when the opponent HeroCell

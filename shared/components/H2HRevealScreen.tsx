@@ -264,11 +264,14 @@ const TIER_ACCENT: Record<string, string> = {
 // bigger cards on both reveal + results (shared const → both surfaces in
 // lockstep → reveal→results crossfade stays byte-identical). Play (states 1–3)
 // also reads this; it carries less content so it only gets more compact.
-// Tuned to 70: at 390/430 the flanked cells are WIDTH-bound (the name + score
-// flanks cap strip width), so the card height tops out ~64–70px; 70 is set just
-// above the widest viewport's card height so the cell isn't taller than the card
-// it holds (no wasted vertical), while never clipping the 430 card.
-export const HAND_STRIP_HEIGHT_PX = 70;
+// boss-winscreen-reclaim card-growth (2026-06-30): 70 → 92. De-flanked strips
+// give the cells the FULL zone width, so they're height-bound again; this growth
+// comes from the reclaimed YOU→CTA margin:auto slack (D1–D4: ~152px dead band on
+// device @390×844, NOT collapsing). 92 keeps 5 full-width cells height-bound at
+// 390 (5×(92·329/478)+4·gap ≈ 333 < ~338 usable — fits with margin), and the
+// device breathing gap above the CTA stays ~64px @390×844. Pairs with the hero
+// cap 81→96; both grow reveal + results in lockstep (zero-snap holds).
+export const HAND_STRIP_HEIGHT_PX = 92;
 const HAND_STRIP_GAP_PX = 4;
 
 // RD6.2-prep-A2 (2026-06-12): natural horizontal span of the strip's
@@ -347,7 +350,7 @@ const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 // H2HBoardShell HERO_* + H2HResultsOverlay HERO_CARD_MAX_WIDTH + play preview).
 // At 390, 28vw≈109 < cap → unchanged. At 430, 28vw≈120 → clamps to 110
 // (~8% smaller duel cards on wide screens only). Breakpoint-free.
-const BATTLEFIELD_CARD_MAX_WIDTH = "min(81px, 28vw)";
+const BATTLEFIELD_CARD_MAX_WIDTH = "min(96px, 28vw)";
 
 // Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
 // reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail

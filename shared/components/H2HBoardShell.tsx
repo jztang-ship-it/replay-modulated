@@ -92,9 +92,9 @@ export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
 // H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH, H2HResultsOverlay.HERO_CARD_MAX_WIDTH,
 // and H2HRecipientPlay.previewCardWidthCss (asymmetry = reveal→results snap).
 // At 390 unchanged (28vw≈109<110); at 430 ~8% smaller. Row height drops with it.
-export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(81px, 28vw) * ${(478 / 329).toFixed(6)})`;
+export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(96px, 28vw) * ${(478 / 329).toFixed(6)})`;
 
-export const HERO_MIN_HEIGHT_CSS = `calc(min(81px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
+export const HERO_MIN_HEIGHT_CSS = `calc(min(96px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
 /** Hero region's reduced minHeight during the hold_select preview window
  *  (docs/holdselect-vertical-budget-design-lock.md §2(3)). One hero-card
@@ -107,7 +107,7 @@ export const HERO_MIN_HEIGHT_CSS = `calc(min(81px, 28vw) * ${((478 / 329) * 2).t
  *  natural choreography so the recipient strip doesn't visibly lurch. */
 // (Dead constant — zero importers, confirmed in boss-mobile-fit recon. Kept in
 //  lockstep with the 110 cap above only so the card-width family stays coherent.)
-export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(81px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
+export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(96px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
 
 /** Duration of the hero-region minHeight restore transition. Synced with
  *  COLUMN_FLIP_DURATION_MS (250ms) per the design lock so the expansion
