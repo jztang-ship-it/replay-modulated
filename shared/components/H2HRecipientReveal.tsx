@@ -52,6 +52,7 @@ import { BossOutwardEnding } from "./BossOutwardEnding";
 import { BossClaimPrompt } from "./BossClaimPrompt";
 import { ensureClaimBaseline } from "@shared/utils/bossClaimPrompt";
 import { RoundSignage } from "./H2HBoardShell";
+import { SlimChallengeHeader } from "./GlobalChallengeHeader";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
 import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
 import { fetchAuthoredFlavor } from "@shared/utils/fetchAuthoredFlavor";
@@ -355,9 +356,15 @@ function H2HRecipientRevealInner(props: InnerProps) {
         renderCard={renderBattlefieldCard}
         reveal={reveal}
         roundSignage={roundSignageLabel ? <RoundSignage label={roundSignageLabel} /> : undefined}
-        // boss-mobile-fit §1.1 (2026-06-27): globalHeader OMITTED (reveal +
-        // overlay both, in lockstep so reveal→results no-snap is preserved —
-        // neither has the banner now). −60px. GlobalChallengeHeader locked.
+        // boss-winscreen-reclaim (2026-06-30): the SLIM header is restored above
+        // the action region (boss-mobile-fit §1.1 had omitted the header for
+        // −60px; the reclaimed band+hero vertical pays for a ~30px slim bar).
+        // Mounted on reveal + overlay BOTH, in lockstep — the equal downward
+        // shift preserves the reveal→results no-snap. The tall
+        // GlobalChallengeHeader internals stay untouched (slim is a sibling).
+        // BRANCH TELL: a slim platinum REPLAY·IFS bar at the top of the boss win
+        // screen (was: NO banner — that "banner absent" tell is now dead).
+        globalHeader={<SlimChallengeHeader />}
       />
       {overlayCrossfade.mounted && (
         <H2HResultsOverlay
@@ -371,8 +378,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // RD7.12 — displayExplanation = validated LLM Flavor if ready, else
           // the RD7.11 deterministic line (never-block swap-in).
           explanation={displayExplanation}
-          // boss-mobile-fit §1.1 (2026-06-27): globalHeader OMITTED here too
-          // (lockstep with the reveal shell above).
+          // boss-winscreen-reclaim (2026-06-30): slim header restored here too,
+          // lockstep with the reveal shell above (equal shift → no-snap holds).
+          globalHeader={<SlimChallengeHeader />}
           onSendItBack={onSendItBack}
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}

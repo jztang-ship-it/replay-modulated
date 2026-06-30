@@ -183,7 +183,7 @@ const HERO_ROW_GAP_PX = 14;
 // preview-card override in H2HRecipientPlay all carry the same value.
 // boss-mobile-fit §1.7 (2026-06-27): 125 → 110 cap, lockstep with arc's
 // BATTLEFIELD_CARD_MAX_WIDTH + shell HERO_* + play preview (asymmetry snaps).
-const HERO_CARD_MAX_WIDTH = "min(110px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
+const HERO_CARD_MAX_WIDTH = "min(90px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
 
 // Step 3: explicit per-row hero height for the hero grid. Pinning each
 // row to this prevents row-1 from collapsing when the opponent HeroCell
@@ -1253,6 +1253,9 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
       <H2HBoardShell
         surfaceKind="results-overlay"
         innerScrollable
+        // boss-winscreen-reclaim (2026-06-30): flank the zone labels — lockstep
+        // with the reveal shell so the reveal→results no-snap holds.
+        flankLabels
         // DELTA (reveal→results no-snap, Lever B): §1.4 had shrunk this hero to
         // ONE card-row to fit, but the REVEAL hero is the full TWO-row
         // HERO_MIN_HEIGHT_CSS — the 100px mismatch was the device jump (results
@@ -1280,6 +1283,7 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
           // untouched) — only its corner WRAPPER is now the shell's
           // ZoneHeader (data-h2h-board-corner-score).
           <TargetCornerScore
+            stacked
             scoreCell={
               <ScoreCell
                 total={sender.totalFp}

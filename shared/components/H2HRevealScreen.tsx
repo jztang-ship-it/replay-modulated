@@ -256,7 +256,19 @@ const TIER_ACCENT: Record<string, string> = {
 // top+bottom) on every H2H surface — play/reveal/overlay all key off this one
 // constant. Cell narrows on the locked 329/478 aspect; the container-query
 // scale(100cqw/150px) keeps card content un-clipped (no scale clawback).
-export const HAND_STRIP_HEIGHT_PX = 60;
+// boss-winscreen-reclaim (2026-06-30): 60 → 74. The mini-card size token. The
+// label-band removal (flank mode) + hero card-cap shrink (110 → 90) freed
+// vertical; it's reclaimed HERE into taller mini-slot cells with a legibility
+// floor. Cells are aspect-locked (329/478) so a taller cell is also wider until
+// the flanked strip runs out of horizontal room and flexShrink kicks in — net
+// bigger cards on both reveal + results (shared const → both surfaces in
+// lockstep → reveal→results crossfade stays byte-identical). Play (states 1–3)
+// also reads this; it carries less content so it only gets more compact.
+// Tuned to 70: at 390/430 the flanked cells are WIDTH-bound (the name + score
+// flanks cap strip width), so the card height tops out ~64–70px; 70 is set just
+// above the widest viewport's card height so the cell isn't taller than the card
+// it holds (no wasted vertical), while never clipping the 430 card.
+export const HAND_STRIP_HEIGHT_PX = 70;
 const HAND_STRIP_GAP_PX = 4;
 
 // RD6.2-prep-A2 (2026-06-12): natural horizontal span of the strip's
@@ -335,7 +347,7 @@ const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 // H2HBoardShell HERO_* + H2HResultsOverlay HERO_CARD_MAX_WIDTH + play preview).
 // At 390, 28vw≈109 < cap → unchanged. At 430, 28vw≈120 → clamps to 110
 // (~8% smaller duel cards on wide screens only). Breakpoint-free.
-const BATTLEFIELD_CARD_MAX_WIDTH = "min(110px, 28vw)";
+const BATTLEFIELD_CARD_MAX_WIDTH = "min(90px, 28vw)";
 
 // Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
 // reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail
@@ -2220,6 +2232,10 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
       <H2HBoardShell
         roundSignage={roundSignage}
         surfaceKind="reveal"
+        // boss-winscreen-reclaim (2026-06-30): flank the zone labels (name left /
+        // score right of the strip, no band) — lockstep with the results overlay
+        // so the reveal→results no-snap holds.
+        flankLabels
         globalHeader={globalHeader}
         topLabel={sender.displayName}
         bottomLabel={recipient.displayName}
@@ -2233,6 +2249,7 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           // the reveal→results no-snap gate still asserts on the inner
           // value node.
           <TargetCornerScore
+            stacked
             scoreCell={
               <ScoreCell
                 total={sender.totalFp}
