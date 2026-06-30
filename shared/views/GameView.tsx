@@ -761,6 +761,69 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }, [lockedCardIds, gameState]); // eslint-disable-line
 
+  // ── Solo FTUE — first-ever solo hand only (docs/solo-ftue-spec.md) ──
+  // Rides the SAME commentaryOverride seam as the challenge-intro chip above,
+  // gated on first-run instead of challengeCtx — mutually exclusive: challenge
+  // hands get the challenge chip, solo first-run gets these beats. One seam, no
+  // parallel coach. All copy is INTENT — final wording is John's at glass.
+  //
+  // First-run is detected ONCE at mount (replaymod_hand_count===0, before the
+  // post-resolve increment at lineup-lock) so Beat 3 still reads first-run after
+  // the counter ticks. rm_solo_ftue_done is the set-once completion flag (abandon
+  // resilience for cold shared-link arrivals — without it an abandon-then-return
+  // would replay the whole FTUE). Both checked at mount; localStorage = anon-safe
+  // (the profile-backed ftueCompleted is null for anon, so NOT used here).
+  const soloFtueActiveRef = useRef<boolean>((() => {
+    if (typeof localStorage === "undefined") return false;
+    try {
+      if (localStorage.getItem("rm_solo_ftue_done") === "1") return false;
+      return (parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) || 0) === 0;
+    } catch { return false; }
+  })());
+  const soloFtueFramingRef = useRef(false); // A — framing line (pre-pick)
+  const soloFtueBeat1Ref = useRef(false);   // Beat 1 — first pick
+  const soloFtueBeat2Ref = useRef(false);   // Beat 2 — reveal
+  const soloFtueBeat3Ref = useRef(false);   // Beat 3 — result
+  // Marks Beat 3 as the LIVE override so its onCommentaryOverrideDone (and only
+  // its) writes the completion flag. Beats 1/2 are sticky and never call done.
+  const soloFtueBeat3LiveRef = useRef(false);
+
+  // A + Beat 1 — deal/hold surface (clone of the challenge-intro chip: sticky at
+  // HOLD; first pick swaps A → Beat 1). Refs make each fire exactly once even
+  // though HOLD recurs across the up-to-3 hold/reroll rounds.
+  useEffect(() => {
+    if (challengeCtx || !soloFtueActiveRef.current) return;
+    if (gameState !== "HOLD") return;
+    if (!soloFtueFramingRef.current && lockedCardIds.size === 0) {
+      soloFtueFramingRef.current = true;
+      setFtueCommentaryOverride({ parts: ["Build a 5-player team. You've got $250 to spend."], sticky: true });
+    }
+    if (!soloFtueBeat1Ref.current && lockedCardIds.size > 0) {
+      soloFtueBeat1Ref.current = true;
+      setFtueCommentaryOverride({ parts: ["Every player costs salary. Spend it wisely — you only get $250."], sticky: true });
+    }
+  }, [challengeCtx, gameState, lockedCardIds]); // eslint-disable-line
+
+  // Beat 2 — reveal / score accrual. Fires once when the hand locks to REVEALING
+  // (terminal, post-rounds — see _roundMachine.commitRound).
+  useEffect(() => {
+    if (challengeCtx || !soloFtueActiveRef.current || soloFtueBeat2Ref.current) return;
+    if (gameState !== "REVEALING") return;
+    soloFtueBeat2Ref.current = true;
+    setFtueCommentaryOverride({ parts: ["Your players score fantasy points. Add them up — that's your total."], sticky: true });
+  }, [challengeCtx, gameState]); // eslint-disable-line
+
+  // Beat 3 — result (3/3), alongside the inherited tier. NON-sticky so it
+  // releases to the normal templated commentary on tap; its done-callback writes
+  // the set-once completion flag (see onCommentaryOverrideDone on TierGauge).
+  useEffect(() => {
+    if (challengeCtx || !soloFtueActiveRef.current || soloFtueBeat3Ref.current) return;
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    soloFtueBeat3Ref.current = true;
+    soloFtueBeat3LiveRef.current = true;
+    setFtueCommentaryOverride({ parts: ["That's your score. Beat it next time — draft smarter, not pricier."], sticky: false });
+  }, [challengeCtx, gameState]); // eslint-disable-line
+
   // ── Attention-surface mutex (single lock, all auto-fired surfaces) ──
   //
   // The post-resolve / IDLE moment can trigger several "demand attention"
@@ -823,6 +886,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Chad nudge about ROOKIE tier rules). onChallengeUrl covers pre-Accept.
   useEffect(() => {
     if (challengeCtx || onChallengeUrl) return;
+    // Solo FTUE owns the result-row voice on the first-ever hand — defer this
+    // nudge (flag left UNSET so it still fires on a later rookie win).
+    if (soloFtueActiveRef.current) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (winTier !== "ROOKIE") return;
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
@@ -2958,6 +3024,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
+                // Solo FTUE Beat 3 dismissed → set-once completion flag so the
+                // FTUE never replays (abandon-resilient across reloads).
+                if (soloFtueBeat3LiveRef.current) {
+                  soloFtueBeat3LiveRef.current = false;
+                  try { localStorage.setItem("rm_solo_ftue_done", "1"); } catch { /* noop */ }
+                }
               }}
             />
           </div>
