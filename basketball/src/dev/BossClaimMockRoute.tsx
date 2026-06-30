@@ -83,6 +83,23 @@ export default function BossClaimMockRoute() {
   const ctx = buildBossCtx();
   const myScore = RECIPIENT_HAND.totalFp; // 154 ≥ 109.3 target → inline live-win
 
+  // DEV glass controls (boss-winscreen-cta, 2026-06-30). Read at render so the
+  // harness can hold a deterministic state on the REAL H2HRecipientReveal mount:
+  //   ?state=reveal | social | claim  → forwarded as devGlassState (held state).
+  //   ?round=2 (etc.)                 → roundSignageLabel "2/3" so the round
+  //                                      harness can diff 2/3 ↔ 3/3 chrome.
+  // No param ⇒ current behavior (natural play, "3/3"). These drive props only;
+  // the surface itself is unchanged.
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const sp2 = new URLSearchParams(search);
+  const stateParam = sp2.get("state");
+  const devGlassState =
+    stateParam === "reveal" || stateParam === "social" || stateParam === "claim"
+      ? stateParam
+      : undefined;
+  const roundParam = sp2.get("round");
+  const roundSignageLabel = roundParam ? `${roundParam}/3` : "3/3";
+
   return (
     <H2HRecipientReveal
       challengeCtx={ctx}
@@ -98,7 +115,8 @@ export default function BossClaimMockRoute() {
       onTryAgain={() => { /* mock no-op */ }}
       onPlayOwnHand={() => { /* mock no-op */ }}
       onDismiss={() => { /* mock no-op */ }}
-      roundSignageLabel="3/3"
+      roundSignageLabel={roundSignageLabel}
+      devGlassState={devGlassState}
     />
   );
 }

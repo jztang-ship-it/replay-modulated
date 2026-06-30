@@ -115,6 +115,19 @@ export interface H2HRecipientRevealProps {
    *  the reveal surface shows the final locked round, riding the recipient row.
    *  Optional — omitted by other consumers. */
   roundSignageLabel?: string;
+  /** DEV-ONLY glass state override (boss-winscreen-cta, 2026-06-30). Lets the
+   *  DEV-only BossClaimMockRoute hold the REAL mount at a specific state for
+   *  device glass without playing through the arc:
+   *    "reveal" → freeze the arc at end-state (skipToEnd) and never crossfade to
+   *               results (showOverlay held false).
+   *    "social" → results overlay, pre-breathe (!claimVisible) held open.
+   *    "claim"  → results overlay, post-breathe (claimVisible) jumped to.
+   *  Default undefined ⇒ production behavior is byte-identical (every override
+   *  below is gated on a non-undefined value). Passed ONLY by BossClaimMockRoute,
+   *  which is itself behind the App.tsx import.meta.env.DEV guard and tree-shaken
+   *  from prod. Touches timing flags only — no layout, no zero-snap, no CardFront/
+   *  header/ScoreCell. */
+  devGlassState?: "reveal" | "social" | "claim";
 }
 
 export function H2HRecipientReveal(props: H2HRecipientRevealProps) {
@@ -140,6 +153,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
     challengeCtx, senderResolved, myScore, myRoster, myWinTier, sport,
     renderBattlefieldCard, renderOverlayCard,
     onSendItBack, onTryAgain, onPlayOwnHand, onDismiss, roundSignageLabel,
+    devGlassState,
   } = props;
 
   const reducedMotion = usePrefersReducedMotion();
@@ -267,6 +281,19 @@ function H2HRecipientRevealInner(props: InnerProps) {
     onArcResolved: () => setArcResolved(true),
   });
 
+  // DEV-ONLY glass jump (boss-winscreen-cta, 2026-06-30). When BossClaimMockRoute
+  // passes devGlassState, jump the arc to its end-state instantly via the existing
+  // skipToEnd path (no new animation). skipToEnd settles phase→"done" but does NOT
+  // fire onArcResolved (useH2HReveal.ts:1089), so the "claim" jump force-sets
+  // arcResolved (BossClaimPrompt's `active` gate needs it). Inert in prod:
+  // devGlassState is undefined there, so this effect returns immediately.
+  useEffect(() => {
+    if (!devGlassState) return;
+    reveal.skipToEnd();
+    if (devGlassState === "claim") setArcResolved(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devGlassState]);
+
   // Crossfade-in from the underlying GameView surface. setVisible
   // flips on the next animation frame so the CSS opacity transition
   // fires from 0 → 1 instead of mounting visible.
@@ -306,7 +333,12 @@ function H2HRecipientRevealInner(props: InnerProps) {
     setDoneHoldElapsed(false);
     return undefined;
   }, [reveal.phase]);
-  const showOverlay = reveal.phase === "done" && doneHoldElapsed;
+  // DEV glass override: "reveal" holds the overlay OFF (stay on the reveal
+  // surface); "social"/"claim" force it ON immediately (the dev effect above
+  // skipToEnd'd the arc to end-state). Undefined ⇒ the production expression.
+  const showOverlay = devGlassState
+    ? devGlassState !== "reveal"
+    : reveal.phase === "done" && doneHoldElapsed;
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
 
   // Boss claim-prompt breathe: let the win celebration (the results overlay)
@@ -322,9 +354,13 @@ function H2HRecipientRevealInner(props: InnerProps) {
   const [claimVisible, setClaimVisible] = useState(false);
   useEffect(() => {
     if (!showOverlay) { setClaimBreatheElapsed(false); return undefined; }
+    // DEV glass override: "social" holds pre-breathe (claim never surfaces);
+    // "claim" jumps past the breathe. Undefined ⇒ the production timer below.
+    if (devGlassState === "social") { setClaimBreatheElapsed(false); return undefined; }
+    if (devGlassState === "claim") { setClaimBreatheElapsed(true); return undefined; }
     const id = window.setTimeout(() => setClaimBreatheElapsed(true), CLAIM_BREATHE_MS);
     return () => clearTimeout(id);
-  }, [showOverlay]);
+  }, [showOverlay, devGlassState]);
 
   // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.
   // Pre-RD6.1 the reveal-side right-rail ScoreCells were hidden via a
