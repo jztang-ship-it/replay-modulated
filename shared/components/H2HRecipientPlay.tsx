@@ -114,7 +114,7 @@ import { ScoreCell } from "./H2HScoreRail";
 import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEngine";
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
-import { formatSeasonRange } from "@shared/utils/seasonRange";
+import { formatBossTeamSeason } from "@shared/utils/seasonRange";
 import { commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
@@ -1081,9 +1081,11 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // header via the senderKind branch, so this play-surface label and the
   // reveal surface don't fight over the boss case.
   const topLabel = (() => {
-    if (challengeCtx.senderKind === "boss" && challengeCtx.bossIdentityId) {
-      const [team, season] = String(challengeCtx.bossIdentityId).split("-");
-      return season ? `${team} ${formatSeasonRange(season)}` : team;
+    if (challengeCtx.senderKind === "boss") {
+      // boss-winscreen-reclaim (2026-06-30): the shared resolver — same helper
+      // the reveal/results surfaces now use, so the boss label can't drift.
+      const teamSeason = formatBossTeamSeason(challengeCtx.bossIdentityId);
+      if (teamSeason) return teamSeason;
     }
     return isRealName(challengeCtx.challengerName)
       ? (challengeCtx.challengerName as string)

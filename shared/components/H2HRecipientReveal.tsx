@@ -48,6 +48,7 @@ import {
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
 import { isRealName } from "@shared/utils/isRealName";
+import { formatBossTeamSeason } from "@shared/utils/seasonRange";
 import { BossOutwardEnding } from "./BossOutwardEnding";
 import { BossClaimPrompt } from "./BossClaimPrompt";
 import { ensureClaimBaseline } from "@shared/utils/bossClaimPrompt";
@@ -174,9 +175,15 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // recipient's roster/state. The `as H2HCard[]` cast is safe per
   // commit 2's contract validation (photoCode drift is the only
   // difference and it's runtime-tolerated).
-  const namedChallenger = isRealName(challengeCtx.challengerName)
-    ? challengeCtx.challengerName
-    : null;
+  // boss-winscreen-reclaim (2026-06-30): for a boss, the opponent label is the
+  // team-season code ("PHX 06-07") via the shared resolver — NOT the boss display
+  // name (which leaked as "Seven Seconds…" → "SEV…"). Same helper the play surface
+  // uses, so the two surfaces can't drift. Friend challenges are unchanged.
+  const namedChallenger =
+    (challengeCtx.senderKind === "boss"
+      ? formatBossTeamSeason(challengeCtx.bossIdentityId)
+      : null) ??
+    (isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null);
 
   const sender: H2HHand = useMemo(() => ({
     handId: senderResolved.handId,

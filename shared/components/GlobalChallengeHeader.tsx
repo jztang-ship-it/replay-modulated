@@ -212,8 +212,12 @@ export function SlimChallengeHeader() {
         alignItems: "center",
         justifyContent: "flex-start",
         gap: 10,
-        paddingTop: 7,
-        paddingBottom: 7,
+        // boss-winscreen-reclaim option-C (2026-06-30): 7 → 3. Slims the bar
+        // 38 → ~24 to fund the symmetric strip labels without scrolling. Pairs
+        // with the wordmark fontSize 16 → 14 below. GlobalChallengeHeader (:88)
+        // internals stay fenced — this is the slim sibling only.
+        paddingTop: 3,
+        paddingBottom: 3,
         paddingLeft: SHARED_LEFT_RAIL_PX,
         paddingRight: SHARED_LEFT_RAIL_PX,
         marginBottom: 8,
@@ -230,13 +234,14 @@ export function SlimChallengeHeader() {
       >
         <span
           data-h2h-global-header-wordmark="true"
-          style={{ fontSize: 16, fontWeight: 950, letterSpacing: -0.4, color: "#12151E" }}
+          style={{ fontSize: 14, lineHeight: "16px", fontWeight: 950, letterSpacing: -0.4, color: "#12151E" }}
         >
           REPLAY
         </span>
         <span
           style={{
-            fontSize: 16,
+            fontSize: 14,
+            lineHeight: "16px",
             fontWeight: 900,
             letterSpacing: 1.5,
             color: BRAND_ORANGE,

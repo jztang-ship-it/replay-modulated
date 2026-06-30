@@ -672,7 +672,7 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
     expect(innerBox?.style.border).toContain("dashed");
   });
 
-  it("RD7.10-c: the 'game logs' hint is a PERMANENT footer row, not a hero caption", () => {
+  it("boss-winscreen option C: the 'game logs' hint is an in-box empty-state hint, not a footer row", () => {
     const sender = makeHand("Mike", 178.4);
     const recipient = makeHand("You", 182.4);
     const targetId = recipient.cards[2].cardId;
@@ -684,27 +684,23 @@ describe("H2HResultsOverlay — hero zone rendering (step 3: opponent hero remov
         state="WIN"
       />
     );
-    const footerHint = () => container.querySelector("[data-h2h-overlay-logs-hint]");
-    const heroHint = () => container.querySelector("[data-h2h-overlay-hero-hint]");
+    const hint = () => container.querySelector("[data-h2h-overlay-logs-hint]");
+    const heroCell = () => container.querySelector("[data-h2h-overlay-hero-cell]");
 
-    // RD7.10-c: the in-hero captions (front + empty in-box prompt) are RETIRED.
-    // Empty state: footer hint present + position-neutral copy; NO hero-zone
-    // caption; the dashed box is a clean placeholder (no in-box "game logs").
-    expect(heroHint()).toBeNull();
-    expect(footerHint()?.textContent).toContain("Tap any card for game logs");
+    // boss-winscreen-reclaim option C: the logs-hint moved OUT of the footer flow
+    // row INTO the empty HeroCell box (absolutely positioned, zero flow cost) to
+    // reclaim the footer band. Empty state: the hint is present, INSIDE the hero
+    // cell, position-neutral copy.
+    expect(hint()).not.toBeNull();
+    expect(heroCell()?.contains(hint() as Node)).toBe(true);
+    expect(hint()?.textContent).toContain("Tap any card for game logs");
 
-    // Select a card → footer hint UNCHANGED (always present, same copy); still
-    // no hero caption.
+    // Select a card → the card fills the hero box; the empty-state hint is gone
+    // (it's shown ONLY while the slot is empty).
     fireEvent.click(container.querySelector(
       `[data-h2h-board-zone="bottom"] [data-card-id="${targetId}"]`
     ) as HTMLElement);
-    expect(heroHint()).toBeNull();
-    expect(footerHint()?.textContent).toContain("Tap any card for game logs");
-
-    // Flip to back → footer hint STILL present (it's global, not card-state
-    // dependent).
-    fireEvent.click(container.querySelector("[data-h2h-overlay-hero-flipped]") as HTMLElement);
-    expect(footerHint()?.textContent).toContain("Tap any card for game logs");
+    expect(hint()).toBeNull();
   });
 
   it("initialTopFlippedCardId + initialBottomFlippedCardId both seed selection state; only bottom hero renders", () => {

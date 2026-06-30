@@ -92,9 +92,9 @@ export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
 // H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH, H2HResultsOverlay.HERO_CARD_MAX_WIDTH,
 // and H2HRecipientPlay.previewCardWidthCss (asymmetry = reveal→results snap).
 // At 390 unchanged (28vw≈109<110); at 430 ~8% smaller. Row height drops with it.
-export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(90px, 28vw) * ${(478 / 329).toFixed(6)})`;
+export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(81px, 28vw) * ${(478 / 329).toFixed(6)})`;
 
-export const HERO_MIN_HEIGHT_CSS = `calc(min(90px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
+export const HERO_MIN_HEIGHT_CSS = `calc(min(81px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
 /** Hero region's reduced minHeight during the hold_select preview window
  *  (docs/holdselect-vertical-budget-design-lock.md §2(3)). One hero-card
@@ -107,7 +107,7 @@ export const HERO_MIN_HEIGHT_CSS = `calc(min(90px, 28vw) * ${((478 / 329) * 2).t
  *  natural choreography so the recipient strip doesn't visibly lurch. */
 // (Dead constant — zero importers, confirmed in boss-mobile-fit recon. Kept in
 //  lockstep with the 110 cap above only so the card-width family stays coherent.)
-export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(90px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
+export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(81px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
 
 /** Duration of the hero-region minHeight restore transition. Synced with
  *  COLUMN_FLIP_DURATION_MS (250ms) per the design lock so the expansion
@@ -395,21 +395,18 @@ export function ZoneHeader({
   );
 }
 
-/** boss-winscreen-reclaim (2026-06-30): max width the flanked team name may
- *  occupy on the LEFT of a strip before it ellipsis-truncates. Capped so a long
- *  boss name ("THE BUBBLE TEAM…") can't starve the mini-cards of width. */
-export const FLANK_NAME_MAX_PX = 46;
-
-/** Flank layout for a board zone — boss-winscreen-reclaim (2026-06-30).
- *  Instead of a label BAND stacked above the strip (ZoneHeader), the team name
- *  sits to the LEFT of the strip and the score/target to the RIGHT, both
- *  vertically centered against the card row. Kills the band's vertical
- *  (≈ ZONE_HEADER_HEIGHT_PX + ZONE_GAP_PX per zone) and hands it to taller
- *  mini-cards. Used ONLY by the boss win surfaces (reveal + results both pass
- *  flankLabels); play keeps the banded ZoneHeader. Because reveal AND results
- *  render this identically, the zone DIV's rect matches on both → the
- *  reveal→results no-snap (dY:0/dH:0) holds by construction. Preserves the
- *  data-h2h-board-zone / -zone-label / -corner-score hooks the gates query. */
+/** Stacked-label zone — boss-winscreen-reclaim option C (2026-06-30).
+ *  REPLACES the earlier flank-row (name LEFT / score RIGHT beside the strip).
+ *  De-flanked: the strip takes the FULL zone width (cards widen on both strips),
+ *  and a single CENTERED line carries "[label] · [score]" — ABOVE the strip for
+ *  the top (opponent) zone, BELOW it for the bottom (YOU) zone. The `score` node
+ *  is the bare ScoreCell (no "TARGET" chrome); its data-h2h-team-score-position
+ *  glyph is the anchor the reveal-only mid-rail flash auto-tracks (it re-parks to
+ *  the new glyph midpoint by measurement — ScoreCell itself is NOT resized).
+ *  Used by the boss win surfaces (reveal + results both pass flankLabels) AND the
+ *  human recipient reveal; play keeps the banded ZoneHeader. reveal and results
+ *  render this identically → reveal→results no-snap holds by construction.
+ *  Preserves the data-h2h-board-zone / -zone-label / -corner-score hooks. */
 export function FlankZone({
   zone,
   label,
@@ -423,72 +420,87 @@ export function FlankZone({
   strip: React.ReactNode;
   style?: React.CSSProperties;
 }) {
+  const labelLine = (
+    <div
+      data-h2h-board-zone-label={zone}
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 5,
+        width: "100%",
+        lineHeight: 1,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.92)",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          maxWidth: "55%",
+        }}
+      >
+        {label}
+      </span>
+      {score && (
+        <>
+          <span
+            aria-hidden="true"
+            style={{ color: "rgba(255,255,255,0.32)", fontSize: 13, flexShrink: 0 }}
+          >
+            ·
+          </span>
+          <span
+            data-h2h-board-corner-score={zone}
+            style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
+          >
+            {score}
+          </span>
+        </>
+      )}
+    </div>
+  );
+  const stripRow = (
+    <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      {strip}
+    </div>
+  );
   return (
     <div
       data-h2h-board-zone={zone}
       style={{
         flex: "0 0 auto",
         display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        // Tight gap — every px here is stolen from the mini-card strip width at
-        // 390 (the binding viewport, where cells are width-bound).
-        gap: 6,
+        flexDirection: "column",
+        alignItems: "stretch",
+        // Tight label↔strip gap — every px here feeds the no-scroll budget.
+        gap: 2,
         borderRadius: 16,
         border: "1px solid rgba(255,255,255,0.10)",
         background: "rgba(255,255,255,0.05)",
         boxShadow: "0 4px 12px rgba(0,0,0,0.20)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
-        // Tight symmetric vertical padding — the band's asymmetric strip-side
-        // trims (paddingTop/Bottom 4) are moot now that there's no band; the
-        // hero gap is carried by the zone marginBottom passed via `style`.
-        // Horizontal padding trimmed 10 → 8 to hand width back to the strip.
-        padding: "6px 8px",
+        padding: "6px 10px",
         ...style,
       }}
     >
-      <span
-        data-h2h-board-zone-label={zone}
-        style={{
-          flexShrink: 0,
-          maxWidth: FLANK_NAME_MAX_PX,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          fontSize: 13,
-          fontWeight: 900,
-          color: "rgba(255,255,255,0.95)",
-          letterSpacing: 0.5,
-          textTransform: "uppercase",
-          lineHeight: 1.05,
-        }}
-      >
-        {label}
-      </span>
-      <div
-        style={{
-          flex: "1 1 auto",
-          minWidth: 0,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        {strip}
-      </div>
-      {score && (
-        <div
-          data-h2h-board-corner-score={zone}
-          style={{
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
-          {score}
-        </div>
+      {zone === "top" ? (
+        <>
+          {labelLine}
+          {stripRow}
+        </>
+      ) : (
+        <>
+          {stripRow}
+          {labelLine}
+        </>
       )}
     </div>
   );

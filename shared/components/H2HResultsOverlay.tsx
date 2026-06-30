@@ -61,7 +61,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { H2HCard, H2HHand, CardRenderer } from "./H2HRevealScreen";
 import { HAND_STRIP_HEIGHT_PX, HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
-import { CORNER_SCORE_MIN_WIDTH_PX, TargetCornerScore, H2HBoardShell, HERO_CARD_ROW_HEIGHT_CSS } from "./H2HBoardShell";
+import { H2HBoardShell, HERO_CARD_ROW_HEIGHT_CSS } from "./H2HBoardShell";
 import {
   trashTalkBucket,
   type TrashTalkBucket,
@@ -183,7 +183,7 @@ const HERO_ROW_GAP_PX = 14;
 // preview-card override in H2HRecipientPlay all carry the same value.
 // boss-mobile-fit §1.7 (2026-06-27): 125 → 110 cap, lockstep with arc's
 // BATTLEFIELD_CARD_MAX_WIDTH + shell HERO_* + play preview (asymmetry snaps).
-const HERO_CARD_MAX_WIDTH = "min(90px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
+const HERO_CARD_MAX_WIDTH = "min(81px, 28vw)"; // matches arc's BATTLEFIELD_CARD_MAX_WIDTH
 
 // Step 3: explicit per-row hero height for the hero grid. Pinning each
 // row to this prevents row-1 from collapsing when the opponent HeroCell
@@ -490,6 +490,7 @@ function HeroCell({
   flipped = false,
   onTap,
   showEmptyBorder = false,
+  emptyHint,
 }: {
   card: H2HCard | null;
   renderCard: CardRenderer;
@@ -506,6 +507,12 @@ function HeroCell({
    *  paints a dashed border so the slot reads as a tap target before
    *  any mini-card has been tapped. */
   showEmptyBorder?: boolean;
+  /** boss-winscreen-reclaim option C (2026-06-30): discoverability hint rendered
+   *  ABSOLUTELY inside the empty dashed box (zero flow cost — the box is
+   *  position:relative). Replaces the footer logs-hint row, reclaiming its ~13px
+   *  of flow height from the no-scroll budget. Shown only when the slot is empty;
+   *  the card covers it once a mini-card is tapped. */
+  emptyHint?: React.ReactNode;
 }) {
   return (
     <div
@@ -566,8 +573,27 @@ function HeroCell({
                 (the footer hint carries the affordance in every state).
             Removing the absolute hero caption frees the visual gap above the
             card (RD7.11 substance-line runway). The empty-state wrapper
-            translate (RD6.2 FIX 2b, :634) is UNTOUCHED. */}
-        {card && renderCard(card, { flipped })}
+            translate (RD6.2 FIX 2b, :634) is UNTOUCHED.
+            boss-winscreen-reclaim option C (2026-06-30): the logs-hint is BACK
+            in this box — but absolutely-positioned (zero flow cost), shown only
+            while empty, so the footer flow row it replaced is reclaimed. */}
+        {card
+          ? renderCard(card, { flipped })
+          : emptyHint && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 10px",
+                  pointerEvents: "none",
+                }}
+              >
+                {emptyHint}
+              </div>
+            )}
       </div>
     </div>
   );
@@ -1278,22 +1304,18 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
         }
         topLabel={sender.displayName}
         topScore={
-          // RD6.1-c: Mike's corner reads "Target: X" on the results
-          // surface too. Same ScoreCell (surface="overlay"; data attrs
-          // untouched) — only its corner WRAPPER is now the shell's
-          // ZoneHeader (data-h2h-board-corner-score).
-          <TargetCornerScore
-            stacked
-            scoreCell={
-              <ScoreCell
-                total={sender.totalFp}
-                displayTotal={reel ? reel.opp : undefined}
-                state={oppCellState}
-                sizeProgress={senderSizeProgress}
-                surface="overlay"
-                teamPosition="opponent"
-              />
-            }
+          // boss-winscreen-reclaim option C (2026-06-30): bare ScoreCell — the
+          // "TARGET" chrome is dropped; the team-season code + " · " lead the
+          // centered label line (FlankZone) → "PHX 03-04 · 109.3". Same ScoreCell
+          // (surface="overlay"; data-h2h-overlay-score-position untouched), so the
+          // no-snap gate still resolves it.
+          <ScoreCell
+            total={sender.totalFp}
+            displayTotal={reel ? reel.opp : undefined}
+            state={oppCellState}
+            sizeProgress={senderSizeProgress}
+            surface="overlay"
+            teamPosition="opponent"
           />
         }
         hero={
@@ -1481,7 +1503,28 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               step). RD6.1 deletes the row-2 right-rail user ScoreCell
               for the same reason as the opponent above — the user total
               now lives in the bottom ZoneHeader's score slot. */}
-          <HeroCell card={bottomSelectedCard} renderCard={renderCard} flipped={bottomHeroFlipped} onTap={handleBottomHeroTap} showEmptyBorder />
+          <HeroCell
+            card={bottomSelectedCard}
+            renderCard={renderCard}
+            flipped={bottomHeroFlipped}
+            onTap={handleBottomHeroTap}
+            showEmptyBorder
+            emptyHint={
+              <span
+                data-h2h-overlay-logs-hint="true"
+                style={{
+                  textAlign: "center",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 0.3,
+                  lineHeight: 1.25,
+                  color: "rgba(255,255,255,0.42)",
+                }}
+              >
+                Tap any card for game logs
+              </span>
+            }
+          />
           {/* RD6.1: row-2 right-rail user ScoreCell deleted (see comment
               above); empty cell parks the grid slot so the layout
               stays the same. */}
@@ -1532,32 +1575,11 @@ export function H2HResultsOverlay(props: H2HResultsOverlayProps) {
               background: "linear-gradient(180deg, #070A12 0%, #070A12 100%)",
             }}
           >
-          {/* RD7.10-c (2026-06-15): the relocated "game logs" discoverability
-              hint. Permanent footer row — FIRST child of the reserved band, so
-              it sits BELOW the YOU mini-slot row and ABOVE the CTA. Full-width
-              in normal flow with textAlign:center → centers cleanly (no rail
-              asymmetry down here, which is the whole reason for the move).
-              Position-neutral copy renders in every state (empty + previewed).
-              Kept deliberately MINIMAL — 11px, muted, tight line-height, small
-              marginBottom — because this row ADDS flow height to a no-scroll-
-              tight overlay (the absolute hero caption it replaced freed none).
-              It's an affordance, not the verdict. */}
-          <div
-            data-h2h-overlay-logs-hint="true"
-            style={{
-              width: "100%",
-              textAlign: "center",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: 0.3,
-              lineHeight: 1.2,
-              color: "rgba(255,255,255,0.40)",
-              marginBottom: 8,
-              pointerEvents: "none",
-            }}
-          >
-            Tap any card for game logs
-          </div>
+          {/* boss-winscreen-reclaim option C (2026-06-30): the footer logs-hint
+              row is REMOVED — the hint now lives absolutely INSIDE the empty
+              HeroCell box (HeroCell emptyHint), zero flow cost. This reclaims the
+              row's ~13px from the no-scroll budget (the band it freed is reused by
+              the symmetric strip labels). MOVED, not duplicated. */}
           {/* 2026-06-23 boss-result unification: the boss path supplies its
               share/replay block here via ctaSlot, REPLACING the state-derived
               primaryCta button (and only it — the reserved band, logs hint,

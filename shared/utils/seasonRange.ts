@@ -22,3 +22,19 @@ export function formatSeasonRange(season: unknown): string {
   if (m) return `${m[1]}-${m[2]}`;
   return s;
 }
+
+// boss-winscreen-reclaim (2026-06-30): the single shared boss team-season
+// resolver. bossIdentityId follows the authoritative {TEAM}-{YYYY} convention
+// (challengeTypes.ts), e.g. "PHX-0607" → "PHX 06-07". Previously this logic was
+// inline in H2HRecipientPlay.tsx (play surface only), so the reveal/results
+// surfaces leaked the boss display name ("Seven Seconds or Less" → "SEV…").
+// Lifting it here lets play AND reveal/results resolve the SAME label, drift-
+// proof. Returns null when there's no usable id (caller falls back).
+export function formatBossTeamSeason(
+  bossIdentityId: string | null | undefined,
+): string | null {
+  if (!bossIdentityId) return null;
+  const [team, season] = String(bossIdentityId).split("-");
+  if (!team) return null;
+  return season ? `${team} ${formatSeasonRange(season)}` : team;
+}

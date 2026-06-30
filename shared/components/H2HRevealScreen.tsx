@@ -77,7 +77,7 @@ import {
   type EntranceStage,
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
-import { H2HBoardShell, TargetCornerScore } from "./H2HBoardShell";
+import { H2HBoardShell } from "./H2HBoardShell";
 import {
   ScoreCell,
   RIGHT_RAIL_WIDTH_PX,
@@ -347,7 +347,7 @@ const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 // H2HBoardShell HERO_* + H2HResultsOverlay HERO_CARD_MAX_WIDTH + play preview).
 // At 390, 28vw≈109 < cap → unchanged. At 430, 28vw≈120 → clamps to 110
 // (~8% smaller duel cards on wide screens only). Breakpoint-free.
-const BATTLEFIELD_CARD_MAX_WIDTH = "min(90px, 28vw)";
+const BATTLEFIELD_CARD_MAX_WIDTH = "min(81px, 28vw)";
 
 // Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
 // reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail
@@ -2248,31 +2248,32 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           // (data-h2h-team-score-position="opponent") is unchanged so
           // the reveal→results no-snap gate still asserts on the inner
           // value node.
-          <TargetCornerScore
-            stacked
-            scoreCell={
-              <ScoreCell
-                total={sender.totalFp}
-                displayTotal={senderDisplayTotal}
-                state={senderState}
-                sizeProgress={senderSizeProgress}
-                surface="reveal"
-                pop={popState.senderPop}
-                teamPosition="opponent"
-                // RD6.2-B (2026-06-12): synchronized dual-blink. Both
-                // corner totals consume the SAME key
-                // (popState.deltaLandedKey), so the React commit that
-                // flips deltaLandedKey ALSO mounts both ScoreCells with
-                // the new blink.key — both useEffects fire on the same
-                // commit → both WAAPI animations start on the same
-                // frame. Suppressed under reduced motion (the prop is
-                // omitted, the useEffect short-circuits).
-                blink={
-                  reducedMotion
-                    ? undefined
-                    : { key: popState.deltaLandedKey, durationMs: BLINK_DURATION_MS }
-                }
-              />
+          // boss-winscreen-reclaim option C (2026-06-30): bare ScoreCell — the
+          // "TARGET" chrome is dropped; the team-season code + " · " now lead the
+          // centered label line (FlankZone), so the opponent total reads as
+          // "PHX 03-04 · 109.3". The ScoreCell DOM (data-h2h-team-score-position
+          // ="opponent") is untouched — the no-snap gate + the mid-rail flash
+          // anchor both still resolve it.
+          <ScoreCell
+            total={sender.totalFp}
+            displayTotal={senderDisplayTotal}
+            state={senderState}
+            sizeProgress={senderSizeProgress}
+            surface="reveal"
+            pop={popState.senderPop}
+            teamPosition="opponent"
+            // RD6.2-B (2026-06-12): synchronized dual-blink. Both
+            // corner totals consume the SAME key
+            // (popState.deltaLandedKey), so the React commit that
+            // flips deltaLandedKey ALSO mounts both ScoreCells with
+            // the new blink.key — both useEffects fire on the same
+            // commit → both WAAPI animations start on the same
+            // frame. Suppressed under reduced motion (the prop is
+            // omitted, the useEffect short-circuits).
+            blink={
+              reducedMotion
+                ? undefined
+                : { key: popState.deltaLandedKey, durationMs: BLINK_DURATION_MS }
             }
           />
         }
