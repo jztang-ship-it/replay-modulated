@@ -36,6 +36,7 @@ import { formatSeasonRange } from "@shared/utils/seasonRange";
 import { getBossResult, hasSeenBossReveal, markBossRevealSeen, bossRevealForce, type BossResult } from "@shared/utils/bossResultMemory";
 import { useBossReveal } from "@shared/hooks/useBossReveal";
 import type { CardRenderer } from "@shared/components/H2HRevealScreen";
+import { SlimChallengeHeader } from "@shared/components/GlobalChallengeHeader";
 
 // First-view reveal renders the boss five as REAL cards scaled into the strip slot
 // (recon B); mirrors the H2H strip's natural-card box (width + height + absolute).
@@ -59,11 +60,53 @@ export interface BossInfo {
   cards: LineupCard[];
 }
 
+/** Derive the BossInfo view-model from a raw /api/challenge/{id} row. Shared by
+ *  BossScreen's fallback fetch AND the hub's useBossDetail seed (Defect 1) so a
+ *  seeded mount is byte-identical to the in-component derivation. */
+export function deriveBossInfo(d: any): BossInfo {
+  const rawCards = (d.initial_roster && (d.initial_roster as any).cards) || [];
+  const cards: LineupCard[] = Array.isArray(rawCards)
+    ? rawCards.slice(0, 5).map((c: any) => ({
+        name: String(c.name ?? ""),
+        // On the wire the field is `pos` (revealedFive shape); `position` is the
+        // legacy fallback — neither is `position` today.
+        position: String(c.pos ?? c.position ?? ""),
+        salary: Number(c.salary ?? 0),
+        photoCode: c.photoCode != null ? String(c.photoCode) : null,
+        basePlayerId: String(c.basePlayerId ?? ""),
+        // fp — needed by the first-view reveal (per-card roll + Σ == target).
+        fp: Number(c.fp ?? c.actualFp ?? 0),
+        tier: String(c.tier ?? "WHITE"),
+      }))
+    : [];
+  const mappedStory = d.boss_identity_id ? BOSS_STORIES[String(d.boss_identity_id)] : undefined;
+  // Title team from the authoritative {TEAM}-{YYYY} bank-key convention
+  // (e.g. "DET-0304" → "DET"); every serveable boss key conforms.
+  const team = String(d.boss_identity_id ?? "").split("-")[0];
+  return {
+    display: String(d.challenger_name ?? "Today's Boss"),
+    // Prefer the authored per-boss story (bundled map, keyed by
+    // boss_identity_id); else a `story` row field if ever plumbed; else the
+    // flavor one-liner. Flavor stays the fallback for a missing entry.
+    story: String(mappedStory ?? d.story ?? d.share_headline ?? ""),
+    target: typeof d.target_score === "number" ? d.target_score : null,
+    team,
+    seasonRange: formatSeasonRange(d.season),
+    cards,
+  };
+}
+
 interface Props {
   sport: "basketball" | "baseball" | "football";
   currentUid: string;
   bossChallengeId: string | null;
   bossPlayerCount: number | null;
+  /** Defect 1 (boss-flow): hub-provided boss detail (useBossDetail) so BossScreen
+   *  mounts POPULATED — no "Today's Boss" fallback flash. When present, the
+   *  in-component /api/challenge/{id} fetch is skipped (no redundant fetch); the
+   *  self-fetch stays a fallback only for when no seed arrives. */
+  seedBoss?: BossInfo | null;
+  seedRawData?: unknown;
   /** Optional headshot resolver (sport adapter). Absent → name/position tiles. */
   headshotUrl?: (playerId: string) => string | null;
   /** Sport card renderer (basketball: h2hArcRenderer, via the GameAdapter) — used
@@ -190,16 +233,16 @@ function LineupTile({ card, headshotUrl }: { card: LineupCard; headshotUrl?: (id
   );
 }
 
-export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, headshotUrl, renderBossCard, __devBoss, __devEntries, onTakeBoss, onClose }: Props) {
+export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount, seedBoss, seedRawData, headshotUrl, renderBossCard, __devBoss, __devEntries, onTakeBoss, onClose }: Props) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [boss, setBoss] = useState<BossInfo | null>(null);
+  const [boss, setBoss] = useState<BossInfo | null>(__devBoss ?? seedBoss ?? null);
   // Raw GET row retained for the in-app boss-direct accept (Phase 3 step 1). The
   // hub already fetches /api/challenge/{id} for the lineup/target; keeping the
   // raw row lets onTakeBoss build the SAME ctx the cold landing does — no second
   // fetch, no veil. State (not a ref) so the CTA re-renders into the in-app button
   // once the row lands. null until the fetch resolves (CTA falls back to href).
-  const [rawData, setRawData] = useState<unknown>(null);
+  const [rawData, setRawData] = useState<unknown>(seedRawData ?? null);
   // Returning-player result for THIS boss (won/score), read from the same local
   // key BossLandingView uses. Sync localStorage read on the prop id — no fetch.
   const [bossResult, setBossResult] = useState<BossResult | null>(null);
@@ -238,8 +281,18 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
 
   // Boss identity + lineup. Best-effort: any failure leaves boss=null and the
   // page falls back to generic chrome (never crashes / never a dead end).
+  // Boss-detail source priority (Defect 1): DEV fixture → hub seed
+  // (useBossDetail → mounts populated, no "Today's Boss" fallback flash) →
+  // self-fetch FALLBACK (only when no seed arrived; never concurrent with the
+  // seed, so no redundant fetch). deriveBossInfo is shared with the hook so a
+  // seeded render is byte-identical to this fallback's derivation.
   useEffect(() => {
     if (__devBoss) { setBoss(__devBoss); return; }                            // DEV fixture — no fetch
+    if (seedBoss) {                                                           // hub seed — no fetch
+      setBoss(seedBoss);
+      if (seedRawData != null) setRawData(seedRawData);
+      return;
+    }
     if (!bossChallengeId) { setBoss(null); return; }
     let cancelled = false;
     fetch(`/api/challenge/${bossChallengeId}`)
@@ -248,41 +301,10 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
       .then((d) => {
         if (cancelled || !d) return;
         setRawData(d);  // retain for in-app onTakeBoss (Phase 3 step 1)
-        const rawCards = (d.initial_roster && (d.initial_roster as any).cards) || [];
-        const cards: LineupCard[] = Array.isArray(rawCards)
-          ? rawCards.slice(0, 5).map((c: any) => ({
-              name: String(c.name ?? ""),
-              // On the wire the field is `pos` (revealedFive shape); `position`
-              // is the legacy fallback — neither is `position` today.
-              position: String(c.pos ?? c.position ?? ""),
-              salary: Number(c.salary ?? 0),
-              photoCode: c.photoCode != null ? String(c.photoCode) : null,
-              basePlayerId: String(c.basePlayerId ?? ""),
-              tier: String(c.tier ?? "WHITE"),
-              // fp — needed by the first-view reveal (per-card roll + Σ == target).
-              fp: Number(c.fp ?? c.actualFp ?? 0),
-            }))
-          : [];
-        const mappedStory = d.boss_identity_id ? BOSS_STORIES[String(d.boss_identity_id)] : undefined;
-        // Title team — derive from the SAME boss_identity_id already consumed
-        // for the story map (no re-fetch, no threading). Relies on the
-        // authoritative {TEAM}-{YYYY} bank-key convention (e.g. "DET-0304" →
-        // "DET"); every serveable boss key conforms.
-        const team = String(d.boss_identity_id ?? "").split("-")[0];
-        setBoss({
-          display: String(d.challenger_name ?? "Today's Boss"),
-          // Prefer the authored per-boss story (bundled map, keyed by
-          // boss_identity_id); else a `story` row field if ever plumbed; else
-          // the flavor one-liner. Flavor stays the fallback for a missing entry.
-          story: String(mappedStory ?? d.story ?? d.share_headline ?? ""),
-          target: typeof d.target_score === "number" ? d.target_score : null,
-          team,
-          seasonRange: formatSeasonRange(d.season),
-          cards,
-        });
+        setBoss(deriveBossInfo(d));
       });
     return () => { cancelled = true; };
-  }, [bossChallengeId, __devBoss]);
+  }, [bossChallengeId, __devBoss, seedBoss, seedRawData]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -314,6 +336,15 @@ export function BossScreen({ sport, currentUid, bossChallengeId, bossPlayerCount
         overflow: "hidden",
       }}
     >
+      {/* Defect 2A (boss-flow consistency): slim platinum REPLAY·IFS header —
+          present on the play/reveal surface, never wired here before. The
+          wrapper OWNS the safe-area-top inset (mirrors the solo platinum band,
+          GameView.tsx:2468-2480) so the platinum fills the notch strip; the
+          #D4DAE2 fill matches SlimChallengeHeader's top gradient stop for a
+          seamless seam. SlimChallengeHeader (:201) internals stay fenced. */}
+      <div style={{ flexShrink: 0, background: "#D4DAE2", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <SlimChallengeHeader />
+      </div>
       {/* ── Fixed top chrome (1-5) ── */}
       <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
         {/* 1 — Header: DAILY BOSS eyebrow + close */}

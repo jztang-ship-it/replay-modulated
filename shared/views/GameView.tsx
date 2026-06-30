@@ -68,6 +68,7 @@ import { AppHeader } from "@shared/components/AppHeader";
 import { PLATINUM_BAND_GRADIENT } from "@shared/components/platinumBand";
 import { useCardFlipState } from "@shared/hooks/useCardFlipState";
 import { useBossEntry } from "@shared/hooks/useBossEntry";
+import { useBossDetail } from "@shared/hooks/useBossDetail";
 import { BossScreen } from "@shared/components/BossScreen";
 import { getBossResult } from "@shared/utils/bossResultMemory";
 import {
@@ -468,6 +469,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Phase 2-mount Step 3/4: today's boss for the post-results entry CTA.
   // Basketball-only inside the hook; null elsewhere → CTA never renders.
   const bossEntry = useBossEntry(sportKey);
+  // Defect 1 (boss-flow): hub-level boss-detail fetch so BossScreen mounts
+  // populated (no "Today's Boss" fallback flash). Gated on bossChallengeId
+  // (non-null only) — no speculative fire on no-boss days.
+  const bossDetail = useBossDetail(bossEntry.bossChallengeId);
   // Boss availability — drives the top BOSS pill (basketball-only) + its tell.
   const bossLive = !!bossEntry.bossChallengeId;
   // Attempted-today is per-device local memory (getBossResult, presence ===
@@ -3179,6 +3184,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             currentUid={getPlayerUid()}
             bossChallengeId={bossEntry.bossChallengeId}
             bossPlayerCount={bossEntry.bossPlayerCount}
+            // Defect 1: hub-fetched boss detail → BossScreen mounts populated
+            // (no fallback flash, no redundant in-component fetch).
+            seedBoss={bossDetail.boss}
+            seedRawData={bossDetail.rawData}
             // Compact lineup headshots via the sport adapter; optional-chained
             // so a sport without headshots falls back to name/position tiles.
             headshotUrl={(id) => sportAdapter.getHeadshotUrl?.(id) ?? null}

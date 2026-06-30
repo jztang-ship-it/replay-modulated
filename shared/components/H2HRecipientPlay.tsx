@@ -121,6 +121,7 @@ import {
   HERO_CARD_ROW_HEIGHT_CSS,
   TargetCornerScore,
 } from "./H2HBoardShell";
+import { SlimChallengeHeader } from "./GlobalChallengeHeader";
 import { PartsLine } from "./TierGauge";
 import { type Line } from "@shared/commentary/chadChallenge";
 
@@ -1614,12 +1615,16 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     <>
       <H2HBoardShell
         surfaceKind="playing"
-        // boss-mobile-fit §1.1 (2026-06-27): globalHeader prop OMITTED here
-        // (and at the two H2HRecipientReveal mounts) to reclaim ~60px on the
-        // play/reveal/result surface. GlobalChallengeHeader internals stay
-        // LOCKED (DO-NOT-TOUCH) — this is an opt-in prop mounted nowhere else,
-        // so omitting it removes the banner from the whole surface with no
-        // global blast radius. The wordmark moment now lives on the landing.
+        // Defect 2B (boss-flow consistency, 2026-06-30): globalHeader RESTORED.
+        // boss-mobile-fit §1.1 had omitted it (and the two H2HRecipientReveal
+        // mounts) to reclaim ~60px; the winscreen-reclaim restored it on Reveal
+        // but not on this play surface — leaving the slim platinum bar present on
+        // reveal/result yet absent on the "Three rounds" play screen. Restoring
+        // it (the RD7.1-documented "play states" intent — H2HBoardShell:599-606)
+        // makes the header consistent across the whole boss flow. SlimChallenge-
+        // Header (:201) only; GlobalChallengeHeader (:88) internals stay LOCKED.
+        // ⚠️ re-costs ~60px — play no-scroll fit MUST be re-glassed at 390/430.
+        globalHeader={<SlimChallengeHeader />}
         topLabel={topLabel}
         bottomLabel={bottomLabel}
         topStrip={topStripSlot}
