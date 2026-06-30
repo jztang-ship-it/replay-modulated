@@ -202,6 +202,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           type: "div",
           props: {
             style: {
+              // satori requires explicit display on any div with >1 child node;
+              // this CTA wrapper holds two lines (primary + secondary) — without
+              // it the render throws and the whole card 500s (latent since the
+              // endpoint was authored). flex/column keeps the two lines stacked,
+              // textAlign:center still centers the text via inheritance.
+              display: "flex", flexDirection: "column",
               marginTop: "auto", padding: "40px 60px", borderRadius: "20px",
               background: "rgba(255,177,74,0.15)", border: "2px solid rgba(255,177,74,0.4)",
               textAlign: "center",
