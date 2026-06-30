@@ -179,3 +179,99 @@ export function GlobalChallengeHeader() {
     </div>
   );
 }
+
+/** SlimChallengeHeader — boss-winscreen-reclaim (2026-06-30).
+ *
+ *  A height-shortened sibling of GlobalChallengeHeader for the boss WIN
+ *  surfaces. boss-mobile-fit §1.1 had OMITTED the header entirely (−60px) to
+ *  win the no-scroll budget; with the band removal + hero shrink reclaiming
+ *  vertical, a SLIM brand bar is restored above the action region so the screen
+ *  isn't headerless. This is a SEPARATE component (the fence: do not edit
+ *  GlobalChallengeHeader internals) that reuses the same brand tokens and the
+ *  same DON'T-BREAK contract:
+ *    1. IN-FLOW ONLY (no transform/fixed/sticky) — first child of the inner
+ *       column, pushes the board down via normal flow.
+ *    2. CONSTANT HEIGHT — fixed type + flexShrink:0 → identical rendered height
+ *       on reveal and results. Mounted on BOTH in lockstep, so the equal
+ *       downward shift preserves the reveal→results no-snap.
+ *    3. RECIPIENT FLOW ONLY — mounted via explicit prop from H2HRecipientReveal.
+ *
+ *  Single platinum row: REPLAY IFS lockup + a one-line tagline. ~half the tall
+ *  header's height. No two-line tagline, no extra vertical. */
+export function SlimChallengeHeader() {
+  return (
+    <div
+      data-h2h-global-header="true"
+      data-h2h-global-header-slim="true"
+      aria-hidden="false"
+      style={{
+        flexShrink: 0,
+        width: "100%",
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        gap: 10,
+        // boss-winscreen-reclaim option-C (2026-06-30): 7 → 3. Slims the bar
+        // 38 → ~24 to fund the symmetric strip labels without scrolling. Pairs
+        // with the wordmark fontSize 16 → 14 below. GlobalChallengeHeader (:88)
+        // internals stay fenced — this is the slim sibling only.
+        paddingTop: 3,
+        paddingBottom: 3,
+        paddingLeft: SHARED_LEFT_RAIL_PX,
+        paddingRight: SHARED_LEFT_RAIL_PX,
+        marginBottom: 8,
+        background:
+          "linear-gradient(180deg, #D4DAE2 0%, #C7CDD6 52%, #B8BFC9 100%)",
+        fontFamily: "'Inter', system-ui, sans-serif",
+        userSelect: "none",
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        data-h2h-global-header-logo="true"
+        style={{ display: "flex", alignItems: "baseline", gap: 2, flexShrink: 0 }}
+      >
+        <span
+          data-h2h-global-header-wordmark="true"
+          style={{ fontSize: 14, lineHeight: "16px", fontWeight: 950, letterSpacing: -0.4, color: "#12151E" }}
+        >
+          REPLAY
+        </span>
+        <span
+          style={{
+            fontSize: 14,
+            lineHeight: "16px",
+            fontWeight: 900,
+            letterSpacing: 1.5,
+            color: BRAND_ORANGE,
+            marginLeft: 2,
+            textShadow: "0 1px 0 rgba(0,0,0,0.18)",
+          }}
+        >
+          IFS
+        </span>
+      </div>
+      {/* One-line tagline — UNIFORM all-caps, color-only emphasis (same hooks as
+          the tall header: STARS / TURN are the value-emphasis words). */}
+      <div
+        data-h2h-global-header-tagline="true"
+        style={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: "0.12em",
+          lineHeight: 1.1,
+          textTransform: "uppercase",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        <span style={softWord}>THE </span>
+        <span style={orangeWord}>STARS</span>
+        <span style={softWord}> PLAYED · YOUR </span>
+        <span style={orangeWord}>TURN</span>
+      </div>
+    </div>
+  );
+}

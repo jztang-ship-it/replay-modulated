@@ -31,8 +31,11 @@ import { HAND_STRIP_CARD_CONTENT_WIDTH_PX } from "./H2HRevealScreen";
 
 // ── Geometry constants (moved from H2HRevealScreen) ─────────────────
 
-/** Zone header (name label) height — 24px tall band above/below the strip. */
-export const ZONE_HEADER_HEIGHT_PX = 24;
+/** Zone header (name label) height — band above/below the strip.
+ *  boss-mobile-fit §1.2 (2026-06-27): 24 → 18 (−12 across top+bottom zones).
+ *  Drives the rendered ZoneHeader on every H2H surface (play/reveal/overlay
+ *  all consume this shell's ZoneHeader). */
+export const ZONE_HEADER_HEIGHT_PX = 18;
 
 /** Gap between the zone header and the strip area inside a ZonePanel. */
 export const ZONE_GAP_PX = 4;
@@ -85,9 +88,13 @@ export const BOTTOM_ZONE_MARGIN_BOTTOM_PX = 0;
  *  HERO_ROW_HEIGHT_CSS and the reveal battlefield card-row already resolve to
  *  this exact value; they reference this constant so the three states can't
  *  drift. HERO_MIN_HEIGHT_CSS below = two of these rows + 14px gap budget. */
-export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(125px, 28vw) * ${(478 / 329).toFixed(6)})`;
+// boss-mobile-fit §1.7 (2026-06-27): card-width cap 125 → 110, in lockstep with
+// H2HRevealScreen.BATTLEFIELD_CARD_MAX_WIDTH, H2HResultsOverlay.HERO_CARD_MAX_WIDTH,
+// and H2HRecipientPlay.previewCardWidthCss (asymmetry = reveal→results snap).
+// At 390 unchanged (28vw≈109<110); at 430 ~8% smaller. Row height drops with it.
+export const HERO_CARD_ROW_HEIGHT_CSS = `calc(min(96px, 28vw) * ${(478 / 329).toFixed(6)})`;
 
-export const HERO_MIN_HEIGHT_CSS = `calc(min(125px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
+export const HERO_MIN_HEIGHT_CSS = `calc(min(96px, 28vw) * ${((478 / 329) * 2).toFixed(6)} + 14px)`;
 
 /** Hero region's reduced minHeight during the hold_select preview window
  *  (docs/holdselect-vertical-budget-design-lock.md §2(3)). One hero-card
@@ -98,7 +105,9 @@ export const HERO_MIN_HEIGHT_CSS = `calc(min(125px, 28vw) * ${((478 / 329) * 2).
  *  hold_select — sized so the restoration finishes inside one
  *  COLUMN_FLIP_DURATION_MS window (~250ms), absorbed into column_flip's
  *  natural choreography so the recipient strip doesn't visibly lurch. */
-export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(125px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
+// (Dead constant — zero importers, confirmed in boss-mobile-fit recon. Kept in
+//  lockstep with the 110 cap above only so the card-width family stays coherent.)
+export const HERO_MIN_HEIGHT_HOLD_SELECT_CSS = `calc(min(96px, 28vw) * ${(478 / 329).toFixed(6)} + 24px)`;
 
 /** Duration of the hero-region minHeight restore transition. Synced with
  *  COLUMN_FLIP_DURATION_MS (250ms) per the design lock so the expansion
@@ -206,7 +215,49 @@ export const CORNER_SCORE_MIN_WIDTH_PX = 110;
  *  (YOU / recipient) hosts a bare ScoreCell — YOU's climbing total
  *  reads as live progress, not a static target.
  */
-export function TargetCornerScore({ scoreCell }: { scoreCell: React.ReactNode }) {
+export function TargetCornerScore({
+  scoreCell,
+  stacked = false,
+}: {
+  scoreCell: React.ReactNode;
+  /** boss-winscreen-reclaim (2026-06-30): when the zone label is FLANKED
+   *  beside the strip (not banded above it), the "Target:" prefix sits
+   *  inline-left of the score and steals horizontal room the mini-cards
+   *  need. `stacked` renders a tiny "TARGET" label ABOVE the score instead
+   *  — same framing, far narrower envelope, so the flanked strip keeps its
+   *  width. The inner ScoreCell DOM (data attrs the no-snap gate queries)
+   *  is untouched in both layouts. */
+  stacked?: boolean;
+}) {
+  if (stacked) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          lineHeight: 1,
+        }}
+      >
+        <span
+          data-h2h-target-label="true"
+          style={{
+            fontSize: 8,
+            fontWeight: 700,
+            color: "rgba(255,255,255,0.6)",
+            letterSpacing: 0.5,
+            textTransform: "uppercase",
+            marginBottom: 2,
+            whiteSpace: "nowrap",
+            lineHeight: 1,
+          }}
+        >
+          Target
+        </span>
+        {scoreCell}
+      </div>
+    );
+  }
   return (
     <>
       <span
@@ -344,6 +395,117 @@ export function ZoneHeader({
   );
 }
 
+/** Stacked-label zone — boss-winscreen-reclaim option C (2026-06-30).
+ *  REPLACES the earlier flank-row (name LEFT / score RIGHT beside the strip).
+ *  De-flanked: the strip takes the FULL zone width (cards widen on both strips),
+ *  and a single CENTERED line carries "[label] · [score]" — ABOVE the strip for
+ *  the top (opponent) zone, BELOW it for the bottom (YOU) zone. The `score` node
+ *  is the bare ScoreCell (no "TARGET" chrome); its data-h2h-team-score-position
+ *  glyph is the anchor the reveal-only mid-rail flash auto-tracks (it re-parks to
+ *  the new glyph midpoint by measurement — ScoreCell itself is NOT resized).
+ *  Used by the boss win surfaces (reveal + results both pass flankLabels) AND the
+ *  human recipient reveal; play keeps the banded ZoneHeader. reveal and results
+ *  render this identically → reveal→results no-snap holds by construction.
+ *  Preserves the data-h2h-board-zone / -zone-label / -corner-score hooks. */
+export function FlankZone({
+  zone,
+  label,
+  score,
+  strip,
+  style,
+}: {
+  zone: "top" | "bottom";
+  label: string;
+  score?: React.ReactNode;
+  strip: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
+  const labelLine = (
+    <div
+      data-h2h-board-zone-label={zone}
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 5,
+        width: "100%",
+        lineHeight: 1,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.92)",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          maxWidth: "55%",
+        }}
+      >
+        {label}
+      </span>
+      {score && (
+        <>
+          <span
+            aria-hidden="true"
+            style={{ color: "rgba(255,255,255,0.32)", fontSize: 13, flexShrink: 0 }}
+          >
+            ·
+          </span>
+          <span
+            data-h2h-board-corner-score={zone}
+            style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
+          >
+            {score}
+          </span>
+        </>
+      )}
+    </div>
+  );
+  const stripRow = (
+    <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      {strip}
+    </div>
+  );
+  return (
+    <div
+      data-h2h-board-zone={zone}
+      style={{
+        flex: "0 0 auto",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch",
+        // Tight label↔strip gap — every px here feeds the no-scroll budget.
+        gap: 2,
+        borderRadius: 16,
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.05)",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.20)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        padding: "6px 10px",
+        ...style,
+      }}
+    >
+      {zone === "top" ? (
+        <>
+          {labelLine}
+          {stripRow}
+        </>
+      ) : (
+        <>
+          {stripRow}
+          {labelLine}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Shell props ─────────────────────────────────────────────────────
 
 export interface H2HBoardShellProps {
@@ -447,6 +609,12 @@ export interface H2HBoardShellProps {
    *  constant H2H_SIGNAGE_OFFSET_BELOW_ROW below the bottom (recipient) strip so
    *  it RIDES that row. Optional — omitted by surfaces that don't show it. */
   roundSignage?: React.ReactNode;
+  /** boss-winscreen-reclaim (2026-06-30): render the top/bottom zone labels
+   *  FLANKED (name left of strip, score right, no band above) via FlankZone
+   *  instead of the banded ZoneHeader. Reclaims the band's vertical for taller
+   *  mini-cards. MUST be passed by BOTH the reveal and results surfaces in
+   *  lockstep — an asymmetry here is a reveal→results snap. Play omits it. */
+  flankLabels?: boolean;
 }
 
 // ── Shell ───────────────────────────────────────────────────────────
@@ -456,7 +624,7 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
     topLabel, bottomLabel, topStrip, bottomStrip, hero, belowBoard, surfaceKind,
     rootDataAttrs, innerOpacity, innerTransitionMs, innerDataAttr, compositeOverlay,
     heroMinHeight, topZoneMarginBottom, heroMarginBottom, innerScrollable, belowBoardSticky,
-    topScore, bottomScore, globalHeader, roundSignage,
+    topScore, bottomScore, globalHeader, roundSignage, flankLabels,
   } = props;
   const resolvedHeroMinHeight = heroMinHeight ?? HERO_MIN_HEIGHT_CSS;
   const resolvedTopZoneMargin = topZoneMarginBottom ?? TOP_ZONE_MARGIN_BOTTOM_PX;
@@ -554,10 +722,20 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
             stays at the ZonePanel default 8, where it teams up with
             the new TOP_ZONE_MARGIN_BOTTOM_PX (12) to give 20px top
             hero gap. */}
-        <ZonePanel zone="top" style={{ marginBottom: resolvedTopZoneMargin, paddingTop: 4 }}>
-          {topStrip}
-          <ZoneHeader label={topLabel} position="top" score={topScore} />
-        </ZonePanel>
+        {flankLabels ? (
+          <FlankZone
+            zone="top"
+            label={topLabel}
+            score={topScore}
+            strip={topStrip}
+            style={{ marginBottom: resolvedTopZoneMargin }}
+          />
+        ) : (
+          <ZonePanel zone="top" style={{ marginBottom: resolvedTopZoneMargin, paddingTop: 4 }}>
+            {topStrip}
+            <ZoneHeader label={topLabel} position="top" score={topScore} />
+          </ZonePanel>
+        )}
 
         {/* Hero region — minHeight defaults to HERO_MIN_HEIGHT_CSS but
             H2HRecipientPlay overrides to HERO_MIN_HEIGHT_HOLD_SELECT_CSS
@@ -595,10 +773,20 @@ export function H2HBoardShell(props: H2HBoardShellProps) {
             (paddingTop of this panel) stays at the ZonePanel default
             8, partnering with HERO_MARGIN_BOTTOM_PX (12) for the 20px
             bottom hero gap. */}
-        <ZonePanel zone="bottom" style={{ marginBottom: BOTTOM_ZONE_MARGIN_BOTTOM_PX, paddingBottom: 4 }}>
-          <ZoneHeader label={bottomLabel} position="bottom" score={bottomScore} />
-          {bottomStrip}
-        </ZonePanel>
+        {flankLabels ? (
+          <FlankZone
+            zone="bottom"
+            label={bottomLabel}
+            score={bottomScore}
+            strip={bottomStrip}
+            style={{ marginBottom: BOTTOM_ZONE_MARGIN_BOTTOM_PX }}
+          />
+        ) : (
+          <ZonePanel zone="bottom" style={{ marginBottom: BOTTOM_ZONE_MARGIN_BOTTOM_PX, paddingBottom: 4 }}>
+            <ZoneHeader label={bottomLabel} position="bottom" score={bottomScore} />
+            {bottomStrip}
+          </ZonePanel>
+        )}
 
         {/* Round-position signage — rides the recipient (bottom) row at a
             constant H2H_SIGNAGE_OFFSET_BELOW_ROW. In-flow (after the bottom

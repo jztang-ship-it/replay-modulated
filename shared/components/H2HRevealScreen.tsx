@@ -77,7 +77,7 @@ import {
   type EntranceStage,
 } from "./useH2HReveal";
 import { CardBackGeneric } from "./CardBackGeneric";
-import { H2HBoardShell, TargetCornerScore } from "./H2HBoardShell";
+import { H2HBoardShell } from "./H2HBoardShell";
 import {
   ScoreCell,
   RIGHT_RAIL_WIDTH_PX,
@@ -252,7 +252,26 @@ const TIER_ACCENT: Record<string, string> = {
 //     surface that defines the floor).
 // Single source of truth. Drift across surfaces is impossible without
 // removing an import — value-agnostic coupling tests gate the lock.
-export const HAND_STRIP_HEIGHT_PX = 80;
+// boss-mobile-fit §1.2 (2026-06-27): 80 → 60. Trims both strips (~52 across
+// top+bottom) on every H2H surface — play/reveal/overlay all key off this one
+// constant. Cell narrows on the locked 329/478 aspect; the container-query
+// scale(100cqw/150px) keeps card content un-clipped (no scale clawback).
+// boss-winscreen-reclaim (2026-06-30): 60 → 74. The mini-card size token. The
+// label-band removal (flank mode) + hero card-cap shrink (110 → 90) freed
+// vertical; it's reclaimed HERE into taller mini-slot cells with a legibility
+// floor. Cells are aspect-locked (329/478) so a taller cell is also wider until
+// the flanked strip runs out of horizontal room and flexShrink kicks in — net
+// bigger cards on both reveal + results (shared const → both surfaces in
+// lockstep → reveal→results crossfade stays byte-identical). Play (states 1–3)
+// also reads this; it carries less content so it only gets more compact.
+// boss-winscreen-reclaim card-growth (2026-06-30): 70 → 92. De-flanked strips
+// give the cells the FULL zone width, so they're height-bound again; this growth
+// comes from the reclaimed YOU→CTA margin:auto slack (D1–D4: ~152px dead band on
+// device @390×844, NOT collapsing). 92 keeps 5 full-width cells height-bound at
+// 390 (5×(92·329/478)+4·gap ≈ 333 < ~338 usable — fits with margin), and the
+// device breathing gap above the CTA stays ~64px @390×844. Pairs with the hero
+// cap 81→96; both grow reveal + results in lockstep (zero-snap holds).
+export const HAND_STRIP_HEIGHT_PX = 92;
 const HAND_STRIP_GAP_PX = 4;
 
 // RD6.2-prep-A2 (2026-06-12): natural horizontal span of the strip's
@@ -327,7 +346,11 @@ const STRIP_CARD_SCALE_CSS = `calc(100cqw / ${STRIP_CARD_NATURAL_WIDTH_PX}px)`;
 // H2HResultsOverlay.HERO_CARD_MAX_WIDTH (and the shell's HERO_MIN_HEIGHT_*
 // constants that derive from this value) or the reveal→results crossfade
 // snaps. The aspect-ratio derived row height drops proportionally.
-const BATTLEFIELD_CARD_MAX_WIDTH = "min(125px, 28vw)";
+// boss-mobile-fit §1.7 (2026-06-27): cap 125 → 110 (lockstep with
+// H2HBoardShell HERO_* + H2HResultsOverlay HERO_CARD_MAX_WIDTH + play preview).
+// At 390, 28vw≈109 < cap → unchanged. At 430, 28vw≈120 → clamps to 110
+// (~8% smaller duel cards on wide screens only). Breakpoint-free.
+const BATTLEFIELD_CARD_MAX_WIDTH = "min(96px, 28vw)";
 
 // Right-rail score-column width (RIGHT_RAIL_WIDTH_PX) and left-rail
 // reserved width (LEFT_RAIL_WIDTH_PX) are imported from H2HScoreRail
@@ -2212,6 +2235,10 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
       <H2HBoardShell
         roundSignage={roundSignage}
         surfaceKind="reveal"
+        // boss-winscreen-reclaim (2026-06-30): flank the zone labels (name left /
+        // score right of the strip, no band) — lockstep with the results overlay
+        // so the reveal→results no-snap holds.
+        flankLabels
         globalHeader={globalHeader}
         topLabel={sender.displayName}
         bottomLabel={recipient.displayName}
@@ -2224,30 +2251,32 @@ export function H2HRevealScreen(props: H2HRevealScreenProps) {
           // (data-h2h-team-score-position="opponent") is unchanged so
           // the reveal→results no-snap gate still asserts on the inner
           // value node.
-          <TargetCornerScore
-            scoreCell={
-              <ScoreCell
-                total={sender.totalFp}
-                displayTotal={senderDisplayTotal}
-                state={senderState}
-                sizeProgress={senderSizeProgress}
-                surface="reveal"
-                pop={popState.senderPop}
-                teamPosition="opponent"
-                // RD6.2-B (2026-06-12): synchronized dual-blink. Both
-                // corner totals consume the SAME key
-                // (popState.deltaLandedKey), so the React commit that
-                // flips deltaLandedKey ALSO mounts both ScoreCells with
-                // the new blink.key — both useEffects fire on the same
-                // commit → both WAAPI animations start on the same
-                // frame. Suppressed under reduced motion (the prop is
-                // omitted, the useEffect short-circuits).
-                blink={
-                  reducedMotion
-                    ? undefined
-                    : { key: popState.deltaLandedKey, durationMs: BLINK_DURATION_MS }
-                }
-              />
+          // boss-winscreen-reclaim option C (2026-06-30): bare ScoreCell — the
+          // "TARGET" chrome is dropped; the team-season code + " · " now lead the
+          // centered label line (FlankZone), so the opponent total reads as
+          // "PHX 03-04 · 109.3". The ScoreCell DOM (data-h2h-team-score-position
+          // ="opponent") is untouched — the no-snap gate + the mid-rail flash
+          // anchor both still resolve it.
+          <ScoreCell
+            total={sender.totalFp}
+            displayTotal={senderDisplayTotal}
+            state={senderState}
+            sizeProgress={senderSizeProgress}
+            surface="reveal"
+            pop={popState.senderPop}
+            teamPosition="opponent"
+            // RD6.2-B (2026-06-12): synchronized dual-blink. Both
+            // corner totals consume the SAME key
+            // (popState.deltaLandedKey), so the React commit that
+            // flips deltaLandedKey ALSO mounts both ScoreCells with
+            // the new blink.key — both useEffects fire on the same
+            // commit → both WAAPI animations start on the same
+            // frame. Suppressed under reduced motion (the prop is
+            // omitted, the useEffect short-circuits).
+            blink={
+              reducedMotion
+                ? undefined
+                : { key: popState.deltaLandedKey, durationMs: BLINK_DURATION_MS }
             }
           />
         }

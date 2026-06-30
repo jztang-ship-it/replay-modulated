@@ -48,11 +48,12 @@ import {
   type ResultsOverlayState,
 } from "./H2HResultsOverlay";
 import { isRealName } from "@shared/utils/isRealName";
+import { formatBossTeamSeason } from "@shared/utils/seasonRange";
 import { BossOutwardEnding } from "./BossOutwardEnding";
 import { BossClaimPrompt } from "./BossClaimPrompt";
 import { ensureClaimBaseline } from "@shared/utils/bossClaimPrompt";
-import { GlobalChallengeHeader } from "./GlobalChallengeHeader";
 import { RoundSignage } from "./H2HBoardShell";
+import { SlimChallengeHeader } from "./GlobalChallengeHeader";
 import { explainH2HResult } from "@shared/explanation/explainH2HResult";
 import { subscribePoolStats } from "@shared/explanation/poolStatsProvider";
 import { fetchAuthoredFlavor } from "@shared/utils/fetchAuthoredFlavor";
@@ -115,6 +116,19 @@ export interface H2HRecipientRevealProps {
    *  the reveal surface shows the final locked round, riding the recipient row.
    *  Optional — omitted by other consumers. */
   roundSignageLabel?: string;
+  /** DEV-ONLY glass state override (boss-winscreen-cta, 2026-06-30). Lets the
+   *  DEV-only BossClaimMockRoute hold the REAL mount at a specific state for
+   *  device glass without playing through the arc:
+   *    "reveal" → freeze the arc at end-state (skipToEnd) and never crossfade to
+   *               results (showOverlay held false).
+   *    "social" → results overlay, pre-breathe (!claimVisible) held open.
+   *    "claim"  → results overlay, post-breathe (claimVisible) jumped to.
+   *  Default undefined ⇒ production behavior is byte-identical (every override
+   *  below is gated on a non-undefined value). Passed ONLY by BossClaimMockRoute,
+   *  which is itself behind the App.tsx import.meta.env.DEV guard and tree-shaken
+   *  from prod. Touches timing flags only — no layout, no zero-snap, no CardFront/
+   *  header/ScoreCell. */
+  devGlassState?: "reveal" | "social" | "claim";
 }
 
 export function H2HRecipientReveal(props: H2HRecipientRevealProps) {
@@ -140,6 +154,7 @@ function H2HRecipientRevealInner(props: InnerProps) {
     challengeCtx, senderResolved, myScore, myRoster, myWinTier, sport,
     renderBattlefieldCard, renderOverlayCard,
     onSendItBack, onTryAgain, onPlayOwnHand, onDismiss, roundSignageLabel,
+    devGlassState,
   } = props;
 
   const reducedMotion = usePrefersReducedMotion();
@@ -160,9 +175,15 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // recipient's roster/state. The `as H2HCard[]` cast is safe per
   // commit 2's contract validation (photoCode drift is the only
   // difference and it's runtime-tolerated).
-  const namedChallenger = isRealName(challengeCtx.challengerName)
-    ? challengeCtx.challengerName
-    : null;
+  // boss-winscreen-reclaim (2026-06-30): for a boss, the opponent label is the
+  // team-season code ("PHX 06-07") via the shared resolver — NOT the boss display
+  // name (which leaked as "Seven Seconds…" → "SEV…"). Same helper the play surface
+  // uses, so the two surfaces can't drift. Friend challenges are unchanged.
+  const namedChallenger =
+    (challengeCtx.senderKind === "boss"
+      ? formatBossTeamSeason(challengeCtx.bossIdentityId)
+      : null) ??
+    (isRealName(challengeCtx.challengerName) ? challengeCtx.challengerName : null);
 
   const sender: H2HHand = useMemo(() => ({
     handId: senderResolved.handId,
@@ -267,6 +288,19 @@ function H2HRecipientRevealInner(props: InnerProps) {
     onArcResolved: () => setArcResolved(true),
   });
 
+  // DEV-ONLY glass jump (boss-winscreen-cta, 2026-06-30). When BossClaimMockRoute
+  // passes devGlassState, jump the arc to its end-state instantly via the existing
+  // skipToEnd path (no new animation). skipToEnd settles phase→"done" but does NOT
+  // fire onArcResolved (useH2HReveal.ts:1089), so the "claim" jump force-sets
+  // arcResolved (BossClaimPrompt's `active` gate needs it). Inert in prod:
+  // devGlassState is undefined there, so this effect returns immediately.
+  useEffect(() => {
+    if (!devGlassState) return;
+    reveal.skipToEnd();
+    if (devGlassState === "claim") setArcResolved(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devGlassState]);
+
   // Crossfade-in from the underlying GameView surface. setVisible
   // flips on the next animation frame so the CSS opacity transition
   // fires from 0 → 1 instead of mounting visible.
@@ -306,7 +340,12 @@ function H2HRecipientRevealInner(props: InnerProps) {
     setDoneHoldElapsed(false);
     return undefined;
   }, [reveal.phase]);
-  const showOverlay = reveal.phase === "done" && doneHoldElapsed;
+  // DEV glass override: "reveal" holds the overlay OFF (stay on the reveal
+  // surface); "social"/"claim" force it ON immediately (the dev effect above
+  // skipToEnd'd the arc to end-state). Undefined ⇒ the production expression.
+  const showOverlay = devGlassState
+    ? devGlassState !== "reveal"
+    : reveal.phase === "done" && doneHoldElapsed;
   const overlayCrossfade = useCrossfade(showOverlay, OVERLAY_CROSSFADE_MS);
 
   // Boss claim-prompt breathe: let the win celebration (the results overlay)
@@ -316,11 +355,19 @@ function H2HRecipientRevealInner(props: InnerProps) {
   // static end-state mount can't surface it without a real arc.
   const CLAIM_BREATHE_MS = 1700;
   const [claimBreatheElapsed, setClaimBreatheElapsed] = useState(false);
+  // boss-winscreen-cta (direction A): mirrors BossClaimPrompt's `shown` latch so
+  // the merged boss ctaSlot re-ranks (CLAIM ↔ SOCIAL) without re-evaluating the
+  // gate or reading auth in the parent. Presentation state only.
+  const [claimVisible, setClaimVisible] = useState(false);
   useEffect(() => {
     if (!showOverlay) { setClaimBreatheElapsed(false); return undefined; }
+    // DEV glass override: "social" holds pre-breathe (claim never surfaces);
+    // "claim" jumps past the breathe. Undefined ⇒ the production timer below.
+    if (devGlassState === "social") { setClaimBreatheElapsed(false); return undefined; }
+    if (devGlassState === "claim") { setClaimBreatheElapsed(true); return undefined; }
     const id = window.setTimeout(() => setClaimBreatheElapsed(true), CLAIM_BREATHE_MS);
     return () => clearTimeout(id);
-  }, [showOverlay]);
+  }, [showOverlay, devGlassState]);
 
   // RD6.1 (2026-06-11): the step-4 glide infrastructure is retired.
   // Pre-RD6.1 the reveal-side right-rail ScoreCells were hidden via a
@@ -352,10 +399,15 @@ function H2HRecipientRevealInner(props: InnerProps) {
         renderCard={renderBattlefieldCard}
         reveal={reveal}
         roundSignage={roundSignageLabel ? <RoundSignage label={roundSignageLabel} /> : undefined}
-        // RD7.1 (2026-06-13): recipient-flow Reveal screen header. Same
-        // component the results overlay below mounts → identical height →
-        // reveal→results no-snap preserved.
-        globalHeader={<GlobalChallengeHeader />}
+        // boss-winscreen-reclaim (2026-06-30): the SLIM header is restored above
+        // the action region (boss-mobile-fit §1.1 had omitted the header for
+        // −60px; the reclaimed band+hero vertical pays for a ~30px slim bar).
+        // Mounted on reveal + overlay BOTH, in lockstep — the equal downward
+        // shift preserves the reveal→results no-snap. The tall
+        // GlobalChallengeHeader internals stay untouched (slim is a sibling).
+        // BRANCH TELL: a slim platinum REPLAY·IFS bar at the top of the boss win
+        // screen (was: NO banner — that "banner absent" tell is now dead).
+        globalHeader={<SlimChallengeHeader />}
       />
       {overlayCrossfade.mounted && (
         <H2HResultsOverlay
@@ -369,10 +421,9 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // RD7.12 — displayExplanation = validated LLM Flavor if ready, else
           // the RD7.11 deterministic line (never-block swap-in).
           explanation={displayExplanation}
-          // RD7.1 (2026-06-13): recipient-flow Results screen header.
-          // Identical GlobalChallengeHeader → same height as the reveal
-          // shell's header → reveal→results no-snap preserved.
-          globalHeader={<GlobalChallengeHeader />}
+          // boss-winscreen-reclaim (2026-06-30): slim header restored here too,
+          // lockstep with the reveal shell above (equal shift → no-snap holds).
+          globalHeader={<SlimChallengeHeader />}
           onSendItBack={onSendItBack}
           onTryAgain={onTryAgain}
           onPlayOwnHand={onPlayOwnHand}
@@ -394,28 +445,68 @@ function H2HRecipientRevealInner(props: InnerProps) {
           // BossOutwardEnding make fresh === revisited.
           ctaSlot={
             challengeCtx.senderKind === "boss" ? (
-              <>
-                <BossOutwardEnding
-                  variant="cta-only"
-                  sport={sport}
-                  bossChallengeId={challengeCtx.challengeId}
-                  freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
-                  marquee={challengeCtx.marquee === true}
-                  targetScore={challengeCtx.targetScore}
-                  bossName={challengeCtx.challengerName}
-                  onPlayAgain={onTryAgain}
-                />
-                {/* Post-win claim prompt — sibling card, surfaces after the
-                    breathe. Self-gates on eligibility (won + after-launch
-                    baseline + anti-repeat + !registered, or ?claim=force in DEV);
-                    won = the inline live-win. */}
+              // boss-winscreen-cta (direction A), stacked on the mobile-fit merged
+              // scaffold. ONE amber primary per state, re-ranked by claim presence:
+              //  • CLAIM (claimVisible): the claim card is the single amber primary
+              //    at the TOP (render order = claim-first); BossOutwardEnding's
+              //    Challenge demotes to outline (challengeTier="secondary"); helper
+              //    reads "This win is yours to keep."
+              //  • SOCIAL (!claimVisible): no save UI in the DOM (BossClaimPrompt
+              //    returns null); Challenge is the amber primary; helper reads
+              //    "Share what you just did."
+              // claimVisible mirrors BossClaimPrompt's own `shown` latch via
+              // onVisibilityChange — no second eligibility eval, no auth in the
+              // parent, gate + RegisterModal invocation untouched. senderKind
+              // branch condition unchanged. Helper shown on WIN only (loss = the
+              // run-it-back button alone, no helper, out of scope).
+              <div
+                data-testid="boss-win-cta-merged"
+                style={{
+                  width: "100%", maxWidth: 420, margin: "0 auto",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+                  // DELTA (Lever B): LEAN footer — one primary button + one text
+                  // link per state, NO helper line, NO Play Again. This claws
+                  // back the +100px the no-snap hero restore costs, so the duel
+                  // cards stay FULL and the result still fits ≤650. Reserve the
+                  // taller final sub-state (CLAIM: Put + Maybe later ≈ 82; SOCIAL:
+                  // Challenge + Copy-text ≈ 76) so the footer outer height is
+                  // constant across claim↔share (the D1 no-jump still holds).
+                  minHeight: 86,
+                  justifyContent: "flex-start",
+                }}
+              >
+                {/* CLAIM primary (top) — self-gates; returns null in SOCIAL
+                    (registered / already-claimed / anon-dismissed) → no save UI
+                    composed into the DOM. onVisibilityChange drives the re-rank.
+                    DELTA: helper line dropped (Lever B). */}
                 <BossClaimPrompt
+                  embedded
                   bossIdentityId={challengeCtx.bossIdentityId}
                   won={myScore >= challengeCtx.targetScore}
                   active={arcResolved && claimBreatheElapsed}
-                  onDismiss={() => { /* card self-hides via its latch */ }}
+                  onVisibilityChange={setClaimVisible}
+                  onDismiss={() => { /* card self-hides via its latch; SOCIAL takes over */ }}
                 />
-              </>
+                {/* SOCIAL only. DELTA Lever B: `lean` drops Play Again and makes
+                    Copy Link a text link → one primary (Challenge) + one text
+                    secondary (Copy). CLAIM (above) = Put it on the record
+                    (primary) + Maybe later (text). One primary + one text link
+                    per state; "Challenge Someone" only in SOCIAL. */}
+                {!claimVisible && (
+                  <BossOutwardEnding
+                    variant="cta-only"
+                    challengeTier="primary"
+                    lean
+                    sport={sport}
+                    bossChallengeId={challengeCtx.challengeId}
+                    freshResult={{ score: myScore, won: myScore >= challengeCtx.targetScore }}
+                    marquee={challengeCtx.marquee === true}
+                    targetScore={challengeCtx.targetScore}
+                    bossName={challengeCtx.challengerName}
+                    onPlayAgain={onTryAgain}
+                  />
+                )}
+              </div>
             ) : undefined
           }
         />
