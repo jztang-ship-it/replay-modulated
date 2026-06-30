@@ -6,26 +6,26 @@
  * server mirror) — actualFp/badges are baked here to the LIVE engine + computeBadges.
  *
  * RAIL (5-card / 3-round):
- *   R1: deal 5 → coach directs "lock in 2 you trust" (Tatum + Herro) → replace the 3 unheld
+ *   R1: deal 5 → coach directs "lock in 2 you trust" (LeBron + Edwards) → replace the 3 unheld
  *   R2: deal 3 replacements → "lock in 1 more" (Draymond) → replace the 2 unheld
- *   R3: give the final 2 (Sabonis + Coby), no choice → reveal
+ *   R3: give the final 2 (Davis + Fox), no choice → reveal
  * Directed holds are GUARANTEED: the scripted redraw keeps the directed cards and
  * replaces the rest regardless of exact taps, so the final 5 is always the engineered set.
  *
- * FP (trued-up against basketballConfig projectionWeights + badges, Phase 0 2026-07-01;
- *  re-tuned to STARTER w/ NATURAL boxes + a WIDE floor-vs-hero gap 2026-07-01):
+ * FP (trued-up against basketballConfig projectionWeights + badges; STARTER re-tune +
+ *  star-power recast 2026-07-01 — roles/FP/stat-lines LOCKED, only names/teams/logs change):
  *   weights pts1.0 reb1.2 ast1.5 stl2.0 blk2.0 to-1.0 ; tiers ROOKIE190/STARTER205/ALLSTAR225/MVP235
- *   Coby   $30  24/5/6/2/0/1   = 42.0  (no badge)              normal proj 40 → Δ+2
- *   Sabonis$52   8/9/4/0/0/3   = 21.8  (no badge; 3TO < SLOPPY) 🧊🧊  proj 46 → Δ-24 (biggest ice)
- *   Draymond$43  4/6/5/1/1/2   = 20.7  (no badge)              🧊    proj 30 → Δ-9
- *   Tatum  $66  33/8/7/1/0/2   = 55.1  (BUCKET 🏀+2, no fire)  normal proj 53 → Δ+2 (modest reliable floor)
- *   Herro  $41  41/7/9/2/1/1   = 72.9  (FIRE 🔥+5, only fire)  🔥🔥  proj 38 → Δ+35 (the held hero, clear top)
- *   TOTAL = 212.5 → STARTER (mid-band; +7.5 above 205 floor, -12.5 below 225 ALL-STAR). Controlled win, not dominant.
- *   Floor-vs-hero gap = Herro 72.9 - Tatum 55.1 = 17.8 (vs the ALL-STAR draft's 11) → contrast reads on raw FP, not just flame.
- *   Natural boxes (no stuffing): Tatum 33/8/7, Herro 41/7/9, Coby 24/5/6 — believable single-game lines.
- *
- * Variance flame intensity = fpDelta (actualFp - projectedFp): projections set so Herro is the
- * lone 🔥🔥, Tatum/Coby read normal (no flame), Draymond light 🧊, Sabonis the visible 🧊🧊.
+ *   ROLE            PLAYER          $   stat line         FP    proj  Δ      flame
+ *   Normal          De'Aaron Fox   30  24/5/6/2/0/1   = 42.0   40  +2.0   none
+ *   Bomb 🧊🧊        Anthony Davis  52   8/9/4/0/0/3   = 21.8   46  -24.2  biggest ice
+ *   Light-ice 🧊     Draymond Green 43   4/6/5/1/1/2   = 20.7   30  -9.3   light
+ *   Anchor (floor)  LeBron James   66  33/8/7/1/0/2   = 55.1   53  +2.1   none (no fire, "floor held")
+ *   Hero 🔥🔥        Anthony Edwards41  41/7/9/2/1/1   = 72.9   38  +34.9  lone FIRE, clear top
+ *   TOTAL = 212.5 → STARTER (mid-band; +7.5 above 205 floor, -12.5 below 225 ALL-STAR). Controlled win.
+ *   Floor-vs-hero gap = Edwards 72.9 - LeBron 55.1 = 17.8 → contrast reads on raw FP, not just flame.
+ *   AD proj 46 ≫ Draymond proj 30 → AD renders the BIGGER ice. Edwards proj 38 ≪ 72.9 → 🔥🔥 pops.
+ *   LeBron proj 53 ≈ 55.1 actual → no flame. Natural boxes (no stuffing).
+ *   Game logs are representative real-style box scores [verify box score].
  */
 
 import type { GeneratedCard } from "@shared/types";
@@ -65,25 +65,34 @@ function makeCard(o: ScriptCard, slotIndex: number, wasHeld: boolean): Generated
 }
 
 // ── The directed holds (guaranteed to survive each round's redraw) ──────────
-export const FTUE_DIRECTED_HOLD_IDS = ["ftue-tatum", "ftue-herro", "ftue-draymond"] as const;
+export const FTUE_DIRECTED_HOLD_IDS = ["ftue-lebron", "ftue-edwards", "ftue-draymond"] as const;
 
-// ── R1 deal — 5 cards. Coach directs hold of Tatum (star anchor) + Herro (the trust pick). ──
+// Card-id → reveal role (drives which FTUE_COPY beat the coach speaks per card).
+export const FTUE_CARD_ROLE: Record<string, "anchor" | "hero" | "bomb" | "lightIce" | "normal"> = {
+  "ftue-lebron": "anchor",
+  "ftue-edwards": "hero",
+  "ftue-davis": "bomb",
+  "ftue-draymond": "lightIce",
+  "ftue-fox": "normal",
+};
+
+// ── R1 deal — 5 cards. Coach directs hold of LeBron (star anchor) + Edwards (the trust pick). ──
 const R1: ScriptCard[] = [
-  // Slot 0 — Tatum $66 ORANGE — DIRECTED HOLD (star anchor). vs PHX: 33/8/7 modest reliable star line
-  // (actual 55.1 ≈ proj 53 → no flame, "the floor held"); clearly below Herro's hero pop.
-  { cardId: "ftue-tatum", basePlayerId: "1628369", name: "Jayson Tatum", team: "BOS", position: "SF",
+  // Slot 0 — LeBron James $66 ORANGE — DIRECTED HOLD (star anchor). 33/8/7 modest reliable star
+  // line (actual 55.1 ≈ proj 53 → no flame, "the floor held"); clearly below Edwards's hero pop.
+  { cardId: "ftue-lebron", basePlayerId: "2544", name: "LeBron James", team: "LAL", position: "SF",
     tier: "ORANGE", salary: 66, projectedFp: 53, actualFp: 55.1,
-    date: "2025-02-04", opponent: "PHX", homeAway: "H",
+    date: "2025-02-22", opponent: "DEN", homeAway: "H",
     statLine: { pts: 33, reb: 8, ast: 7, stl: 1, blk: 0, turnovers: 2, min: 36 },
     achievements: [{ id: "BUCKET", icon: "🏀", label: "Bucket", fp: 2 }] },
-  // Slot 1 — Herro $41 PURPLE — DIRECTED HOLD (the trust pick → 🔥🔥). vs BOS: 41-pt ceiling night,
-  // FIRE only, the lone big over (actual 72.9 vs proj 38 → Δ+35) — clear top of the board.
-  { cardId: "ftue-herro", basePlayerId: "1629639", name: "Tyler Herro", team: "MIA", position: "SG",
+  // Slot 1 — Anthony Edwards $41 PURPLE — DIRECTED HOLD (the trust pick → 🔥🔥). 41-pt ceiling
+  // night, FIRE only, the lone big over (actual 72.9 vs proj 38 → Δ+35) — clear top of the board.
+  { cardId: "ftue-edwards", basePlayerId: "1630162", name: "Anthony Edwards", team: "MIN", position: "SG",
     tier: "PURPLE", salary: 41, projectedFp: 38, actualFp: 72.9,
-    date: "2025-01-08", opponent: "BOS", homeAway: "H",
+    date: "2025-01-21", opponent: "HOU", homeAway: "H",
     statLine: { pts: 41, reb: 7, ast: 9, stl: 2, blk: 1, turnovers: 1, min: 38 },
     achievements: [{ id: "FIRE", icon: "🔥", label: "Fire", fp: 5 }] },
-  // Slots 2-4 — released after R1.
+  // Slots 2-4 — released after R1 (never scored).
   { cardId: "ftue-capela", basePlayerId: "203991", name: "Clint Capela", team: "ATL", position: "C",
     tier: "BLUE", salary: 38, projectedFp: 28, actualFp: 24.0,
     date: "2025-01-15", opponent: "MIL", homeAway: "A",
@@ -115,17 +124,17 @@ const R2: ScriptCard[] = [
     statLine: { pts: 11, reb: 2, ast: 1, stl: 1, blk: 0, turnovers: 1, min: 26 } },
 ];
 
-// ── R3 given (2) — no choice. Sabonis = the 🧊🧊 bomb; Coby = the normal anchor. ──
+// ── R3 given (2) — no choice. Davis = the 🧊🧊 bomb; Fox = the normal anchor. ──
 const R3: ScriptCard[] = [
-  // Sabonis $52 ORANGE — 🧊🧊 genuine under (mid-tier bomb). @ OKC: 8/9/4, 3 TOs.
-  { cardId: "ftue-sabonis", basePlayerId: "1627734", name: "Domantas Sabonis", team: "SAC", position: "C",
+  // Anthony Davis $52 ORANGE — 🧊🧊 genuine under (mid-tier bomb). 8/9/4, 3 TOs; proj 46 → Δ-24.
+  { cardId: "ftue-davis", basePlayerId: "203076", name: "Anthony Davis", team: "DAL", position: "C",
     tier: "ORANGE", salary: 52, projectedFp: 46, actualFp: 21.8,
-    date: "2025-03-12", opponent: "OKC", homeAway: "A",
+    date: "2025-03-14", opponent: "GSW", homeAway: "A",
     statLine: { pts: 8, reb: 9, ast: 4, stl: 0, blk: 0, turnovers: 3, min: 31 } },
-  // Coby White $30 BLUE — normal (≈ expected). vs DET: 24/5/6, solid floor, no badge (Δ+2).
-  { cardId: "ftue-coby", basePlayerId: "1629632", name: "Coby White", team: "CHI", position: "PG",
+  // De'Aaron Fox $30 BLUE — normal (≈ expected). 24/5/6, solid floor, no badge (Δ+2).
+  { cardId: "ftue-fox", basePlayerId: "1628368", name: "De'Aaron Fox", team: "SAC", position: "PG",
     tier: "BLUE", salary: 30, projectedFp: 40, actualFp: 42.0,
-    date: "2025-01-20", opponent: "DET", homeAway: "H",
+    date: "2025-01-25", opponent: "POR", homeAway: "H",
     statLine: { pts: 24, reb: 5, ast: 6, stl: 2, blk: 0, turnovers: 1, min: 33 } },
 ];
 
@@ -135,7 +144,7 @@ export async function dealFtueScriptedRoster(): Promise<{ roster: GeneratedCard[
 }
 
 /**
- * Round-aware scripted redraw. Keeps the DIRECTED holds (Tatum/Herro after R1,
+ * Round-aware scripted redraw. Keeps the DIRECTED holds (LeBron/Edwards after R1,
  * + Draymond after R2) regardless of the user's exact taps, and fills the rest:
  *   round 1 redraw (roundsUsed 1) → R2 replacements in the non-directed slots
  *   round 2 redraw (roundsUsed 2) → R3 given cards in the remaining 2 slots
@@ -159,11 +168,11 @@ export async function redrawFtueScriptedRoster(params: {
   return { roster };
 }
 
-/** Final resolve — cards already carry baked actualFp/badges; Tatum is the MVP/anchor. */
+/** Final resolve — cards already carry baked actualFp/badges; Edwards is the hero/top. */
 export async function resolveFtueScriptedRoster(params: {
   finalCards: any[];
 }): Promise<{ roster: GeneratedCard[]; mvpCardId: string }> {
-  return { roster: params.finalCards, mvpCardId: "ftue-herro" };
+  return { roster: params.finalCards, mvpCardId: "ftue-edwards" };
 }
 
 // Re-hydrate a held card (already a GeneratedCard) back into ScriptCard shape for makeCard.
@@ -179,20 +188,22 @@ function toScript(card: any): ScriptCard {
 }
 
 // ── THE COMMENTARY DECK (verbatim per spec — economy-clean; FINAL, John adjusts at glass) ──
+// Keys are role-based (anchor/hero/bomb/lightIce/normal via FTUE_CARD_ROLE) so a future
+// recast only touches the strings, not the wiring. Point-values fixed; only names re-synced.
 export const FTUE_COPY = {
   // Hold prompts
-  holdR1: "Lock in two you trust. Tatum's your franchise guy — you already knew that. And Herro? $41 and fearless, the kind of flyer that pays off. Tap 'em both, then we replace the rest.",
+  holdR1: "Lock in two you trust. LeBron's your franchise guy — you already knew that. And Ant Edwards? $41 and fearless, the kind of flyer that pays off. Tap 'em both, then we replace the rest.",
   holdR2: "One more. Draymond — three-time champ, never shuts up, always involved. Lock him.",
-  giveR3: "Last two are on us — Sabonis and Coby White round out your five. Now let's see what tonight actually gave us.",
+  giveR3: "Last two are on us — Anthony Davis and De'Aaron Fox round out your five. Now let's see what tonight actually gave us.",
 
-  // Per-card reveal beats (reveal order 1→5: Coby, Sabonis, Draymond, Tatum, Herro)
-  revealCoby: "Coby White, $30, did exactly what $30 should — 24 and 6, no fireworks, no faceplant. That's your floor. Solid.",
-  revealSabonis: "Oof. Sabonis is a $52 stud most nights — tonight? 8 and 9, turned it over three times. 🧊 That's the game: you pay for the average, but you play one night. Even the studs no-show.",
-  revealDraymond: "Draymond did Draymond things — a little of everything, not a lot of anything. 🧊 Loud guy, quiet box score. He won't sink you, but he won't carry you either.",
-  revealTatum: "There's the franchise. Tatum drops 33, fills the sheet — exactly what a $66 star is supposed to do. No fireworks needed. He's your floor, and the floor held.",
-  revealHerro: "And THIS is why you play. Tyler Herro — your $41 flyer — went for FORTY-ONE. 🔥🔥 Career kind of night. Your star delivered AND your flyer hit the ceiling — THAT'S a team. The cap makes you find both.",
+  // Per-card reveal beats (reveal order 1→5: normal, bomb, lightIce, anchor, hero)
+  revealNormal: "De'Aaron Fox, $30, did exactly what $30 should — 24 and 6, no fireworks, no faceplant. That's your floor. Solid.",
+  revealBomb: "Oof. Anthony Davis is a $52 stud most nights — tonight? 8 and 9, turned it over three times. 🧊 That's the game: you pay for the average, but you play one night. Even the studs no-show.",
+  revealLightIce: "Draymond did Draymond things — a little of everything, not a lot of anything. 🧊 Loud guy, quiet box score. He won't sink you, but he won't carry you either.",
+  revealAnchor: "There's the franchise. LeBron drops 33, fills the sheet — exactly what a $66 star is supposed to do. No fireworks needed. He's your floor, and the floor held.",
+  revealHero: "And THIS is why you play. Anthony Edwards — your $41 flyer — went for FORTY-ONE. 🔥🔥 Career kind of night. Your star delivered AND your flyer hit the ceiling — THAT'S a team. The cap makes you find both.",
 
-  // Result sequence (after tier slam; [XXX]/[TIER] filled at runtime)
+  // Result sequence (after tier slam; {total}/{tier} filled at runtime)
   resultWin: "{total} FP. {tier} — and you're sitting pretty above the line. First hand, clean win. 🏀",
   resultBaseline: "Every player has a baseline from their season average — tonight, some swung above it, some below. That swing is the game.",
   resultThesis: "Salary tells you what's LIKELY — never what's certain. A winning hand needs your stars to deliver AND your value picks to surprise. That's why the total works — not one steal, the whole squad under the cap.",
