@@ -79,8 +79,8 @@ type Props = {
   cardShakeTypeMap?: Map<string, ShakeType | null>;
   visibleBadgesMap?: Map<string, Array<{ id: string; icon: string; label: string; fp: number }>>;
   activeRevealCardId?: string | null;
-  /** FTUE only: recovers the old spotlight treatment on the directed-hold card —
-   *  the gold `ftueCardPulse` ring on the lit card + a deeper dim on the rest.
+  /** FTUE only: spotlight treatment on the directed-hold card — a scale breath
+   *  (ftueSpotlightBreath) on the lit card + a deeper dim on the rest.
    *  Off (default) → normal play byte-identical. */
   isFTUE?: boolean;
   canFlip: boolean;
@@ -134,8 +134,8 @@ export function RosterGrid(props: Props) {
     return [...roster].sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0));
   }, [roster]);
 
-  // FTUE directed-hold spotlight: recovered gold pulse on the lit card + deeper
-  // dim on the rest. Confined to HOLD so the reveal phase is untouched.
+  // FTUE directed-hold spotlight: scale breath on the lit card + deeper dim on
+  // the rest. Confined to HOLD so the reveal phase is untouched.
   const ftueHold = isFTUE && phase === "HOLD";
 
   return (
@@ -147,23 +147,16 @@ export function RosterGrid(props: Props) {
       rowGap: 6,
       boxSizing: "border-box",
     }}>
-      {/* FTUE hold spotlight animations.
-          - ftueSpotlightBreath (JOHN'S PRIORITY): the card BREATHES by scaling.
-            The old FTUE had no scale pulse (its spotlight scale was static + a
-            box-shadow ring) — built fresh to intent. Applied to the SLOT so it
-            COMPOUNDS with the card's static rest-pop (× 1.08 → 1.05⇄1.11 for an
-            ORANGE card; proportional for others), oscillating around the rest,
-            never resetting it. ±2.8% around 1.0, 1.4s ease-in-out infinite.
-          - ftueCardPulse: recovered gold ring (CardBackGeneric@21706b1e), verbatim
-            companion. */}
+      {/* FTUE hold spotlight — the lit card BREATHES by scaling (the only emphasis;
+          the old gold ring was dropped as a distraction). The old FTUE had no scale
+          pulse (static spotlight scale + a box-shadow ring) — built fresh to intent.
+          Applied to the SLOT so it COMPOUNDS with the card's static rest-pop
+          (× 1.08 → 1.05⇄1.11 for an ORANGE card; proportional for others),
+          oscillating around the rest, never resetting it. ±2.8%, 1.4s ease-in-out. */}
       {ftueHold && (
         <style>{`@keyframes ftueSpotlightBreath {
           0%,100% { transform: scale(0.972); }
           50%     { transform: scale(1.028); }
-        }
-        @keyframes ftueCardPulse {
-          0%,100% { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.5); }
-          50%     { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,177,74,1), 0 0 18px rgba(255,177,74,0.5); }
         }`}</style>
       )}
       {cards.map((card) => {
@@ -246,20 +239,6 @@ export function RosterGrid(props: Props) {
                 background: `rgba(4,8,16,${ftueHold ? 0.72 : 0.45})`,
                 pointerEvents: "none", zIndex: 120,
                 transition: "opacity 0.3s ease",
-              }} />
-            )}
-            {/* FTUE hold spotlight ring — recovered ftueCardPulse (gold #FFB14A,
-                1.4s ease-in-out infinite), verbatim. As an OVERLAY ABOVE the card
-                (z 130 > the card + the neighbor dims) so the scaled-up card can't
-                cover it and the mirror of the working dim-overlay pattern renders
-                it reliably. Was previously a box-shadow on the slot, which the
-                scaled card painted over + the overflow:hidden wrappers clipped. */}
-            {ftueHold && isSpotlight && (
-              <div style={{
-                position: "absolute", inset: 0, borderRadius: 18,
-                pointerEvents: "none", zIndex: 130,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.6)",
-                animation: "ftueCardPulse 1.4s ease-in-out infinite",
               }} />
             )}
             {/* Optional slot-label badge (e.g. football's FLEX rule). Only

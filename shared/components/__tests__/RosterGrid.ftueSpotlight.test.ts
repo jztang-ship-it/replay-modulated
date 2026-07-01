@@ -1,10 +1,9 @@
 // shared/components/__tests__/RosterGrid.ftueSpotlight.test.ts
 //
-// FTUE polish #1 — the RECOVERED spotlight pulse + deeper dim. Static-source
-// guard (same precedent as the GameView FTUE guards). Pins the pulse to the
-// EXACT recovered spec (CardBackGeneric@21706b1e ftueCardPulse) so a refactor
-// can't silently drop it or re-approximate a new one, and pins the FTUE gating
-// so normal play stays byte-identical.
+// FTUE spotlight — BREATH-ONLY final state. Static-source guard (same precedent
+// as the GameView FTUE guards). Pins the scale breath + the FTUE gating, and pins
+// that the old gold ring (ftueCardPulse + its z-130 overlay) is fully GONE — so it
+// can't regress back to the two-effect distraction.
 
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -14,22 +13,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const GRID = readFileSync(resolve(__dirname, "../RosterGrid.tsx"), "utf8");
 
-describe("FTUE spotlight — recovered pulse spec (not an approximation)", () => {
-  it("ftueCardPulse keyframes are the recovered gold-ring pulse, verbatim", () => {
-    // rest (0/100%): 2px gold ring @ 0.5 ; peak (50%): 3px @ full + 18px glow.
-    expect(GRID).toMatch(/@keyframes ftueCardPulse \{/);
-    expect(GRID).toMatch(/0%,100% \{ box-shadow: 0 8px 24px rgba\(0,0,0,0\.4\), 0 0 0 2px rgba\(255,177,74,0\.5\); \}/);
-    expect(GRID).toMatch(/50%\s+\{ box-shadow: 0 8px 24px rgba\(0,0,0,0\.4\), 0 0 0 3px rgba\(255,177,74,1\), 0 0 18px rgba\(255,177,74,0\.5\); \}/);
-  });
-  it("applied to the lit card with the recovered timing (1.4s ease-in-out infinite)", () => {
-    expect(GRID).toMatch(/animation: "ftueCardPulse 1\.4s ease-in-out infinite"/);
-  });
-  it("renders as an OVERLAY ABOVE the card + neighbor dims (not a slot box-shadow the scale covers)", () => {
-    // the ring lives on a positioned overlay at z 130 (> dim overlay's 120 and
-    // > the scaled card) so nothing paints over it.
-    expect(GRID).toMatch(/\{ftueHold && isSpotlight && \(\s*<div style=\{\{[\s\S]*?zIndex: 130,[\s\S]*?animation: "ftueCardPulse 1\.4s ease-in-out infinite",[\s\S]*?\}\} \/>\s*\)\}/);
-    // and the slot itself no longer carries the pulse box-shadow
-    expect(GRID).not.toMatch(/isSpotlight\s*\?\s*\{ borderRadius: 18, boxShadow:/);
+describe("FTUE spotlight — the gold ring is fully removed (breath-only)", () => {
+  it("no ftueCardPulse keyframe, animation, or ring overlay remains", () => {
+    expect(GRID).not.toMatch(/ftueCardPulse/);
+    // no leftover z-130 gold ring overlay
+    expect(GRID).not.toMatch(/rgba\(255,177,74/);
   });
 });
 
