@@ -12,24 +12,45 @@
  * Directed holds are GUARANTEED: the scripted redraw keeps the directed cards and
  * replaces the rest regardless of exact taps, so the final 5 is always the engineered set.
  *
- * FP (trued-up against basketballConfig projectionWeights + badges; STARTER re-tune +
- *  star-power recast 2026-07-01 — roles/FP/stat-lines LOCKED, only names/teams/logs change):
- *   weights pts1.0 reb1.2 ast1.5 stl2.0 blk2.0 to-1.0 ; tiers ROOKIE190/STARTER205/ALLSTAR225/MVP235
- *   ROLE            PLAYER          $   stat line         FP    proj  Δ      flame
- *   Normal          De'Aaron Fox   30  24/5/6/2/0/1   = 42.0   40  +2.0   none
- *   Bomb 🧊🧊        Anthony Davis  52   8/9/4/0/0/3   = 21.8   46  -24.2  biggest ice
- *   Light-ice 🧊     Draymond Green 43   4/6/5/1/1/2   = 20.7   30  -9.3   light
- *   Anchor (floor)  LeBron James   66  33/8/7/1/0/2   = 55.1   53  +2.1   none (no fire, "floor held")
- *   Hero 🔥🔥        Anthony Edwards41  41/7/9/2/1/1   = 72.9   38  +34.9  lone FIRE, clear top
- *   TOTAL = 212.5 → STARTER (mid-band; +7.5 above 205 floor, -12.5 below 225 ALL-STAR). Controlled win.
- *   Floor-vs-hero gap = Edwards 72.9 - LeBron 55.1 = 17.8 → contrast reads on raw FP, not just flame.
- *   AD proj 46 ≫ Draymond proj 30 → AD renders the BIGGER ice. Edwards proj 38 ≪ 72.9 → 🔥🔥 pops.
- *   LeBron proj 53 ≈ 55.1 actual → no flame. Natural boxes (no stuffing).
- *   Game logs are representative real-style box scores [verify box score].
+ * Stage-3 re-cast onto REAL 2025-26 game-logs (2026-07-01). Every cast line is a
+ * real 2526 box score pinned by player + date; FP + badges are NOT hand-entered —
+ * makeCard trues each line through the LIVE engine (computeBasketballFp +
+ * computeBasketballBadges) at build time. projectedFp = that player's real 2526
+ * avgFP baseline (the fire/ice denominator). Season tag = "2526" (real, not the
+ * old synthetic "2024-25").
+ *
+ *   weights pts1.0 reb1.2 ast1.5 stl2.0 blk2.0 to-1.0 ; tiers ROOKIE190/STARTER205/ALLSTAR225
+ *   ROLE       PLAYER    $   date/opp        line            engine FP  base  ratio  stamp
+ *   lightIce   Draymond  34  01-20 vs TOR    6/6/5/0/0/2  →  18.7      23.7  0.79   🧊
+ *   normal(R3) LeBron    57  11-25 vs LAC   25/6/6/1/1/3  →  42.2      39.6  1.07   —
+ *   bomb(R3)   Murray    60  03-14 vs LAL    5/6/6/2/0/2  →  23.2      41.6  0.56   🧊🧊
+ *   hero       Edwards   61  11-24 vs SAC   43/7/4/3/1/3  →  69.4      41.8  1.66   🔥🔥 👀
+ *   anchor     Giannis   69  01-02 vs CHA   30/10/5/1/0/3 →  55.5      47.5  1.17   🏀🧲✌️ (no fire)
+ *   TOTAL = 209.0 → STARTER (205-224); +4.0 over floor, 16 under ALL-STAR. Clean win.
+ *   Reveal = salary-ascending (engine natural): Draymond 34 → LeBron 57 → Murray 60
+ *            → Edwards 61 → Giannis 69 LAST. No custom reveal wiring.
  */
 
 import type { GeneratedCard } from "@shared/types";
 import { getPlayers } from "../engines/dataEngine";
+import { computeBasketballFp } from "./fantasyPoints";
+import { computeBasketballBadges } from "./badges";
+import { BasketballSportConfig } from "./basketballConfig";
+
+const FTUE_WEIGHTS = (BasketballSportConfig as any).projectionWeights;
+const FTUE_BADGES = (BasketballSportConfig as any).badges;
+
+/** True a real stat line through the LIVE engine — the ONLY source of the FTUE
+ *  hand's FP + badges (no hand-entered numbers). */
+function trueScriptLine(statLine: Record<string, number>): {
+  actualFp: number;
+  achievements: Array<{ id: string; icon: string; label: string; fp: number }>;
+} {
+  const achievements = computeBasketballBadges(statLine, FTUE_BADGES) as any;
+  const badgeFp = achievements.reduce((a: number, b: any) => a + (b.fp ?? 0), 0);
+  const fp = computeBasketballFp(statLine, FTUE_WEIGHTS) + badgeFp;
+  return { actualFp: Math.round(fp * 10) / 10, achievements };
+}
 
 type TierColor = "RED" | "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 
@@ -41,102 +62,109 @@ interface ScriptCard {
   position: string;
   tier: TierColor;
   salary: number;
+  /** Real 2526 avgFP baseline — the fire/ice denominator (actualFp / projectedFp). */
   projectedFp: number;
-  actualFp: number;
   date: string;
   opponent: string;
   homeAway: "H" | "A";
+  /** Real 2526 box score. actualFp + badges are DERIVED from this by the engine. */
   statLine: Record<string, number>;
-  achievements?: Array<{ id: string; icon: string; label: string; fp: number }>;
 }
 
 function makeCard(o: ScriptCard, slotIndex: number, wasHeld: boolean): GeneratedCard {
-  const { achievements = [], ...rest } = o;
+  const { actualFp, achievements } = trueScriptLine(o.statLine);
   return {
-    ...rest,
-    id: rest.cardId,
-    personKey: rest.basePlayerId,
-    season: "2024-25",
+    ...o,
+    id: o.cardId,
+    personKey: o.basePlayerId,
+    season: "2526",
     slotIndex,
-    fpDelta: rest.actualFp - rest.projectedFp,
-    gameInfo: { date: rest.date, opponent: rest.opponent, homeAway: rest.homeAway },
+    actualFp,
+    projectedFp: o.projectedFp,
+    fpDelta: Math.round((actualFp - o.projectedFp) * 10) / 10,
+    gameInfo: { date: o.date, opponent: o.opponent, homeAway: o.homeAway },
     wasHeld,
     achievements,
   } as unknown as GeneratedCard;
 }
 
 // ── The directed holds (guaranteed to survive each round's redraw) ──────────
-export const FTUE_DIRECTED_HOLD_IDS = ["ftue-lebron", "ftue-edwards", "ftue-draymond"] as const;
+// Order = spotlight order: R1 lights Giannis then Edwards ("lock in 2 you trust",
+// one at a time), R2 lights Draymond. R3 gives LeBron + Murray (no hold).
+export const FTUE_DIRECTED_HOLD_IDS = ["ftue-giannis", "ftue-edwards", "ftue-draymond"] as const;
 
 // Card-id → reveal role (drives which FTUE_COPY beat the coach speaks per card).
 export const FTUE_CARD_ROLE: Record<string, "anchor" | "hero" | "bomb" | "lightIce" | "normal"> = {
-  "ftue-lebron": "anchor",
+  "ftue-giannis": "anchor",
   "ftue-edwards": "hero",
-  "ftue-davis": "bomb",
+  "ftue-murray": "bomb",
   "ftue-draymond": "lightIce",
-  "ftue-fox": "normal",
+  "ftue-lebron": "normal",
 };
 
-// ── R1 deal — 5 cards. Coach directs hold of LeBron (star anchor) + Edwards (the trust pick). ──
+// ── R1 deal — 5 cards. Coach directs hold of Giannis (anchor) + Edwards (hero). ──
+// projectedFp = real 2526 avgFP baseline. actualFp + badges are engine-derived
+// from statLine (trueScriptLine) — never hand-entered here.
 const R1: ScriptCard[] = [
-  // Slot 0 — LeBron James $66 ORANGE — DIRECTED HOLD (star anchor). 33/8/7 modest reliable star
-  // line (actual 55.1 ≈ proj 53 → no flame, "the floor held"); clearly below Edwards's hero pop.
-  { cardId: "ftue-lebron", basePlayerId: "2544", name: "LeBron James", team: "LAL", position: "SF",
-    tier: "ORANGE", salary: 66, projectedFp: 53, actualFp: 55.1,
-    date: "2025-02-22", opponent: "DEN", homeAway: "H",
-    statLine: { pts: 33, reb: 8, ast: 7, stl: 1, blk: 0, turnovers: 2, min: 36 },
-    achievements: [{ id: "BUCKET", icon: "🏀", label: "Bucket", fp: 2 }] },
-  // Slot 1 — Anthony Edwards $41 PURPLE — DIRECTED HOLD (the trust pick → 🔥🔥). 41-pt ceiling
-  // night, FIRE only, the lone big over (actual 72.9 vs proj 38 → Δ+35) — clear top of the board.
-  { cardId: "ftue-edwards", basePlayerId: "1630162", name: "Anthony Edwards", team: "MIN", position: "SG",
-    tier: "PURPLE", salary: 41, projectedFp: 38, actualFp: 72.9,
-    date: "2025-01-21", opponent: "HOU", homeAway: "H",
-    statLine: { pts: 41, reb: 7, ast: 9, stl: 2, blk: 1, turnovers: 1, min: 38 },
-    achievements: [{ id: "FIRE", icon: "🔥", label: "Fire", fp: 5 }] },
-  // Slots 2-4 — released after R1 (never scored).
-  { cardId: "ftue-capela", basePlayerId: "203991", name: "Clint Capela", team: "ATL", position: "C",
-    tier: "BLUE", salary: 38, projectedFp: 28, actualFp: 24.0,
-    date: "2025-01-15", opponent: "MIL", homeAway: "A",
-    statLine: { pts: 8, reb: 11, ast: 0, stl: 0, blk: 1, turnovers: 1, min: 24 } },
-  { cardId: "ftue-hield", basePlayerId: "1627741", name: "Buddy Hield", team: "GSW", position: "SG",
-    tier: "GREEN", salary: 27, projectedFp: 22, actualFp: 19.5,
-    date: "2025-01-18", opponent: "SAC", homeAway: "H",
-    statLine: { pts: 14, reb: 3, ast: 2, stl: 1, blk: 0, turnovers: 1, min: 28 } },
-  { cardId: "ftue-bertans", basePlayerId: "202722", name: "Davis Bertans", team: "OKC", position: "PF",
-    tier: "WHITE", salary: 16, projectedFp: 11, actualFp: 8.4,
-    date: "2024-12-30", opponent: "POR", homeAway: "H",
-    statLine: { pts: 6, reb: 2, ast: 0, stl: 0, blk: 0, turnovers: 0, min: 17 } },
+  // Slot 0 — Giannis $69 ORANGE — DIRECTED HOLD (anchor, reveals LAST). 30/10/5, no fire:
+  // → 🏀Bucket 🧲Glass ✌️DD = 55.5 (base 48.5 +7), ratio 55.5/47.5 = 1.17. Delivers, no flame.
+  { cardId: "ftue-giannis", basePlayerId: "203507", name: "Giannis Antetokounmpo", team: "MIL", position: "SF",
+    tier: "ORANGE", salary: 69, projectedFp: 47.5,
+    date: "2026-01-02", opponent: "CHA", homeAway: "H",
+    statLine: { pts: 30, reb: 10, ast: 5, stl: 1, blk: 0, turnovers: 3, min: 30 } },
+  // Slot 1 — Edwards $61 ORANGE — DIRECTED HOLD (hero → 🔥🔥). 43-pt ceiling: 🔥Fire 👀Pickpocket
+  // = 69.4 (base 62.4 +7), ratio 69.4/41.8 = 1.66 → SMOKING HOT. The trusted star paid off big.
+  { cardId: "ftue-edwards", basePlayerId: "1630162", name: "Anthony Edwards", team: "MIN", position: "PG",
+    tier: "ORANGE", salary: 61, projectedFp: 41.8,
+    date: "2025-11-24", opponent: "SAC", homeAway: "A",
+    statLine: { pts: 43, reb: 7, ast: 4, stl: 3, blk: 1, turnovers: 3, min: 40 } },
+  // Slots 2-4 — real 2526 decoys, released after R1 (never scored; statLine is cosmetic).
+  { cardId: "ftue-podziemski", basePlayerId: "1641764", name: "Brandin Podziemski", team: "GSW", position: "PG",
+    tier: "BLUE", salary: 38, projectedFp: 26.4,
+    date: "2025-10-21", opponent: "LAL", homeAway: "A",
+    statLine: { pts: 7, reb: 7, ast: 2, stl: 1, blk: 0, turnovers: 1, min: 33 } },
+  { cardId: "ftue-santos", basePlayerId: "1630611", name: "Gui Santos", team: "GSW", position: "SF",
+    tier: "GREEN", salary: 27, projectedFp: 18.3,
+    date: "2025-11-19", opponent: "MIA", homeAway: "A",
+    statLine: { pts: 4, reb: 6, ast: 0, stl: 0, blk: 1, turnovers: 2, min: 18 } },
+  { cardId: "ftue-powell", basePlayerId: "203939", name: "Dwight Powell", team: "DAL", position: "PF",
+    tier: "WHITE", salary: 16, projectedFp: 11.1,
+    date: "2025-10-29", opponent: "IND", homeAway: "H",
+    statLine: { pts: 18, reb: 6, ast: 0, stl: 1, blk: 2, turnovers: 1, min: 29 } },
 ];
 
 // ── R2 replacements (3) — fill the released slots. Coach directs hold of Draymond. ──
 const R2: ScriptCard[] = [
-  // Draymond $43 PURPLE — DIRECTED HOLD (3rd trust pick → light 🧊). @ MIA: quiet all-around line.
-  { cardId: "ftue-draymond", basePlayerId: "203110", name: "Draymond Green", team: "GSW", position: "PF",
-    tier: "PURPLE", salary: 43, projectedFp: 30, actualFp: 20.7,
-    date: "2025-03-25", opponent: "MIA", homeAway: "A",
-    statLine: { pts: 4, reb: 6, ast: 5, stl: 1, blk: 1, turnovers: 2, min: 23 } },
-  { cardId: "ftue-naz", basePlayerId: "1626156", name: "Naz Reid", team: "MIN", position: "C",
-    tier: "BLUE", salary: 31, projectedFp: 24, actualFp: 21.0,
-    date: "2025-02-10", opponent: "POR", homeAway: "H",
-    statLine: { pts: 12, reb: 5, ast: 1, stl: 0, blk: 1, turnovers: 1, min: 23 } },
-  { cardId: "ftue-trent", basePlayerId: "1628971", name: "Gary Trent Jr.", team: "MIL", position: "SG",
-    tier: "GREEN", salary: 24, projectedFp: 18, actualFp: 15.0,
-    date: "2025-02-12", opponent: "CHA", homeAway: "A",
-    statLine: { pts: 11, reb: 2, ast: 1, stl: 1, blk: 0, turnovers: 1, min: 26 } },
+  // Draymond $34 BLUE — DIRECTED HOLD (light 🧊). Quiet: 6/6/5 = 18.7 (no badge),
+  // ratio 18.7/23.7 = 0.79 → ICE COLD. Won't sink you, won't carry you.
+  { cardId: "ftue-draymond", basePlayerId: "203110", name: "Draymond Green", team: "GSW", position: "SF",
+    tier: "BLUE", salary: 34, projectedFp: 23.7,
+    date: "2026-01-20", opponent: "TOR", homeAway: "H",
+    statLine: { pts: 6, reb: 6, ast: 5, stl: 0, blk: 0, turnovers: 2, min: 22 } },
+  // real 2526 decoys, released after R2 (never scored).
+  { cardId: "ftue-oneale", basePlayerId: "1626220", name: "Royce O'Neale", team: "PHX", position: "SF",
+    tier: "BLUE", salary: 31, projectedFp: 21.2,
+    date: "2025-10-22", opponent: "SAC", homeAway: "H",
+    statLine: { pts: 12, reb: 5, ast: 2, stl: 1, blk: 0, turnovers: 1, min: 29 } },
+  { cardId: "ftue-dort", basePlayerId: "1629652", name: "Luguentz Dort", team: "OKC", position: "PG",
+    tier: "GREEN", salary: 24, projectedFp: 16.3,
+    date: "2025-10-21", opponent: "HOU", homeAway: "H",
+    statLine: { pts: 6, reb: 6, ast: 5, stl: 1, blk: 0, turnovers: 1, min: 45 } },
 ];
 
-// ── R3 given (2) — no choice. Davis = the 🧊🧊 bomb; Fox = the normal anchor. ──
+// ── R3 given (2) — no choice. Murray = the 🧊🧊 bomb; LeBron = the normal. ──
 const R3: ScriptCard[] = [
-  // Anthony Davis $52 ORANGE — 🧊🧊 genuine under (mid-tier bomb). 8/9/4, 3 TOs; proj 46 → Δ-24.
-  { cardId: "ftue-davis", basePlayerId: "203076", name: "Anthony Davis", team: "DAL", position: "C",
-    tier: "ORANGE", salary: 52, projectedFp: 46, actualFp: 21.8,
-    date: "2025-03-14", opponent: "GSW", homeAway: "A",
-    statLine: { pts: 8, reb: 9, ast: 4, stl: 0, blk: 0, turnovers: 3, min: 31 } },
-  // De'Aaron Fox $30 BLUE — normal (≈ expected). 24/5/6, solid floor, no badge (Δ+2).
-  { cardId: "ftue-fox", basePlayerId: "1628368", name: "De'Aaron Fox", team: "SAC", position: "PG",
-    tier: "BLUE", salary: 30, projectedFp: 40, actualFp: 42.0,
-    date: "2025-01-25", opponent: "POR", homeAway: "H",
-    statLine: { pts: 24, reb: 5, ast: 6, stl: 2, blk: 0, turnovers: 1, min: 33 } },
+  // LeBron $57 PURPLE — normal (≈ baseline). 25/6/6, no badge = 42.2, ratio 42.2/39.6 = 1.07.
+  { cardId: "ftue-lebron", basePlayerId: "2544", name: "LeBron James", team: "LAL", position: "SF",
+    tier: "PURPLE", salary: 57, projectedFp: 39.6,
+    date: "2025-11-25", opponent: "LAC", homeAway: "H",
+    statLine: { pts: 25, reb: 6, ast: 6, stl: 1, blk: 1, turnovers: 3, min: 32 } },
+  // Jamal Murray $60 ORANGE — 🧊🧊 bomb (the overpaid star who vanished). 5/6/6 = 23.2 (no badge),
+  // ratio 23.2/41.6 = 0.56 → FREEZING. Given in R3 — not the player's fault.
+  { cardId: "ftue-murray", basePlayerId: "1627750", name: "Jamal Murray", team: "DEN", position: "PG",
+    tier: "ORANGE", salary: 60, projectedFp: 41.6,
+    date: "2026-03-14", opponent: "LAL", homeAway: "A",
+    statLine: { pts: 5, reb: 6, ast: 6, stl: 2, blk: 0, turnovers: 2, min: 36 } },
 ];
 
 /** R1 deal — the initial 5. */
@@ -169,7 +197,8 @@ export async function redrawFtueScriptedRoster(params: {
   return { roster };
 }
 
-/** Final resolve — cards already carry baked actualFp/badges; Edwards is the hero/top. */
+/** Final resolve — each card's actualFp/badges were engine-trued in makeCard from
+ *  its real 2526 line; Edwards (69.4) is the hero/top → MVP. */
 export async function resolveFtueScriptedRoster(params: {
   finalCards: any[];
 }): Promise<{ roster: GeneratedCard[]; mvpCardId: string }> {
@@ -177,38 +206,40 @@ export async function resolveFtueScriptedRoster(params: {
 }
 
 // Re-hydrate a held card (already a GeneratedCard) back into ScriptCard shape for makeCard.
+// actualFp/achievements are NOT preserved — makeCard re-trues them from statLine.
 function toScript(card: any): ScriptCard {
   return {
     cardId: card.cardId ?? card.id, basePlayerId: card.basePlayerId ?? card.personKey,
     name: card.name, team: card.team, position: card.position, tier: card.tier,
-    salary: card.salary, projectedFp: card.projectedFp, actualFp: card.actualFp,
+    salary: card.salary, projectedFp: card.projectedFp,
     date: card.gameInfo?.date ?? card.date, opponent: card.gameInfo?.opponent ?? card.opponent,
     homeAway: card.gameInfo?.homeAway ?? card.homeAway, statLine: card.statLine ?? {},
-    achievements: card.achievements ?? [],
   };
 }
 
-// ── THE COMMENTARY DECK (verbatim per spec — economy-clean; FINAL, John adjusts at glass) ──
-// Keys are role-based (anchor/hero/bomb/lightIce/normal via FTUE_CARD_ROLE) so a future
-// recast only touches the strings, not the wiring. Point-values fixed; only names re-synced.
+// ── THE COMMENTARY DECK — PLACEHOLDER ONLY (Stage-3). ────────────────────────
+// John writes every final beat in a dedicated copy pass AFTER structure glasses.
+// These are role/slot-tagged placeholders so the FTUE renders the beat slots
+// without leaking wrong wording. Keys are stable (role-based via FTUE_CARD_ROLE);
+// only the strings change in the copy pass. {total}/{tier} are runtime tokens.
 export const FTUE_COPY = {
   // Hold prompts
-  holdR1: "Lock in two you trust. LeBron's your franchise guy — you already knew that. And Ant Edwards? $41 and fearless, the kind of flyer that pays off. Tap 'em both, then we replace the rest.",
-  holdR2: "One more. Draymond — three-time champ, never shuts up, always involved. Lock him.",
-  giveR3: "Last two are on us — Anthony Davis and De'Aaron Fox round out your five. Now let's see what tonight actually gave us.",
+  holdR1: "[R1 hold — lock the two stars: Giannis (anchor) + Edwards (hero)]",
+  holdR2: "[R2 hold — lock one more: Draymond (light-ice)]",
+  giveR3: "[R3 given — the last two are on us: LeBron + Murray]",
 
-  // Per-card reveal beats (reveal order 1→5: normal, bomb, lightIce, anchor, hero)
-  revealNormal: "De'Aaron Fox, $30, did exactly what $30 should — 24 and 6, no fireworks, no faceplant. That's your floor. Solid.",
-  revealBomb: "Oof. Anthony Davis is a $52 stud most nights — tonight? 8 and 9, turned it over three times. 🧊 That's the game: you pay for the average, but you play one night. Even the studs no-show.",
-  revealLightIce: "Draymond did Draymond things — a little of everything, not a lot of anything. 🧊 Loud guy, quiet box score. He won't sink you, but he won't carry you either.",
-  revealAnchor: "There's the franchise. LeBron drops 33, fills the sheet — exactly what a $66 star is supposed to do. No fireworks needed. He's your floor, and the floor held.",
-  revealHero: "And THIS is why you play. Anthony Edwards — your $41 flyer — went for FORTY-ONE. 🔥🔥 Career kind of night. Your star delivered AND your flyer hit the ceiling — THAT'S a team. The cap makes you find both.",
+  // Per-card reveal beats (reveal order salary-asc: Draymond, LeBron, Murray, Edwards, Giannis)
+  revealLightIce: "[reveal — light-ice: Draymond, quiet 🧊 below baseline]",
+  revealNormal: "[reveal — normal: LeBron, ~baseline, no flame]",
+  revealBomb: "[reveal — bomb: Murray, the vanished star 🧊🧊]",
+  revealHero: "[reveal — hero: Edwards, the trusted star pays off big 🔥🔥]",
+  revealAnchor: "[reveal — anchor: Giannis LAST, delivers without a flame]",
 
   // Result sequence (after tier slam; {total}/{tier} filled at runtime)
-  resultWin: "{total} FP. {tier} — and you're sitting pretty above the line. First hand, clean win. 🏀",
-  resultBaseline: "Every player has a baseline from their season average — tonight, some swung above it, some below. That swing is the game.",
-  resultThesis: "Salary tells you what's LIKELY — never what's certain. A winning hand needs your stars to deliver AND your value picks to surprise. That's why the total works — not one steal, the whole squad under the cap.",
-  resultHandoff: "That's a real number to beat. Now you're off the training wheels — same deal, live slate, your calls. Go cook.",
+  resultWin: "[result — {total} FP, {tier}: clean first-hand win]",
+  resultBaseline: "[result — baseline: each player swings above/below their season average]",
+  resultThesis: "[result — thesis: salary is likely-not-certain; the whole squad under the cap]",
+  resultHandoff: "[result — handoff: off the training wheels, live slate next]",
 } as const;
 
 // ── THE OPENING CEREMONY (pre-deal wall) ────────────────────────────────────
