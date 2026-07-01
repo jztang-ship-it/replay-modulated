@@ -24,6 +24,13 @@ describe("FTUE spotlight — recovered pulse spec (not an approximation)", () =>
   it("applied to the lit card with the recovered timing (1.4s ease-in-out infinite)", () => {
     expect(GRID).toMatch(/animation: "ftueCardPulse 1\.4s ease-in-out infinite"/);
   });
+  it("renders as an OVERLAY ABOVE the card + neighbor dims (not a slot box-shadow the scale covers)", () => {
+    // the pulse lives on a positioned overlay at z 130 (> dim overlay's 120 and
+    // > the scaled card) so nothing paints over it — the fix for it being invisible.
+    expect(GRID).toMatch(/\{ftueHold && isSpotlight && \(\s*<div style=\{\{[\s\S]*?zIndex: 130,[\s\S]*?animation: "ftueCardPulse 1\.4s ease-in-out infinite",[\s\S]*?\}\} \/>\s*\)\}/);
+    // and the slot itself no longer carries the pulse box-shadow
+    expect(GRID).not.toMatch(/isSpotlight\s*\?\s*\{ borderRadius: 18, boxShadow:/);
+  });
 });
 
 describe("FTUE spotlight — gating keeps normal play byte-identical", () => {

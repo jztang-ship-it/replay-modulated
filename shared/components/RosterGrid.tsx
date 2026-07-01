@@ -216,11 +216,7 @@ export function RosterGrid(props: Props) {
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
               background: "transparent",
               cursor: isTapTarget ? "pointer" : "default",
-              // FTUE hold spotlight: recovered gold pulse ring on the lit card
-              // (borderRadius hugs the card so the ring matches its shape).
-              ...(ftueHold && isSpotlight
-                ? { borderRadius: 18, boxShadow: "0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.6)", animation: "ftueCardPulse 1.4s ease-in-out infinite" as const }
-                : { boxShadow: "none" }),
+              boxShadow: "none",
               transition: "box-shadow 300ms ease",
             }}
           >
@@ -232,6 +228,20 @@ export function RosterGrid(props: Props) {
                 background: `rgba(4,8,16,${ftueHold ? 0.72 : 0.45})`,
                 pointerEvents: "none", zIndex: 120,
                 transition: "opacity 0.3s ease",
+              }} />
+            )}
+            {/* FTUE hold spotlight ring — recovered ftueCardPulse (gold #FFB14A,
+                1.4s ease-in-out infinite), verbatim. As an OVERLAY ABOVE the card
+                (z 130 > the card + the neighbor dims) so the scaled-up card can't
+                cover it and the mirror of the working dim-overlay pattern renders
+                it reliably. Was previously a box-shadow on the slot, which the
+                scaled card painted over + the overflow:hidden wrappers clipped. */}
+            {ftueHold && isSpotlight && (
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: 18,
+                pointerEvents: "none", zIndex: 130,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.6)",
+                animation: "ftueCardPulse 1.4s ease-in-out infinite",
               }} />
             )}
             {/* Optional slot-label badge (e.g. football's FLEX rule). Only
