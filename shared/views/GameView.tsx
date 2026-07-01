@@ -916,6 +916,68 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const onChallengeUrl = typeof window !== "undefined" &&
     /\/basketball\/challenge\/[0-9a-f-]{36}/i.test(window.location.pathname);
 
+  // ── Scripted-FTUE coach driver (feat/ftue-scripted-hand) ──────────────
+  // Fires the verbatim FTUE_COPY deck through the commentary override seam
+  // (TierGauge 96px slot). Basketball-only / first-run only via ftueActive; each
+  // beat fires once (refs). Directed-card pulse-ring spotlight is merged into the
+  // RosterGrid pulseMap at the mount (below). Release + rm_solo_ftue_done fire
+  // from the result sequence's onCommentaryOverrideDone.
+  const ftueCopy = adapter.ftueScriptedHand?.copy;
+  const ftueR1Ref = useRef(false);
+  const ftueR2Ref = useRef(false);
+  const ftueGiveR3Ref = useRef(false);
+  const ftueRevealShownRef = useRef<Set<string>>(new Set());
+  const ftueResultRef = useRef(false);
+  const ftueResultLiveRef = useRef(false);
+
+  // Hold prompts — R1 (spotlit LeBron+Edwards) / R2 (spotlit Draymond), sticky.
+  useEffect(() => {
+    if (!ftueActive || !ftueCopy || gameState !== "HOLD") return;
+    if (roundsUsed <= 1 && !ftueR1Ref.current) {
+      ftueR1Ref.current = true;
+      setFtueCommentaryOverride({ parts: [ftueCopy.holdR1], sticky: true });
+    } else if (roundsUsed === 2 && !ftueR2Ref.current) {
+      ftueR2Ref.current = true;
+      setFtueCommentaryOverride({ parts: [ftueCopy.holdR2], sticky: true });
+    }
+  }, [ftueActive, gameState, roundsUsed]); // eslint-disable-line
+
+  // giveR3 — the "last two are on us" beat as the given cards land + reveal begins.
+  useEffect(() => {
+    if (!ftueActive || !ftueCopy || gameState !== "REVEALING" || ftueGiveR3Ref.current) return;
+    ftueGiveR3Ref.current = true;
+    setFtueCommentaryOverride({ parts: [ftueCopy.giveR3], sticky: true });
+  }, [ftueActive, gameState]); // eslint-disable-line
+
+  // Per-card reveal beats — each card's role → its verbatim beat, once, sticky
+  // (replaced as the next card reveals). Reveal order is the engine's (unheld
+  // tapped first, held fade in); the hero (Edwards) lands in the held group as
+  // the climax. Strict Fox→…→Edwards ordering is a glass refinement.
+  useEffect(() => {
+    if (!ftueActive || !ftueCopy || !lastRevealedCardId) return;
+    if (ftueRevealShownRef.current.has(lastRevealedCardId)) return;
+    const role = adapter.ftueScriptedHand?.cardRole[lastRevealedCardId];
+    if (!role) return;
+    const line = ftueCopy["reveal" + role[0].toUpperCase() + role.slice(1)];
+    if (!line) return;
+    ftueRevealShownRef.current.add(lastRevealedCardId);
+    setFtueCommentaryOverride({ parts: [line], sticky: true });
+  }, [ftueActive, lastRevealedCardId]); // eslint-disable-line
+
+  // Result sequence — win → baseline → thesis → handoff, tap-advanced via the
+  // override parts[]. NON-sticky: the last part's onCommentaryOverrideDone clears
+  // the override AND sets rm_solo_ftue_done (release; see the TierGauge mount).
+  useEffect(() => {
+    if (!ftueActive || !ftueCopy || ftueResultRef.current) return;
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    ftueResultRef.current = true;
+    ftueResultLiveRef.current = true;
+    const total = roster.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
+    const tierLabel = String(winTier ?? "STARTER").replace(/_/g, " ");
+    const win = ftueCopy.resultWin.replace("{total}", total.toFixed(1)).replace("{tier}", tierLabel);
+    setFtueCommentaryOverride({ parts: [win, ftueCopy.resultBaseline, ftueCopy.resultThesis, ftueCopy.resultHandoff], sticky: false });
+  }, [ftueActive, gameState]); // eslint-disable-line
+
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
   // leaderboard_intro topic so it celebrates registered users too. Edge-
@@ -2690,7 +2752,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     flipMsMap={flipMsMap}
                     fpCountUpMsMap={fpCountUpMsMap}
                     performanceTagMap={performanceTagMap}
-                    pulseMap={pulseMap}
+                    pulseMap={(ftueActive && gameState === "HOLD" && adapter.ftueScriptedHand)
+                      ? (() => {
+                          // FTUE spotlight: pulse-ring the UNHELD directed cards so it's
+                          // obvious which to tap (DRAW is gated on holding them). Clears
+                          // per-card as they lock. Merges into the existing pulseMap.
+                          const m = new Map(pulseMap ?? []);
+                          for (const c of roster) {
+                            const id = cardId(c);
+                            if (adapter.ftueScriptedHand!.directedHoldIds.includes(id) && !lockedCardIds.has(id)) m.set(id, "POS");
+                          }
+                          return m;
+                        })()
+                      : pulseMap}
                     shakingCardId={shakeInfo?.cardId ?? null}
                     shakeType={shakeInfo?.type ?? null}
                     cardShakeTypeMap={cardShakeTypeMap}
@@ -2985,6 +3059,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
+                // Scripted-FTUE release: the result sequence's final beat was
+                // dismissed → set the set-once completion flag so the FTUE never
+                // replays (abandon-resilient). Only the FTUE result run flips
+                // ftueResultLiveRef; other overrides' done-callbacks are unaffected.
+                if (ftueResultLiveRef.current) {
+                  ftueResultLiveRef.current = false;
+                  try { localStorage.setItem("rm_solo_ftue_done", "1"); } catch { /* noop */ }
+                }
               }}
             />
           </div>
