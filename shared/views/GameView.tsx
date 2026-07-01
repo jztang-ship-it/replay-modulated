@@ -597,7 +597,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     // eslint-disable-next-line no-console
-    console.debug("[FTUE-DIAG]", {
+    console.log("[FTUE-DIAG]", {
       soloFirstRun: soloFtueFirstRunRef.current,
       challengeCtx: !!challengeCtx,
       hasScriptedHand: !!adapter.ftueScriptedHand,
