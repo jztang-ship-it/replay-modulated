@@ -116,6 +116,11 @@ export interface GameAdapter {
     cardRole: Record<string, "anchor" | "hero" | "bomb" | "lightIce" | "normal">;
     /** The verbatim commentary deck (hold prompts, per-card reveals, result seq). */
     copy: Record<string, string>;
+    /** Experienced reveal-beat order for the REVEALING tap-advance walk (card-ids).
+     *  Distinct from the engine's salary-ascending reveal order — the two given
+     *  cards lead, the three held follow, anchor last. Absent → no walk (the
+     *  engine's default reveal runs). */
+    walkOrder?: readonly string[];
     /** Opening ceremony: the five real First-Team cards shown face-up before the
      *  scripted deal. Returns [] when the pool isn't loaded or any card is missing
      *  → GameView skips the ceremony. Optional; absent → no ceremony (deal direct). */

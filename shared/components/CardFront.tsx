@@ -584,8 +584,8 @@ export function CardFront(props: CardFrontProps) {
               transition: "opacity 350ms ease",
               pointerEvents: "none",
             }}>
-              <span data-ftue-label="avg" style={{ fontSize: 7, fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: 1, textTransform: "uppercase", lineHeight: 1 }}>AVG</span>
-              <span data-ftue-label="avg" style={{ fontSize: 14, fontWeight: 900, color: "rgba(255,255,255,0.40)", letterSpacing: -0.3, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+              <span data-ftue-label="avg" style={{ fontSize: 7, fontWeight: 700, color: "#FFFFFF", letterSpacing: 1, textTransform: "uppercase", lineHeight: 1 }}>AVG</span>
+              <span data-ftue-label="avg" style={{ fontSize: 14, fontWeight: 900, color: "#FFFFFF", letterSpacing: -0.3, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                 {proj.toFixed(1)}
               </span>
             </div>

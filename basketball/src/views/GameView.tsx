@@ -45,6 +45,7 @@ import {
   FTUE_DIRECTED_HOLD_IDS,
   FTUE_CARD_ROLE,
   FTUE_COPY,
+  FTUE_WALK_ORDER,
   ceremonyFtueRoster,
   FTUE_CEREMONY_LINE,
 } from "../adapters/ftueScriptedHand";
@@ -241,6 +242,7 @@ export default function GameView({
       directedHoldIds: FTUE_DIRECTED_HOLD_IDS,
       cardRole: FTUE_CARD_ROLE,
       copy: FTUE_COPY as Record<string, string>,
+      walkOrder: FTUE_WALK_ORDER as unknown as string[],
       ceremony: ceremonyFtueRoster,
       ceremonyLine: FTUE_CEREMONY_LINE,
     },

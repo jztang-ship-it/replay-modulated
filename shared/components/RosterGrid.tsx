@@ -83,6 +83,13 @@ type Props = {
    *  (ftueSpotlightBreath) on the lit card + a deeper dim on the rest.
    *  Off (default) → normal play byte-identical. */
   isFTUE?: boolean;
+  /** FTUE ceremony only: every wall card breathes (the "alive" opening wall),
+   *  not just a spotlight card. Off (default) → no ceremony breath. */
+  ftueCeremonyBlink?: boolean;
+  /** FTUE reveal-walk only: a tap anywhere on a card advances the walk one beat
+   *  (reveal the next card in the experienced order) instead of the normal
+   *  lock/flip/tap-reveal. Set only during the FTUE REVEALING walk. */
+  onFtueWalkAdvance?: () => void;
   canFlip: boolean;
   onToggleLock: (cardId: string) => void;
   onToggleFlip: (cardId: string) => void;
@@ -121,6 +128,8 @@ export function RosterGrid(props: Props) {
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId,
     isFTUE = false,
+    ftueCeremonyBlink = false,
+    onFtueWalkAdvance,
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false,
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
@@ -134,9 +143,15 @@ export function RosterGrid(props: Props) {
     return [...roster].sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0));
   }, [roster]);
 
-  // FTUE directed-hold spotlight: scale breath on the lit card + deeper dim on
-  // the rest. Confined to HOLD so the reveal phase is untouched.
+  // FTUE breath (ftueSpotlightBreath) fires in three FTUE moments, all off by
+  // default so normal play is byte-identical:
+  //   - HOLD: the directed-hold spotlight card breathes, rest dimmed deep.
+  //   - REVEALING walk: the beat's lit card breathes, rest dimmed deep.
+  //   - Ceremony: EVERY wall card breathes (the "alive" opening wall).
   const ftueHold = isFTUE && phase === "HOLD";
+  const ftueWalk = isFTUE && isRevealingPhase;
+  const ftueSpotlightBreath = ftueHold || ftueWalk;   // one lit card at a time
+  const ftueBreathActive = ftueSpotlightBreath || ftueCeremonyBlink;
 
   return (
     <div className="roster-grid" style={{
@@ -153,7 +168,7 @@ export function RosterGrid(props: Props) {
           Applied to the SLOT so it COMPOUNDS with the card's static rest-pop
           (× 1.08 → 1.05⇄1.11 for an ORANGE card; proportional for others),
           oscillating around the rest, never resetting it. ±2.8%, 1.4s ease-in-out. */}
-      {ftueHold && (
+      {ftueBreathActive && (
         <style>{`@keyframes ftueSpotlightBreath {
           0%,100% { transform: scale(0.972); }
           50%     { transform: scale(1.028); }
@@ -200,6 +215,10 @@ export function RosterGrid(props: Props) {
 
         const handleTap = (e: React.MouseEvent) => {
           e.stopPropagation();
+          // FTUE reveal-walk: any tap advances the walk one beat (reveal the next
+          // card in the experienced order) — the specific card tapped doesn't
+          // matter, so a stray tap can't skip the ordered walk.
+          if (ftueWalk && onFtueWalkAdvance) { onFtueWalkAdvance(); return; }
           if (phase === "HOLD") onToggleLock(id);
           else if (canFlip) onToggleFlip(id);
           else if (isTapTarget) onTapReveal?.(id);
@@ -222,11 +241,19 @@ export function RosterGrid(props: Props) {
               cursor: isTapTarget ? "pointer" : "default",
               boxShadow: "none",
               transition: "box-shadow 300ms ease",
-              // FTUE hold spotlight: breathe the lit card by scaling (John's
-              // priority). On the slot so it compounds with the card's static
-              // rest-pop (center-origin, both center → clean); z 100 grows over
-              // dimmed neighbors; transform never reflows the grid.
-              ...(ftueHold && isSpotlight
+              // FTUE breath: breathe the lit card by scaling (John's priority).
+              // On the slot so it compounds with the card's static rest-pop
+              // (center-origin, both center → clean); z 100 grows over dimmed
+              // neighbors; transform never reflows the grid. Ceremony breathes
+              // EVERY wall card (staggered so the wall reads alive, not in lockstep);
+              // HOLD + REVEALING-walk breathe only the spotlight card.
+              ...(ftueCeremonyBlink
+                ? {
+                    transformOrigin: "center",
+                    animation: "ftueSpotlightBreath 1.4s ease-in-out infinite" as const,
+                    animationDelay: `${(card.slotIndex ?? 0) * 0.12}s`,
+                  }
+                : ftueSpotlightBreath && isSpotlight
                 ? { transformOrigin: "center", animation: "ftueSpotlightBreath 1.4s ease-in-out infinite" as const }
                 : {}),
             }}
@@ -236,7 +263,7 @@ export function RosterGrid(props: Props) {
             {isDimmed && (
               <div style={{
                 position: "absolute", inset: 0, borderRadius: 18,
-                background: `rgba(4,8,16,${ftueHold ? 0.72 : 0.45})`,
+                background: `rgba(4,8,16,${ftueSpotlightBreath ? 0.72 : 0.45})`,
                 pointerEvents: "none", zIndex: 120,
                 transition: "opacity 0.3s ease",
               }} />

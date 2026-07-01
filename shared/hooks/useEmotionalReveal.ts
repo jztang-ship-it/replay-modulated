@@ -67,6 +67,15 @@ type Params = {
    */
   onBeforeHeldReveal?: (resume: () => void) => void;
   /**
+   * FTUE walk gate (feat/ftue-scripted-hand Pass A): called BEFORE each held
+   * card rolls up during revealHeldCards, with its `index` and a `reveal()`
+   * thunk. Call reveal() when the user advances to that beat. When provided,
+   * held cards do NOT auto-chain and the pre-first-card suspense pause is
+   * skipped (the tap owns the pace). Absent (default) → held cards auto-chain
+   * exactly as today (normal-play byte-identical).
+   */
+  onBeforeEachHeld?: (index: number, reveal: () => void) => void;
+  /**
    * FP that's "already locked in" at REVEAL start (held cards' actualFp,
    * minus the held anchor — its FP is the spring's payload). The gauge
    * baseline starts here instead of 0 so the bar doesn't rebound to 0
@@ -606,20 +615,31 @@ export function useEmotionalReveal(params: Params) {
         onAllComplete?.(total);
         return;
       }
-      // Mark this card as revealed (shows FP strip)
-      setHeldRevealedIds(prev => new Set(prev).add(hc.cardId));
-      // Run the full flip+rollup reveal for this held card
-      runCardReveal(hc, hc.cardId === anchorId, myRunId, () => {
-        onCardComplete?.(hc.cardId);
-        revealOne(idx + 1);
-      }, true, hc.cardId !== anchorId /* isSkip: non-anchor held cards roll up fast */);
+      // The actual per-card rollup. Gated by onBeforeEachHeld when present (FTUE
+      // walk: fires on the beat's tap); otherwise runs immediately (auto-chain).
+      const runIt = () => {
+        if (runIdRef.current !== myRunId) return;
+        // Mark this card as revealed (shows FP strip)
+        setHeldRevealedIds(prev => new Set(prev).add(hc.cardId));
+        // Run the full flip+rollup reveal for this held card.
+        // FTUE walk (onBeforeEachHeld set): NO isSkip — each held card rolls up
+        // at full pace so its fire/ice + gauge move lands on its own beat.
+        const fastRoll = !params.onBeforeEachHeld && hc.cardId !== anchorId;
+        runCardReveal(hc, hc.cardId === anchorId, myRunId, () => {
+          onCardComplete?.(hc.cardId);
+          revealOne(idx + 1);
+        }, true, fastRoll /* isSkip: non-anchor held cards roll up fast (auto-chain only) */);
+      };
+      if (params.onBeforeEachHeld) params.onBeforeEachHeld(idx, runIt);
+      else runIt();
     };
 
-    // Pre-pause before first held card
+    // Pre-pause before first held card. FTUE walk owns the pace via the beat
+    // tap → skip the auto suspense pause.
     window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
       revealOne(0);
-    }, PRE_PAUSE_MS);
+    }, params.onBeforeEachHeld ? 0 : PRE_PAUSE_MS);
   }
 
   // tapRevealCard: called when user taps an unheld card in tap mode.

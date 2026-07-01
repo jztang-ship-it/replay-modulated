@@ -953,6 +953,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const ftueRevealShownRef = useRef<Set<string>>(new Set());
   const ftueResultRef = useRef(false);
   const ftueResultLiveRef = useRef(false);
+  // ── FTUE reveal-walk refs (Pass A) ────────────────────────────────────
+  // ftueWalkBusyRef: a beat is mid-rollup → advance is ignored (no beat skip).
+  // pendingHeldRevealRef: the armed onBeforeEachHeld reveal() for the NEXT held
+  // card, fired when the user advances to that beat.
+  // ftueIntroShownRef: the R3-entry "tap to reveal / GAME TIME" beat fires once.
+  const ftueWalkBusyRef = useRef(false);
+  const pendingHeldRevealRef = useRef<(() => void) | null>(null);
+  const ftueIntroShownRef = useRef(false);
 
   // Hold prompts — R1 (spotlit LeBron+Edwards) / R2 (spotlit Draymond), sticky.
   useEffect(() => {
@@ -987,18 +995,27 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     setFtueCommentaryOverride({ parts: [line], sticky: true });
   }, [ftueActive, lastRevealedCardId]); // eslint-disable-line
 
-  // Result sequence — win → baseline → thesis → handoff, tap-advanced via the
-  // override parts[]. NON-sticky: the last part's onCommentaryOverrideDone clears
-  // the override AND sets rm_solo_ftue_done (release; see the TierGauge mount).
+  // R3-entry beat (REVEALING beat 0): the two given cards are still face-down —
+  // "tap to reveal or hit GAME TIME to see who your last two cards are." Fires
+  // once; the first reveal beat (Tobias) replaces it as the walk advances.
   useEffect(() => {
-    if (!ftueActive || !ftueCopy || ftueResultRef.current) return;
+    if (!ftueActive || !ftueCopy || gameState !== "REVEALING") return;
+    if (ftueIntroShownRef.current) return;
+    ftueIntroShownRef.current = true;
+    if (ftueCopy.revealIntro) setFtueCommentaryOverride({ parts: [ftueCopy.revealIntro], sticky: true });
+  }, [ftueActive, gameState]); // eslint-disable-line
+
+  // Result sequence — SUPPRESSED for Pass A. The Giannis reveal beat carries the
+  // STARTER-win finale + forward-looking ALL-STAR framing, so no separate result
+  // override fires (the placeholder resultWin/… strings would show as "[result —
+  // …]" junk on glass). We keep the sticky Giannis beat through the win screen
+  // and just fire the set-once completion flag so the FTUE never replays. The
+  // result-copy pass will re-home the resultWin/baseline/thesis/handoff slots.
+  useEffect(() => {
+    if (!ftueActive || ftueResultRef.current) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     ftueResultRef.current = true;
-    ftueResultLiveRef.current = true;
-    const total = roster.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
-    const tierLabel = String(winTier ?? "STARTER").replace(/_/g, " ");
-    const win = ftueCopy.resultWin.replace("{total}", total.toFixed(1)).replace("{tier}", tierLabel);
-    setFtueCommentaryOverride({ parts: [win, ftueCopy.resultBaseline, ftueCopy.resultThesis, ftueCopy.resultHandoff], sticky: false });
+    try { localStorage.setItem("rm_solo_ftue_done", "1"); } catch { /* noop */ }
   }, [ftueActive, gameState]); // eslint-disable-line
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
@@ -1256,6 +1273,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     seedFp: heldFpAtDraw,
     flipState,
     onBeforeHeldReveal: undefined,
+    // FTUE reveal-walk (Pass A): gate each held card's rollup on its beat tap.
+    // Arms the next held reveal + clears the busy latch so the next advance can
+    // fire it. Non-FTUE → undefined → held cards auto-chain (byte-identical).
+    onBeforeEachHeld: ftueActive
+      ? (_index: number, reveal: () => void) => {
+          pendingHeldRevealRef.current = reveal;
+          ftueWalkBusyRef.current = false;
+        }
+      : undefined,
     onCardRevealStart: handleCardRevealStart,
     onCardFpStart,
     onCardComplete,
@@ -1266,6 +1292,41 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }, []), // eslint-disable-line
   });
   bindIsSkippingRef(isSkippingRef);
+
+  // ── FTUE reveal-walk driver (Pass A) ──────────────────────────────────
+  // Tap-to-advance through the five beats in the experienced order (walkOrder):
+  // the two given cards (Tobias, Zion) then the three held (Draymond, Edwards,
+  // Giannis). Each advance reveals the NEXT unrevealed walk card — unheld via
+  // tapRevealCard, held via the armed onBeforeEachHeld reveal() — so its FP +
+  // fire/ice rolls up ON its beat and the gauge accrues across the walk. The
+  // busy latch means a stray tap mid-rollup can't skip a beat. Giannis (last,
+  // anchor) fires the spring → STARTER stamp → WIN_CELEBRATION.
+  const ftueWalkOrder = adapter.ftueScriptedHand?.walkOrder ?? [];
+  function advanceFtueWalk() {
+    if (!ftueActive || gameState !== "REVEALING") return;
+    if (ftueWalkBusyRef.current) return; // a beat is mid-rollup — no skip
+    const revealed = new Set<string>([...tappedCardIds, ...(heldRevealedIds ?? new Set<string>())]);
+    const next = ftueWalkOrder.find((id) => !revealed.has(id));
+    if (!next) return; // all five revealed — spring/win owns the rest
+    const card = roster.find((c) => cardId(c) === next);
+    const isHeld = !!(card as any)?.wasHeld;
+    ftueWalkBusyRef.current = true;
+    if (isHeld) {
+      const fn = pendingHeldRevealRef.current;
+      pendingHeldRevealRef.current = null;
+      if (fn) fn();
+      else ftueWalkBusyRef.current = false; // not armed yet — release, retry on next tap
+    } else {
+      tapRevealCard(next);
+    }
+  }
+  // Clear the walk busy latch when a beat's card finishes rolling up (each card,
+  // held or given, fires onCardComplete → lastRevealedCardId). onBeforeEachHeld
+  // also clears it as the next held card arms.
+  useEffect(() => {
+    if (!ftueActive || gameState !== "REVEALING") return;
+    ftueWalkBusyRef.current = false;
+  }, [ftueActive, gameState, lastRevealedCardId]);
 
   // ── Derived values ────────────────────────────────────────────────
   const phase: GamePhase = useMemo(() => {
@@ -1725,6 +1786,22 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
     return ids;
   }, [gameState, roster, flipState, statsFlippedIds]);
+
+  // ── FTUE render flags (Pass A) ────────────────────────────────────────
+  // Ceremony blink: the opening wall (five ftue-ceremony cards, face-up at IDLE)
+  // breathes every card. Off the instant the deal flip starts (flippedIds grows).
+  const ftueCeremonyBlink = ftueActive && gameState === "IDLE"
+    && roster.length > 0
+    && roster.every((c) => String(cardId(c)).startsWith("ftue-ceremony"))
+    && flippedIds.size === 0;
+  // Primary-CTA blink: signals "you can advance now". At HOLD once this round's
+  // directed holds are all locked (mirrors the DRAW-gate) → NEXT blinks. At
+  // REVEALING entry (nothing revealed yet) → GAME TIME blinks.
+  const ftuePrimaryPulse = ftueActive && (
+    (gameState === "HOLD" && !!adapter.ftueScriptedHand
+      && !roster.some((c) => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c))))
+    || (gameState === "REVEALING" && tappedCardIds.size === 0 && (heldRevealedIds?.size ?? 0) === 0)
+  );
 
   const revealingIds = useMemo(() => {
     const ids = new Set<string>();
@@ -2240,6 +2317,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   function handleButtonClick() {
     if (gameState === "REVEALING") {
+      // FTUE: the primary CTA is "GAME TIME" — it advances the reveal walk one
+      // beat (reveal the next given card, then step the held beats) instead of
+      // the normal AUTO skip-flip-all.
+      if (ftueActive) { advanceFtueWalk(); return; }
       setWasSkipped(true);
       autoFlipAll();
     }
@@ -2764,9 +2845,36 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 {/* L2/#1 season display-pin: the FTUE is a sealed 2025-26 hand, so
                     suppress the live slate chip (which reads getActiveSeason → today's
                     boss-coupled season, e.g. "2006-07 · 135 players" — wrong for this
-                    roster) and show a static "2025-26" (no player count). */}
+                    roster) and show a static "2025-26" (no player count).
+                    #1 — the static chip now MIRRORS the normal-game SlateChip pill
+                    (shared/components/SlateChip.tsx): same neutral raised fill +
+                    border + bottom edge, cards glyph, white bold season. The old
+                    ad-hoc Rajdhani span read differently from normal game; this reads
+                    uniform. Non-interactive (no overlay) + no player count, since the
+                    sealed hand has no live pool to open. */}
                 {ftueActive
-                  ? <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, color: "rgba(234,240,255,0.6)", fontFamily: "'Rajdhani','Arial Narrow',sans-serif" }}>2025-26</span>
+                  ? (
+                    <div style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "5px 11px", borderRadius: 999,
+                      background: "rgba(255,255,255,0.09)",
+                      border: "1px solid rgba(255,255,255,0.16)",
+                      borderBottom: "1px solid rgba(0,0,0,0.28)",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+                      color: "#F0F2F5", fontFamily: "'Inter', system-ui, sans-serif",
+                      fontSize: 11, fontWeight: 800, letterSpacing: "0.04em",
+                      whiteSpace: "nowrap", lineHeight: 1.1,
+                    }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="rgba(255,255,255,0.6)" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        aria-hidden="true" style={{ flexShrink: 0 }}>
+                        <rect x="8" y="3" width="11" height="16" rx="2" />
+                        <path d="M5 6.5v11a2 2 0 0 0 2 2h7" />
+                      </svg>
+                      <span style={{ color: "#FFFFFF", fontWeight: 900 }}>2025-26</span>
+                    </div>
+                  )
                   : (SlateChipComponent && <SlateChipComponent />)}
                 {/* BOSS pill — basketball-only, right-aligned in the year·players
                     row. Absolutely positioned so the SlateChip stays centered;
@@ -2849,11 +2957,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           overflow: "hidden",
         }}>
           <div
-            onClick={gameState === "REVEALING" && (REVEAL_MODE as string) === "auto" ? skipReveal : undefined}
+            onClick={
+              ftueActive && gameState === "REVEALING"
+                ? advanceFtueWalk // FTUE walk: a tap in the card stage advances a beat
+                : gameState === "REVEALING" && (REVEAL_MODE as string) === "auto" ? skipReveal : undefined
+            }
             style={{
               width: "100%",
               height: "100%",
-              cursor: gameState === "REVEALING" && (REVEAL_MODE as string) === "auto" ? "pointer" : "default",
+              cursor: (ftueActive && gameState === "REVEALING") || (gameState === "REVEALING" && (REVEAL_MODE as string) === "auto") ? "pointer" : "default",
               boxSizing: "border-box",
               overflow: "hidden",
             }}
@@ -2901,6 +3013,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     // FTUE hold spotlight: recovered gold pulse on the lit card +
                     // deeper dim on the rest (RosterGrid gates on isFTUE && phase HOLD).
                     isFTUE={ftueActive}
+                    // FTUE ceremony: breathe every wall card. FTUE reveal-walk:
+                    // any card tap advances the walk one beat.
+                    ftueCeremonyBlink={ftueCeremonyBlink}
+                    onFtueWalkAdvance={ftueActive && gameState === "REVEALING" ? advanceFtueWalk : undefined}
                     onToggleLock={toggleLock}
                     onToggleFlip={toggleStatsFlip}
                     revealMode={REVEAL_MODE}
@@ -3337,6 +3453,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         sportKey={sportKey}
         roundsUsed={roundsUsed}
         maxRounds={maxRounds}
+        ftueActive={ftueActive}
+        ftuePrimaryPulse={ftuePrimaryPulse}
         hideTierBar
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}

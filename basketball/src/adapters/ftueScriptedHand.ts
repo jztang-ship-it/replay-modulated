@@ -103,6 +103,24 @@ export const FTUE_CARD_ROLE: Record<string, "anchor" | "hero" | "bomb" | "lightI
   "ftue-tobias": "normal",
 };
 
+// ── The reveal-beat walk (feat/ftue-scripted-hand Pass A) ────────────────────
+// The EXPERIENCED order the user taps through at REVEALING (NOT the engine's
+// salary-ascending reveal order). The two GIVEN cards (Tobias, Zion) lead; the
+// three HELD cards (Draymond, Edwards, Giannis) follow, Giannis last as the
+// STARTER-win climax. GameView's tap-advance walk reveals one card per beat in
+// this order — each card's FP + fire/ice rolls up ON its beat (walk-drives-the-
+// reveal), the gauge accrues across the walk, and the anchor (Giannis) fires the
+// spring/STARTER stamp on the final beat. Draymond/Edwards/Giannis are held
+// (face-up); their per-beat rollup is gated via useEmotionalReveal's
+// onBeforeEachHeld seam.
+export const FTUE_WALK_ORDER = [
+  "ftue-tobias",   // beat 1 — given, normal (34.0, no flame)
+  "ftue-zion",     // beat 2 — given, 🧊🧊 bomb (20.1)
+  "ftue-draymond", // beat 3 — held, 🧊 light-ice (18.7)
+  "ftue-edwards",  // beat 4 — held, 🔥🔥 hero (69.4)
+  "ftue-giannis",  // beat 5 — held anchor, STARTER climax (64.1 → total 206.3)
+] as const;
+
 // ── R1 deal — 5 cards. Coach directs hold of Giannis (anchor) + Edwards (hero). ──
 // projectedFp = real 2526 avgFP baseline. actualFp + badges are engine-derived
 // from statLine (trueScriptLine) — never hand-entered here.
@@ -225,20 +243,31 @@ function toScript(card: any): ScriptCard {
 // These are role/slot-tagged placeholders so the FTUE renders the beat slots
 // without leaking wrong wording. Keys are stable (role-based via FTUE_CARD_ROLE);
 // only the strings change in the copy pass. {total}/{tier} are runtime tokens.
+// Stage-4 (Pass A) — John's authored slots, wired verbatim. Keys are STABLE
+// (role-based + walk beats); John does a final wording pass against the live
+// flow. The result-sequence keys (resultWin/…/Handoff) are PARKED placeholders
+// for Pass A — the Giannis beat carries the STARTER-win finale, so GameView
+// suppresses the result-sequence override (no placeholder junk on glass).
 export const FTUE_COPY = {
-  // Hold prompts
-  holdR1: "[R1 hold — lock the two stars: Giannis (anchor) + Edwards (hero)]",
-  holdR2: "[R2 hold — lock one more: Draymond (light-ice)]",
-  giveR3: "[R3 given — the last two are on us: Tobias + Zion]",
+  // Hold prompts (R1 spotlights Giannis+Edwards; R2 spotlights Draymond)
+  holdR1: "You get three rounds, Greek beast and Ant are no brainers, tap them to hold but know that holding them takes more than half of your cap.",
+  holdR2: "With your remaining cap, Draymond is a good bet to give you the best return, tap him to hold and your two remaining spots will be randomly assigned to you.",
 
-  // Per-card reveal beats (reveal order salary-asc: Draymond, Tobias, Zion, Edwards, Giannis)
-  revealLightIce: "[reveal — light-ice: Draymond, quiet 🧊 below baseline]",
-  revealNormal: "[reveal — normal: Tobias, calm filler, no flame]",
-  revealBomb: "[reveal — bomb: Zion, the vanished star 🧊🧊]",
-  revealHero: "[reveal — hero: Edwards, the trusted star pays off big 🔥🔥]",
-  revealAnchor: "[reveal — anchor: Giannis LAST, delivers without a flame]",
+  // R3-entry (REVEALING beat 0 — the two given cards still face-down)
+  revealIntro: "tap to reveal or hit GAME TIME to see who your last two cards are.",
 
-  // Result sequence (after tier slam; {total}/{tier} filled at runtime)
+  // Per-card reveal beats — spoken as each card lights on its walk beat.
+  // Keyed by role via FTUE_CARD_ROLE: revealNormal=Tobias, revealBomb=Zion,
+  // revealLightIce=Draymond, revealHero=Edwards, revealAnchor=Giannis.
+  revealNormal: "Tobias, the steady veteran with 34 fp, not to mention two badges that give you bonus fp.",
+  revealBomb: "Yikes! Zion really bombed with that score, he was ICE COLD, definitely not what you'd expect from a star player.",
+  revealLightIce: "Too much trash talk from Dray, if only his game was as loud, lets see if your big guns can save your squad.",
+  revealHero: "ANTMAN to the rescue! That fire tells you he vastly outperformed his value, Lets call him Super Ant from now on.",
+  revealAnchor: "Giannis did what super stars do, A normal monster game. Your team scored a STARTER win — and ALL-STAR is right there on the board to chase next time.",
+
+  // Result sequence — PARKED for Pass A (Giannis beat is the finale). Retained
+  // as stable keys for a later result-copy pass; not rendered by the walk.
+  giveR3: "[R3 given — parked; the reveal walk names the given cards on their beats]",
   resultWin: "[result — {total} FP, {tier}: clean first-hand win]",
   resultBaseline: "[result — baseline: each player swings above/below their season average]",
   resultThesis: "[result — thesis: salary is likely-not-certain; the whole squad under the cap]",

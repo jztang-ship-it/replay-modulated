@@ -117,6 +117,12 @@ type Props = {
   onWageAnimationComplete?: () => void;
   /** Pulse the replay/deal button to draw attention on results. */
   replayPulse?: boolean;
+  /** FTUE only: relabel the REVEALING primary CTA "AUTO" → "GAME TIME". */
+  ftueActive?: boolean;
+  /** FTUE only: pulse the primary CTA (reuses the replayPulse blink) to signal
+   *  "you can advance now" — NEXT once the round's directed holds are locked,
+   *  GAME TIME at the reveal-walk entry. Off (default) → no pulse. */
+  ftuePrimaryPulse?: boolean;
   /** Challenge mode: the recipient is playing a friend's hand. Hides
    *  the bet-multiplier selector AND the balance/wallet display since
    *  the matchup is decided by head-to-head score comparison, not by
@@ -228,7 +234,7 @@ function getTierState(totalFp: number, winTiers: WinTierDisplay[]) {
   return { label: next.label, fillPct, color: fillColor, glow: fillGlow, fptNeeded: Math.max(0, ceiling - totalFp) };
 }
 
-function actionLabel(state: GameStateLabel, maxRounds: number): string {
+function actionLabel(state: GameStateLabel, maxRounds: number, ftue = false): string {
   if (state === "IDLE") return "DEAL";
   if (state === "DEALING") return "...";
   // Multi-round (basketball, maxRounds>1): every interactive HOLD advance reads
@@ -237,7 +243,9 @@ function actionLabel(state: GameStateLabel, maxRounds: number): string {
   // HOLD locks immediately, so the relabel can never reach them.
   if (state === "HOLD") return maxRounds > 1 ? "NEXT" : "DRAW";
   if (state === "DRAWING") return "...";
-  if (state === "REVEALING") return "AUTO";
+  // FTUE reveal-walk relabels AUTO → "GAME TIME" (the affordance to flip the two
+  // given cards / start the walk). Normal play keeps "AUTO".
+  if (state === "REVEALING") return ftue ? "GAME TIME" : "AUTO";
   return "REPLAY";
 }
 
@@ -1426,6 +1434,8 @@ export function GameBar({
   challengeTarget,
   roundsUsed = 1,
   maxRounds = 1,
+  ftueActive = false,
+  ftuePrimaryPulse = false,
 }: Props) {
   // x/N hold-loop indicator + "NEXT" relabel — multi-round only. Single-shot
   // sports (maxRounds 1) get neither, so their HOLD stays "DRAW" and no
@@ -1763,10 +1773,10 @@ export function GameBar({
                 pointerEvents: "auto" as const,
                 boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 300ms ease", lineHeight: 1,
-                animation: replayPulse ? "replayPulse 1.2s ease-in-out infinite" : "none",
+                animation: (replayPulse || ftuePrimaryPulse) ? "replayPulse 1.2s ease-in-out infinite" : "none",
               }}>
-              {replayPulse && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
-              {actionLabel(gameState, maxRounds)}
+              {(replayPulse || ftuePrimaryPulse) && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
+              {actionLabel(gameState, maxRounds, ftueActive)}
             </button>
 
             {/* Compact secondary Challenge button — in-flow flex sibling between
@@ -1996,8 +2006,10 @@ export function GameBar({
                   pointerEvents: "auto" as const,
                   boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                   transition: "opacity 150ms ease", lineHeight: 1,
+                  animation: (replayPulse || ftuePrimaryPulse) ? "replayPulse 1.2s ease-in-out infinite" : "none",
                 }}>
-                {actionLabel(gameState, maxRounds)}
+                {(replayPulse || ftuePrimaryPulse) && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
+                {actionLabel(gameState, maxRounds, ftueActive)}
               </button>
               {/* Parity with the split path: Challenge button as an in-flow sibling
                   (null unless challengeAvailable). */}

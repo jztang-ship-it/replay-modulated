@@ -29,23 +29,40 @@ describe("FTUE spotlight — the card BREATHES by scaling (John's priority)", ()
     expect(GRID).toMatch(/0%,100% \{ transform: scale\(0\.972\); \}/);
     expect(GRID).toMatch(/50%\s+\{ transform: scale\(1\.028\); \}/);
   });
-  it("applied to the lit SLOT (compounds with the card scale) at 1.4s ease-in-out infinite", () => {
-    expect(GRID).toMatch(/ftueHold && isSpotlight\s*\?\s*\{ transformOrigin: "center", animation: "ftueSpotlightBreath 1\.4s ease-in-out infinite"/);
+  it("the lit-card breath applies to the SLOT at 1.4s ease-in-out infinite", () => {
+    // The spotlight breath now fires in HOLD *and* the REVEALING walk (one card
+    // at a time) via ftueSpotlightBreath; the exact application line is asserted
+    // in the walk/ceremony block below.
+    expect(GRID).toMatch(/animation: "ftueSpotlightBreath 1\.4s ease-in-out infinite"/);
+  });
+});
+
+describe("FTUE breath — extended to the ceremony wall + the reveal walk (Pass A)", () => {
+  it("ftueWalk = REVEALING; ftueSpotlightBreath = HOLD or walk (one lit card)", () => {
+    expect(GRID).toMatch(/const ftueHold = isFTUE && phase === "HOLD";/);
+    expect(GRID).toMatch(/const ftueWalk = isFTUE && isRevealingPhase;/);
+    expect(GRID).toMatch(/const ftueSpotlightBreath = ftueHold \|\| ftueWalk;/);
+    expect(GRID).toMatch(/const ftueBreathActive = ftueSpotlightBreath \|\| ftueCeremonyBlink;/);
+  });
+  it("keyframes inject under ftueBreathActive (HOLD/walk/ceremony), else normal-play DOM is unchanged", () => {
+    expect(GRID).toMatch(/\{ftueBreathActive && \(\s*<style>/);
+  });
+  it("ceremony breathes EVERY card (staggered); HOLD/walk breathe only the spotlight card", () => {
+    expect(GRID).toMatch(/ftueCeremonyBlink/);
+    expect(GRID).toMatch(/animationDelay: `\$\{\(card\.slotIndex \?\? 0\) \* 0\.12\}s`/);
+    expect(GRID).toMatch(/ftueSpotlightBreath && isSpotlight/);
+  });
+  it("a tap during the walk advances the beat (onFtueWalkAdvance), not lock/flip/reveal", () => {
+    expect(GRID).toMatch(/if \(ftueWalk && onFtueWalkAdvance\) \{ onFtueWalkAdvance\(\); return; \}/);
   });
 });
 
 describe("FTUE spotlight — gating keeps normal play byte-identical", () => {
-  it("isFTUE defaults false", () => {
+  it("isFTUE defaults false; ftueCeremonyBlink defaults false", () => {
     expect(GRID).toMatch(/isFTUE = false,/);
+    expect(GRID).toMatch(/ftueCeremonyBlink = false,/);
   });
-  it("the treatment is confined to FTUE + the HOLD phase", () => {
-    expect(GRID).toMatch(/const ftueHold = isFTUE && phase === "HOLD";/);
-    // pulse only on the lit card during ftueHold
-    expect(GRID).toMatch(/ftueHold && isSpotlight/);
-    // keyframes only injected under ftueHold (normal-play DOM unchanged)
-    expect(GRID).toMatch(/\{ftueHold && \(\s*<style>/);
-  });
-  it("the dim deepens to 0.72 only under ftueHold, else the original 0.45", () => {
-    expect(GRID).toMatch(/rgba\(4,8,16,\$\{ftueHold \? 0\.72 : 0\.45\}\)/);
+  it("the dim deepens to 0.72 only under the spotlight breath (HOLD/walk), else the original 0.45", () => {
+    expect(GRID).toMatch(/rgba\(4,8,16,\$\{ftueSpotlightBreath \? 0\.72 : 0\.45\}\)/);
   });
 });
