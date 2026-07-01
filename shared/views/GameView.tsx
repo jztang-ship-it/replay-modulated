@@ -596,17 +596,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // ceremony gate + its inputs so a cold-anon run shows which condition fails.
   useEffect(() => {
     if (!import.meta.env.DEV) return;
+    let cards: any = "n/a";
+    try { cards = adapter.ftueScriptedHand?.ceremony?.()?.length ?? "no-fn"; } catch (e) { cards = `throw:${(e as Error).message}`; }
+    // Flat string so Chrome can't collapse/truncate it.
     // eslint-disable-next-line no-console
-    console.log("[FTUE-DIAG]", {
-      soloFirstRun: soloFtueFirstRunRef.current,
-      challengeCtx: !!challengeCtx,
-      hasScriptedHand: !!adapter.ftueScriptedHand,
-      hasCeremonyFn: !!adapter.ftueScriptedHand?.ceremony,
-      authReady, isAnonymous, ftueActive,
-      ftuePlayersReady, playersLoaded: arePlayersLoaded(),
-      gameState, activeSeason: getActiveSeason(),
-      ceremonyCards: (() => { try { return adapter.ftueScriptedHand?.ceremony?.()?.length ?? "n/a"; } catch (e) { return `throw:${(e as Error).message}`; } })(),
-    });
+    console.log(
+      `[FTUE-DIAG] soloFirstRun=${soloFtueFirstRunRef.current} challenge=${!!challengeCtx} scriptedHand=${!!adapter.ftueScriptedHand} ceremonyFn=${!!adapter.ftueScriptedHand?.ceremony} authReady=${authReady} isAnonymous=${isAnonymous} ftueActive=${ftueActive} ftuePlayersReady=${ftuePlayersReady} playersLoaded=${arePlayersLoaded()} gameState=${gameState} activeSeason=${getActiveSeason()} ceremonyCards=${cards}`,
+    );
   }, [ftueActive, ftuePlayersReady, gameState, authReady, isAnonymous]);
   // Latest onPrimaryAction, so the flip-complete listener re-enters the deal path
   // with a fresh closure (the flip spans ~1s of possible re-renders).
