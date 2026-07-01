@@ -99,6 +99,25 @@ export interface GameAdapter {
   ftueResolveRoster?: (args: { finalCards: PlayerCard[] })
                     => Promise<{ roster: PlayerCard[]; mvpCardId?: string }>;
 
+  // ── Scripted first-hand FTUE (feat/ftue-scripted-hand) ─────────────────
+  // Sport-agnostic by construction: shared GameView drives the rail/coach;
+  // the sport supplies this bundle (data only). Present ⇒ FTUE is available
+  // for this sport; absent ⇒ no scripted FTUE (baseball/football omit it).
+  // Redraw is ROUND-AWARE ({roundsUsed}, not lockedCardIds) — the rail is
+  // lock-2/replace-3 → lock-1/replace-2 → give-2, and the directed holds are
+  // kept regardless of taps so the sealed 5 is guaranteed.
+  ftueScriptedHand?: {
+    deal: () => Promise<{ roster: PlayerCard[] }>;
+    redraw: (args: { currentCards: PlayerCard[]; roundsUsed: number }) => Promise<{ roster: PlayerCard[] }>;
+    resolve: (args: { finalCards: PlayerCard[] }) => Promise<{ roster: PlayerCard[]; mvpCardId?: string }>;
+    /** Card-ids the rail keeps across each round's redraw (the directed holds). */
+    directedHoldIds: readonly string[];
+    /** card-id → reveal role (drives which copy beat fires per card). */
+    cardRole: Record<string, "anchor" | "hero" | "bomb" | "lightIce" | "normal">;
+    /** The verbatim commentary deck (hold prompts, per-card reveals, result seq). */
+    copy: Record<string, string>;
+  };
+
   // ── Sport-specific data lookups ────────────────────────────────────
   /** Today's bonus players (used by the CollectScreen + GameBar legend). */
   getTodaysStars: () => DailyBonusPlayer[];

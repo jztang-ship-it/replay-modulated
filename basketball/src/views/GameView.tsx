@@ -38,6 +38,14 @@ import {
   computeRosterCeiling,
   getTodaysStars,
 } from "../adapters/gameAdapter";
+import {
+  dealFtueScriptedRoster,
+  redrawFtueScriptedRoster,
+  resolveFtueScriptedRoster,
+  FTUE_DIRECTED_HOLD_IDS,
+  FTUE_CARD_ROLE,
+  FTUE_COPY,
+} from "../adapters/ftueScriptedHand";
 import { AthleteCard, resetAllOverlays } from "../components/AthleteCard";
 import {
   calculateWinTier,
@@ -223,6 +231,15 @@ export default function GameView({
     dealInitialRoster,
     redrawRoster,
     resolveRoster,
+    // Scripted first-hand FTUE (data only; shared GameView drives the rail/coach).
+    ftueScriptedHand: {
+      deal: dealFtueScriptedRoster,
+      redraw: redrawFtueScriptedRoster,
+      resolve: resolveFtueScriptedRoster,
+      directedHoldIds: FTUE_DIRECTED_HOLD_IDS,
+      cardRole: FTUE_CARD_ROLE,
+      copy: FTUE_COPY as Record<string, string>,
+    },
     getTodaysStars,
     computeRosterCeiling,
     // AthleteCard's Props type marks several fields optional (locked,
