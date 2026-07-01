@@ -163,7 +163,7 @@ import { useAuth } from "@shared/auth/useAuth";
 import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { listMessages } from "@shared/inbox/inbox";
 import { useChallengeNotifications, type ChallengeNotification } from "@shared/hooks/useChallengeNotifications";
-import { ensureLoaded, ensurePlayersLoaded, arePlayersLoaded, getActiveSeason } from "@shared/engines/dataEngine";
+import { ensureLoaded, ensurePlayersLoaded, arePlayersLoaded } from "@shared/engines/dataEngine";
 import { supabase } from "@shared/lib/supabase";
 
 // ── Reveal mode toggle ─────────────────────────────────────────────────────
@@ -592,18 +592,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const ftuePlayersReadyRef = useRef<boolean>(ftuePlayersReady);
   ftuePlayersReadyRef.current = ftuePlayersReady;
 
-  // TEMP DIAGNOSTIC (DEV only) — remove after FTUE glass root-cause. Logs the
-  // ceremony gate + its inputs so a cold-anon run shows which condition fails.
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    let cards: any = "n/a";
-    try { cards = adapter.ftueScriptedHand?.ceremony?.()?.length ?? "no-fn"; } catch (e) { cards = `throw:${(e as Error).message}`; }
-    // Flat string so Chrome can't collapse/truncate it.
-    // eslint-disable-next-line no-console
-    console.log(
-      `[FTUE-DIAG] soloFirstRun=${soloFtueFirstRunRef.current} challenge=${!!challengeCtx} scriptedHand=${!!adapter.ftueScriptedHand} ceremonyFn=${!!adapter.ftueScriptedHand?.ceremony} authReady=${authReady} isAnonymous=${isAnonymous} ftueActive=${ftueActive} ftuePlayersReady=${ftuePlayersReady} playersLoaded=${arePlayersLoaded()} gameState=${gameState} activeSeason=${getActiveSeason()} ceremonyCards=${cards}`,
-    );
-  }, [ftueActive, ftuePlayersReady, gameState, authReady, isAnonymous]);
   // Latest onPrimaryAction, so the flip-complete listener re-enters the deal path
   // with a fresh closure (the flip spans ~1s of possible re-renders).
   const onPrimaryActionRef = useRef<() => void>(() => {});
@@ -1796,7 +1784,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     for (const id of ids) flipState.revealCard(id);
     for (const id of ids) flipState.completeReveal(id);
     const line = adapter.ftueScriptedHand?.ceremonyLine;
-    if (line) setFtueCommentaryOverride({ parts: [line], sticky: false });
+    // sticky so tapping the line is inert — DEAL is the only advance gesture. The
+    // line clears when the deal's IDLE reset runs after the flip.
+    if (line) setFtueCommentaryOverride({ parts: [line], sticky: true });
   }, [ftueActive, gameState, ftuePlayersReady, adapter, flipState, setRoster, setFtueCommentaryOverride]);
 
   // Tap-through of the line → staggered L→R flip to backs → the LAST card's real
@@ -1883,10 +1873,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // phase gate below owns the flip; if there's no ceremony, this clears and
       // the deal proceeds normally.
       if (ftueActiveNow && !ftuePlayersReadyRef.current) return;
-      // FTUE ceremony gate: while the wall is showing/flipping, a primary action
-      // must NOT deal — the tap-through of the ceremony line owns the flip, and
-      // the flip-complete event re-enters here with phase "done" (which passes).
-      if (ftueActiveNow && (ceremonyPhaseRef.current === "cards" || ceremonyPhaseRef.current === "flipping")) return;
+      // FTUE ceremony — DEAL-to-dismiss (DEAL is the only gesture): pressing DEAL
+      // while the wall rests on its fronts ("cards") runs the whole transition in
+      // one gesture — flip the five to backs L→R, then auto-deal R1 off the LAST
+      // card's real flip-complete (transitionend, not a timer). During "flipping"
+      // a re-press is ignored (the event owns the deal); on "done" the re-entry
+      // from the flip-complete falls through and deals normally.
+      if (ftueActiveNow && ceremonyPhaseRef.current === "cards") { runCeremonyFlipThenDeal(); return; }
+      if (ftueActiveNow && ceremonyPhaseRef.current === "flipping") return;
       // F2P: skip the affordability lockout when the economy is off (wallet never
       // moves). Outer-wrapped so the inner `if (balance < currentBet)` line stays
       // byte-identical for the pinned betOncePerHand assertion.
@@ -3189,9 +3183,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
-                // Ceremony tap-through: the wall's line was dismissed → flip the
-                // five to backs L→R; the last flip-complete fires the scripted deal.
-                if (ceremonyPhaseRef.current === "cards") { runCeremonyFlipThenDeal(); return; }
+                // (Ceremony advance is now DEAL-driven — no tap-to-flip here.)
                 // Scripted-FTUE release: the result sequence's final beat was
                 // dismissed → set the set-once completion flag so the FTUE never
                 // replays (abandon-resilient). Only the FTUE result run flips

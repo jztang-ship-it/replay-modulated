@@ -35,24 +35,24 @@ describe("FTUE ceremony — the show-wall effect is FTUE + players-ready gated (
     // settle face-up via the existing flip machinery (no bespoke flip state)
     expect(GAME_VIEW).toMatch(/flipState\.initCards\(ids\);/);
     expect(GAME_VIEW).toMatch(/for \(const id of ids\) flipState\.completeReveal\(id\);/);
-    // verbatim line pushed through the commentary override, sticky:false so the
-    // tap-through fires onCommentaryOverrideDone (sticky:true would swallow it)
+    // verbatim line pushed through the commentary override, sticky:true so
+    // tapping the line is inert — DEAL is the only advance gesture.
     expect(GAME_VIEW).toMatch(/adapter\.ftueScriptedHand\?\.ceremonyLine/);
-    expect(GAME_VIEW).toMatch(/setFtueCommentaryOverride\(\{ parts: \[line\], sticky: false \}\)/);
+    expect(GAME_VIEW).toMatch(/setFtueCommentaryOverride\(\{ parts: \[line\], sticky: true \}\)/);
   });
 });
 
-describe("FTUE ceremony — a primary action cannot deal while the wall is up", () => {
-  it("the IDLE branch bails during the ceremony (cards/flipping), not when done", () => {
-    expect(GAME_VIEW).toMatch(
-      /if \(ftueActiveNow && \(ceremonyPhaseRef\.current === "cards" \|\| ceremonyPhaseRef\.current === "flipping"\)\) return;/,
-    );
+describe("FTUE ceremony — DEAL-to-dismiss (DEAL is the only gesture)", () => {
+  it("pressing DEAL in the cards phase runs the flip (not a block, not a tap)", () => {
+    // In the IDLE branch of onPrimaryAction — the DEAL press owns the transition.
+    expect(GAME_VIEW).toMatch(/if \(ftueActiveNow && ceremonyPhaseRef\.current === "cards"\) \{ runCeremonyFlipThenDeal\(\); return; \}/);
+    // a re-press during the flip is ignored (the event owns the deal)
+    expect(GAME_VIEW).toMatch(/if \(ftueActiveNow && ceremonyPhaseRef\.current === "flipping"\) return;/);
   });
-});
-
-describe("FTUE ceremony — tap → flip → deal chains off the REAL flip-complete event", () => {
-  it("the commentary tap-through triggers the flip (cards phase only)", () => {
-    expect(GAME_VIEW).toMatch(/if \(ceremonyPhaseRef\.current === "cards"\) \{ runCeremonyFlipThenDeal\(\); return; \}/);
+  it("the tap-to-flip via onCommentaryOverrideDone is GONE (no intermediate tap)", () => {
+    // the ceremony-advance line must NOT live in the commentary-done handler anymore
+    const doneHandler = /onCommentaryOverrideDone=\{\(\) => \{([\s\S]*?)\n\s*\}\}/.exec(GAME_VIEW)?.[1] ?? "";
+    expect(doneHandler).not.toMatch(/runCeremonyFlipThenDeal/);
   });
   it("the deal fires off transitionend(transform) of the last card — NOT a timer", () => {
     // event-driven: a transitionend listener filtered to transform + the last
