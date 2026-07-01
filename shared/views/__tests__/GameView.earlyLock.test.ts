@@ -42,7 +42,7 @@ describe("B2a — onPrimaryAction derives the trigger from hold count (no param)
   });
   it("earlyLock is computed from allHeld (every card held) gated by maxRounds > 1", () => {
     expect(GAME_VIEW).toMatch(/const allHeld = markedRoster\.length > 0 && markedRoster\.every\(c => \(c as any\)\.wasHeld\);/);
-    expect(GAME_VIEW).toMatch(/const earlyLock = allHeld && maxRounds > 1 && !ftueActive;/);
+    expect(GAME_VIEW).toMatch(/const earlyLock = allHeld && maxRounds > 1 && !ftueActiveNow;/);
   });
 });
 
@@ -93,7 +93,7 @@ describe("B2a — the shared tail locks on the current roster with userTappedRev
 
 describe("B2a — the token is the GATED earlyLock, not raw allHeld (single-shot byte-identical)", () => {
   it("userTappedReveal is fed earlyLock, and earlyLock carries the maxRounds > 1 gate", () => {
-    expect(holdBranch).toMatch(/const earlyLock = allHeld && maxRounds > 1 && !ftueActive;/);
+    expect(holdBranch).toMatch(/const earlyLock = allHeld && maxRounds > 1 && !ftueActiveNow;/);
     expect(holdBranch).toMatch(/userTappedReveal: earlyLock,/);
   });
   it("the gate is NOT bypassed — raw allHeld never reaches userTappedReveal or the head", () => {

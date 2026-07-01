@@ -109,10 +109,17 @@ type Props = {
    *  snapshot resolve correctly). Caller passes `challengeCtx?.season`
    *  here when in challenge mode. */
   bypassSeasonKey?: string | null;
+  /** Glass-round-2: gate the reel decision on auth resolution. `skipReel` for
+   *  the scripted FTUE is only trustworthy once auth has resolved (a signed-in
+   *  user is transiently indistinguishable from a cold anon). While false, the
+   *  gate holds in its loading state (children blocked) rather than risk showing
+   *  the reel before the FTUE-vs-reel decision is settled. Defaults true so
+   *  callers that don't pass it are never blocked. */
+  authReady?: boolean;
   children: React.ReactNode;
 };
 
-export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSeasonKey = null, children }: Props) {
+export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSeasonKey = null, authReady = true, children }: Props) {
   const [manifest, setManifest] = useState<SeasonsManifest | null>(null);
   const [pick, setPick] = useState<SeasonManifestEntry | null>(null);
   // null = unresolved; true = show reel; false = skip reel
@@ -136,6 +143,10 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
   //      after the user has already seen today's reveal).
   useEffect(() => {
     let cancelled = false;
+    // Glass-round-2: hold the loading state (children blocked) until auth
+    // resolves — the FTUE-vs-reel decision (skipReel) is only trustworthy on a
+    // settled isAnonymous. Re-runs when authReady flips (dep below).
+    if (!authReady) { setShouldShowReel(null); return; }
     // If we're transitioning out of FTUE (bypass true → false), reset the
     // gate to its loading state synchronously so children stop rendering
     // until the reel mounts. Without this, the GameView with the FTUE
@@ -243,7 +254,7 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
       }
     })();
     return () => { cancelled = true; };
-  }, [bypass, skipReel, bypassSeasonKey]);
+  }, [bypass, skipReel, bypassSeasonKey, authReady]);
 
   // Block rendering until we know whether to show the reel — avoids the
   // child mounting briefly, then being covered, then becoming interactive.

@@ -156,7 +156,7 @@ function AppInner() {
   }
 
   const challengeIdFromUrl = getChallengeId();
-  const { user, uid, isAuthenticated, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const { user, uid, isAuthenticated, isAnonymous, authReady, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
   const profileUserId = getProfileUserId();
   const [challengeCtx, setChallengeCtx] = useState<ChallengeCtx | null>(null);
   // Rivalry-continuation context. Set when a recipient wins a challenge
@@ -672,12 +672,15 @@ function AppInner() {
              off mid-session so the reel doesn't surprise-fire. Resolved
              via the normal manifest path so today's daily season is
              still pinned for any later non-challenge hands they play. */
-          /* NEW B / L1: on the scripted-FTUE first run (cold, not-signed-in),
+          /* NEW B / L1: on the scripted-FTUE first run (resolved cold-anon),
              skip the daily season reel so the user lands STRAIGHT in the FTUE
-             deal. After the FTUE completes (rm_solo_ftue_done) the flag flips
-             and the reel shows normally on the next entry. Same gate conditions
-             as GameView's ftueActive (first-run + not-signed-in). */
-          skipReel={!!challengeIdFromUrl || (isSoloFtueFirstRun() && !(isAuthenticated && !isAnonymous))}
+             deal. Same gate as GameView's ftueActive (first-run + authReady +
+             isAnonymous — glass-round-2 truth table). authReady also passed
+             below so the gate WAITS for auth resolution before deciding (else a
+             cold-anon reel could fire before the FTUE is determined). After the
+             FTUE completes the flag flips and the reel shows normally next entry. */
+          authReady={authReady}
+          skipReel={!!challengeIdFromUrl || (isSoloFtueFirstRun() && authReady && isAnonymous)}
           /* When the bypass is fired by challengeCtx (recipient accepted
              a challenge), pin the data engine to the CHALLENGE'S season,
              not FTUE_SEASON_KEY. Without this, retired players in the

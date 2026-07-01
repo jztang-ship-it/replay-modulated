@@ -31,6 +31,13 @@ export interface AuthContextValue {
   uid: string;
   isAuthenticated: boolean;
   isAnonymous: boolean;
+  /** True once INITIAL_SESSION has been handled — i.e. the SDK has completed
+   *  URL/session detection and we KNOW whether there's a persisted session.
+   *  Before this, `isAnonymous` defaults true (untrustworthy) — a signed-in
+   *  user is transiently indistinguishable from a cold anon. Consumers that
+   *  must act on "is this really an anonymous first-timer" (e.g. the scripted
+   *  FTUE gate + the season-reel skip) require `authReady && isAnonymous`. */
+  authReady: boolean;
   /** Phase 5b piece 1 — Item B (FTUE bypass, doc lock edc58d9).
    *  Server-side FTUE-completion flag for signed-in users, fetched from
    *  player_profiles.ftue_completed on session resolve.
@@ -120,6 +127,7 @@ export const AuthContext = createContext<AuthContextValue>({
   uid: "",
   isAuthenticated: false,
   isAnonymous: true,
+  authReady: false,
   ftueCompleted: null,
   signUp: async () => ({ error: null }),
   linkGoogle: async () => ({ error: null }),
@@ -155,6 +163,8 @@ export function anyLocalFtueCompleted(): boolean {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  // True after INITIAL_SESSION — auth resolution complete (session known).
+  const [authReady, setAuthReady] = useState(false);
   // Phase 5b piece 1 — Item B (2026-05-28, doc lock edc58d9). Server-side
   // FTUE-completion flag for signed-in users. NULL while loading or for
   // anonymous users; populated from player_profiles.ftue_completed on
@@ -307,6 +317,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.error("[auth] signInAnonymously failed to start:", e);
               }
             }
+            // Auth resolution complete: we now know whether a persisted session
+            // exists (signed-in → onSessionEstablished set isAnonymous=false in
+            // the same batch; no session → isAnonymous stays true). isAnonymous
+            // is trustworthy from here. Consumers gate FTUE etc. on this.
+            setAuthReady(true);
           }
 
           if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
@@ -579,7 +594,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset, oauthError, oauthErrorCode }}>
+    <AuthContext.Provider value={{ user, uid, isAuthenticated, isAnonymous, authReady, ftueCompleted, signUp, linkGoogle, signIn, signInGoogle, signOut, resetPasswordForEmail, passwordResetRequestTick, requestPasswordReset, oauthError, oauthErrorCode }}>
       {children}
     </AuthContext.Provider>
   );

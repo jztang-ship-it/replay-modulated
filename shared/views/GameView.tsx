@@ -561,20 +561,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showBoss, setShowBoss] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+  const { user, isAnonymous, authReady, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
 
   // The single FTUE gate at every FTUE site: first-run (localStorage, via the
   // ref above) + solo (!challengeCtx) + basketball (only basketball supplies
-  // adapter.ftueScriptedHand) + RESOLVED-ANONYMOUS.
-  //   `!!user && isAnonymous` = a settled anon session — NOT signed-in AND NOT
-  //   the transient first-render window (user=null, isAnonymous defaults true).
-  //   Bug (glass-2b): the old `!(!!user && !isAnonymous)` was true during that
-  //   window, so a SIGNED-IN user's early DEAL fired the scripted hand before
-  //   INITIAL_SESSION resolved (coaching then bypassed once auth settled = the
-  //   drift). Requiring a resolved anon `user` seals it: signed-in and loading
-  //   both ⇒ false ⇒ byte-identical non-FTUE path.
+  // adapter.ftueScriptedHand) + RESOLVED-ANONYMOUS (authReady && isAnonymous).
+  //   `authReady` = INITIAL_SESSION handled, so isAnonymous is trustworthy.
+  //   `authReady && isAnonymous` is TRUE only for a settled anonymous session
+  //   — the cold-anon first-timer, INCLUDING localStorage-only users whose
+  //   signInAnonymously failed (user=null). It's FALSE for signed-in
+  //   (isAnonymous=false) AND for the loading window (authReady=false), which
+  //   seals the glass-2b signed-in deal leak WITHOUT the glass-2 regression
+  //   (the earlier `!!user` requirement wrongly excluded user=null cold users).
   const ftueActive = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
-    && !!user && isAnonymous;
+    && authReady && isAnonymous;
 
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -1766,6 +1766,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   }
 
   async function onPrimaryAction() {
+    // FTUE gate re-evaluated FRESH here (glass-2a termination + glass-2 no
+    // double-deal). Re-read first-run at each DEAL (IDLE) — a discrete event,
+    // never mid-hand — then compute ftueActiveNow. The DEAL/round injections use
+    // ftueActiveNow (not the render-const ftueActive, which was captured in this
+    // closure BEFORE the re-read → stale for one deal). The effects/UI keep the
+    // render-const ftueActive; by their next render the ref is already updated.
+    if (gameState === "IDLE") soloFtueFirstRunRef.current = isSoloFtueFirstRun();
+    const ftueActiveNow = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
+      && authReady && isAnonymous;
     if (gameState === "IDLE") {
       // F2P: skip the affordability lockout when the economy is off (wallet never
       // moves). Outer-wrapped so the inner `if (balance < currentBet)` line stays
@@ -1775,13 +1784,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       }
       resetReveal();
       resetAllOverlays();
-      // FTUE termination (glass-2a): GameView does NOT remount between hands, so
-      // the read-once first-run ref would stay true all session → every hand FTUE
-      // (infinite tutorial). Re-evaluate at each new-hand DEAL (a discrete event,
-      // never mid-hand — so hand 1 stays stable through its own post-resolve
-      // hand_count increment). By hand 2's deal, replaymod_hand_count > 0 (hand 1
-      // locked) OR rm_solo_ftue_done="1" → isSoloFtueFirstRun() false → normal.
-      soloFtueFirstRunRef.current = isSoloFtueFirstRun();
       setRoundsUsed(1); // new hand → the deal is round/lineup 1 (lock fires after 2 rerolls = 3 lineups at maxRounds 3; first reroll locks at maxRounds 1 = single-shot)
       initialRosterRef.current = [];
       completedCardsRef.current = new Set();
@@ -1825,7 +1827,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // routed first-timers into ftueDealRoster() is gone. It was
           // INDEPENDENT of the FTUE flag (the second deal gate), so cut here
           // is what actually stops the scripted Tatum hand from dealing.
-          res = ftueActive ? await adapter.ftueScriptedHand!.deal() : await dealInitialRoster();
+          res = ftueActiveNow ? await adapter.ftueScriptedHand!.deal() : await dealInitialRoster();
         }
       } catch (e) {
         // Surface the real error to the console — the on-screen banner is
@@ -1881,7 +1883,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // until the directed cards present this round are held (they're spotlit —
       // "lock in who you trust"). A stray DRAW tap is a no-op; the user performs
       // the real hold themselves. Non-FTUE untouched (ftueActive false → skipped).
-      if (ftueActive && roster.some(c => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c)))) {
+      if (ftueActiveNow && roster.some(c => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c)))) {
         return;
       }
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
@@ -1892,7 +1894,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // Gated to maxRounds > 1: a single-shot sport has no early lock, so earlyLock
       // stays false → redraw head + userTappedReveal:false, byte-identical to today.
       const allHeld = markedRoster.length > 0 && markedRoster.every(c => (c as any).wasHeld);
-      const earlyLock = allHeld && maxRounds > 1 && !ftueActive;
+      const earlyLock = allHeld && maxRounds > 1 && !ftueActiveNow;
       let finalRoster: PlayerCard[];
       let mvp: string | undefined;
 
@@ -1907,7 +1909,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         if (roundsUsed === 1) {
           let resolveRes: any;
           try {
-            resolveRes = ftueActive ? await adapter.ftueScriptedHand!.resolve({ finalCards: markedRoster }) : await resolveRoster({ finalCards: markedRoster });
+            resolveRes = ftueActiveNow ? await adapter.ftueScriptedHand!.resolve({ finalCards: markedRoster }) : await resolveRoster({ finalCards: markedRoster });
           } catch {
             setGameError("Something went wrong. Tap to try again.");
             setGameState("HOLD");
@@ -1927,9 +1929,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         await sleep(DRAWING_DWELL_MS);
         let drawRes: any, resolveRes: any;
         try {
-          drawRes = ftueActive ? await adapter.ftueScriptedHand!.redraw({ currentCards: markedRoster, roundsUsed }) : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+          drawRes = ftueActiveNow ? await adapter.ftueScriptedHand!.redraw({ currentCards: markedRoster, roundsUsed }) : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
           const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-          resolveRes = ftueActive ? await adapter.ftueScriptedHand!.resolve({ finalCards: drawnRoster }) : await resolveRoster({ finalCards: drawnRoster });
+          resolveRes = ftueActiveNow ? await adapter.ftueScriptedHand!.resolve({ finalCards: drawnRoster }) : await resolveRoster({ finalCards: drawnRoster });
         } catch {
           setGameError("Something went wrong during the draw. Tap to try again.");
           setGameState("HOLD");

@@ -23,11 +23,16 @@ describe("scripted FTUE — gate is structural (basketball + solo + first-run on
     expect(GAME_VIEW).toMatch(
       /const ftueActive = soloFtueFirstRunRef\.current && !challengeCtx && !!adapter\.ftueScriptedHand/,
     );
-    // NEW A + glass-2b: gate requires a RESOLVED anonymous session — excludes
-    // signed-in users AND the transient first-render window (user=null).
-    expect(GAME_VIEW).toMatch(/&& !!user && isAnonymous;/);
-    // ...and the first-run ref is re-evaluated at each new-hand deal (termination).
+    // NEW A + glass-round-2 truth table: gate requires RESOLVED-anonymous —
+    // authReady (INITIAL_SESSION handled, isAnonymous trustworthy) + isAnonymous.
+    // TRUE only for a settled anon (incl. localStorage-only user=null); FALSE for
+    // signed-in AND the loading window (authReady=false).
+    expect(GAME_VIEW).toMatch(/&& authReady && isAnonymous;/);
+    // ...and the first-run ref is re-evaluated at each new-hand deal (termination),
+    // with a FRESH ftueActiveNow gate used for the deal/round injections (no
+    // one-deal-late double-deal).
     expect(GAME_VIEW).toMatch(/soloFtueFirstRunRef\.current = isSoloFtueFirstRun\(\);/);
+    expect(GAME_VIEW).toMatch(/const ftueActiveNow = soloFtueFirstRunRef\.current && !challengeCtx && !!adapter\.ftueScriptedHand/);
   });
   it("first-run comes from the shared isSoloFtueFirstRun() helper (anon-safe), NOT profile ftueCompleted", () => {
     expect(GAME_VIEW).toMatch(/useRef<boolean>\(isSoloFtueFirstRun\(\)\)/);
@@ -42,21 +47,21 @@ describe("scripted FTUE — gate is structural (basketball + solo + first-run on
 describe("scripted FTUE — ftueActive=false routes every site to the ADAPTER", () => {
   it("deal: non-FTUE branch calls adapter.dealInitialRoster()", () => {
     expect(GAME_VIEW).toMatch(
-      /res = ftueActive \? await adapter\.ftueScriptedHand!\.deal\(\) : await dealInitialRoster\(\);/,
+      /res = ftueActiveNow \? await adapter\.ftueScriptedHand!\.deal\(\) : await dealInitialRoster\(\);/,
     );
   });
   it("redraw: non-FTUE branch calls adapter.redrawRoster({ currentCards, lockedCardIds })", () => {
     expect(GAME_VIEW).toMatch(
-      /drawRes = ftueActive \? await adapter\.ftueScriptedHand!\.redraw\(\{ currentCards: markedRoster, roundsUsed \}\) : await redrawRoster\(\{ currentCards: markedRoster, lockedCardIds \}\);/,
+      /drawRes = ftueActiveNow \? await adapter\.ftueScriptedHand!\.redraw\(\{ currentCards: markedRoster, roundsUsed \}\) : await redrawRoster\(\{ currentCards: markedRoster, lockedCardIds \}\);/,
     );
   });
   it("resolve (both call sites): non-FTUE branch calls adapter.resolveRoster(...)", () => {
     const resolveTernaries = GAME_VIEW.match(
-      /resolveRes = ftueActive \? await adapter\.ftueScriptedHand!\.resolve\([^)]*\) : await resolveRoster\([^)]*\);/g,
+      /resolveRes = ftueActiveNow \? await adapter\.ftueScriptedHand!\.resolve\([^)]*\) : await resolveRoster\([^)]*\);/g,
     );
     expect(resolveTernaries?.length).toBe(2);
   });
-  it("early-lock is disabled ONLY under FTUE (&& !ftueActive) — normal play unchanged", () => {
-    expect(GAME_VIEW).toMatch(/const earlyLock = allHeld && maxRounds > 1 && !ftueActive;/);
+  it("early-lock is disabled ONLY under FTUE (&& !ftueActiveNow) — normal play unchanged", () => {
+    expect(GAME_VIEW).toMatch(/const earlyLock = allHeld && maxRounds > 1 && !ftueActiveNow;/);
   });
 });
