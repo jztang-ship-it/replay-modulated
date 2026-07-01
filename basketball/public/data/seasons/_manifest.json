@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-12T10:31:56.844Z",
+  "generatedAt": "2026-07-01T08:40:51.903Z",
   "seasons": [
     {
       "key": "0001",
       "label": "2000-01",
       "playerCount": 263,
       "logCount": 17788,
-      "playersBytes": 87607,
+      "playersBytes": 88491,
       "logsBytes": 6299484
     },
     {
@@ -14,7 +14,7 @@
       "label": "2001-02",
       "playerCount": 284,
       "logCount": 18884,
-      "playersBytes": 94660,
+      "playersBytes": 95593,
       "logsBytes": 6688553
     },
     {
@@ -22,7 +22,7 @@
       "label": "2002-03",
       "playerCount": 291,
       "logCount": 19427,
-      "playersBytes": 97002,
+      "playersBytes": 97956,
       "logsBytes": 6881517
     },
     {
@@ -30,7 +30,7 @@
       "label": "2003-04",
       "playerCount": 307,
       "logCount": 20212,
-      "playersBytes": 102771,
+      "playersBytes": 103785,
       "logsBytes": 7160884
     },
     {
@@ -38,7 +38,7 @@
       "label": "2004-05",
       "playerCount": 326,
       "logCount": 21115,
-      "playersBytes": 109109,
+      "playersBytes": 110191,
       "logsBytes": 7481980
     },
     {
@@ -46,7 +46,7 @@
       "label": "2005-06",
       "playerCount": 346,
       "logCount": 21803,
-      "playersBytes": 115997,
+      "playersBytes": 117147,
       "logsBytes": 7731000
     },
     {
@@ -54,7 +54,7 @@
       "label": "2006-07",
       "playerCount": 345,
       "logCount": 22265,
-      "playersBytes": 115696,
+      "playersBytes": 116838,
       "logsBytes": 7901259
     },
     {
@@ -62,7 +62,7 @@
       "label": "2007-08",
       "playerCount": 336,
       "logCount": 21922,
-      "playersBytes": 113313,
+      "playersBytes": 114440,
       "logsBytes": 7785797
     },
     {
@@ -70,7 +70,7 @@
       "label": "2008-09",
       "playerCount": 348,
       "logCount": 22322,
-      "playersBytes": 117456,
+      "playersBytes": 118607,
       "logsBytes": 7933714
     },
     {
@@ -78,7 +78,7 @@
       "label": "2009-10",
       "playerCount": 355,
       "logCount": 22837,
-      "playersBytes": 120072,
+      "playersBytes": 121266,
       "logsBytes": 8120463
     },
     {
@@ -86,7 +86,7 @@
       "label": "2010-11",
       "playerCount": 364,
       "logCount": 23298,
-      "playersBytes": 123566,
+      "playersBytes": 124784,
       "logsBytes": 8287566
     },
     {
@@ -94,7 +94,7 @@
       "label": "2011-12",
       "playerCount": 382,
       "logCount": 19284,
-      "playersBytes": 129162,
+      "playersBytes": 130463,
       "logsBytes": 6860336
     },
     {
@@ -102,7 +102,7 @@
       "label": "2012-13",
       "playerCount": 384,
       "logCount": 24376,
-      "playersBytes": 130323,
+      "playersBytes": 131652,
       "logsBytes": 8676672
     },
     {
@@ -110,7 +110,7 @@
       "label": "2013-14",
       "playerCount": 379,
       "logCount": 24034,
-      "playersBytes": 128968,
+      "playersBytes": 130296,
       "logsBytes": 8559992
     },
     {
@@ -118,7 +118,7 @@
       "label": "2014-15",
       "playerCount": 403,
       "logCount": 24721,
-      "playersBytes": 137401,
+      "playersBytes": 138852,
       "logsBytes": 8805859
     },
     {
@@ -126,7 +126,7 @@
       "label": "2015-16",
       "playerCount": 400,
       "logCount": 25122,
-      "playersBytes": 136251,
+      "playersBytes": 137718,
       "logsBytes": 8952047
     },
     {
@@ -134,7 +134,7 @@
       "label": "2016-17",
       "playerCount": 397,
       "logCount": 25034,
-      "playersBytes": 135650,
+      "playersBytes": 137139,
       "logsBytes": 8926799
     },
     {
@@ -142,7 +142,7 @@
       "label": "2017-18",
       "playerCount": 386,
       "logCount": 24339,
-      "playersBytes": 132155,
+      "playersBytes": 133619,
       "logsBytes": 8685828
     },
     {
@@ -150,7 +150,7 @@
       "label": "2018-19",
       "playerCount": 405,
       "logCount": 24731,
-      "playersBytes": 139203,
+      "playersBytes": 140794,
       "logsBytes": 8830618
     },
     {
@@ -158,7 +158,7 @@
       "label": "2019-20",
       "playerCount": 396,
       "logCount": 21056,
-      "playersBytes": 136146,
+      "playersBytes": 137748,
       "logsBytes": 7521792
     },
     {
@@ -166,7 +166,7 @@
       "label": "2020-21",
       "playerCount": 427,
       "logCount": 21759,
-      "playersBytes": 147048,
+      "playersBytes": 148839,
       "logsBytes": 7773368
     },
     {
@@ -174,7 +174,7 @@
       "label": "2021-22",
       "playerCount": 422,
       "logCount": 24291,
-      "playersBytes": 145357,
+      "playersBytes": 147173,
       "logsBytes": 8679925
     },
     {
@@ -182,7 +182,7 @@
       "label": "2022-23",
       "playerCount": 422,
       "logCount": 24688,
-      "playersBytes": 145370,
+      "playersBytes": 147206,
       "logsBytes": 8822922
     },
     {
@@ -190,7 +190,7 @@
       "label": "2023-24",
       "playerCount": 389,
       "logCount": 23483,
-      "playersBytes": 134176,
+      "playersBytes": 135929,
       "logsBytes": 8394860
     },
     {
@@ -198,15 +198,23 @@
       "label": "2024-25",
       "playerCount": 380,
       "logCount": 22416,
-      "playersBytes": 131139,
+      "playersBytes": 132819,
       "logsBytes": 8018013
+    },
+    {
+      "key": "2526",
+      "label": "2025-26",
+      "playerCount": 431,
+      "logCount": 26568,
+      "playersBytes": 135026,
+      "logsBytes": 9495472
     },
     {
       "key": "9697",
       "label": "1996-97",
       "playerCount": 212,
       "logCount": 14536,
-      "playersBytes": 70402,
+      "playersBytes": 71104,
       "logsBytes": 5144449
     },
     {
@@ -214,7 +222,7 @@
       "label": "1997-98",
       "playerCount": 228,
       "logCount": 15331,
-      "playersBytes": 75739,
+      "playersBytes": 76499,
       "logsBytes": 5426389
     },
     {
@@ -222,7 +230,7 @@
       "label": "1998-99",
       "playerCount": 242,
       "logCount": 10215,
-      "playersBytes": 80319,
+      "playersBytes": 81128,
       "logsBytes": 3615048
     },
     {
@@ -230,7 +238,7 @@
       "label": "1999-00",
       "playerCount": 250,
       "logCount": 17169,
-      "playersBytes": 82994,
+      "playersBytes": 83846,
       "logsBytes": 6079870
     }
   ]
