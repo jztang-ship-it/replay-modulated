@@ -27,6 +27,7 @@ import { DailySeasonReelGate } from "./components/DailySeasonReelGate";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { AuthProvider } from "@shared/auth/AuthProvider";
 import { useAuth } from "@shared/auth/useAuth";
+import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ResumeShareSurface } from "@shared/components/ResumeShareSurface";
 import { ChallengeSentConfirmation } from "@shared/components/ChallengeSentConfirmation";
@@ -671,7 +672,12 @@ function AppInner() {
              off mid-session so the reel doesn't surprise-fire. Resolved
              via the normal manifest path so today's daily season is
              still pinned for any later non-challenge hands they play. */
-          skipReel={!!challengeIdFromUrl}
+          /* NEW B / L1: on the scripted-FTUE first run (cold, not-signed-in),
+             skip the daily season reel so the user lands STRAIGHT in the FTUE
+             deal. After the FTUE completes (rm_solo_ftue_done) the flag flips
+             and the reel shows normally on the next entry. Same gate conditions
+             as GameView's ftueActive (first-run + not-signed-in). */
+          skipReel={!!challengeIdFromUrl || (isSoloFtueFirstRun() && !(isAuthenticated && !isAnonymous))}
           /* When the bypass is fired by challengeCtx (recipient accepted
              a challenge), pin the data engine to the CHALLENGE'S season,
              not FTUE_SEASON_KEY. Without this, retired players in the

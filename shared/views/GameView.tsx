@@ -160,6 +160,7 @@ import {
 import type { TopSlotTrigger } from "@shared/commentary/chadChallenge";
 import { isRealName } from "@shared/utils/isRealName";
 import { useAuth } from "@shared/auth/useAuth";
+import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { listMessages } from "@shared/inbox/inbox";
 import { useChallengeNotifications, type ChallengeNotification } from "@shared/hooks/useChallengeNotifications";
 import { ensureLoaded } from "@shared/engines/dataEngine";
@@ -460,21 +461,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const FTUE_ANCHOR_ID = ftueTextConfig.anchorCardId;
 
   // ── Scripted-first-hand FTUE gate (feat/ftue-scripted-hand) ───────────
-  // First-run detected ONCE at mount (localStorage, anon-safe) — read before
-  // the post-resolve replaymod_hand_count increment so it stays stable through
-  // hand 1 — plus the set-once completion flag. NOT the profile-backed
-  // ftueCompleted (null for anon / cold shared-link arrivals).
-  const soloFtueActiveRef = useRef<boolean>((() => {
-    if (typeof localStorage === "undefined") return false;
-    try {
-      if (localStorage.getItem("rm_solo_ftue_done") === "1") return false;
-      return (parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) || 0) === 0;
-    } catch { return false; }
-  })());
-  // The single gate at every FTUE site. Basketball-only by construction (only
-  // basketball supplies adapter.ftueScriptedHand) + solo-only (!challengeCtx).
-  // False ⇒ every injection site takes the byte-identical non-FTUE path.
-  const ftueActive = soloFtueActiveRef.current && !challengeCtx && !!adapter.ftueScriptedHand;
+  // First-run detected ONCE at mount via the shared helper (localStorage,
+  // anon-safe; read before the post-resolve hand-count increment so it stays
+  // stable through hand 1). The gate `ftueActive` itself is defined BELOW
+  // useAuth — it also requires NOT-signed-in (signed-in users never see FTUE).
+  const soloFtueFirstRunRef = useRef<boolean>(isSoloFtueFirstRun());
 
   // ── Shared game state ─────────────────────────────────────────────
   const sharedAdapter = useMemo(() => ({
@@ -571,6 +562,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [showBoss, setShowBoss] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { user, isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useAuth();
+
+  // The single FTUE gate at every FTUE site: first-run (localStorage, via the
+  // ref above) + solo (!challengeCtx) + basketball (only basketball supplies
+  // adapter.ftueScriptedHand) + NOT signed-in (signed-in users NEVER see the
+  // FTUE — restores the old bypass). False ⇒ every injection/driver/seal site
+  // takes the byte-identical non-FTUE path.
+  const ftueActive = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
+    && !(!!user && !isAnonymous);
+
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   // Notification panel state + hook. Anonymous users skip the fetch
@@ -925,7 +925,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const ftueCopy = adapter.ftueScriptedHand?.copy;
   const ftueR1Ref = useRef(false);
   const ftueR2Ref = useRef(false);
-  const ftueGiveR3Ref = useRef(false);
   const ftueRevealShownRef = useRef<Set<string>>(new Set());
   const ftueResultRef = useRef(false);
   const ftueResultLiveRef = useRef(false);
@@ -942,12 +941,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }, [ftueActive, gameState, roundsUsed]); // eslint-disable-line
 
-  // giveR3 — the "last two are on us" beat as the given cards land + reveal begins.
-  useEffect(() => {
-    if (!ftueActive || !ftueCopy || gameState !== "REVEALING" || ftueGiveR3Ref.current) return;
-    ftueGiveR3Ref.current = true;
-    setFtueCommentaryOverride({ parts: [ftueCopy.giveR3], sticky: true });
-  }, [ftueActive, gameState]); // eslint-disable-line
+  // giveR3 (glass #3): the pre-flip "last two are on us — Davis and Fox" beat is
+  // REMOVED — it named the given cards while they were still face-down. Reveal-
+  // then-name is now carried by the per-card reveal beats below (Fox reveals →
+  // revealNormal, Davis reveals → revealBomb), which fire on flip. The giveR3
+  // copy line is free for John to re-place (e.g. as a post-flip recap) if wanted.
 
   // Per-card reveal beats — each card's role → its verbatim beat, once, sticky
   // (replaced as the next card reveals). Reveal order is the engine's (unheld
@@ -2644,14 +2642,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     onAmountChange={(v) => { bonusPoolRef.current = v; }}
                   />
                 )}
-                {SlateChipComponent && <SlateChipComponent />}
+                {/* L2/#1 season display-pin: the FTUE is a sealed 2024-25 hand, so
+                    suppress the live slate chip (which reads getActiveSeason → today's
+                    boss-coupled season, e.g. "2006-07 · 135 players" — wrong for this
+                    roster) and show a static "2024-25" (no player count). */}
+                {ftueActive
+                  ? <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, color: "rgba(234,240,255,0.6)", fontFamily: "'Rajdhani','Arial Narrow',sans-serif" }}>2024-25</span>
+                  : (SlateChipComponent && <SlateChipComponent />)}
                 {/* BOSS pill — basketball-only, right-aligned in the year·players
                     row. Absolutely positioned so the SlateChip stays centered;
                     distinct from the slate-info chip (boss = a destination, gold).
                     Opens BossScreen (the single boss door). Glass the 360 width
                     budget for chip+pill crowding. Emphasis/pulse is the next
                     commit. */}
-                {sportKey === "basketball" && bossLive && (
+                {sportKey === "basketball" && bossLive && !ftueActive && (
                   <>
                     {/* Pill emphasis: unattempted → an OCCASIONAL single glow
                         pulse (one glow per ~18s, NOT a continuous blink);
@@ -2752,19 +2756,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     flipMsMap={flipMsMap}
                     fpCountUpMsMap={fpCountUpMsMap}
                     performanceTagMap={performanceTagMap}
-                    pulseMap={(ftueActive && gameState === "HOLD" && adapter.ftueScriptedHand)
-                      ? (() => {
-                          // FTUE spotlight: pulse-ring the UNHELD directed cards so it's
-                          // obvious which to tap (DRAW is gated on holding them). Clears
-                          // per-card as they lock. Merges into the existing pulseMap.
-                          const m = new Map(pulseMap ?? []);
-                          for (const c of roster) {
-                            const id = cardId(c);
-                            if (adapter.ftueScriptedHand!.directedHoldIds.includes(id) && !lockedCardIds.has(id)) m.set(id, "POS");
-                          }
-                          return m;
-                        })()
-                      : pulseMap}
+                    pulseMap={pulseMap}
                     shakingCardId={shakeInfo?.cardId ?? null}
                     shakeType={shakeInfo?.type ?? null}
                     cardShakeTypeMap={cardShakeTypeMap}
@@ -2773,7 +2765,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     glowTier={glowState.tier}
                     glowDurationMs={glowState.durationMs}
                     isSkipping={isSkipping}
-                    activeRevealCardId={activeRevealCardId}
+                    activeRevealCardId={(ftueActive && gameState === "HOLD" && adapter.ftueScriptedHand)
+                      ? (() => {
+                          // FTUE sequential spotlight (glass #2): light ONE directed card
+                          // at a time — the first present+unheld in order [LeBron, Edwards,
+                          // Draymond] — dimming the rest (RosterGrid dims every card except
+                          // the activeRevealCardId). LeBron → held → Edwards → held → clear
+                          // → DRAW; R2 spotlights Draymond. Field-dark, one-light path.
+                          const present = new Set(roster.map(cardId));
+                          for (const id of adapter.ftueScriptedHand!.directedHoldIds) {
+                            if (present.has(id) && !lockedCardIds.has(id)) return id;
+                          }
+                          return activeRevealCardId;
+                        })()
+                      : activeRevealCardId}
                     onToggleLock={toggleLock}
                     onToggleFlip={toggleStatsFlip}
                     revealMode={REVEAL_MODE}

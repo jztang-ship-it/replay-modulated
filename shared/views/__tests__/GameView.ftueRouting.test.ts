@@ -19,16 +19,20 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const GAME_VIEW = readFileSync(resolve(__dirname, "../GameView.tsx"), "utf8");
 
 describe("scripted FTUE — gate is structural (basketball + solo + first-run only)", () => {
-  it("ftueActive requires first-run ref AND !challengeCtx AND adapter.ftueScriptedHand", () => {
+  it("ftueActive requires first-run ref AND !challengeCtx AND adapter.ftueScriptedHand AND not-signed-in", () => {
     expect(GAME_VIEW).toMatch(
-      /const ftueActive = soloFtueActiveRef\.current && !challengeCtx && !!adapter\.ftueScriptedHand;/,
+      /const ftueActive = soloFtueFirstRunRef\.current && !challengeCtx && !!adapter\.ftueScriptedHand/,
     );
+    // NEW A: signed-in users NEVER see the FTUE (auth bypass in the gate).
+    expect(GAME_VIEW).toMatch(/&& !\(!!user && !isAnonymous\);/);
   });
-  it("first-run is read once from localStorage (anon-safe), NOT profile ftueCompleted", () => {
-    expect(GAME_VIEW).toMatch(/localStorage\.getItem\("rm_solo_ftue_done"\) === "1"/);
-    expect(GAME_VIEW).toMatch(/localStorage\.getItem\("replaymod_hand_count"\)/);
-    // the gate must not be sourced from the profile-backed flag
+  it("first-run comes from the shared isSoloFtueFirstRun() helper (anon-safe), NOT profile ftueCompleted", () => {
+    expect(GAME_VIEW).toMatch(/useRef<boolean>\(isSoloFtueFirstRun\(\)\)/);
     expect(GAME_VIEW).not.toMatch(/const ftueActive =[^\n]*ftueCompleted/);
+    // the helper (single source, shared with App's reel-skip) owns the localStorage read
+    const HELPER = readFileSync(resolve(__dirname, "../../utils/soloFtue.ts"), "utf8");
+    expect(HELPER).toMatch(/localStorage\.getItem\("rm_solo_ftue_done"\)/);
+    expect(HELPER).toMatch(/localStorage\.getItem\("replaymod_hand_count"\)/);
   });
 });
 
