@@ -55,6 +55,9 @@ export type RosterGridCardProps = {
   /** Top Games full result (tier + primaryReason). Used by the back-of-card
    *  achievement layout to render the featured stat + context line. */
   topGameResult?: TopGameResult | null;
+  /** FTUE Pass B only: when set, the card BACK renders this single sentence
+   *  (fantasy tiles stripped). Default undefined → normal back. */
+  backStringOverride?: string;
 };
 
 type Props = {
@@ -90,6 +93,13 @@ type Props = {
    *  (reveal the next card in the experienced order) instead of the normal
    *  lock/flip/tap-reveal. Set only during the FTUE REVEALING walk. */
   onFtueWalkAdvance?: () => void;
+  /** FTUE Pass B history beat (RESULTS): apply the single-card spotlight breath +
+   *  deep dim (same look as the walk) to the lit card, WITHOUT the walk's
+   *  tap-advance routing. Off (default) → no change. */
+  ftueHistoryActive?: boolean;
+  /** FTUE Pass B: per-card back-string override (card-id → sentence). Only the
+   *  matched card's back renders the sentence; every other back is unchanged. */
+  backStringOverrideMap?: Map<string, string>;
   canFlip: boolean;
   onToggleLock: (cardId: string) => void;
   onToggleFlip: (cardId: string) => void;
@@ -130,6 +140,8 @@ export function RosterGrid(props: Props) {
     isFTUE = false,
     ftueCeremonyBlink = false,
     onFtueWalkAdvance,
+    ftueHistoryActive = false,
+    backStringOverrideMap,
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false,
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
@@ -150,7 +162,11 @@ export function RosterGrid(props: Props) {
   //   - Ceremony: EVERY wall card breathes (the "alive" opening wall).
   const ftueHold = isFTUE && phase === "HOLD";
   const ftueWalk = isFTUE && isRevealingPhase;
-  const ftueSpotlightBreath = ftueHold || ftueWalk;   // one lit card at a time
+  // Pass B history beat (RESULTS): same single-card breath + deep dim as the walk,
+  // WITHOUT the walk's tap-advance routing (handleTap stays on the normal
+  // RESULTS flip path so the toggleStatsFlip lock gate owns "Ant only").
+  const ftueHistory = isFTUE && ftueHistoryActive;
+  const ftueSpotlightBreath = ftueHold || ftueWalk || ftueHistory;   // one lit card at a time
   const ftueBreathActive = ftueSpotlightBreath || ftueCeremonyBlink;
 
   return (
@@ -324,6 +340,7 @@ export function RosterGrid(props: Props) {
               isDimmed={isDimmed}
               topGameTier={cardTopGameTier}
               topGameResult={cardTopGameResult}
+              backStringOverride={backStringOverrideMap?.get(id)}
             />
           </div>
         );

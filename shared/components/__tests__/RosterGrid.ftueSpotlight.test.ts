@@ -41,7 +41,8 @@ describe("FTUE breath — extended to the ceremony wall + the reveal walk (Pass 
   it("ftueWalk = REVEALING; ftueSpotlightBreath = HOLD or walk (one lit card)", () => {
     expect(GRID).toMatch(/const ftueHold = isFTUE && phase === "HOLD";/);
     expect(GRID).toMatch(/const ftueWalk = isFTUE && isRevealingPhase;/);
-    expect(GRID).toMatch(/const ftueSpotlightBreath = ftueHold \|\| ftueWalk;/);
+    // Pass B folds the RESULTS history beat into the same single-card breath.
+    expect(GRID).toMatch(/const ftueSpotlightBreath = ftueHold \|\| ftueWalk \|\| ftueHistory;/);
     expect(GRID).toMatch(/const ftueBreathActive = ftueSpotlightBreath \|\| ftueCeremonyBlink;/);
   });
   it("keyframes inject under ftueBreathActive (HOLD/walk/ceremony), else normal-play DOM is unchanged", () => {

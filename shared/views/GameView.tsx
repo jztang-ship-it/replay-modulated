@@ -170,6 +170,9 @@ import { supabase } from "@shared/lib/supabase";
 // "auto" = cards flip automatically in sequence (original behaviour)
 // "tap"  = user taps each unheld card to reveal it; held FP fades in at end
 const REVEAL_MODE: "auto" | "tap" = "tap";
+// FTUE Pass B: dwell on the Giannis STARTER line at RESULTS before the history
+// prompt replaces it — the win is the emotional peak; don't step on it. Glass-tunable.
+const FTUE_HISTORY_DWELL_MS = 2200;
 
 const BASE_BET = 10;
 
@@ -961,6 +964,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const ftueWalkBusyRef = useRef(false);
   const pendingHeldRevealRef = useRef<(() => void) | null>(null);
   const ftueIntroShownRef = useRef(false);
+  // ── FTUE Pass B — historical-flip finale ──────────────────────────────
+  // idle → (RESULTS + dwell) → prompt (board locked to Ant, Replay dimmed) →
+  // (Ant flip) → flipped (back shows the real game, board released, Replay blinks).
+  const [ftueHistoryBeat, setFtueHistoryBeat] = useState<"idle" | "prompt" | "flipped">("idle");
+  // The card the beat spotlights = the hero (Edwards). Derived from cardRole so
+  // it can't drift from the scripted hand.
+  const ftueHistoryCardId = useMemo(() => {
+    const cr = adapter.ftueScriptedHand?.cardRole;
+    if (!cr) return undefined;
+    return Object.keys(cr).find((id) => cr[id] === "hero");
+  }, [adapter]);
 
   // Hold prompts — R1 (spotlit LeBron+Edwards) / R2 (spotlit Draymond), sticky.
   useEffect(() => {
@@ -1015,8 +1029,24 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (!ftueActive || ftueResultRef.current) return;
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     ftueResultRef.current = true;
+    // rm_solo_ftue_done fires HERE (the win), NOT after the Pass B history beat —
+    // the beat is a display-only bonus; completion must be abandon-resilient so
+    // closing the tab after the win never re-grinds the FTUE.
     try { localStorage.setItem("rm_solo_ftue_done", "1"); } catch { /* noop */ }
   }, [ftueActive, gameState]); // eslint-disable-line
+
+  // Pass B — history-beat entry. At RESULTS (after the Giannis WIN_CELEBRATION
+  // slam), let the STARTER line breathe (dwell), then lock the board to Ant and
+  // prompt the historical flip. Fires once (idle → prompt).
+  useEffect(() => {
+    if (!ftueActive || !ftueCopy || gameState !== "RESULTS") return;
+    if (ftueHistoryBeat !== "idle" || !ftueHistoryCardId) return;
+    const t = window.setTimeout(() => {
+      setFtueHistoryBeat("prompt");
+      if (ftueCopy.historyPrompt) setFtueCommentaryOverride({ parts: [ftueCopy.historyPrompt], sticky: true });
+    }, FTUE_HISTORY_DWELL_MS);
+    return () => window.clearTimeout(t);
+  }, [ftueActive, gameState, ftueHistoryBeat, ftueHistoryCardId]); // eslint-disable-line
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
@@ -1796,12 +1826,31 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     && flippedIds.size === 0;
   // Primary-CTA blink: signals "you can advance now". At HOLD once this round's
   // directed holds are all locked (mirrors the DRAW-gate) → NEXT blinks. At
-  // REVEALING entry (nothing revealed yet) → GAME TIME blinks.
+  // REVEALING entry (nothing revealed yet) → GAME TIME blinks. Pass B: after the
+  // Ant flip (history beat flipped) → REPLAY blinks (board released).
   const ftuePrimaryPulse = ftueActive && (
     (gameState === "HOLD" && !!adapter.ftueScriptedHand
       && !roster.some((c) => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c))))
     || (gameState === "REVEALING" && tappedCardIds.size === 0 && (heldRevealedIds?.size ?? 0) === 0)
+    || (gameState === "RESULTS" && ftueHistoryBeat === "flipped")
   );
+  // Pass B: REPLAY is dimmed + inert during the PROMPT (spotlight-Ant) stage,
+  // then released (blinks) once Ant has flipped. During the idle dwell the win
+  // reads normally (Giannis line breathing) — only card-flips are frozen.
+  const ftuePrimaryLocked = ftueActive && gameState === "RESULTS"
+    && ftueHistoryBeat === "prompt";
+  // Pass B: spotlight Ant + deep dim only during the PROMPT stage (not the dwell).
+  const ftueHistoryActive = ftueActive && gameState === "RESULTS"
+    && ftueHistoryBeat === "prompt";
+  // Pass B: Ant's card back renders the real game sentence (filled from its own
+  // baked log inside BackBStats). Only the hero card is in the map → every other
+  // back is byte-identical. Active for the whole RESULTS beat (only visible once
+  // flipped).
+  const ftueBackStringMap = useMemo(() => {
+    const line = ftueCopy?.historyBackString;
+    if (!ftueActive || !ftueHistoryCardId || !line) return undefined;
+    return new Map<string, string>([[ftueHistoryCardId, line]]);
+  }, [ftueActive, ftueHistoryCardId, ftueCopy]);
 
   const revealingIds = useMemo(() => {
     const ids = new Set<string>();
@@ -1926,11 +1975,24 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   function toggleStatsFlip(cardKey: string) {
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
+    // FTUE Pass B — the history beat locks the board (RESULTS only; ftueActive-gated
+    // so normal-play flipping is byte-identical):
+    //   idle (dwell on the Giannis line): whole board frozen.
+    //   prompt: only Ant (the hero) flips — every other tap inert.
+    //   flipped: released → normal toggle.
+    if (ftueActive && gameState === "RESULTS" && ftueHistoryBeat === "idle") return;
+    if (ftueActive && ftueHistoryBeat === "prompt" && cardKey !== ftueHistoryCardId) return;
     setStatsFlippedIds(prev => {
       const next = new Set(prev);
       next.has(cardKey) ? next.delete(cardKey) : next.add(cardKey);
       return next;
     });
+    // Ant's flip during the prompt advances the beat → board releases + Replay
+    // blinks (both derived from ftueHistoryBeat below) + the second line shows.
+    if (ftueActive && ftueHistoryBeat === "prompt" && cardKey === ftueHistoryCardId) {
+      setFtueHistoryBeat("flipped");
+      if (ftueCopy?.historyDone) setFtueCommentaryOverride({ parts: [ftueCopy.historyDone], sticky: true });
+    }
   }
 
   async function onPrimaryAction() {
@@ -3009,14 +3071,22 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           }
                           return activeRevealCardId;
                         })()
-                      : activeRevealCardId}
+                      // Pass B history beat: spotlight Ant (+ dim rest) at RESULTS
+                      // while the beat is locked (idle dwell + prompt); released on flip.
+                      : (ftueHistoryActive && ftueHistoryCardId)
+                        ? ftueHistoryCardId
+                        : activeRevealCardId}
                     // FTUE hold spotlight: recovered gold pulse on the lit card +
                     // deeper dim on the rest (RosterGrid gates on isFTUE && phase HOLD).
                     isFTUE={ftueActive}
                     // FTUE ceremony: breathe every wall card. FTUE reveal-walk:
-                    // any card tap advances the walk one beat.
+                    // any card tap advances the walk one beat. Pass B: history beat
+                    // applies the single-card breath/deep-dim at RESULTS + Ant's back
+                    // renders the real-game sentence.
                     ftueCeremonyBlink={ftueCeremonyBlink}
                     onFtueWalkAdvance={ftueActive && gameState === "REVEALING" ? advanceFtueWalk : undefined}
+                    ftueHistoryActive={ftueHistoryActive}
+                    backStringOverrideMap={ftueBackStringMap}
                     onToggleLock={toggleLock}
                     onToggleFlip={toggleStatsFlip}
                     revealMode={REVEAL_MODE}
@@ -3455,6 +3525,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         maxRounds={maxRounds}
         ftueActive={ftueActive}
         ftuePrimaryPulse={ftuePrimaryPulse}
+        ftuePrimaryLocked={ftuePrimaryLocked}
         hideTierBar
         showBetMultiplier={multiplierEnabled}
         onBetMultiplier={setBetMultiplier}

@@ -256,6 +256,16 @@ export const FTUE_COPY = {
   // R3-entry (REVEALING beat 0 — the two given cards still face-down)
   revealIntro: "tap to reveal or hit GAME TIME to see who your last two cards are.",
 
+  // ── Pass B — the historical-flip finale (RESULTS, after the Giannis slam) ──
+  // historyPrompt: board locks to Ant only; tap Ant → flips to the real game.
+  // historyBackString: rendered ON Edwards's card back — {pts}/{date} filled from
+  // the card's OWN baked log (statLine.pts / gameInfo.date) so it can never drift
+  // from the scored line; "Sactown" is authored copy (the raw log is "SAC").
+  // historyDone: after the flip → board releases + Replay blinks.
+  historyPrompt: "We're playing with real historical games, tap Ant to see the game that he pulled.",
+  historyBackString: "{pts} points against Sactown on {date}",
+  historyDone: "Now that you've gotten the hang of it, lets run it back for reals now.",
+
   // Per-card reveal beats — spoken as each card lights on its walk beat.
   // Keyed by role via FTUE_CARD_ROLE: revealNormal=Tobias, revealBomb=Zion,
   // revealLightIce=Draymond, revealHero=Edwards, revealAnchor=Giannis.

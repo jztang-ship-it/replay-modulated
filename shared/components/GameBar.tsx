@@ -123,6 +123,10 @@ type Props = {
    *  "you can advance now" — NEXT once the round's directed holds are locked,
    *  GAME TIME at the reveal-walk entry. Off (default) → no pulse. */
   ftuePrimaryPulse?: boolean;
+  /** FTUE Pass B only: dim + disable the primary CTA (REPLAY) during the history
+   *  beat's locked stage — reuses the existing disabled dim (opacity 0.3, no
+   *  action), and suppresses the pulse. Off (default) → no change. */
+  ftuePrimaryLocked?: boolean;
   /** Challenge mode: the recipient is playing a friend's hand. Hides
    *  the bet-multiplier selector AND the balance/wallet display since
    *  the matchup is decided by head-to-head score comparison, not by
@@ -1436,7 +1440,12 @@ export function GameBar({
   maxRounds = 1,
   ftueActive = false,
   ftuePrimaryPulse = false,
+  ftuePrimaryLocked = false,
 }: Props) {
+  // FTUE Pass B: the primary CTA is disabled/dimmed when the state disables it
+  // (DEALING/DRAWING) OR when the history beat locks REPLAY. Superset of the
+  // normal gate → non-FTUE (ftuePrimaryLocked=false) is byte-identical.
+  const primaryDisabled = isDisabled(gameState) || ftuePrimaryLocked;
   // x/N hold-loop indicator + "NEXT" relabel — multi-round only. Single-shot
   // sports (maxRounds 1) get neither, so their HOLD stays "DRAW" and no
   // indicator renders. Shown across the active hand (HOLD/DRAWING/REVEALING);
@@ -1759,19 +1768,19 @@ export function GameBar({
 
             <button
               onClick={onAction}
-              disabled={isDisabled(gameState)}
+              disabled={primaryDisabled}
               data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
               style={{
                 width: challengeAvailable ? 120 : "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",
                 padding: "11px 0",
                 fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                cursor: (isDisabled(gameState)) ? "default" : "pointer",
-                background: (isDisabled(gameState)) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                color: (isDisabled(gameState)) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                opacity: isDisabled(gameState) ? 0.3 : 1,
+                cursor: (primaryDisabled) ? "default" : "pointer",
+                background: (primaryDisabled) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                color: (primaryDisabled) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                opacity: primaryDisabled ? 0.3 : 1,
                 pointerEvents: "auto" as const,
-                boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                boxShadow: (primaryDisabled) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                 transition: "opacity 300ms ease", lineHeight: 1,
                 animation: (replayPulse || ftuePrimaryPulse) ? "replayPulse 1.2s ease-in-out infinite" : "none",
               }}>
@@ -1992,19 +2001,19 @@ export function GameBar({
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
               <button
                 onClick={onAction}
-                disabled={isDisabled(gameState)}
+                disabled={primaryDisabled}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
                 style={{
                   width: challengeAvailable ? 120 : "min(168px, 50%)",
                   borderRadius: THEME.button.action.borderRadius, border: "none",
                   padding: "11px 0",
                   fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
-                  cursor: (isDisabled(gameState)) ? "default" : "pointer",
-                  background: (isDisabled(gameState)) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
-                  color: (isDisabled(gameState)) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
-                  opacity: isDisabled(gameState) ? 0.3 : 1,
+                  cursor: (primaryDisabled) ? "default" : "pointer",
+                  background: (primaryDisabled) ? "rgba(255,255,255,0.10)" : actionBackground(gameState),
+                  color: (primaryDisabled) ? "rgba(255,255,255,0.35)" : actionTextColor(gameState),
+                  opacity: primaryDisabled ? 0.3 : 1,
                   pointerEvents: "auto" as const,
-                  boxShadow: (isDisabled(gameState)) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
+                  boxShadow: (primaryDisabled) ? "none" : "0 4px 14px rgba(0,0,0,0.30)",
                   transition: "opacity 150ms ease", lineHeight: 1,
                   animation: (replayPulse || ftuePrimaryPulse) ? "replayPulse 1.2s ease-in-out infinite" : "none",
                 }}>
