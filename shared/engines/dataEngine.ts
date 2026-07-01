@@ -166,8 +166,22 @@ export async function ensurePlayersLoaded(): Promise<void> {
     const url = loadMode === "monolithic"
       ? PLAYERS_URL
       : (activeSeasonKey ? `${SEASONS_BASE_URL}/${activeSeasonKey}/players.json` : null);
+    // TEMP DIAGNOSTIC (DEV only) — remove after FTUE glass root-cause.
+    if (typeof import.meta !== "undefined" && (import.meta as any).env?.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug("[FTUE-DIAG] ensurePlayersLoaded", { loadMode, activeSeasonKey, url });
+    }
     if (!url) { _playersLoading = null; return; } // per-season w/o pinned season → leave unloaded
-    _players = await fetchJson<RawPlayer[]>(url);
+    try {
+      _players = await fetchJson<RawPlayer[]>(url);
+    } catch (e) {
+      _playersLoading = null;
+      if (typeof import.meta !== "undefined" && (import.meta as any).env?.DEV) {
+        // eslint-disable-next-line no-console
+        console.debug("[FTUE-DIAG] ensurePlayersLoaded FAILED", (e as Error).message);
+      }
+      throw e; // reject → loader effect's .catch leaves unready (no false-ready)
+    }
     _playersLoading = null;
   })();
   return _playersLoading;

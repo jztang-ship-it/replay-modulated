@@ -21,7 +21,7 @@ describe("FTUE ceremony — the show-wall effect is FTUE + players-ready gated (
     // Gate is ftuePlayersReady (players.json ~176 KB), NOT dataReady (waits for
     // the 9.5 MB gamelogs). The players-only fast path feeds it.
     expect(GAME_VIEW).toMatch(/if \(!ftueActive \|\| gameState !== "IDLE" \|\| !ftuePlayersReady\) return;/);
-    expect(GAME_VIEW).toMatch(/ensurePlayersLoaded\(\)\.then\(\(\) => \{ if \(!cancelled\) setFtuePlayersReady\(true\); \}\)/);
+    expect(GAME_VIEW).toMatch(/ensurePlayersLoaded\(\)\s*\.then\(\(\) => \{ if \(!cancelled && arePlayersLoaded\(\)\) setFtuePlayersReady\(true\); \}\)/);
     // once-guard so the wall shows a single time per FTUE
     expect(GAME_VIEW).toMatch(/if \(ceremonyStartedRef\.current\) return;/);
     expect(GAME_VIEW).toMatch(/ceremonyStartedRef\.current = true;/);

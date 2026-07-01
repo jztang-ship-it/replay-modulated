@@ -163,7 +163,7 @@ import { useAuth } from "@shared/auth/useAuth";
 import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { listMessages } from "@shared/inbox/inbox";
 import { useChallengeNotifications, type ChallengeNotification } from "@shared/hooks/useChallengeNotifications";
-import { ensureLoaded, ensurePlayersLoaded, arePlayersLoaded } from "@shared/engines/dataEngine";
+import { ensureLoaded, ensurePlayersLoaded, arePlayersLoaded, getActiveSeason } from "@shared/engines/dataEngine";
 import { supabase } from "@shared/lib/supabase";
 
 // ── Reveal mode toggle ─────────────────────────────────────────────────────
@@ -591,6 +591,23 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [ftuePlayersReady, setFtuePlayersReady] = useState<boolean>(() => arePlayersLoaded());
   const ftuePlayersReadyRef = useRef<boolean>(ftuePlayersReady);
   ftuePlayersReadyRef.current = ftuePlayersReady;
+
+  // TEMP DIAGNOSTIC (DEV only) — remove after FTUE glass root-cause. Logs the
+  // ceremony gate + its inputs so a cold-anon run shows which condition fails.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    // eslint-disable-next-line no-console
+    console.debug("[FTUE-DIAG]", {
+      soloFirstRun: soloFtueFirstRunRef.current,
+      challengeCtx: !!challengeCtx,
+      hasScriptedHand: !!adapter.ftueScriptedHand,
+      hasCeremonyFn: !!adapter.ftueScriptedHand?.ceremony,
+      authReady, isAnonymous, ftueActive,
+      ftuePlayersReady, playersLoaded: arePlayersLoaded(),
+      gameState, activeSeason: getActiveSeason(),
+      ceremonyCards: (() => { try { return adapter.ftueScriptedHand?.ceremony?.()?.length ?? "n/a"; } catch (e) { return `throw:${(e as Error).message}`; } })(),
+    });
+  }, [ftueActive, ftuePlayersReady, gameState, authReady, isAnonymous]);
   // Latest onPrimaryAction, so the flip-complete listener re-enters the deal path
   // with a fresh closure (the flip spans ~1s of possible re-renders).
   const onPrimaryActionRef = useRef<() => void>(() => {});
@@ -1755,9 +1772,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (!ftueActive || ftuePlayersReady) return;
     if (arePlayersLoaded()) { setFtuePlayersReady(true); return; }
     let cancelled = false;
-    ensurePlayersLoaded().then(() => { if (!cancelled) setFtuePlayersReady(true); }).catch(() => { /* leave unready → normal deal */ });
+    // Only mark ready when players ACTUALLY loaded (a season-not-pinned-yet call
+    // resolves without loading — must not false-signal ready). dataReady is a dep
+    // so the full-load backstop re-runs this if the fast path no-opped early.
+    ensurePlayersLoaded()
+      .then(() => { if (!cancelled && arePlayersLoaded()) setFtuePlayersReady(true); })
+      .catch(() => { /* leave unready → dataReady backstop retries */ });
     return () => { cancelled = true; };
-  }, [ftueActive, ftuePlayersReady]);
+  }, [ftueActive, ftuePlayersReady, dataReady]);
 
   // First FTUE IDLE, once PLAYERS are ready: swap the empty placeholder deck for
   // five real First-Team fronts + the verbatim ceremony line. Retries across
