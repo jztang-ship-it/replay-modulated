@@ -565,11 +565,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   // The single FTUE gate at every FTUE site: first-run (localStorage, via the
   // ref above) + solo (!challengeCtx) + basketball (only basketball supplies
-  // adapter.ftueScriptedHand) + NOT signed-in (signed-in users NEVER see the
-  // FTUE — restores the old bypass). False ⇒ every injection/driver/seal site
-  // takes the byte-identical non-FTUE path.
+  // adapter.ftueScriptedHand) + RESOLVED-ANONYMOUS.
+  //   `!!user && isAnonymous` = a settled anon session — NOT signed-in AND NOT
+  //   the transient first-render window (user=null, isAnonymous defaults true).
+  //   Bug (glass-2b): the old `!(!!user && !isAnonymous)` was true during that
+  //   window, so a SIGNED-IN user's early DEAL fired the scripted hand before
+  //   INITIAL_SESSION resolved (coaching then bypassed once auth settled = the
+  //   drift). Requiring a resolved anon `user` seals it: signed-in and loading
+  //   both ⇒ false ⇒ byte-identical non-FTUE path.
   const ftueActive = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
-    && !(!!user && !isAnonymous);
+    && !!user && isAnonymous;
 
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -1770,6 +1775,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       }
       resetReveal();
       resetAllOverlays();
+      // FTUE termination (glass-2a): GameView does NOT remount between hands, so
+      // the read-once first-run ref would stay true all session → every hand FTUE
+      // (infinite tutorial). Re-evaluate at each new-hand DEAL (a discrete event,
+      // never mid-hand — so hand 1 stays stable through its own post-resolve
+      // hand_count increment). By hand 2's deal, replaymod_hand_count > 0 (hand 1
+      // locked) OR rm_solo_ftue_done="1" → isSoloFtueFirstRun() false → normal.
+      soloFtueFirstRunRef.current = isSoloFtueFirstRun();
       setRoundsUsed(1); // new hand → the deal is round/lineup 1 (lock fires after 2 rerolls = 3 lineups at maxRounds 3; first reroll locks at maxRounds 1 = single-shot)
       initialRosterRef.current = [];
       completedCardsRef.current = new Set();

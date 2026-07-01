@@ -23,8 +23,11 @@ describe("scripted FTUE — gate is structural (basketball + solo + first-run on
     expect(GAME_VIEW).toMatch(
       /const ftueActive = soloFtueFirstRunRef\.current && !challengeCtx && !!adapter\.ftueScriptedHand/,
     );
-    // NEW A: signed-in users NEVER see the FTUE (auth bypass in the gate).
-    expect(GAME_VIEW).toMatch(/&& !\(!!user && !isAnonymous\);/);
+    // NEW A + glass-2b: gate requires a RESOLVED anonymous session — excludes
+    // signed-in users AND the transient first-render window (user=null).
+    expect(GAME_VIEW).toMatch(/&& !!user && isAnonymous;/);
+    // ...and the first-run ref is re-evaluated at each new-hand deal (termination).
+    expect(GAME_VIEW).toMatch(/soloFtueFirstRunRef\.current = isSoloFtueFirstRun\(\);/);
   });
   it("first-run comes from the shared isSoloFtueFirstRun() helper (anon-safe), NOT profile ftueCompleted", () => {
     expect(GAME_VIEW).toMatch(/useRef<boolean>\(isSoloFtueFirstRun\(\)\)/);
