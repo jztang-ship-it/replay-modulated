@@ -42,9 +42,10 @@ import seasonIntros from "../data/seasonIntros.json";
 const MANIFEST_URL = "/basketball/data/seasons/_manifest.json";
 const TODAYS_PICK_KEY = "replaymod_todays_season_pick_basketball";
 /** When the FTUE bypass is on, pin to the latest season — that's what the
- *  hardcoded FTUE roster expects. Any newer season key takes precedence
- *  if added in the future; this is the conservative default. */
-const FTUE_SEASON_KEY = "2425";
+ *  ceremony wall (real 2025-26 First-Team cards) + scripted hand expect.
+ *  Any newer season key takes precedence if added in the future; this is
+ *  the conservative default. */
+const FTUE_SEASON_KEY = "2526";
 
 type BossSchedule = { _meta: { epoch: string; horizonDays: number; bankVersion: string }; seasons: string[] };
 const BOSS_SCHEDULE = bossSchedule as BossSchedule;
@@ -103,7 +104,7 @@ type Props = {
   skipReel?: boolean;
   /** When `bypass` is true, override the season the data engine is
    *  pinned to. Without this, bypass mode hard-codes FTUE_SEASON_KEY —
-   *  correct for FTUE (the hardcoded roster needs 2024-25 data) but
+   *  correct for FTUE (the hardcoded roster needs 2025-26 data) but
    *  WRONG for challenge replay (the recipient needs the CHALLENGE'S
    *  original season's logs so retired/historical players in the
    *  snapshot resolve correctly). Caller passes `challengeCtx?.season`
@@ -150,7 +151,7 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
     // If we're transitioning out of FTUE (bypass true → false), reset the
     // gate to its loading state synchronously so children stop rendering
     // until the reel mounts. Without this, the GameView with the FTUE
-    // anchor season (2024-25) flashes for ~1 frame before the reel covers.
+    // anchor season (2025-26) flashes for ~1 frame before the reel covers.
     const justExitedFtue = prevBypassRef.current && !bypass;
     prevBypassRef.current = bypass;
     if (justExitedFtue) {
@@ -164,13 +165,13 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
         new URLSearchParams(window.location.search).get("reel") === "force";
 
       // Bypass: skip the reel and pin the active season directly.
-      //   - FTUE (no bypassSeasonKey): use FTUE_SEASON_KEY (2425). The
-      //     hardcoded FTUE roster expects 2024-25 data.
+      //   - FTUE (no bypassSeasonKey): use FTUE_SEASON_KEY (2526). The
+      //     hardcoded FTUE roster expects 2025-26 data.
       //   - Challenge replay (bypassSeasonKey set): use the challenge's
       //     original season. The recipient's snapshot has players from
       //     that era (e.g. 1617). Without this override, retired-by-now
       //     players (Aldridge, Whiteside, etc.) resolve to null logs
-      //     and score 0 FP because logsByKey only has 2024-25 entries.
+      //     and score 0 FP because logsByKey only has 2025-26 entries.
       // Pre-fetch the manifest in the background so the reel can fire
       // immediately when bypass ends (no second wait).
       if (bypass && !forceReel) {

@@ -2656,12 +2656,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     onAmountChange={(v) => { bonusPoolRef.current = v; }}
                   />
                 )}
-                {/* L2/#1 season display-pin: the FTUE is a sealed 2024-25 hand, so
+                {/* L2/#1 season display-pin: the FTUE is a sealed 2025-26 hand, so
                     suppress the live slate chip (which reads getActiveSeason → today's
                     boss-coupled season, e.g. "2006-07 · 135 players" — wrong for this
-                    roster) and show a static "2024-25" (no player count). */}
+                    roster) and show a static "2025-26" (no player count). */}
                 {ftueActive
-                  ? <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, color: "rgba(234,240,255,0.6)", fontFamily: "'Rajdhani','Arial Narrow',sans-serif" }}>2024-25</span>
+                  ? <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 0.4, color: "rgba(234,240,255,0.6)", fontFamily: "'Rajdhani','Arial Narrow',sans-serif" }}>2025-26</span>
                   : (SlateChipComponent && <SlateChipComponent />)}
                 {/* BOSS pill — basketball-only, right-aligned in the year·players
                     row. Absolutely positioned so the SlateChip stays centered;

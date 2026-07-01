@@ -685,7 +685,7 @@ function AppInner() {
              a challenge), pin the data engine to the CHALLENGE'S season,
              not FTUE_SEASON_KEY. Without this, retired players in the
              snapshot (e.g. Aldridge in a 1617 challenge) score 0 FP
-             because logsByKey only contains 2024-25 entries. FTUE
+             because logsByKey only contains 2025-26 entries. FTUE
              bypass passes null here so the gate falls back to its
              FTUE_SEASON_KEY default. */
           bypassSeasonKey={challengeCtx?.season ?? null}
