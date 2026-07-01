@@ -79,6 +79,10 @@ type Props = {
   cardShakeTypeMap?: Map<string, ShakeType | null>;
   visibleBadgesMap?: Map<string, Array<{ id: string; icon: string; label: string; fp: number }>>;
   activeRevealCardId?: string | null;
+  /** FTUE only: recovers the old spotlight treatment on the directed-hold card —
+   *  the gold `ftueCardPulse` ring on the lit card + a deeper dim on the rest.
+   *  Off (default) → normal play byte-identical. */
+  isFTUE?: boolean;
   canFlip: boolean;
   onToggleLock: (cardId: string) => void;
   onToggleFlip: (cardId: string) => void;
@@ -116,6 +120,7 @@ export function RosterGrid(props: Props) {
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
     flipMsMap, fpCountUpMsMap, performanceTagMap, pulseMap,
     shakingCardId, shakeType, cardShakeTypeMap, visibleBadgesMap, activeRevealCardId,
+    isFTUE = false,
     revealMode = "auto", onTapReveal, heldFpVisible = false, heldRevealedIds, tappedCardIds, isRevealingPhase = false,
     glowCardId, glowTier, glowDurationMs,
     isSkipping = false,
@@ -129,6 +134,10 @@ export function RosterGrid(props: Props) {
     return [...roster].sort((a, b) => (a.slotIndex ?? 0) - (b.slotIndex ?? 0));
   }, [roster]);
 
+  // FTUE directed-hold spotlight: recovered gold pulse on the lit card + deeper
+  // dim on the rest. Confined to HOLD so the reveal phase is untouched.
+  const ftueHold = isFTUE && phase === "HOLD";
+
   return (
     <div className="roster-grid" style={{
       width: "100%",
@@ -138,6 +147,14 @@ export function RosterGrid(props: Props) {
       rowGap: 6,
       boxSizing: "border-box",
     }}>
+      {/* Recovered from CardBackGeneric@21706b1e (isFTUE gold pulse) — verbatim
+          keyframes: 1.4s ease-in-out infinite, gold #FFB14A ring 2px@.5 → 3px@1 + glow. */}
+      {ftueHold && (
+        <style>{`@keyframes ftueCardPulse {
+          0%,100% { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.5); }
+          50%     { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,177,74,1), 0 0 18px rgba(255,177,74,0.5); }
+        }`}</style>
+      )}
       {cards.map((card) => {
         const id = keyOf(card);
         const isLocked = lockedIds.has(id);
@@ -199,15 +216,20 @@ export function RosterGrid(props: Props) {
               zIndex: isSpotlight ? 100 : isShaking ? 10 : 1,
               background: "transparent",
               cursor: isTapTarget ? "pointer" : "default",
-              boxShadow: "none",
+              // FTUE hold spotlight: recovered gold pulse ring on the lit card
+              // (borderRadius hugs the card so the ring matches its shape).
+              ...(ftueHold && isSpotlight
+                ? { borderRadius: 18, boxShadow: "0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.6)", animation: "ftueCardPulse 1.4s ease-in-out infinite" as const }
+                : { boxShadow: "none" }),
               transition: "box-shadow 300ms ease",
             }}
           >
-            {/* Dim overlay — sits above 3D card as a sibling, never touches preserve-3d */}
+            {/* Dim overlay — sits above 3D card as a sibling, never touches preserve-3d.
+                FTUE hold deepens it (0.45 → 0.72) so the lit card clearly pops. */}
             {isDimmed && (
               <div style={{
                 position: "absolute", inset: 0, borderRadius: 18,
-                background: "rgba(4,8,16,0.45)",
+                background: `rgba(4,8,16,${ftueHold ? 0.72 : 0.45})`,
                 pointerEvents: "none", zIndex: 120,
                 transition: "opacity 0.3s ease",
               }} />

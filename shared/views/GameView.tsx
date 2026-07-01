@@ -2887,9 +2887,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     activeRevealCardId={(ftueActive && gameState === "HOLD" && adapter.ftueScriptedHand)
                       ? (() => {
                           // FTUE sequential spotlight (glass #2): light ONE directed card
-                          // at a time — the first present+unheld in order [LeBron, Edwards,
+                          // at a time — the first present+unheld in order [Giannis, Edwards,
                           // Draymond] — dimming the rest (RosterGrid dims every card except
-                          // the activeRevealCardId). LeBron → held → Edwards → held → clear
+                          // the activeRevealCardId). Giannis → held → Edwards → held → clear
                           // → DRAW; R2 spotlights Draymond. Field-dark, one-light path.
                           const present = new Set(roster.map(cardId));
                           for (const id of adapter.ftueScriptedHand!.directedHoldIds) {
@@ -2898,6 +2898,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           return activeRevealCardId;
                         })()
                       : activeRevealCardId}
+                    // FTUE hold spotlight: recovered gold pulse on the lit card +
+                    // deeper dim on the rest (RosterGrid gates on isFTUE && phase HOLD).
+                    isFTUE={ftueActive}
                     onToggleLock={toggleLock}
                     onToggleFlip={toggleStatsFlip}
                     revealMode={REVEAL_MODE}
