@@ -29,6 +29,7 @@
  */
 
 import type { GeneratedCard } from "@shared/types";
+import { getPlayers } from "../engines/dataEngine";
 
 type TierColor = "RED" | "ORANGE" | "PURPLE" | "BLUE" | "GREEN" | "WHITE";
 
@@ -209,3 +210,54 @@ export const FTUE_COPY = {
   resultThesis: "Salary tells you what's LIKELY — never what's certain. A winning hand needs your stars to deliver AND your value picks to surprise. That's why the total works — not one steal, the whole squad under the cap.",
   resultHandoff: "That's a real number to beat. Now you're off the training wheels — same deal, live slate, your calls. Go cook.",
 } as const;
+
+// ── THE OPENING CEREMONY (pre-deal wall) ────────────────────────────────────
+// Five REAL 2025-26 All-NBA First-Team cards, pulled by basePlayerId from the
+// loaded 2526 pool (season pinned by DailySeasonReelGate). Shown face-up before
+// the scripted deal, then flipped to backs L→R as the deal's payoff. The cards
+// carry no game outcome (actualFp 0) — this is the "here's what a dream team
+// looks like" teaching wall, not a played hand. Order is L→R wall order.
+//
+// Verbatim ceremony line (John's copy — wired, not edited):
+export const FTUE_CEREMONY_LINE =
+  "250 dollar budget to assemble your own dream team, the higher the projected fantasy points(fp) the more expensive player. Show em how its done.";
+
+// L→R: SGA, Jokić, Wembanyama, Luka Dončić, Cade Cunningham (2025-26 First Team).
+const FTUE_CEREMONY_IDS = ["1628983", "203999", "1641705", "1629029", "1630595"] as const;
+
+/** Build the five real 2526 ceremony cards from the loaded pool. Returns [] if
+ *  the pool isn't loaded yet OR any of the five is missing — GameView then skips
+ *  the ceremony rather than render a broken/partial wall (STOP-safe). */
+export function ceremonyFtueRoster(): GeneratedCard[] {
+  let players: any[] = [];
+  try { players = getPlayers(); } catch { return []; } // pool not loaded → no ceremony
+  const byId = new Map(players.map((p: any) => [String(p.basePlayerId), p]));
+  const out: GeneratedCard[] = [];
+  FTUE_CEREMONY_IDS.forEach((bid, i) => {
+    const p = byId.get(bid);
+    if (!p) return;
+    out.push({
+      id: `${bid}_${p.season}`,
+      basePlayerId: bid,
+      personKey: bid,
+      cardId: `ftue-ceremony-${bid}`,
+      name: p.name,
+      team: p.team,
+      season: p.season,
+      position: p.position,
+      photoCode: p.photoCode ?? bid,
+      salary: Number(p.salary),
+      tier: p.tier,
+      slotIndex: i,
+      projectedFp: Number(p.projectedFp ?? p.avgFP ?? 0),
+      actualFp: 0,
+      fpDelta: 0,
+      statLine: {},
+      gameInfo: { date: "", opponent: "", homeAway: "" },
+      achievements: [],
+      wasHeld: false,
+    } as unknown as GeneratedCard);
+  });
+  // All-or-nothing: a partial wall is a bug, not a fallback.
+  return out.length === FTUE_CEREMONY_IDS.length ? out : [];
+}

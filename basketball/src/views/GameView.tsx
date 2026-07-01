@@ -45,6 +45,8 @@ import {
   FTUE_DIRECTED_HOLD_IDS,
   FTUE_CARD_ROLE,
   FTUE_COPY,
+  ceremonyFtueRoster,
+  FTUE_CEREMONY_LINE,
 } from "../adapters/ftueScriptedHand";
 import { AthleteCard, resetAllOverlays } from "../components/AthleteCard";
 import {
@@ -239,6 +241,8 @@ export default function GameView({
       directedHoldIds: FTUE_DIRECTED_HOLD_IDS,
       cardRole: FTUE_CARD_ROLE,
       copy: FTUE_COPY as Record<string, string>,
+      ceremony: ceremonyFtueRoster,
+      ceremonyLine: FTUE_CEREMONY_LINE,
     },
     getTodaysStars,
     computeRosterCeiling,

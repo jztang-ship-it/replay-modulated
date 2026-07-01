@@ -554,7 +554,7 @@ export function PlayerCardShell(props: CardShellProps) {
   };
 
   return (
-    <div className={`${shakeClass}${isTapTarget ? " pcs-tap-bounce" : ""}`} style={outerStyle}>
+    <div className={`${shakeClass}${isTapTarget ? " pcs-tap-bounce" : ""}`} style={outerStyle} data-cardid={id}>
       {/* Tap target pulse — bounce animation only, no border overlay */}
       <div className={innerClass} style={innerStyle}>
         <div className="pcs-face">

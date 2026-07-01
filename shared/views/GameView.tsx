@@ -576,6 +576,18 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const ftueActive = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
     && authReady && isAnonymous;
 
+  // ── FTUE opening ceremony (pre-deal wall) ──────────────────────────────────
+  // On the scripted-FTUE first run, IDLE shows five real First-Team cards face-up
+  // + the verbatim ceremony line instead of the empty placeholder deck. A single
+  // tap-through of the line flips them to backs L→R; the LAST card's real
+  // flip-complete (transitionend on transform, NOT a timer) fires the scripted
+  // deal. Phases: none → cards → flipping → done. Non-FTUE never enters this.
+  const ceremonyPhaseRef = useRef<"none" | "cards" | "flipping" | "done">("none");
+  const ceremonyStartedRef = useRef(false);
+  // Latest onPrimaryAction, so the flip-complete listener re-enters the deal path
+  // with a fresh closure (the flip spans ~1s of possible re-renders).
+  const onPrimaryActionRef = useRef<() => void>(() => {});
+
   const [bellOpen, setBellOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   // Notification panel state + hook. Anonymous users skip the fetch
@@ -1722,6 +1734,59 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   const displayRoster = roster;
 
+  // ── FTUE ceremony: show the wall, then flip → scripted deal ────────────────
+  const ceremonyIdsRef = useRef<string[]>([]);
+
+  // Keep the deal re-entry closure fresh for the flip-complete listener (the
+  // flip spans ~1s of possible re-renders).
+  useEffect(() => { onPrimaryActionRef.current = onPrimaryAction; });
+
+  // First FTUE IDLE, once the pool is ready: swap the empty placeholder deck for
+  // five real First-Team fronts + the verbatim ceremony line. Retries across
+  // renders until dataReady + the five cards resolve (ceremonyStartedRef = once).
+  useEffect(() => {
+    if (!ftueActive || gameState !== "IDLE" || !dataReady) return;
+    if (ceremonyStartedRef.current) return;
+    const build = adapter.ftueScriptedHand?.ceremony;
+    const cards = build ? build() : [];
+    if (!cards.length) return; // pool not ready / not all five → skip (normal deal)
+    ceremonyStartedRef.current = true;
+    ceremonyPhaseRef.current = "cards";
+    const ids = cards.map((c) => cardId(c));
+    ceremonyIdsRef.current = ids;
+    setRoster(cards as any);
+    // Settle face-up (mirrors the deal's initCards → reveal → complete settle).
+    flipState.initCards(ids);
+    for (const id of ids) flipState.revealCard(id);
+    for (const id of ids) flipState.completeReveal(id);
+    const line = adapter.ftueScriptedHand?.ceremonyLine;
+    if (line) setFtueCommentaryOverride({ parts: [line], sticky: false });
+  }, [ftueActive, gameState, dataReady, adapter, flipState, setRoster, setFtueCommentaryOverride]);
+
+  // Tap-through of the line → staggered L→R flip to backs → the LAST card's real
+  // transitionend (transform, NOT a timer) re-enters the scripted deal, so a slow
+  // device can never deal under cards still mid-flip.
+  const runCeremonyFlipThenDeal = useCallback(() => {
+    const ids = ceremonyIdsRef.current;
+    if (!ids.length) { onPrimaryActionRef.current(); return; }
+    ceremonyPhaseRef.current = "flipping";
+    const lastId = ids[ids.length - 1];
+    let fired = false;
+    const onEnd = (e: TransitionEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t || e.propertyName !== "transform" || !t.classList?.contains("pcs-inner")) return;
+      const host = t.closest("[data-cardid]");
+      if (!host || host.getAttribute("data-cardid") !== lastId || fired) return;
+      fired = true;
+      window.removeEventListener("transitionend", onEnd, true);
+      ceremonyPhaseRef.current = "done";
+      onPrimaryActionRef.current(); // → scripted R1 (ceremony gate now clears)
+    };
+    window.addEventListener("transitionend", onEnd, true);
+    // Staggered flip-STARTS are visual only; the DEAL waits on the event above.
+    ids.forEach((id, i) => setTimeout(() => flipState.beginDraw([id]), i * 120));
+  }, [flipState]);
+
   const visibleFpMap = useMemo(() => {
     const map = new Map<string, number>();
     for (const c of roster) {
@@ -1776,6 +1841,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     const ftueActiveNow = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
       && authReady && isAnonymous;
     if (gameState === "IDLE") {
+      // FTUE ceremony gate: while the wall is showing/flipping, a primary action
+      // must NOT deal — the tap-through of the ceremony line owns the flip, and
+      // the flip-complete event re-enters here with phase "done" (which passes).
+      if (ftueActiveNow && (ceremonyPhaseRef.current === "cards" || ceremonyPhaseRef.current === "flipping")) return;
       // F2P: skip the affordability lockout when the economy is off (wallet never
       // moves). Outer-wrapped so the inner `if (balance < currentBet)` line stays
       // byte-identical for the pinned betOncePerHand assertion.
@@ -3078,6 +3147,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
+                // Ceremony tap-through: the wall's line was dismissed → flip the
+                // five to backs L→R; the last flip-complete fires the scripted deal.
+                if (ceremonyPhaseRef.current === "cards") { runCeremonyFlipThenDeal(); return; }
                 // Scripted-FTUE release: the result sequence's final beat was
                 // dismissed → set the set-once completion flag so the FTUE never
                 // replays (abandon-resilient). Only the FTUE result run flips
