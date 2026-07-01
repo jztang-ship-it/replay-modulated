@@ -257,14 +257,14 @@ export const FTUE_COPY = {
   revealIntro: "tap to reveal or hit GAME TIME to see who your last two cards are.",
 
   // ── Pass B — the historical-flip finale (RESULTS, after the Giannis slam) ──
-  // historyPrompt: board locks to Ant only; tap Ant → flips to the real game.
-  // historyBackString: rendered ON Edwards's card back — {pts}/{date} filled from
-  // the card's OWN baked log (statLine.pts / gameInfo.date) so it can never drift
-  // from the scored line; "Sactown" is authored copy (the raw log is "SAC").
-  // historyDone: after the flip → board releases + Replay blinks.
-  historyPrompt: "We're playing with real historical games, tap Ant to see the game that he pulled.",
-  historyBackString: "{pts} points against Sactown on {date}",
-  historyDone: "Now that you've gotten the hang of it, lets run it back for reals now.",
+  // Ant's card back is a NORMAL flipped-card back (real box score / stat tiles) —
+  // the box score IS the proof the beat teaches; the sentence is commentary, not
+  // card content. BOTH lines route through the standard commentary channel.
+  // historyPrompt: before the flip. historyDone: after — the historical sentence
+  // lives here (John's copy; pts/date are Edwards's pinned 2526 log, fixed for the
+  // sealed hand; "Sactown" is authored — the raw log is "SAC"). John polishes wording.
+  historyPrompt: "tap Ant to see the game that he pulled",
+  historyDone: "43 points against Sactown on Nov 24, 2025. Now that you've gotten the hang of it, lets run it back for reals now.",
 
   // Per-card reveal beats — spoken as each card lights on its walk beat.
   // Keyed by role via FTUE_CARD_ROLE: revealNormal=Tobias, revealBomb=Zion,

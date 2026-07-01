@@ -304,7 +304,7 @@ function StatRows({
 // a Top Game result, defers to AchievementBack which uses the achievement
 // stat as the hero instead of FP.
 
-function BackBStats({ card, topGameResult, backStringOverride }: { card: PlayerCard; topGameTier?: TopGameTier | null; topGameResult?: TopGameResult | null; backStringOverride?: string }) {
+function BackBStats({ card, topGameResult }: { card: PlayerCard; topGameTier?: TopGameTier | null; topGameResult?: TopGameResult | null }) {
   const gi = (card as any).gameInfo || {};
   const sl = (card as any).statLine || {};
   const posStats = useMemo(() => getPositionStats(card.position as Position, sl), [card.position, sl]);
@@ -326,32 +326,6 @@ function BackBStats({ card, topGameResult, backStringOverride }: { card: PlayerC
   const opponent = String(rawOpp).trim();
   const ha = gi.homeAway || (sl.was_home === true ? "H" : sl.was_home === false ? "A" : "");
   const oppStr = opponent ? `${ha === "A" ? "@" : "vs"} ${opponent.toUpperCase()}` : "";
-
-  // FTUE Pass B — the historical-flip finale. The back becomes the RAW real-game
-  // fact, stated plainly: the fantasy layer (tiles, FP-hero, badges) is stripped
-  // for this beat so the card reads as "here's the actual box score that
-  // generated everything you just saw." {pts}/{date} are filled from the card's
-  // OWN baked log (statLine.pts / gameInfo.date via the same fmtDate the normal
-  // back uses) so the string can never drift from the scored line; "Sactown" is
-  // authored copy. Only Edwards receives this override → every other back is
-  // byte-identical.
-  if (backStringOverride) {
-    const filled = backStringOverride
-      .replace("{pts}", String(Number(sl.pts ?? 0)))
-      .replace("{date}", dateStr || "");
-    return (
-      <div style={{ ...S.backWrap, position: "relative", justifyContent: "center", alignItems: "center" }}>
-        <div style={{
-          fontSize: 17, fontWeight: 900, color: "#FFFFFF", lineHeight: 1.4,
-          textAlign: "center", padding: "0 12px", letterSpacing: -0.2,
-        }}>
-          {filled}
-        </div>
-        <div style={{ ...S.tapHint, position: "absolute", bottom: 6, left: 0, right: 0 }}>TAP TO FLIP BACK</div>
-      </div>
-    );
-  }
-
   const badgesData: Array<{ icon: string; label: string; fp: number; id?: string }> =
     Array.isArray((card as any).achievements) ? (card as any).achievements.filter(Boolean) : [];
   const hasStats = Object.keys(sl).length > 0;
@@ -450,11 +424,6 @@ type Props = {
   topGameTier?: TopGameTier | null;
   /** Top Games full result — drives the achievement-mode back layout. */
   topGameResult?: TopGameResult | null;
-  /** FTUE Pass B only: when set, the card BACK renders this single sentence as
-   *  the hero line (fantasy tiles/FP-hero stripped) — the raw real-game fact
-   *  ("{pts} points against Sactown on {date}"). Tokens are filled by BackBStats
-   *  from the card's own baked log. Default undefined → normal back (byte-identical). */
-  backStringOverride?: string;
 };
 
 function AthleteCardImpl(props: Props) {
@@ -464,7 +433,6 @@ function AthleteCardImpl(props: Props) {
     glowDurationMs,
     topGameTier,
     topGameResult,
-    backStringOverride,
     ...rest
   } = props;
   return (
@@ -484,7 +452,7 @@ function AthleteCardImpl(props: Props) {
           )}
         />
       )}
-      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} topGameResult={topGameResult ?? null} backStringOverride={backStringOverride} />}
+      renderBack={(p: CardBackProps) => <BackBStats card={p.card} topGameTier={topGameTier ?? null} topGameResult={topGameResult ?? null} />}
     />
   );
 }
@@ -499,7 +467,7 @@ const SCALAR_KEYS: Array<keyof Props> = [
   "flipDurationMs", "fpCountUpMs", "performanceTag", "pulse", "shakeType",
   "cardShakeType", "isSpotlight", "spotlightLevel", "isDimmed",
   "heldFpVisible", "isTapTarget", "glowActive", "glowTier",
-  "glowDurationMs", "topGameTier", "backStringOverride",
+  "glowDurationMs", "topGameTier",
 ];
 
 function badgesEqual(

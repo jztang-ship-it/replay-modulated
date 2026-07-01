@@ -170,9 +170,14 @@ import { supabase } from "@shared/lib/supabase";
 // "auto" = cards flip automatically in sequence (original behaviour)
 // "tap"  = user taps each unheld card to reveal it; held FP fades in at end
 const REVEAL_MODE: "auto" | "tap" = "tap";
-// FTUE Pass B: dwell on the Giannis STARTER line at RESULTS before the history
-// prompt replaces it — the win is the emotional peak; don't step on it. Glass-tunable.
-const FTUE_HISTORY_DWELL_MS = 2200;
+// FTUE Pass B — finale timing (both glass-tunable):
+// FTUE_SLAM_HOLD_MS: how long the STARTER slam holds at WIN_CELEBRATION before
+//   the FTUE hand auto-advances to RESULTS (normal play is user-tap-gated here;
+//   the FTUE beat needs RESULTS, so we advance it automatically after the slam).
+// FTUE_HISTORY_DWELL_MS: extra beat on the Giannis STARTER line at RESULTS before
+//   the history prompt takes over.
+const FTUE_SLAM_HOLD_MS = 2000;
+const FTUE_HISTORY_DWELL_MS = 1200;
 
 const BASE_BET = 10;
 
@@ -1035,6 +1040,24 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     try { localStorage.setItem("rm_solo_ftue_done", "1"); } catch { /* noop */ }
   }, [ftueActive, gameState]); // eslint-disable-line
 
+  // Pass B — FTUE finale auto-advance. The WIN_CELEBRATION→RESULTS transition is
+  // normally USER-TAP-GATED (onWinCelebrationComplete only fires from a celebration
+  // / score-row tap — there is no auto-advance). The history beat needs the RESULTS
+  // screen (board + REPLAY, no celebration overlay), so while the sealed hand rests
+  // on the slam it never engages → the prompt never surfaces. For FTUE only, once
+  // the slam has held, advance to RESULTS automatically so the beat plays "after
+  // the slam" without the user having to dismiss the celebration. This was the
+  // real prompt-blank root (not the card-back path, which never touched the
+  // commentary channel). ftueActive-gated → normal play is byte-identical.
+  const ftueFinaleAdvancedRef = useRef(false);
+  useEffect(() => {
+    if (!ftueActive || gameState !== "WIN_CELEBRATION") return;
+    if (ftueFinaleAdvancedRef.current) return;
+    ftueFinaleAdvancedRef.current = true;
+    const t = window.setTimeout(() => onWinCelebrationComplete(), FTUE_SLAM_HOLD_MS);
+    return () => window.clearTimeout(t);
+  }, [ftueActive, gameState]); // eslint-disable-line
+
   // Pass B — history-beat entry. At RESULTS (after the Giannis WIN_CELEBRATION
   // slam), let the STARTER line breathe (dwell), then advance the STATE to
   // "prompt". The commentary is set by the dedicated effect below (keyed on the
@@ -1857,15 +1880,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Pass B: spotlight Ant + deep dim only during the PROMPT stage (not the dwell).
   const ftueHistoryActive = ftueActive && gameState === "RESULTS"
     && ftueHistoryBeat === "prompt";
-  // Pass B: Ant's card back renders the real game sentence (filled from its own
-  // baked log inside BackBStats). Only the hero card is in the map → every other
-  // back is byte-identical. Active for the whole RESULTS beat (only visible once
-  // flipped).
-  const ftueBackStringMap = useMemo(() => {
-    const line = ftueCopy?.historyBackString;
-    if (!ftueActive || !ftueHistoryCardId || !line) return undefined;
-    return new Map<string, string>([[ftueHistoryCardId, line]]);
-  }, [ftueActive, ftueHistoryCardId, ftueCopy]);
+  // (Ant's card back is a NORMAL flipped-card back — the real box score IS the
+  // proof. No card-back override; the historical sentence lives in the closer
+  // commentary line.)
 
   const revealingIds = useMemo(() => {
     const ids = new Set<string>();
@@ -3096,12 +3113,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     isFTUE={ftueActive}
                     // FTUE ceremony: breathe every wall card. FTUE reveal-walk:
                     // any card tap advances the walk one beat. Pass B: history beat
-                    // applies the single-card breath/deep-dim at RESULTS + Ant's back
-                    // renders the real-game sentence.
+                    // applies the single-card breath/deep-dim at RESULTS (Ant's back
+                    // is a normal box-score flip — no card-back override).
                     ftueCeremonyBlink={ftueCeremonyBlink}
                     onFtueWalkAdvance={ftueActive && gameState === "REVEALING" ? advanceFtueWalk : undefined}
                     ftueHistoryActive={ftueHistoryActive}
-                    backStringOverrideMap={ftueBackStringMap}
                     onToggleLock={toggleLock}
                     onToggleFlip={toggleStatsFlip}
                     revealMode={REVEAL_MODE}

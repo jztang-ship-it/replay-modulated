@@ -71,19 +71,26 @@ describe("Pass B — rm_solo_ftue_done stays at WIN_CELEBRATION (abandon-resilie
   });
 });
 
-describe("Pass B — the card-back render is card-sourced + default-off", () => {
-  it("GameView builds the hero-only back-string map from the copy slot", () => {
-    expect(GAME_VIEW).toMatch(/ftueCopy\?\.historyBackString/);
-    expect(GAME_VIEW).toMatch(/new Map<string, string>\(\[\[ftueHistoryCardId, line\]\]\)/);
+describe("Pass B — the card-back override is GONE; Ant's back is a normal box-score flip", () => {
+  it("no backStringOverride / map / historyBackString anywhere (spec error removed)", () => {
+    expect(ATHLETE).not.toMatch(/backStringOverride/);
+    expect(ROSTER).not.toMatch(/backStringOverride/);
+    expect(GAME_VIEW).not.toMatch(/backStringOverride/);
+    expect(GAME_VIEW).not.toMatch(/ftueBackStringMap/);
+    expect(GAME_VIEW).not.toMatch(/historyBackString/);
   });
-  it("BackBStats renders the sentence (fantasy tiles stripped) only when overridden; {pts}/{date} from the card", () => {
-    expect(ATHLETE).toMatch(/if \(backStringOverride\) \{/);
-    expect(ATHLETE).toMatch(/\.replace\("\{pts\}", String\(Number\(sl\.pts \?\? 0\)\)\)/);
-    expect(ATHLETE).toMatch(/\.replace\("\{date\}", dateStr \|\| ""\)/);
+  it("both history lines route through the STANDARD commentary channel (state-keyed effect)", () => {
+    expect(GAME_VIEW).toMatch(/if \(ftueHistoryBeat === "prompt" && ftueCopy\.historyPrompt\) \{\s*\n\s*setFtueCommentaryOverride\(\{ parts: \[ftueCopy\.historyPrompt\], sticky: true \}\);/);
+    expect(GAME_VIEW).toMatch(/else if \(ftueHistoryBeat === "flipped" && ftueCopy\.historyDone\) \{\s*\n\s*setFtueCommentaryOverride\(\{ parts: \[ftueCopy\.historyDone\], sticky: true \}\);/);
   });
-  it("backStringOverride defaults undefined → normal back byte-identical", () => {
-    expect(ATHLETE).toMatch(/backStringOverride\?: string/);
-    expect(ROSTER).toMatch(/backStringOverride=\{backStringOverrideMap\?\.get\(id\)\}/);
+});
+
+describe("Pass B — FTUE finale auto-advances to RESULTS after the slam (the prompt-blank root)", () => {
+  it("ftueActive-gated WIN_CELEBRATION→RESULTS auto-advance via onWinCelebrationComplete", () => {
+    expect(GAME_VIEW).toMatch(/if \(!ftueActive \|\| gameState !== "WIN_CELEBRATION"\) return;/);
+    expect(GAME_VIEW).toMatch(/window\.setTimeout\(\(\) => onWinCelebrationComplete\(\), FTUE_SLAM_HOLD_MS\)/);
+    // guarded once so it can't re-fire
+    expect(GAME_VIEW).toMatch(/if \(ftueFinaleAdvancedRef\.current\) return;/);
   });
 });
 
