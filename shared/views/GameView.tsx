@@ -1036,17 +1036,32 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   }, [ftueActive, gameState]); // eslint-disable-line
 
   // Pass B — history-beat entry. At RESULTS (after the Giannis WIN_CELEBRATION
-  // slam), let the STARTER line breathe (dwell), then lock the board to Ant and
-  // prompt the historical flip. Fires once (idle → prompt).
+  // slam), let the STARTER line breathe (dwell), then advance the STATE to
+  // "prompt". The commentary is set by the dedicated effect below (keyed on the
+  // beat state), NOT here — so the prompt line survives the WIN_CELEBRATION→
+  // RESULTS handoff + the sticky Giannis override, instead of racing inside this
+  // detached timer. Fires once (idle → prompt).
   useEffect(() => {
     if (!ftueActive || !ftueCopy || gameState !== "RESULTS") return;
     if (ftueHistoryBeat !== "idle" || !ftueHistoryCardId) return;
-    const t = window.setTimeout(() => {
-      setFtueHistoryBeat("prompt");
-      if (ftueCopy.historyPrompt) setFtueCommentaryOverride({ parts: [ftueCopy.historyPrompt], sticky: true });
-    }, FTUE_HISTORY_DWELL_MS);
+    const t = window.setTimeout(() => setFtueHistoryBeat("prompt"), FTUE_HISTORY_DWELL_MS);
     return () => window.clearTimeout(t);
   }, [ftueActive, gameState, ftueHistoryBeat, ftueHistoryCardId]); // eslint-disable-line
+
+  // Pass B — history-beat COMMENTARY, driven by the beat STATE (not the transient
+  // dwell timer / flip handler). Runs deterministically on the render where
+  // ftueHistoryBeat commits to "prompt"/"flipped", so the prompt + closer lines
+  // reliably take over the commentary channel from the sticky Giannis override.
+  // This was the blank-prompt root: the line was previously set inside a detached
+  // setTimeout that didn't survive the finale's state handoff.
+  useEffect(() => {
+    if (!ftueActive || !ftueCopy) return;
+    if (ftueHistoryBeat === "prompt" && ftueCopy.historyPrompt) {
+      setFtueCommentaryOverride({ parts: [ftueCopy.historyPrompt], sticky: true });
+    } else if (ftueHistoryBeat === "flipped" && ftueCopy.historyDone) {
+      setFtueCommentaryOverride({ parts: [ftueCopy.historyDone], sticky: true });
+    }
+  }, [ftueActive, ftueHistoryBeat, ftueCopy]); // eslint-disable-line
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
@@ -1988,10 +2003,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       return next;
     });
     // Ant's flip during the prompt advances the beat → board releases + Replay
-    // blinks (both derived from ftueHistoryBeat below) + the second line shows.
+    // blinks + the closer line shows. State only; the closer commentary is set by
+    // the state-keyed history-beat effect above (deterministic handoff).
     if (ftueActive && ftueHistoryBeat === "prompt" && cardKey === ftueHistoryCardId) {
       setFtueHistoryBeat("flipped");
-      if (ftueCopy?.historyDone) setFtueCommentaryOverride({ parts: [ftueCopy.historyDone], sticky: true });
     }
   }
 

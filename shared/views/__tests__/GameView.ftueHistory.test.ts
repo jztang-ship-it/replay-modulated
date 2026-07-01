@@ -33,6 +33,15 @@ describe("Pass B — the lock-state is ftueActive-gated (no leak into normal pla
     expect(GAME_VIEW).toMatch(/setFtueHistoryBeat\("flipped"\)/);
     expect(GAME_VIEW).toMatch(/ftueCopy\.historyDone/);
   });
+  it("history-beat commentary is driven by the beat STATE, not the transient dwell timer / flip handler", () => {
+    // the blank-prompt fix: prompt + closer lines are set from a dedicated effect
+    // keyed on ftueHistoryBeat, so they survive the WIN_CELEBRATION→RESULTS handoff
+    // and the sticky Giannis override (no longer set inside a detached setTimeout).
+    expect(GAME_VIEW).toMatch(/if \(ftueHistoryBeat === "prompt" && ftueCopy\.historyPrompt\) \{\s*\n\s*setFtueCommentaryOverride\(\{ parts: \[ftueCopy\.historyPrompt\], sticky: true \}\);/);
+    expect(GAME_VIEW).toMatch(/else if \(ftueHistoryBeat === "flipped" && ftueCopy\.historyDone\) \{\s*\n\s*setFtueCommentaryOverride\(\{ parts: \[ftueCopy\.historyDone\], sticky: true \}\);/);
+    // the dwell timer now advances STATE ONLY (no commentary set inside it)
+    expect(GAME_VIEW).toMatch(/const t = window\.setTimeout\(\(\) => setFtueHistoryBeat\("prompt"\), FTUE_HISTORY_DWELL_MS\);/);
+  });
   it("the hero card is derived from cardRole (can't drift from the scripted hand)", () => {
     expect(GAME_VIEW).toMatch(/cr\[id\] === "hero"/);
   });
