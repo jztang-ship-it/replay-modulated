@@ -145,6 +145,32 @@ export function invalidateCache(): void {
   _players = null;
   _logsByKey = null;
   _loading = null;
+  _playersLoading = null;
+}
+
+// ── Players-only fast path ──────────────────────────────────────────────────
+// The FTUE ceremony needs player RECORDS (~176 KB players.json) but not the
+// ~9.5 MB gamelogs. ensureLoaded() awaits both in a Promise.all, so getPlayers()
+// isn't usable until logs land — which made the ceremony wait behind the big
+// download (the phone load-race that skipped it). ensurePlayersLoaded() loads
+// only players.json so the ceremony can mount fast. Idempotent; a no-op once
+// _players is set (by this OR ensureLoaded, whichever wins).
+let _playersLoading: Promise<void> | null = null;
+export function arePlayersLoaded(): boolean {
+  return _players !== null;
+}
+export async function ensurePlayersLoaded(): Promise<void> {
+  if (_players !== null) return;
+  if (_playersLoading) return _playersLoading;
+  _playersLoading = (async () => {
+    const url = loadMode === "monolithic"
+      ? PLAYERS_URL
+      : (activeSeasonKey ? `${SEASONS_BASE_URL}/${activeSeasonKey}/players.json` : null);
+    if (!url) { _playersLoading = null; return; } // per-season w/o pinned season → leave unloaded
+    _players = await fetchJson<RawPlayer[]>(url);
+    _playersLoading = null;
+  })();
+  return _playersLoading;
 }
 
 async function fetchJson<T>(url: string): Promise<T> {

@@ -163,7 +163,7 @@ import { useAuth } from "@shared/auth/useAuth";
 import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { listMessages } from "@shared/inbox/inbox";
 import { useChallengeNotifications, type ChallengeNotification } from "@shared/hooks/useChallengeNotifications";
-import { ensureLoaded } from "@shared/engines/dataEngine";
+import { ensureLoaded, ensurePlayersLoaded, arePlayersLoaded } from "@shared/engines/dataEngine";
 import { supabase } from "@shared/lib/supabase";
 
 // ── Reveal mode toggle ─────────────────────────────────────────────────────
@@ -584,6 +584,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // deal. Phases: none → cards → flipping → done. Non-FTUE never enters this.
   const ceremonyPhaseRef = useRef<"none" | "cards" | "flipping" | "done">("none");
   const ceremonyStartedRef = useRef(false);
+  // The ceremony mounts on PLAYERS-loaded (~176 KB), NOT dataReady (which waits
+  // for the ~9.5 MB gamelogs) — closes the phone load-race that skipped it. The
+  // FTUE deal is gated on this too, so a tap during the load can't deal past the
+  // not-yet-mounted ceremony. A ref shadows the state for the onPrimaryAction gate.
+  const [ftuePlayersReady, setFtuePlayersReady] = useState<boolean>(() => arePlayersLoaded());
+  const ftuePlayersReadyRef = useRef<boolean>(ftuePlayersReady);
+  ftuePlayersReadyRef.current = ftuePlayersReady;
   // Latest onPrimaryAction, so the flip-complete listener re-enters the deal path
   // with a fresh closure (the flip spans ~1s of possible re-renders).
   const onPrimaryActionRef = useRef<() => void>(() => {});
@@ -1741,11 +1748,22 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // flip spans ~1s of possible re-renders).
   useEffect(() => { onPrimaryActionRef.current = onPrimaryAction; });
 
-  // First FTUE IDLE, once the pool is ready: swap the empty placeholder deck for
-  // five real First-Team fronts + the verbatim ceremony line. Retries across
-  // renders until dataReady + the five cards resolve (ceremonyStartedRef = once).
+  // Kick off the players-only load as soon as the FTUE is active, independent of
+  // the full ensureLoaded (which the reel gate also fires for logs). Fast → the
+  // ceremony can mount without waiting on the 9.5 MB gamelogs.
   useEffect(() => {
-    if (!ftueActive || gameState !== "IDLE" || !dataReady) return;
+    if (!ftueActive || ftuePlayersReady) return;
+    if (arePlayersLoaded()) { setFtuePlayersReady(true); return; }
+    let cancelled = false;
+    ensurePlayersLoaded().then(() => { if (!cancelled) setFtuePlayersReady(true); }).catch(() => { /* leave unready → normal deal */ });
+    return () => { cancelled = true; };
+  }, [ftueActive, ftuePlayersReady]);
+
+  // First FTUE IDLE, once PLAYERS are ready: swap the empty placeholder deck for
+  // five real First-Team fronts + the verbatim ceremony line. Retries across
+  // renders until ftuePlayersReady + the five cards resolve (ceremonyStartedRef = once).
+  useEffect(() => {
+    if (!ftueActive || gameState !== "IDLE" || !ftuePlayersReady) return;
     if (ceremonyStartedRef.current) return;
     const build = adapter.ftueScriptedHand?.ceremony;
     const cards = build ? build() : [];
@@ -1761,7 +1779,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     for (const id of ids) flipState.completeReveal(id);
     const line = adapter.ftueScriptedHand?.ceremonyLine;
     if (line) setFtueCommentaryOverride({ parts: [line], sticky: false });
-  }, [ftueActive, gameState, dataReady, adapter, flipState, setRoster, setFtueCommentaryOverride]);
+  }, [ftueActive, gameState, ftuePlayersReady, adapter, flipState, setRoster, setFtueCommentaryOverride]);
 
   // Tap-through of the line → staggered L→R flip to backs → the LAST card's real
   // transitionend (transform, NOT a timer) re-enters the scripted deal, so a slow
@@ -1841,6 +1859,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     const ftueActiveNow = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
       && authReady && isAnonymous;
     if (gameState === "IDLE") {
+      // FTUE load-race gate: until the ceremony pool (players) is ready the wall
+      // can't have mounted yet — swallow the tap so it can't deal past the
+      // (not-yet-shown) ceremony. Once ready, the ceremony effect mounts and the
+      // phase gate below owns the flip; if there's no ceremony, this clears and
+      // the deal proceeds normally.
+      if (ftueActiveNow && !ftuePlayersReadyRef.current) return;
       // FTUE ceremony gate: while the wall is showing/flipping, a primary action
       // must NOT deal — the tap-through of the ceremony line owns the flip, and
       // the flip-complete event re-enters here with phase "done" (which passes).

@@ -16,12 +16,18 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const GAME_VIEW = readFileSync(resolve(__dirname, "../GameView.tsx"), "utf8");
 
-describe("FTUE ceremony — the show-wall effect is FTUE + pool-ready gated (once)", () => {
-  it("only runs for ftueActive, in IDLE, once the pool is ready (dataReady)", () => {
-    expect(GAME_VIEW).toMatch(/if \(!ftueActive \|\| gameState !== "IDLE" \|\| !dataReady\) return;/);
+describe("FTUE ceremony — the show-wall effect is FTUE + players-ready gated (once)", () => {
+  it("mounts on PLAYERS-loaded (not dataReady/gamelogs) — closes the load-race", () => {
+    // Gate is ftuePlayersReady (players.json ~176 KB), NOT dataReady (waits for
+    // the 9.5 MB gamelogs). The players-only fast path feeds it.
+    expect(GAME_VIEW).toMatch(/if \(!ftueActive \|\| gameState !== "IDLE" \|\| !ftuePlayersReady\) return;/);
+    expect(GAME_VIEW).toMatch(/ensurePlayersLoaded\(\)\.then\(\(\) => \{ if \(!cancelled\) setFtuePlayersReady\(true\); \}\)/);
     // once-guard so the wall shows a single time per FTUE
     expect(GAME_VIEW).toMatch(/if \(ceremonyStartedRef\.current\) return;/);
     expect(GAME_VIEW).toMatch(/ceremonyStartedRef\.current = true;/);
+  });
+  it("the FTUE deal is gated until players are ready (a load-window tap can't skip the wall)", () => {
+    expect(GAME_VIEW).toMatch(/if \(ftueActiveNow && !ftuePlayersReadyRef\.current\) return;/);
   });
   it("pulls the five real cards from the adapter (sport-specific data off shared)", () => {
     expect(GAME_VIEW).toMatch(/adapter\.ftueScriptedHand\?\.ceremony/);
