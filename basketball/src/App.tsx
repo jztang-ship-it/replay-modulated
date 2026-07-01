@@ -663,7 +663,14 @@ function AppInner() {
         />
       ) : (
         <DailySeasonReelGate
-          bypass={!!challengeCtx}
+          /* bypass = pin a specific season + skip the reel. TRUE for challenge
+             replay (pins the challenge's season) AND for the scripted-FTUE first
+             run (bypassSeasonKey null → FTUE_SEASON_KEY = 2526, which the ceremony
+             wall + season context need). Without the FTUE arm here the gate fell
+             through to the daily boss season and the ceremony found 0 of its five
+             2526 cards. skipReel below is the weaker "skip reel, keep today's
+             season" flag; bypass wins when both are true. */
+          bypass={!!challengeCtx || (isSoloFtueFirstRun() && authReady && isAnonymous)}
           /* Recipients of a challenge link skip the reel for the whole
              session — pre-Accept they're on the landing screen which has
              its own era caption (data.share_headline above the score),
