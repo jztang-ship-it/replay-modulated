@@ -459,6 +459,23 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // this constant so the FTUE flow stays sport-agnostic.
   const FTUE_ANCHOR_ID = ftueTextConfig.anchorCardId;
 
+  // ── Scripted-first-hand FTUE gate (feat/ftue-scripted-hand) ───────────
+  // First-run detected ONCE at mount (localStorage, anon-safe) — read before
+  // the post-resolve replaymod_hand_count increment so it stays stable through
+  // hand 1 — plus the set-once completion flag. NOT the profile-backed
+  // ftueCompleted (null for anon / cold shared-link arrivals).
+  const soloFtueActiveRef = useRef<boolean>((() => {
+    if (typeof localStorage === "undefined") return false;
+    try {
+      if (localStorage.getItem("rm_solo_ftue_done") === "1") return false;
+      return (parseInt(localStorage.getItem("replaymod_hand_count") ?? "0", 10) || 0) === 0;
+    } catch { return false; }
+  })());
+  // The single gate at every FTUE site. Basketball-only by construction (only
+  // basketball supplies adapter.ftueScriptedHand) + solo-only (!challengeCtx).
+  // False ⇒ every injection site takes the byte-identical non-FTUE path.
+  const ftueActive = soloFtueActiveRef.current && !challengeCtx && !!adapter.ftueScriptedHand;
+
   // ── Shared game state ─────────────────────────────────────────────
   const sharedAdapter = useMemo(() => ({
     sportKey,
@@ -665,6 +682,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   useEffect(() => {
     if (gameState !== "IDLE") return;
+    if (ftueActive) return; // FTUE coach owns the commentary slot on the first hand
     if (localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1") return;
     // Challenge acceptors get their own intro chip instead. Skip firing
     // the welcome HERE, but leave the flag alone — when they later play
@@ -823,6 +841,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // Chad nudge about ROOKIE tier rules). onChallengeUrl covers pre-Accept.
   useEffect(() => {
     if (challengeCtx || onChallengeUrl) return;
+    if (ftueActive) return; // FTUE owns the result-row voice on the first-ever hand
     if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return;
     if (winTier !== "ROOKIE") return;
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
@@ -838,6 +857,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // null but landing screen open).
   useEffect(() => {
     if (challengeCtx || onChallengeUrl || gameState !== "IDLE") return;
+    if (ftueActive) return; // FTUE coach owns the commentary slot on the first hand
     // OAuth-resume race guard (build lock rev 3): skip the entire chad
     // pass while a resume payload is queued, so a chad bubble doesn't fire
     // on top of the ResumeShareSurface modal flow.
@@ -1733,7 +1753,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // routed first-timers into ftueDealRoster() is gone. It was
           // INDEPENDENT of the FTUE flag (the second deal gate), so cut here
           // is what actually stops the scripted Tatum hand from dealing.
-          res = await dealInitialRoster();
+          res = ftueActive ? await adapter.ftueScriptedHand!.deal() : await dealInitialRoster();
         }
       } catch (e) {
         // Surface the real error to the console — the on-screen banner is
@@ -1785,6 +1805,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // with no redraw; the REDRAW head (else) is byte-for-byte today's behavior.
       // The only economic delta between them is the `userTappedReveal` token fed
       // to commitRound below (earlyLock vs the hardcoded false the redraw uses).
+      // FTUE DRAW-gate (owned, not railroaded): the coach won't advance the round
+      // until the directed cards present this round are held (they're spotlit —
+      // "lock in who you trust"). A stray DRAW tap is a no-op; the user performs
+      // the real hold themselves. Non-FTUE untouched (ftueActive false → skipped).
+      if (ftueActive && roster.some(c => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c)))) {
+        return;
+      }
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       // Trigger: tapping the primary CTA with EVERY card held = "lock what I see
       // now". markedRoster is freshly marked from the CURRENT lockedCardIds at tap
@@ -1793,7 +1820,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // Gated to maxRounds > 1: a single-shot sport has no early lock, so earlyLock
       // stays false → redraw head + userTappedReveal:false, byte-identical to today.
       const allHeld = markedRoster.length > 0 && markedRoster.every(c => (c as any).wasHeld);
-      const earlyLock = allHeld && maxRounds > 1;
+      const earlyLock = allHeld && maxRounds > 1 && !ftueActive;
       let finalRoster: PlayerCard[];
       let mvp: string | undefined;
 
@@ -1808,7 +1835,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         if (roundsUsed === 1) {
           let resolveRes: any;
           try {
-            resolveRes = await resolveRoster({ finalCards: markedRoster });
+            resolveRes = ftueActive ? await adapter.ftueScriptedHand!.resolve({ finalCards: markedRoster }) : await resolveRoster({ finalCards: markedRoster });
           } catch {
             setGameError("Something went wrong. Tap to try again.");
             setGameState("HOLD");
@@ -1828,9 +1855,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         await sleep(DRAWING_DWELL_MS);
         let drawRes: any, resolveRes: any;
         try {
-          drawRes = await redrawRoster({ currentCards: markedRoster, lockedCardIds });
+          drawRes = ftueActive ? await adapter.ftueScriptedHand!.redraw({ currentCards: markedRoster, roundsUsed }) : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
           const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-          resolveRes = await resolveRoster({ finalCards: drawnRoster });
+          resolveRes = ftueActive ? await adapter.ftueScriptedHand!.resolve({ finalCards: drawnRoster }) : await resolveRoster({ finalCards: drawnRoster });
         } catch {
           setGameError("Something went wrong during the draw. Tap to try again.");
           setGameState("HOLD");
