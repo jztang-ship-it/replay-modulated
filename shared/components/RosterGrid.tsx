@@ -147,10 +147,21 @@ export function RosterGrid(props: Props) {
       rowGap: 6,
       boxSizing: "border-box",
     }}>
-      {/* Recovered from CardBackGeneric@21706b1e (isFTUE gold pulse) — verbatim
-          keyframes: 1.4s ease-in-out infinite, gold #FFB14A ring 2px@.5 → 3px@1 + glow. */}
+      {/* FTUE hold spotlight animations.
+          - ftueSpotlightBreath (JOHN'S PRIORITY): the card BREATHES by scaling.
+            The old FTUE had no scale pulse (its spotlight scale was static + a
+            box-shadow ring) — built fresh to intent. Applied to the SLOT so it
+            COMPOUNDS with the card's static rest-pop (× 1.08 → 1.05⇄1.11 for an
+            ORANGE card; proportional for others), oscillating around the rest,
+            never resetting it. ±2.8% around 1.0, 1.4s ease-in-out infinite.
+          - ftueCardPulse: recovered gold ring (CardBackGeneric@21706b1e), verbatim
+            companion. */}
       {ftueHold && (
-        <style>{`@keyframes ftueCardPulse {
+        <style>{`@keyframes ftueSpotlightBreath {
+          0%,100% { transform: scale(0.972); }
+          50%     { transform: scale(1.028); }
+        }
+        @keyframes ftueCardPulse {
           0%,100% { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,177,74,0.5); }
           50%     { box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 3px rgba(255,177,74,1), 0 0 18px rgba(255,177,74,0.5); }
         }`}</style>
@@ -218,6 +229,13 @@ export function RosterGrid(props: Props) {
               cursor: isTapTarget ? "pointer" : "default",
               boxShadow: "none",
               transition: "box-shadow 300ms ease",
+              // FTUE hold spotlight: breathe the lit card by scaling (John's
+              // priority). On the slot so it compounds with the card's static
+              // rest-pop (center-origin, both center → clean); z 100 grows over
+              // dimmed neighbors; transform never reflows the grid.
+              ...(ftueHold && isSpotlight
+                ? { transformOrigin: "center", animation: "ftueSpotlightBreath 1.4s ease-in-out infinite" as const }
+                : {}),
             }}
           >
             {/* Dim overlay — sits above 3D card as a sibling, never touches preserve-3d.
