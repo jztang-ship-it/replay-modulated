@@ -6,9 +6,9 @@
  * server mirror) — actualFp/badges are baked here to the LIVE engine + computeBadges.
  *
  * RAIL (5-card / 3-round):
- *   R1: deal 5 → coach directs "lock in 2 you trust" (LeBron + Edwards) → replace the 3 unheld
+ *   R1: deal 5 → coach directs "lock in 2 you trust" (Giannis + Edwards) → replace the 3 unheld
  *   R2: deal 3 replacements → "lock in 1 more" (Draymond) → replace the 2 unheld
- *   R3: give the final 2 (Davis + Fox), no choice → reveal
+ *   R3: give the final 2 (Tobias + Zion), no choice → reveal
  * Directed holds are GUARANTEED: the scripted redraw keeps the directed cards and
  * replaces the rest regardless of exact taps, so the final 5 is always the engineered set.
  *
@@ -22,12 +22,13 @@
  *   weights pts1.0 reb1.2 ast1.5 stl2.0 blk2.0 to-1.0 ; tiers ROOKIE190/STARTER205/ALLSTAR225
  *   ROLE       PLAYER    $   date/opp        line            engine FP  base  ratio  stamp
  *   lightIce   Draymond  34  01-20 vs TOR    6/6/5/0/0/2  →  18.7      23.7  0.79   🧊
- *   normal(R3) LeBron    57  11-25 vs LAC   25/6/6/1/1/3  →  42.2      39.6  1.07   —
- *   bomb(R3)   Murray    60  03-14 vs LAL    5/6/6/2/0/2  →  23.2      41.6  0.56   🧊🧊
+ *   normal(R3) Tobias    36  03-07 vs BKN  18/10/0/1/0/3 →  34.0      24.8  1.37   — (no fire)
+ *   bomb(R3)   Zion      49  12-18 vs HOU   9/3/5/0/1/2  →  20.1      33.6  0.60   🧊🧊
  *   hero       Edwards   61  11-24 vs SAC   43/7/4/3/1/3  →  69.4      41.8  1.66   🔥🔥 👀
- *   anchor     Giannis   69  01-02 vs CHA   30/10/5/1/0/3 →  55.5      47.5  1.17   🏀🧲✌️ (no fire)
- *   TOTAL = 209.0 → STARTER (205-224); +4.0 over floor, 16 under ALL-STAR. Clean win.
- *   Reveal = salary-ascending (engine natural): Draymond 34 → LeBron 57 → Murray 60
+ *   anchor     Giannis   69  11-03 vs IND  33/13/5/2/0/3 →  64.1      47.5  1.35   🏀🧲✌️ (no fire)
+ *   TOTAL = 206.3 → STARTER (205-224); +1.3 over floor. Cheap-fire killed: only Edwards
+ *   carries a stamp. Salary sum $249 (≤ $250).
+ *   Reveal = salary-ascending (engine natural): Draymond 34 → Tobias 36 → Zion 49
  *            → Edwards 61 → Giannis 69 LAST. No custom reveal wiring.
  */
 
@@ -90,28 +91,29 @@ function makeCard(o: ScriptCard, slotIndex: number, wasHeld: boolean): Generated
 
 // ── The directed holds (guaranteed to survive each round's redraw) ──────────
 // Order = spotlight order: R1 lights Giannis then Edwards ("lock in 2 you trust",
-// one at a time), R2 lights Draymond. R3 gives LeBron + Murray (no hold).
+// one at a time), R2 lights Draymond. R3 gives Tobias + Zion (no hold).
 export const FTUE_DIRECTED_HOLD_IDS = ["ftue-giannis", "ftue-edwards", "ftue-draymond"] as const;
 
 // Card-id → reveal role (drives which FTUE_COPY beat the coach speaks per card).
 export const FTUE_CARD_ROLE: Record<string, "anchor" | "hero" | "bomb" | "lightIce" | "normal"> = {
   "ftue-giannis": "anchor",
   "ftue-edwards": "hero",
-  "ftue-murray": "bomb",
+  "ftue-zion": "bomb",
   "ftue-draymond": "lightIce",
-  "ftue-lebron": "normal",
+  "ftue-tobias": "normal",
 };
 
 // ── R1 deal — 5 cards. Coach directs hold of Giannis (anchor) + Edwards (hero). ──
 // projectedFp = real 2526 avgFP baseline. actualFp + badges are engine-derived
 // from statLine (trueScriptLine) — never hand-entered here.
 const R1: ScriptCard[] = [
-  // Slot 0 — Giannis $69 ORANGE — DIRECTED HOLD (anchor, reveals LAST). 30/10/5, no fire:
-  // → 🏀Bucket 🧲Glass ✌️DD = 55.5 (base 48.5 +7), ratio 55.5/47.5 = 1.17. Delivers, no flame.
+  // Slot 0 — Giannis $69 ORANGE — DIRECTED HOLD (anchor, reveals LAST). Warmed 33/13/5, no fire:
+  // → 🏀Bucket 🧲Glass ✌️DD = 64.1 (base 57.1 +7), ratio 64.1/47.5 = 1.35 (no stamp). Bigger anchor
+  // night via boards, no scoring flame — "your expensive anchor delivered even bigger".
   { cardId: "ftue-giannis", basePlayerId: "203507", name: "Giannis Antetokounmpo", team: "MIL", position: "SF",
     tier: "ORANGE", salary: 69, projectedFp: 47.5,
-    date: "2026-01-02", opponent: "CHA", homeAway: "H",
-    statLine: { pts: 30, reb: 10, ast: 5, stl: 1, blk: 0, turnovers: 3, min: 30 } },
+    date: "2025-11-03", opponent: "IND", homeAway: "A",
+    statLine: { pts: 33, reb: 13, ast: 5, stl: 2, blk: 0, turnovers: 3, min: 32 } },
   // Slot 1 — Edwards $61 ORANGE — DIRECTED HOLD (hero → 🔥🔥). 43-pt ceiling: 🔥Fire 👀Pickpocket
   // = 69.4 (base 62.4 +7), ratio 69.4/41.8 = 1.66 → SMOKING HOT. The trusted star paid off big.
   { cardId: "ftue-edwards", basePlayerId: "1630162", name: "Anthony Edwards", team: "MIN", position: "PG",
@@ -152,19 +154,20 @@ const R2: ScriptCard[] = [
     statLine: { pts: 6, reb: 6, ast: 5, stl: 1, blk: 0, turnovers: 1, min: 45 } },
 ];
 
-// ── R3 given (2) — no choice. Murray = the 🧊🧊 bomb; LeBron = the normal. ──
+// ── R3 given (2) — no choice. Tobias = the normal (filler); Zion = the 🧊🧊 bomb. ──
 const R3: ScriptCard[] = [
-  // LeBron $57 PURPLE — normal (≈ baseline). 25/6/6, no badge = 42.2, ratio 42.2/39.6 = 1.07.
-  { cardId: "ftue-lebron", basePlayerId: "2544", name: "LeBron James", team: "LAL", position: "SF",
-    tier: "PURPLE", salary: 57, projectedFp: 39.6,
-    date: "2025-11-25", opponent: "LAC", homeAway: "H",
-    statLine: { pts: 25, reb: 6, ast: 6, stl: 1, blk: 1, turnovers: 3, min: 32 } },
-  // Jamal Murray $60 ORANGE — 🧊🧊 bomb (the overpaid star who vanished). 5/6/6 = 23.2 (no badge),
-  // ratio 23.2/41.6 = 0.56 → FREEZING. Given in R3 — not the player's fault.
-  { cardId: "ftue-murray", basePlayerId: "1627750", name: "Jamal Murray", team: "DEN", position: "PG",
-    tier: "ORANGE", salary: 60, projectedFp: 41.6,
-    date: "2026-03-14", opponent: "LAL", homeAway: "A",
-    statLine: { pts: 5, reb: 6, ast: 6, stl: 2, blk: 0, turnovers: 2, min: 36 } },
+  // Tobias Harris $36 BLUE — normal (calm filler, NO stamp). 18/10, 🧲Glass ✌️DD = 34.0
+  // (base 29 +5), ratio 34.0/24.8 = 1.37 (< 1.4 → no flame). Unremarkable double-double.
+  { cardId: "ftue-tobias", basePlayerId: "202699", name: "Tobias Harris", team: "DET", position: "SF",
+    tier: "BLUE", salary: 36, projectedFp: 24.8,
+    date: "2026-03-07", opponent: "BKN", homeAway: "H",
+    statLine: { pts: 18, reb: 10, ast: 0, stl: 1, blk: 0, turnovers: 3, min: 34 } },
+  // Zion Williamson $49 PURPLE — 🧊🧊 bomb (the overpaid star who vanished). 9/3/5 = 20.1 (no badge),
+  // ratio 20.1/33.6 = 0.60 → FREEZING. Given in R3 — not the player's fault.
+  { cardId: "ftue-zion", basePlayerId: "1629627", name: "Zion Williamson", team: "NOP", position: "SF",
+    tier: "PURPLE", salary: 49, projectedFp: 33.6,
+    date: "2025-12-18", opponent: "HOU", homeAway: "H",
+    statLine: { pts: 9, reb: 3, ast: 5, stl: 0, blk: 1, turnovers: 2, min: 21 } },
 ];
 
 /** R1 deal — the initial 5. */
@@ -173,7 +176,7 @@ export async function dealFtueScriptedRoster(): Promise<{ roster: GeneratedCard[
 }
 
 /**
- * Round-aware scripted redraw. Keeps the DIRECTED holds (LeBron/Edwards after R1,
+ * Round-aware scripted redraw. Keeps the DIRECTED holds (Giannis/Edwards after R1,
  * + Draymond after R2) regardless of the user's exact taps, and fills the rest:
  *   round 1 redraw (roundsUsed 1) → R2 replacements in the non-directed slots
  *   round 2 redraw (roundsUsed 2) → R3 given cards in the remaining 2 slots
@@ -226,12 +229,12 @@ export const FTUE_COPY = {
   // Hold prompts
   holdR1: "[R1 hold — lock the two stars: Giannis (anchor) + Edwards (hero)]",
   holdR2: "[R2 hold — lock one more: Draymond (light-ice)]",
-  giveR3: "[R3 given — the last two are on us: LeBron + Murray]",
+  giveR3: "[R3 given — the last two are on us: Tobias + Zion]",
 
-  // Per-card reveal beats (reveal order salary-asc: Draymond, LeBron, Murray, Edwards, Giannis)
+  // Per-card reveal beats (reveal order salary-asc: Draymond, Tobias, Zion, Edwards, Giannis)
   revealLightIce: "[reveal — light-ice: Draymond, quiet 🧊 below baseline]",
-  revealNormal: "[reveal — normal: LeBron, ~baseline, no flame]",
-  revealBomb: "[reveal — bomb: Murray, the vanished star 🧊🧊]",
+  revealNormal: "[reveal — normal: Tobias, calm filler, no flame]",
+  revealBomb: "[reveal — bomb: Zion, the vanished star 🧊🧊]",
   revealHero: "[reveal — hero: Edwards, the trusted star pays off big 🔥🔥]",
   revealAnchor: "[reveal — anchor: Giannis LAST, delivers without a flame]",
 
