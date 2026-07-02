@@ -57,6 +57,16 @@ describe("FTUE reveal walk — tap-advance owns the beat (no skip)", () => {
     // card tap routes through RosterGrid's onFtueWalkAdvance only during the walk
     expect(GAME_VIEW).toMatch(/onFtueWalkAdvance=\{ftueActive && gameState === "REVEALING" \? advanceFtueWalk : undefined\}/);
   });
+
+  it("tap-ANYWHERE catcher exists ONLY during the FTUE reveal walk (ftueActive + REVEALING)", () => {
+    // full-surface catcher is rendered strictly under ftueActive && REVEALING —
+    // no full-surface catcher leaks into normal play or other FTUE phases
+    expect(GAME_VIEW).toMatch(/\{ftueActive && gameState === "REVEALING" && \(\s*\n\s*<div\s*\n\s*data-ftue-walk-tapcatcher/);
+    // it routes to advanceFtueWalk (same busy-latched one-beat-per-tap path)
+    expect(GAME_VIEW).toMatch(/data-ftue-walk-tapcatcher\s*\n\s*onClick=\{advanceFtueWalk\}/);
+    // covers the surface (fixed inset:0) below modals/error
+    expect(GAME_VIEW).toMatch(/position: "fixed", inset: 0, zIndex: 6000/);
+  });
 });
 
 describe("FTUE reveal walk — Pass A finale + completion", () => {

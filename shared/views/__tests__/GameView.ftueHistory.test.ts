@@ -45,6 +45,18 @@ describe("Pass B — the lock-state is ftueActive-gated (no leak into normal pla
   it("the hero card is derived from cardRole (can't drift from the scripted hand)", () => {
     expect(GAME_VIEW).toMatch(/cr\[id\] === "hero"/);
   });
+  it("the history commentary effect is RESULTS-phase-gated (can't re-set after the IDLE handoff)", () => {
+    // gating on gameState==="RESULTS" stops the effect re-setting the closer when
+    // the exit reel's setActiveSeason rebuilds the adapter (fresh ftueCopy ref).
+    expect(GAME_VIEW).toMatch(/if \(!ftueActive \|\| !ftueCopy \|\| gameState !== "RESULTS"\) return;/);
+  });
+});
+
+describe("FTUE→normal handoff — the FTUE commentary override is cleared (no bleed)", () => {
+  it("the FTUE-exit REPLAY clears the override so no FTUE line leaks into normal-game commentary", () => {
+    // in the RESULTS→IDLE branch's ftueActive block (alongside arming the exit reel)
+    expect(GAME_VIEW).toMatch(/window\.dispatchEvent\(new Event\("replaymod:ftue-exit-reel"\)\);\s*\n[\s\S]*?setFtueCommentaryOverride\(null\);\s*\n\s*\}/);
+  });
 });
 
 describe("Pass B — dwell, spotlight, and Replay lock scope to the right stages", () => {

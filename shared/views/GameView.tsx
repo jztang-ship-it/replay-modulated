@@ -1077,14 +1077,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // reliably take over the commentary channel from the sticky Giannis override.
   // This was the blank-prompt root: the line was previously set inside a detached
   // setTimeout that didn't survive the finale's state handoff.
+  // RESULTS-phase-gated: the history beat lives on the RESULTS screen. Gating on
+  // gameState==="RESULTS" means that once the FTUE-exit REPLAY resets to IDLE, this
+  // can NOT re-set the closer — critical because the exit reel calls setActiveSeason,
+  // which rebuilds the adapter → a fresh ftueCopy reference would otherwise re-run
+  // this effect and re-leak the closer into normal-game commentary.
   useEffect(() => {
-    if (!ftueActive || !ftueCopy) return;
+    if (!ftueActive || !ftueCopy || gameState !== "RESULTS") return;
     if (ftueHistoryBeat === "prompt" && ftueCopy.historyPrompt) {
       setFtueCommentaryOverride({ parts: [ftueCopy.historyPrompt], sticky: true });
     } else if (ftueHistoryBeat === "flipped" && ftueCopy.historyDone) {
       setFtueCommentaryOverride({ parts: [ftueCopy.historyDone], sticky: true });
     }
-  }, [ftueActive, ftueHistoryBeat, ftueCopy]); // eslint-disable-line
+  }, [ftueActive, ftueHistoryBeat, ftueCopy, gameState]); // eslint-disable-line
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
@@ -2354,6 +2359,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       if (ftueActive) {
         try { localStorage.setItem("rm_ftue_exit_reel_pending", "1"); } catch { /* noop */ }
         if (typeof window !== "undefined") window.dispatchEvent(new Event("replaymod:ftue-exit-reel"));
+        // Clear the FTUE history-closer here (the FTUE→normal handoff). The
+        // commentary override channel is SHARED with normal-play chad commentary,
+        // so a leftover FTUE line would bleed onto the post-reel welcome screen.
+        // The history effect below is RESULTS-phase-gated so it can't re-set it
+        // after this IDLE reset.
+        setFtueCommentaryOverride(null);
       }
       gameAnalytics.sessionEnd();
       resetReveal();
@@ -2812,6 +2823,21 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // padding (the challenge-via-GameView header is unchanged dark glass).
       paddingTop: challengeCtx ? "env(safe-area-inset-top, 0px)" : 0,
     }}>
+      {/* ── FTUE reveal-walk tap catcher ──
+          Advance the reveal walk on a tap ANYWHERE on screen. Exists ONLY during
+          the FTUE reveal walk (ftueActive + gameState REVEALING) — never in normal
+          play or any other FTUE phase, so no full-surface catcher leaks elsewhere.
+          Transparent (the board/commentary/breath show through); it just routes
+          every tap to advanceFtueWalk, whose busy latch (ftueWalkBusyRef) preserves
+          the one-beat-per-tap rule — tap-anywhere widens the ZONE, not the pace, so
+          a stray tap still can't skip a beat. z below modals/error (9999). */}
+      {ftueActive && gameState === "REVEALING" && (
+        <div
+          data-ftue-walk-tapcatcher
+          onClick={advanceFtueWalk}
+          style={{ position: "fixed", inset: 0, zIndex: 6000, background: "transparent", cursor: "pointer" }}
+        />
+      )}
       {/* ── Transient error banner ── */}
       {gameError && dataReady && (
         <div style={{
