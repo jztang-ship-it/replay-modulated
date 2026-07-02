@@ -266,6 +266,19 @@ export const FTUE_COPY = {
   historyPrompt: "tap Ant to see the game that he pulled",
   historyDone: "43 points against Sactown on Nov 24, 2025. Now that you've gotten the hang of it, lets run it back for reals now.",
 
+  // Post-FTUE welcome — the first NORMAL-game entry commentary, shown ONCE after
+  // the exit reel lands on IDLE (John's copy, verbatim). Paragraphs are "\n\n"-
+  // separated; GameView splits them into tap-advance parts (the 96px commentary
+  // slot can't show all at once). Shown once via the shared pregame-intro flag →
+  // never on later normal entries; returning users get the standard welcome.
+  postFtueWelcome: [
+    "Welcome to the 2025-26 season.",
+    "Build a 5-player lineup under a $250 cap — then watch real game logs from this season decide how your basketball instincts hold up.",
+    "Stars matter — but value wins games when it shows up at the right time.",
+    "Everyone gets the same players. Not everyone sees the same game.",
+    "Tap the i for scoring rules, then hit DEAL to draft your first lineup.",
+  ].join("\n\n"),
+
   // Per-card reveal beats — spoken as each card lights on its walk beat.
   // Keyed by role via FTUE_CARD_ROLE: revealNormal=Tobias, revealBomb=Zion,
   // revealLightIce=Draymond, revealHero=Edwards, revealAnchor=Giannis.

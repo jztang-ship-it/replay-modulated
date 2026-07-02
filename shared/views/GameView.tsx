@@ -973,6 +973,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // idle → (RESULTS + dwell) → prompt (board locked to Ant, Replay dimmed) →
   // (Ant flip) → flipped (back shows the real game, board released, Replay blinks).
   const [ftueHistoryBeat, setFtueHistoryBeat] = useState<"idle" | "prompt" | "flipped">("idle");
+  // Post-FTUE welcome (first normal-game entry): drives the DEAL blink on that
+  // one screen. Set when the welcome fires; naturally inert after the first DEAL
+  // (ftuePrimaryPulse is ftueActive-gated, which flips false on that deal).
+  const [ftuePostWelcome, setFtuePostWelcome] = useState(false);
   // The card the beat spotlights = the hero (Edwards). Derived from cardRole so
   // it can't drift from the scripted hand.
   const ftueHistoryCardId = useMemo(() => {
@@ -1090,6 +1094,31 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setFtueCommentaryOverride({ parts: [ftueCopy.historyDone], sticky: true });
     }
   }, [ftueActive, ftueHistoryBeat, ftueCopy, gameState]); // eslint-disable-line
+
+  // Post-FTUE welcome — the first NORMAL-game entry commentary, shown ONCE on the
+  // first IDLE after FTUE completion (rm_solo_ftue_done set), in the same slot the
+  // FTUE closer used to leak into. Multi-part (paragraphs tap-advance — the 96px
+  // slot can't show all at once), sticky-last; the i-icon (legendGold) and DEAL
+  // both blink to invite the first real hand. Shares the standard pregame-intro
+  // seen-flag: shows once AND blocks the default chadMessage("welcome") from also
+  // firing for this user. Not ftueActive-gated (ftueActive is still stale-true at
+  // the post-FTUE IDLE, and the existing welcome IS ftueActive-gated → blocked
+  // there); scoped instead by rm_solo_ftue_done + the seen-flag. Non-FTUE sports
+  // lack postFtueWelcome → return → their standard welcome path is untouched.
+  useEffect(() => {
+    if (gameState !== "IDLE") return;
+    if (!ftueCopy?.postFtueWelcome) return;
+    try {
+      if (localStorage.getItem("rm_solo_ftue_done") !== "1") return; // post-FTUE only
+      if (localStorage.getItem(`replaymod_pregame_intro_${sportKey}`) === "1") return; // once
+      localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
+    } catch { return; }
+    const parts = ftueCopy.postFtueWelcome.split("\n\n").map((s) => s.trim()).filter(Boolean);
+    if (!parts.length) return;
+    setFtuePostWelcome(true);
+    setLegendGold(true); // i-icon blink (matches the standard welcome)
+    setFtueCommentaryOverride({ parts, sticky: true });
+  }, [gameState]); // eslint-disable-line
 
   // Trophy burst — fires when the user lands on the daily leaderboard,
   // independent of (and parallel to) the isAnonymous-gated chad
@@ -1871,12 +1900,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // directed holds are all locked (mirrors the DRAW-gate) → NEXT blinks. At
   // REVEALING entry (nothing revealed yet) → GAME TIME blinks. Pass B: after the
   // Ant flip (history beat flipped) → REPLAY blinks (board released).
-  const ftuePrimaryPulse = ftueActive && (
+  const ftuePrimaryPulse = (ftueActive && (
     (gameState === "HOLD" && !!adapter.ftueScriptedHand
       && !roster.some((c) => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c))))
     || (gameState === "REVEALING" && tappedCardIds.size === 0 && (heldRevealedIds?.size ?? 0) === 0)
     || (gameState === "RESULTS" && ftueHistoryBeat === "flipped")
-  );
+  ))
+  // Post-FTUE welcome (first normal IDLE): DEAL blinks to invite the first real
+  // hand, matching the i-icon. Outside the ftueActive gate so it also blinks on a
+  // reload-into-welcome (ftueActive false); ftuePostWelcome resets on the deal so
+  // it can't persist onto later IDLEs.
+  || (gameState === "IDLE" && ftuePostWelcome);
   // Pass B: REPLAY is dimmed + inert during the PROMPT (spotlight-Ant) stage,
   // then released (blinks) once Ant has flipped. During the idle dwell the win
   // reads normally (Giannis line breathing) — only card-flips are frozen.
@@ -2078,6 +2112,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setLastRevealedCardId(null);
       setCelebrationHeld(false);
       setFtueCommentaryOverride(null);
+      setFtuePostWelcome(false); // welcome dismissed on the deal → DEAL blink ends, can't persist to later IDLEs
       pendingCelebration.current = null;
       let res: any;
       try {

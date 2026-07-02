@@ -59,6 +59,29 @@ describe("FTUE→normal handoff — the FTUE commentary override is cleared (no 
   });
 });
 
+describe("Post-FTUE welcome — shows ONCE on the first post-FTUE IDLE (not persistent)", () => {
+  const ATHLETE_ADAPTER = readFileSync(resolve(__dirname, "../../../basketball/src/adapters/ftueScriptedHand.ts"), "utf8");
+
+  it("the welcome copy lives in FTUE_COPY as postFtueWelcome (paragraph-joined)", () => {
+    expect(ATHLETE_ADAPTER).toMatch(/postFtueWelcome:/);
+    expect(ATHLETE_ADAPTER).toMatch(/Welcome to the 2025-26 season\./);
+    expect(ATHLETE_ADAPTER).toMatch(/hit DEAL to draft your first lineup\./);
+  });
+  it("fires only post-FTUE (rm_solo_ftue_done) + once (shared pregame-intro seen-flag)", () => {
+    expect(GAME_VIEW).toMatch(/if \(localStorage\.getItem\("rm_solo_ftue_done"\) !== "1"\) return;/);
+    expect(GAME_VIEW).toMatch(/if \(localStorage\.getItem\(`replaymod_pregame_intro_\$\{sportKey\}`\) === "1"\) return;/);
+    expect(GAME_VIEW).toMatch(/localStorage\.setItem\(`replaymod_pregame_intro_\$\{sportKey\}`, "1"\);/);
+  });
+  it("multi-part tap-advance (splits the paragraphs), sets the i-icon + DEAL blink", () => {
+    expect(GAME_VIEW).toMatch(/ftueCopy\.postFtueWelcome\.split\("\\n\\n"\)/);
+    expect(GAME_VIEW).toMatch(/setFtuePostWelcome\(true\);/);
+    expect(GAME_VIEW).toMatch(/setLegendGold\(true\);/);
+    // DEAL blink on the welcome IDLE, outside the ftueActive gate, reset on deal
+    expect(GAME_VIEW).toMatch(/\|\| \(gameState === "IDLE" && ftuePostWelcome\)/);
+    expect(GAME_VIEW).toMatch(/setFtuePostWelcome\(false\)/);
+  });
+});
+
 describe("Pass B — dwell, spotlight, and Replay lock scope to the right stages", () => {
   it("a tunable dwell lets the Giannis STARTER line land before the prompt", () => {
     expect(GAME_VIEW).toMatch(/const FTUE_HISTORY_DWELL_MS = \d+;/);
