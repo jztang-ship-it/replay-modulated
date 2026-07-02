@@ -2343,6 +2343,18 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
 
     if (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") {
+      // FTUE-exit one-shot day-reel: on the FTUE-completion REPLAY (ftueActive is
+      // still true through this hand — re-read only at the next IDLE deal), arm a
+      // DURABLE flag + signal the gate to play today's REAL-slate reel once before
+      // the first normal hand. Durable so a mid-beat reload can't lose it; the gate
+      // clears it on reel-complete. Non-stamping (the gate does NOT writeStored on
+      // this path) so the user's genuine entry-of-day reel is preserved. A normal
+      // (non-FTUE) REPLAY has ftueActive=false → never sets this → normal path
+      // byte-identical.
+      if (ftueActive) {
+        try { localStorage.setItem("rm_ftue_exit_reel_pending", "1"); } catch { /* noop */ }
+        if (typeof window !== "undefined") window.dispatchEvent(new Event("replaymod:ftue-exit-reel"));
+      }
       gameAnalytics.sessionEnd();
       resetReveal();
       resetAllOverlays();

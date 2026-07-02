@@ -131,6 +131,13 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
   // Storage-keyed by date+seasonKey so it doesn't re-fire mid-day.
   const [showIntro, setShowIntro] = useState<boolean>(false);
 
+  // FTUE-exit one-shot reel (feat/ftue-scripted-hand). When set, play the REAL
+  // day-slate reel ONCE on FTUE completion, landing on this season, then reveal
+  // the game (IDLE). Distinct from the daily gate: this path does NOT stamp the
+  // daily day-key (writeStored), so the user's genuine entry-of-day reel later is
+  // preserved. null = not playing.
+  const [ftueExitReelPick, setFtueExitReelPick] = useState<SeasonManifestEntry | null>(null);
+
   // Track previous bypass value. When bypass transitions true → false
   // (user just finished the FTUE), we want the reel to take over IMMEDIATELY
   // without a frame of game-view rendering in between. Manifest pre-fetched
@@ -256,6 +263,63 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
     })();
     return () => { cancelled = true; };
   }, [bypass, skipReel, bypassSeasonKey, authReady]);
+
+  // FTUE-exit one-shot reel. GameView sets a durable flag (rm_ftue_exit_reel_pending)
+  // + dispatches replaymod:ftue-exit-reel on the FTUE-completion REPLAY. We arm on
+  // BOTH the event (same session — bypass doesn't flip mid-session and the main
+  // effect above won't re-run) AND on mount (reload-durable). Re-resolves TODAY'S
+  // REAL season (pickBossSeason → setActiveSeason) — this is what flips the lingering
+  // 2526 FTUE pin over to the real daily slate, so the reel previews and the first
+  // hand deals the real slate. Deliberately does NOT writeStored: the daily day-key
+  // is left un-consumed so the genuine entry-of-day reel still fires independently.
+  useEffect(() => {
+    let cancelled = false;
+    const arm = async () => {
+      try { if (localStorage.getItem("rm_ftue_exit_reel_pending") !== "1") return; }
+      catch { return; }
+      try {
+        const m = await loadSeasonsManifest(MANIFEST_URL);
+        if (cancelled) return;
+        const today = new Date();
+        const pick = pickBossSeason(today, m) ?? pickTodaysSeason("basketball", today, m);
+        if (!pick) { try { localStorage.removeItem("rm_ftue_exit_reel_pending"); } catch { /* noop */ } return; }
+        setManifest(m);
+        setActiveSeason(pick.key); // flip the 2526 FTUE pin → today's real daily slate
+        setFtueExitReelPick(pick);
+      } catch {
+        // Manifest unavailable — clear the flag so we don't wedge on the reel.
+        try { localStorage.removeItem("rm_ftue_exit_reel_pending"); } catch { /* noop */ }
+      }
+    };
+    void arm();
+    const onExit = () => { void arm(); };
+    if (typeof window !== "undefined") window.addEventListener("replaymod:ftue-exit-reel", onExit);
+    return () => {
+      cancelled = true;
+      if (typeof window !== "undefined") window.removeEventListener("replaymod:ftue-exit-reel", onExit);
+    };
+  }, []);
+
+  // FTUE-exit one-shot reel — TOP priority (overrides bypass / loading / normal).
+  // Plays today's real day-slate reel once, then clears the durable flag and
+  // reveals the game (IDLE) so the user taps DEAL for the first real hand. This
+  // path NEVER calls writeStored → the daily day-key is left un-consumed.
+  if (ftueExitReelPick && manifest) {
+    const exitLabels = manifestLabelsChronological(manifest);
+    return (
+      <>
+        {children}
+        <SeasonReel
+          labels={exitLabels}
+          targetLabel={ftueExitReelPick.label}
+          onComplete={() => {
+            try { localStorage.removeItem("rm_ftue_exit_reel_pending"); } catch { /* noop */ }
+            setFtueExitReelPick(null); // reveal children (IDLE) — user taps DEAL
+          }}
+        />
+      </>
+    );
+  }
 
   // Block rendering until we know whether to show the reel — avoids the
   // child mounting briefly, then being covered, then becoming interactive.
