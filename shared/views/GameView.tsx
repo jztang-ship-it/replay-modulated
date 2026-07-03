@@ -1604,6 +1604,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   topGameInfoHolder.current = topGameInfo;
 
   const displayFp = computeDisplayFp(totalFp);
+  // Capability gate for the Stage-2 verdict restack (basketball only today). When
+  // the adapter carries a crowd model, the verdict is the reveal's payload, so FP +
+  // ceiling demote to a quiet supporting line and the resting gauge bar is hidden.
+  // Sports without it keep the baseline reveal unchanged.
+  const hasVerdict = !!adapter.computeVerdict;
   const gaugeTotalFp = displayFp;
   latestGaugeFpRef.current = gaugeTotalFp;
 
@@ -1666,6 +1671,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // doesn't speak over the challenge-aware framing.
     if (challengeCtx) return null;
     const fp = lockedGaugeFpRef.current ?? displayFp;
+    // Stage-2 "the verdict" — the terminal beat. Present only when the adapter
+    // carries a crowd model (basketball today); other sports → undefined → the
+    // baseline reveal is untouched. Built from the resolved cards + room ownership
+    // and landed as the SECONDARY (terminal) line, so the existing primary walks
+    // as before and the verdict lands last — same surface, same pacing.
+    // (Depth = terminal-beat-only for now; full commentary retarget is a follow-up.)
+    const verdictSecondary = adapter.computeVerdict?.(roster, fp, winTier)?.line || undefined;
     // Phase 1 trigger split (2026-06-03): tracked NEAR_MISS_BAND with
     // the post-reveal commentary path. Today gaugeSnap.isNearMiss is not
     // consumed at this site (only nextTier/curMin/nextMin flow into
@@ -1821,15 +1833,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             }
           : null,
       });
-      const framed = { primary: framingLine, secondary: baseCopy.secondary ?? "" };
+      const framed = { primary: framingLine, secondary: verdictSecondary ?? (baseCopy.secondary ?? "") };
       postRevealCopyRef.current = framed as any;
       postRevealCopyKeyRef.current = currentKey;
       return framed as any;
     }
 
-    postRevealCopyRef.current = baseCopy as any;
+    const finalCopy = verdictSecondary ? { primary: baseCopy.primary, secondary: verdictSecondary } : baseCopy;
+    postRevealCopyRef.current = finalCopy as any;
     postRevealCopyKeyRef.current = currentKey;
-    return baseCopy;
+    return finalCopy;
   }, [gameState, winTier, springSettled, displayFp, roster, streak, ceilingPct, challengeTrigger, challengeCtx]); // eslint-disable-line
 
   const regularFinalGaugeKick = false;
@@ -3337,8 +3350,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           </div>
                         )}
                       </div>
-                      <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 4, width: "100%" }}>
-                        <span style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+                      <div style={{ animation: "tierInfoFadeIn 300ms ease both", display: "flex", justifyContent: "center", alignItems: "center", gap: hasVerdict ? 10 : 20, marginTop: 4, width: "100%" }}>
+                        {/* hasVerdict: the verdict is the payload → FP + ceiling drop to
+                            one quiet supporting line under the tier (was 20px bold). */}
+                        <span style={{ fontSize: hasVerdict ? 13 : 20, fontWeight: hasVerdict ? 600 : 700, color: hasVerdict ? "rgba(255,255,255,0.55)" : "#FFFFFF", fontFamily: FF, letterSpacing: hasVerdict ? 0 : "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                           {displayFp.toFixed(1)} FP
                           {teamBonusFp > 0 && (
                             <span style={{ marginLeft: 6, fontSize: 13, fontWeight: 700, color: "#FFD700", letterSpacing: 0 }}>
@@ -3473,7 +3488,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               postRevealCopy={postRevealCopy}
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
-              hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"}
+              hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"
+                // hasVerdict: the verdict is the resting payload, so the gauge bar is
+                // hidden at RESULTS/WIN_CELEBRATION. The reveal fill is RETAINED for
+                // now (still shows during REVEALING) — pending glass confirmation, not
+                // a settled decision.
+                || (hasVerdict && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION"))}
               onCommentaryOverrideDone={() => {
                 setFtueCommentaryOverride(null);
                 // (Ceremony advance is now DEAL-driven — no tap-to-flip here.)

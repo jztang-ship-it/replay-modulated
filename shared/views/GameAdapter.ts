@@ -25,6 +25,7 @@ import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import type { HandStatus } from "@shared/utils/handStatus";
+import type { Verdict } from "@shared/crowd/verdict";
 
 export interface GameAdapter {
   // ── Identity ───────────────────────────────────────────────────────
@@ -135,6 +136,13 @@ export interface GameAdapter {
   /** Sum of personal-peak FP across the resolved roster (basketball ceiling
    *  display in RESULTS). Optional — sports without a peak corpus omit. */
   computeRosterCeiling?: (roster: PlayerCard[]) => number;
+  /** Stage-2 "the verdict": resolve a hand into its contested claim — the most
+   *  notable HELD call scored against the room's ownership (crowd model). Present
+   *  ONLY for sports with a crowd model (basketball today). When present, GameView
+   *  lands the verdict as the terminal commentary beat and restacks the reveal
+   *  (demotes FP/ceiling, hides the resting gauge bar). Sports that omit it keep
+   *  the baseline reveal untouched. Returns null when the hand yields no verdict. */
+  computeVerdict?: (roster: PlayerCard[], totalFp: number, tier: string) => Verdict | null;
 
   // ── Components — sport-specific render slots ───────────────────────
   /** The roster card component (basketball: AthleteCard, baseball: BaseballCard).

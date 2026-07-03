@@ -13,6 +13,8 @@ import { getDealPool } from "@shared/utils/dealGate";
 import { getCachedSlate } from "@shared/utils/slateSelector";
 import { isSlateV2Enabled } from "@shared/featureFlags";
 import type { PlayerCard } from "./types";
+import { basketballCrowdOwnership, type CrowdPlayer, type CrowdLog } from "../crowd/basketballCrowd";
+import { computeVerdict, type Verdict } from "@shared/crowd/verdict";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
 
@@ -354,4 +356,51 @@ export function computeRosterCeiling(roster: PlayerCard[]): number {
   }
 
   return Math.round(ceiling * 10) / 10;
+}
+
+/**
+ * Stage-2 "the verdict" for a resolved basketball hand. Builds per-card room
+ * ownership from the FROZEN crowd model (fame/market/position/recency — all
+ * value-free) and asks the shared, sport-agnostic computeVerdict for the most
+ * notable HELD call vs the room. The crowd side never sees value; this only reads
+ * resolved FP for the OUTCOME half of "you held X, the room faded him, here's the
+ * result." Returns null on an empty/idless roster.
+ */
+export function computeBasketballVerdict(roster: PlayerCard[], totalFp: number, tier: string): Verdict | null {
+  if (!roster?.length) return null;
+  const logsByKey = getLogsByKey();
+  const crowdPlayers: CrowdPlayer[] = [];
+  const logsByBaseId = new Map<string, CrowdLog[]>();
+  for (const card of roster) {
+    const baseId = String((card as any).basePlayerId ?? (card as any).personKey ?? "").trim();
+    if (!baseId) continue;
+    crowdPlayers.push({
+      basePlayerId: baseId,
+      name: String((card as any).name ?? ""),
+      team: String((card as any).team ?? ""),
+      position: String((card as any).position ?? ""),
+    });
+    // Same season-preferring log lookup as computeRosterCeiling, re-keyed by
+    // baseId for the crowd extractor (recency reads raw box lines only).
+    const seasonNum = Number(String((card as any).season ?? ""));
+    const seasonKey = Number.isFinite(seasonNum) && seasonNum > 0 ? `${baseId}|${Math.round(seasonNum)}` : null;
+    let candidates = seasonKey ? (logsByKey.get(seasonKey) ?? []) : [];
+    if (!candidates.length) candidates = logsByKey.get(baseId) ?? [];
+    logsByBaseId.set(baseId, candidates.map((l) => ({ stats: (l as any).stats ?? {} })));
+  }
+  if (!crowdPlayers.length) return null;
+  const ownership = basketballCrowdOwnership(crowdPlayers, logsByBaseId);
+  const cards = roster
+    .map((c) => {
+      const baseId = String((c as any).basePlayerId ?? (c as any).personKey ?? "").trim();
+      return {
+        id: String((c as any).cardId ?? baseId),
+        name: String((c as any).name ?? ""),
+        wasHeld: Boolean((c as any).wasHeld ?? false),
+        fp: Number((c as any).actualFp ?? 0),
+        ownership: ownership.get(baseId) ?? 0.3,
+      };
+    })
+    .filter((c) => c.id);
+  return computeVerdict({ cards, totalFp, tier });
 }
