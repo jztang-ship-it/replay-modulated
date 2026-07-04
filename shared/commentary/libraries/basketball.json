@@ -5815,7 +5815,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "hype",
-      "template": "{name} just had a career night{opp}. {extremeDescription} Save the box score.",
+      "template": "{name} just had a career night{opp}. Save the box score.",
       "tags": [
         "career_night"
       ],
@@ -5829,7 +5829,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "culture_wry",
-      "template": "{nick} decided to do something ridiculous tonight{opp}. {extremeDescription} Someone check the stat sheet twice.",
+      "template": "{nick} decided to do something ridiculous tonight{opp}. Someone check the stat sheet twice.",
       "tags": [
         "career_night"
       ],
@@ -5843,7 +5843,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "warm",
-      "template": "What a night from {name}{opp}. {extremeDescription} Games like this make the season.",
+      "template": "What a night from {name}{opp}. Games like this make the season.",
       "tags": [
         "career_night"
       ],
@@ -5857,7 +5857,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "observational",
-      "template": "{name} posted a tier 1 stat line tonight{opp}. {extremeDescription} Few players ever touch that line.",
+      "template": "{name} posted a tier 1 stat line tonight{opp}. Few players ever touch that line.",
       "tags": [
         "career_night"
       ],
@@ -5871,7 +5871,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{last} had a historic night{opp}. {extremeDescription} The hand cashed itself.",
+      "template": "{last} had a historic night{opp}. The hand cashed itself.",
       "tags": [
         "career_night"
       ],
@@ -5885,7 +5885,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "analytical",
-      "template": "{name} exceeded every historical benchmark tonight{opp}. {extremeDescription} The math doesn't lie.",
+      "template": "{name} exceeded every historical benchmark tonight{opp}. The math doesn't lie.",
       "tags": [
         "career_night"
       ],
@@ -5899,7 +5899,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{nick} had a career night{opp} and the hand STILL busted. {extremeDescription} The roster owes an apology.",
+      "template": "{nick} had a career night{opp} and the hand STILL busted. The roster owes an apology.",
       "tags": [
         "career_night"
       ],
@@ -5913,7 +5913,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "warm",
-      "template": "{name} had a historic game{opp} and it wasn't enough. {extremeDescription} The supporting cast wasted it.",
+      "template": "{name} had a historic game{opp} and it wasn't enough. The supporting cast wasted it.",
       "tags": [
         "career_night"
       ],
@@ -5927,7 +5927,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{last} went historic{opp}. {extremeDescription}. Still lost.",
+      "template": "{last} went historic{opp}. Still lost.",
       "tags": [
         "career_night"
       ],
@@ -5941,7 +5941,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "hype",
-      "template": "{nick} just went for {extremeDescription}{opp} — save the screenshot forever.",
+      "template": "{nick} just went for {extremeStat}{opp} — save the screenshot forever.",
       "tags": [
         "career_night",
         "phase2"
@@ -5971,7 +5971,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "hype",
-      "template": "{last} went full supernova — {extremeDescription} and {opp} had no answers.",
+      "template": "{last} went full supernova — {extremeStat} and {opp} had no answers.",
       "tags": [
         "career_night",
         "phase2"
@@ -5986,7 +5986,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "hype",
-      "template": "{nick} woke up and chose absolute violence — {extremeDescription}{opp}.",
+      "template": "{nick} woke up and chose absolute violence — {extremeStat}{opp}.",
       "tags": [
         "career_night",
         "phase2"
@@ -6001,7 +6001,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "hype",
-      "template": "Rename the arena after {name}. {extremeDescription}{opp}.",
+      "template": "Rename the arena after {name}. {extremeStat}{opp}.",
       "tags": [
         "career_night",
         "phase2"
@@ -6016,7 +6016,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "warm",
-      "template": "You wait your whole life to see a night like this from {name}. {extremeDescription}.",
+      "template": "You wait your whole life to see a night like this from {name}.",
       "tags": [
         "career_night",
         "phase2"
@@ -6046,7 +6046,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "warm",
-      "template": "Games like this are why {last} keeps grinding. {extremeDescription} speaks for itself.",
+      "template": "Games like this are why {last} keeps grinding. {extremeStat} speaks for itself.",
       "tags": [
         "career_night",
         "phase2"
@@ -6061,7 +6061,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "warm",
-      "template": "{first} left everything on the floor tonight. {extremeDescription}{opp}. One for the keeps.",
+      "template": "{first} left everything on the floor tonight. {extremeStat}{opp}. One for the keeps.",
       "tags": [
         "career_night",
         "phase2"
@@ -6076,7 +6076,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "warm",
-      "template": "Soak it in \u2014 {nick} going for {extremeDescription}{opp} isn't the baseline.",
+      "template": "Soak it in — {nick} going for {extremeStat}{opp} isn't the baseline.",
       "tags": [
         "career_night",
         "phase2"
@@ -6091,7 +6091,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "culture_wry",
-      "template": "{nick} went for {extremeDescription}{opp} like it was a pickup game at the Y.",
+      "template": "{nick} went for {extremeStat}{opp} like it was a pickup game at the Y.",
       "tags": [
         "career_night",
         "phase2"
@@ -6106,7 +6106,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "culture_wry",
-      "template": "{last} treated {opp} like a scrimmage. {extremeDescription} on a Tuesday.",
+      "template": "{last} treated {opp} like a scrimmage. {extremeStat} on a Tuesday.",
       "tags": [
         "career_night",
         "phase2"
@@ -6136,7 +6136,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "culture_wry",
-      "template": "{name} going for {extremeDescription}? They should have stayed on the bus.",
+      "template": "{name} going for {extremeStat}? They should have stayed on the bus.",
       "tags": [
         "career_night",
         "phase2"
@@ -6151,7 +6151,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "culture_wry",
-      "template": "{nick} chose chaos. {extremeDescription}{opp} like rent was due tonight.",
+      "template": "{nick} chose chaos. {extremeStat}{opp} like rent was due tonight.",
       "tags": [
         "career_night",
         "phase2"
@@ -6166,7 +6166,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "observational",
-      "template": "{name} found every crease in the defense. {extremeDescription} was the result.",
+      "template": "{name} found every crease in the defense. {extremeStat} was the result.",
       "tags": [
         "career_night",
         "phase2"
@@ -6181,7 +6181,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "observational",
-      "template": "{last} got to the spots early and nobody adjusted. Hence {extremeDescription}.",
+      "template": "{last} got to the spots early and nobody adjusted. Hence {extremeStat}.",
       "tags": [
         "career_night",
         "phase2"
@@ -6196,7 +6196,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "observational",
-      "template": "When {nick} gets that first-quarter rhythm, {extremeDescription} stops being a question.",
+      "template": "When {nick} gets that first-quarter rhythm, {extremeStat} stops being a question.",
       "tags": [
         "career_night",
         "phase2"
@@ -6211,7 +6211,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "observational",
-      "template": "They switched coverages three times and {name} still finished with {extremeDescription}.",
+      "template": "They switched coverages three times and {name} still finished with {extremeStat}.",
       "tags": [
         "career_night",
         "phase2"
@@ -6226,7 +6226,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "observational",
-      "template": "{last} was operating at a different speed all night. {extremeDescription} showed up on schedule.",
+      "template": "{last} was operating at a different speed all night. {extremeStat} showed up on schedule.",
       "tags": [
         "career_night",
         "phase2"
@@ -6241,7 +6241,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "analytical",
-      "template": "{name} posted {extremeDescription}{opp} on elite efficiency. The math agreed.",
+      "template": "{name} posted {extremeStat}{opp} on elite efficiency. The math agreed.",
       "tags": [
         "career_night",
         "phase2"
@@ -6256,7 +6256,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "analytical",
-      "template": "{last}'s shot distribution was textbook. {extremeDescription} was the payoff.",
+      "template": "{last}'s shot distribution was textbook. {extremeStat} was the payoff.",
       "tags": [
         "career_night",
         "phase2"
@@ -6271,7 +6271,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "analytical",
-      "template": "{extremeDescription} for {nick} with clean looks all night. Zero answers from the defense.",
+      "template": "{extremeStat} for {nick} with clean looks all night. Zero answers from the defense.",
       "tags": [
         "career_night",
         "phase2"
@@ -6286,7 +6286,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "analytical",
-      "template": "{name} hit from every zone. {extremeDescription}{opp} with no volume discount.",
+      "template": "{name} hit from every zone. {extremeStat}{opp} with no volume discount.",
       "tags": [
         "career_night",
         "phase2"
@@ -6301,7 +6301,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "analytical",
-      "template": "The {extremeDescription} line from {last} was surgical. Clean looks all night.",
+      "template": "The {extremeStat} line from {last} was surgical. Clean looks all night.",
       "tags": [
         "career_night",
         "phase2"
@@ -6316,7 +6316,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{nick} went for {extremeDescription}{opp}. Normal Tuesday, apparently.",
+      "template": "{nick} went for {extremeStat}{opp}. Normal Tuesday, apparently.",
       "tags": [
         "career_night",
         "phase2"
@@ -6331,7 +6331,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{last} posted {extremeDescription}. The defense is filing a missing persons report.",
+      "template": "{last} posted {extremeStat}. The defense is filing a missing persons report.",
       "tags": [
         "career_night",
         "phase2"
@@ -6346,7 +6346,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{extremeDescription} for {name}{opp}. Nature is healing.",
+      "template": "{extremeStat} for {name}{opp}. Nature is healing.",
       "tags": [
         "career_night",
         "phase2"
@@ -6361,7 +6361,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{nick}{opp}: {extremeDescription}. The box score doesn't editorialize.",
+      "template": "{nick}{opp}: {extremeStat}. The box score doesn't editorialize.",
       "tags": [
         "career_night",
         "phase2"
@@ -6376,7 +6376,7 @@
       "archetype": "career_night",
       "register": "win",
       "tone": "deadpan",
-      "template": "{name} did {extremeDescription} and then sat down like nothing happened.",
+      "template": "{name} did {extremeStat} and then sat down like nothing happened.",
       "tags": [
         "career_night",
         "phase2"
@@ -6391,7 +6391,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "hype",
-      "template": "{nick} went for {extremeDescription}{opp} and still lost. That's not basketball, that's robbery.",
+      "template": "{nick} went for {extremeStat}{opp} and still lost. That's not basketball, that's robbery.",
       "tags": [
         "career_night",
         "phase2"
@@ -6406,7 +6406,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "hype",
-      "template": "{extremeDescription} from {name}{opp} and the opposition still walked away with it. Steal of the night, wrong direction.",
+      "template": "{extremeStat} from {name}{opp} and the opposition still walked away with it. Steal of the night, wrong direction.",
       "tags": [
         "career_night",
         "phase2"
@@ -6421,7 +6421,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "hype",
-      "template": "{last} gave them {extremeDescription} and the roster gave away the win.",
+      "template": "{last} gave them {extremeStat} and the roster gave away the win.",
       "tags": [
         "career_night",
         "phase2"
@@ -6436,7 +6436,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "warm",
-      "template": "{name} poured in {extremeDescription}{opp}. Shouldn't have to hurt this much.",
+      "template": "{name} poured in {extremeStat}{opp}. Shouldn't have to hurt this much.",
       "tags": [
         "career_night",
         "phase2"
@@ -6451,7 +6451,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "warm",
-      "template": "You feel for {nick}. {extremeDescription} deserved a W, not this.",
+      "template": "You feel for {nick}. {extremeStat} deserved a W, not this.",
       "tags": [
         "career_night",
         "phase2"
@@ -6466,7 +6466,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "warm",
-      "template": "{last} did everything right. {extremeDescription}{opp}. The result didn't follow.",
+      "template": "{last} did everything right. {extremeStat}{opp}. The result didn't follow.",
       "tags": [
         "career_night",
         "phase2"
@@ -6481,7 +6481,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{nick} dropped {extremeDescription} and lost. Somebody owes that man an apology.",
+      "template": "{nick} dropped {extremeStat} and lost. Somebody owes that man an apology.",
       "tags": [
         "career_night",
         "phase2"
@@ -6496,7 +6496,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{last} went for {extremeDescription} just for the team to blow it.",
+      "template": "{last} went for {extremeStat} just for the team to blow it.",
       "tags": [
         "career_night",
         "phase2"
@@ -6511,7 +6511,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "culture_wry",
-      "template": "{extremeDescription}{opp} and an L? {nick}'s teammates owe dinner for a month.",
+      "template": "{extremeStat}{opp} and an L? {nick}'s teammates owe dinner for a month.",
       "tags": [
         "career_night",
         "phase2"
@@ -6526,7 +6526,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "observational",
-      "template": "{name} carried the full offensive load with {extremeDescription} but the other four got exposed.",
+      "template": "{name} carried the full offensive load with {extremeStat} but the other four got exposed.",
       "tags": [
         "career_night",
         "phase2"
@@ -6541,7 +6541,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "observational",
-      "template": "{last}'s {extremeDescription} masked a defensive collapse that the opponent rode to the finish.",
+      "template": "{last}'s {extremeStat} masked a defensive collapse that the opponent rode to the finish.",
       "tags": [
         "career_night",
         "phase2"
@@ -6556,7 +6556,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "observational",
-      "template": "{nick} peaked at {extremeDescription} while the other team quietly built leads on the other end.",
+      "template": "{nick} peaked at {extremeStat} while the other team quietly built leads on the other end.",
       "tags": [
         "career_night",
         "phase2"
@@ -6571,7 +6571,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "analytical",
-      "template": "{name} posted {extremeDescription}. The supporting cast gave back every margin.",
+      "template": "{name} posted {extremeStat}. The supporting cast gave back every margin.",
       "tags": [
         "career_night",
         "phase2"
@@ -6586,7 +6586,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "analytical",
-      "template": "{last}'s {extremeDescription} came in high volume. Team needed stops, not just scoring.",
+      "template": "{last}'s {extremeStat} came in high volume. Team needed stops, not just scoring.",
       "tags": [
         "career_night",
         "phase2"
@@ -6601,7 +6601,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "analytical",
-      "template": "{extremeDescription} from {nick} skewed the box score. The opponent won the possessions that mattered.",
+      "template": "{extremeStat} from {nick} skewed the box score. The opponent won the possessions that mattered.",
       "tags": [
         "career_night",
         "phase2"
@@ -6616,7 +6616,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{nick} went for {extremeDescription}{opp} and lost. Math is broken.",
+      "template": "{nick} went for {extremeStat}{opp} and lost. Math is broken.",
       "tags": [
         "career_night",
         "phase2"
@@ -6631,7 +6631,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{last}: {extremeDescription}. Final result: L.",
+      "template": "{last}: {extremeStat}. Final result: L.",
       "tags": [
         "career_night",
         "phase2"
@@ -6646,7 +6646,7 @@
       "archetype": "career_night",
       "register": "loss",
       "tone": "deadpan",
-      "template": "{name} did {extremeDescription}. The other team won anyway.",
+      "template": "{name} did {extremeStat}. The other team won anyway.",
       "tags": [
         "career_night",
         "phase2"

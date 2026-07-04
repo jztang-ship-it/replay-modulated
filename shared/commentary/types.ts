@@ -213,6 +213,8 @@ export interface TemplateData {
   recordValue: number;
   /** Pre-built description of the most extreme game in the hand */
   extremeDescription: string;
+  /** Bare stat headline(s) only — for mid-sentence embedding ({extremeStat}) */
+  extremeStat: string;
   /** Top Games — tier code; null when no Top Games trigger. */
   topTier?: TopGameTier | null;
   /**

@@ -114,6 +114,15 @@ export function buildTemplateData(
   const extremeDescription = extremeCard
     ? describeExtremes(extremeCard.extremeFlags!, extremeCard.name)
     : "";
+  // Bare stat headline(s) only — no "{name}:" prefix, no "Flip the card" suffix —
+  // for templates that embed the number mid-sentence ({extremeStat}). Mirrors the
+  // headline selection describeExtremes uses (tier-1 preferred, up to 3; else tier-2).
+  const extremeT1 = (extremeCard?.extremeFlags ?? []).filter(f => f.tier === 1);
+  const extremeT2 = (extremeCard?.extremeFlags ?? []).filter(f => f.tier === 2);
+  const extremeStat = extremeCard
+    ? (extremeT1.length ? extremeT1.slice(0, 3).map(f => f.headline).join(", ")
+       : extremeT2.length ? extremeT2.map(f => f.headline).join(", ") : "")
+    : "";
 
   // Resolve the star's highest badge for commentary focus.
   //
@@ -239,6 +248,7 @@ export function buildTemplateData(
     recordHolder: rec?.holder ?? "",
     recordValue: rec?.record ?? 0,
     extremeDescription,
+    extremeStat,
   };
 }
 
@@ -289,6 +299,7 @@ const STRING_VARS_REQUIRING_VALUE: Array<keyof TemplateData> = [
   "topStat", "topLabel", "topCategory", "topRank", "topRankPhrase",
   "seasonBestStat",
   "record", "recordHolder",
+  "extremeDescription",
 ];
 
 const VAR_REF_RE = /\{(\w+)\}/g;
@@ -343,7 +354,9 @@ export function resolveTemplate(template: string, data: TemplateData): string {
     .replace(/\{gap\}/g, String(data.gap))
     .replace(/\{record\}/g, data.record)
     .replace(/\{recordHolder\}/g, data.recordHolder)
-    .replace(/\{recordValue\}/g, String(data.recordValue));
+    .replace(/\{recordValue\}/g, String(data.recordValue))
+    .replace(/\{extremeDescription\}/g, data.extremeDescription ?? "")
+    .replace(/\{extremeStat\}/g, data.extremeStat ?? "");
 }
 
 // ─── Supporting detail injection ────────────────────────────────────────────
