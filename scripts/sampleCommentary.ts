@@ -207,7 +207,10 @@ const SPECS: Spec[] = [
   { label: "ugly_win(→rookie_neutral) / ROOKIE", gen: (r) => hand({ winTier: "ROOKIE", totalFp: winFp("ROOKIE", r), starRatio: 0.7, starFp: 28, streak: st(r), r }) },
   { label: "rookie_neutral / ROOKIE", gen: (r) => hand({ winTier: "ROOKIE", totalFp: winFp("ROOKIE", r), starRatio: 1.0, starFp: 34, streak: st(r), r }) },
   { label: "near_miss / BUST", gen: (r) => hand({ winTier: "BUST", totalFp: 90 - (1 + Math.floor(r() * 5)), starRatio: 0.9, starFp: 30, streak: st(r), r }) },
-  { label: "collapse / BUST", gen: (r) => hand({ winTier: "BUST", totalFp: 30 + Math.floor(r() * 40), starRatio: 0.8, starFp: 26, prevStreak: 5 + Math.floor(r() * 3), streak: 0, r }) },
+  // Honor production's BUST invariant: on a bust, copyInput sets prevStreak === streak
+  // (the broken-streak length). collapse is gated on prevStreak>=3 and renders {streak},
+  // so both must carry the SAME value or the token renders "0-game streak" (sampler-only bug).
+  { label: "collapse / BUST", gen: (r) => { const totalFp = 30 + Math.floor(r() * 40); const s = 5 + Math.floor(r() * 3); return hand({ winTier: "BUST", totalFp, starRatio: 0.8, starFp: 26, prevStreak: s, streak: s, r }); } },
   { label: "star_carried_loss / BUST", gen: (r) => hand({ winTier: "BUST", totalFp: lossFp(r), starRatio: 1.4, starFp: 55, r }) },
   { label: "star_failed / BUST", gen: (r) => hand({ winTier: "BUST", totalFp: lossFp(r), starRatio: 0.5, starFp: 18, r }) },
   { label: "star_cold / BUST", gen: (r) => hand({ winTier: "BUST", totalFp: lossFp(r), starRatio: 0.7, starFp: 26, r }) },
