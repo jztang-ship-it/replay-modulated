@@ -84,6 +84,10 @@ interface TierGaugeProps {
   onCommentaryOverrideDone?: () => void;
   /** When true, hide the gauge bar (but keep commentary visible) */
   hideBar?: boolean;
+  /** When true, COLLAPSE the gauge bar row entirely (0px, no gap) so the box is
+   *  just the 96px commentary. Distinct from hideBar (which only hides, still
+   *  reserving 14px). Gated by the caller on the verdict layout only. */
+  collapseBar?: boolean;
   /** Slot rendered between the gauge bar and commentary area */
   belowBarSlot?: ReactNode;
 }
@@ -583,6 +587,7 @@ export function TierGauge({
   commentaryOverride = null,
   onCommentaryOverrideDone,
   hideBar = false,
+  collapseBar = false,
   belowBarSlot,
 }: TierGaugeProps) {
   const [barFill, setBarFill] = useState(0);
@@ -801,8 +806,8 @@ export function TierGauge({
   return (
     <div style={{
       display: "grid",
-      gridTemplateRows: "14px 96px",
-      gap: 4,
+      gridTemplateRows: collapseBar ? "0px 96px" : "14px 96px",
+      gap: collapseBar ? 0 : 4,
       boxSizing: "border-box",
       width: "100%",
     }}>
