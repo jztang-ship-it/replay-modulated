@@ -23,7 +23,7 @@ describe("verdict — contrarian-hit (a faded hold that went off)", () => {
     expect(v.player).toBe("Alvarado");
     expect(v.fadePct).toBe(70);
     expect(v.fpDelivered).toBe(45);
-    expect(v.line).toBe("You held Alvarado. 70% of the room faded him. He went for 45.");
+    expect(v.line).toBe("You held Alvarado. 70% of the room faded him. He went for 45.0 FP.");
     // guard #2: no skill/process narration
     expect(v.line).not.toMatch(/genius|great (process|read)|smart|clever/i);
   });
@@ -43,7 +43,7 @@ describe("verdict — chalk-hit (the room was WITH you; no fabricated dissent)",
   it("tells the truth: you rode the consensus", () => {
     expect(v.tone).toBe("chalk-hit");
     expect(v.player).toBe("Jokic");
-    expect(v.line).toBe("The room was on Jokic too. You just rode him for 58.");
+    expect(v.line).toBe("The room was on Jokic too. You just rode him for 58.0 FP.");
     // guard #1: never claim a fight-the-room angle on chalk
     expect(v.line).not.toMatch(/faded|against the room|bold|nobody/i);
   });
@@ -61,7 +61,7 @@ describe("verdict — contrarian-miss (a faded hold that busted; not hidden)", (
     expect(v.tone).toBe("contrarian-miss");
     expect(v.player).toBe("Faded");
     expect(v.fpDelivered).toBe(8);
-    expect(v.line).toBe("You backed Faded against the room — 70% faded him. He didn't land (8).");
+    expect(v.line).toBe("You backed Faded against the room — 70% faded him. He didn't land (8.0 FP).");
   });
 });
 
@@ -77,12 +77,12 @@ describe("verdict — hand-level fallback (no held call cleared meaningful fade 
     expect(v.tone).toBe("hand-level");
     expect(v.player).toBeUndefined();
     expect(v.fadePct).toBe(0);
-    expect(v.line).toBe("You built a 176. A STARTER board.");
+    expect(v.line).toBe("You built a 176.0 FP hand. A STARTER board.");
   });
   it("a chalk card that busted is NOT a miss (you agreed with the room) → hand-level", () => {
     const v = computeVerdict({ cards: [card("a", "ChalkBust", true, 9, CHALK)], totalFp: 150, tier: "BUST" }, );
     expect(v.tone).toBe("hand-level");
-    expect(v.line).toBe("You built a 150. Off night.");
+    expect(v.line).toBe("You built a 150.0 FP hand. Off night.");
   });
   it("no held cards at all → hand-level (everything rerolled in)", () => {
     const v = computeVerdict({

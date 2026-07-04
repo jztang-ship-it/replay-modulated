@@ -84,17 +84,19 @@ function line(tone: VerdictTone, o: { name?: string; fadePct: number; fp: number
   switch (tone) {
     case "contrarian-hit":
       // observable only: you held, the room faded, here's the number.
-      return `You held ${o.name}. ${o.fadePct}% of the room faded him. He went for ${o.fp}.`;
+      return `You held ${o.name}. ${o.fadePct}% of the room faded him. He went for ${o.fp.toFixed(1)} FP.`;
     case "contrarian-miss":
       // the losing kind of call — surfaced, not hidden.
-      return `You backed ${o.name} against the room — ${o.fadePct}% faded him. He didn't land (${o.fp}).`;
+      return `You backed ${o.name} against the room — ${o.fadePct}% faded him. He didn't land (${o.fp.toFixed(1)} FP).`;
     case "chalk-hit":
       // honest chalk: the room was WITH you. No fake dissent.
-      return `The room was on ${o.name} too. You just rode him for ${o.fp}.`;
+      return `The room was on ${o.name} too. You just rode him for ${o.fp.toFixed(1)} FP.`;
     case "hand-level": {
       const t = (o.tier ?? "").toUpperCase();
-      const tail = t === "BUST" || !t ? "Off night." : `A ${o.tier} board.`;
-      return `You built a ${o.total}. ${tail}`;
+      // Article by SOUND: vowel-initial tiers (ALL_STAR) and MVP ("em-vee-pee") take "An".
+      const article = /^[AEIOU]/.test(t) || t === "MVP" ? "An" : "A";
+      const tail = t === "BUST" || !t ? "Off night." : `${article} ${o.tier} board.`;
+      return `You built a ${o.total.toFixed(1)} FP hand. ${tail}`;
     }
   }
 }
@@ -104,7 +106,7 @@ function line(tone: VerdictTone, o: { name?: string; fadePct: number; fp: number
  * verdict is about a call you MADE, not a card that rerolled into your lineup.
  */
 export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT_VERDICT_CONFIG): Verdict {
-  const total = r0(input.totalFp);
+  const total = input.totalFp; // raw — line() formats the copy to 1 decimal
   const handLevel = (): Verdict => ({ fadePct: 0, fpDelivered: 0, tone: "hand-level", line: line("hand-level", { fadePct: 0, fp: 0, total, tier: input.tier }) });
 
   const held = input.cards.filter((c) => c.wasHeld);
@@ -120,7 +122,7 @@ export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT
       const sa = fadeOf(a) * a.fp, sb = fadeOf(b) * b.fp;
       return sa !== sb ? sa > sb : a.fp !== b.fp ? a.fp > b.fp : a.ownership < b.ownership;
     });
-    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-hit", line: line("contrarian-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: r0(v.fp), total, tier: input.tier }) };
+    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-hit", line: line("contrarian-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }) };
   }
 
   // 2. CONTRARIAN-MISS — a faded hold that busted. The boldest failed call:
@@ -131,7 +133,7 @@ export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT
       const fa = fadeOf(a), fb = fadeOf(b);
       return fa !== fb ? fa > fb : a.fp !== b.fp ? a.fp < b.fp : a.ownership < b.ownership;
     });
-    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-miss", line: line("contrarian-miss", { name: v.name, fadePct: pct(fadeOf(v)), fp: r0(v.fp), total, tier: input.tier }) };
+    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-miss", line: line("contrarian-miss", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }) };
   }
 
   // 3. CHALK-HIT — no bold call stood out, but you rode a high-owned hold to a big
@@ -139,7 +141,7 @@ export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT
   const chalkHits = held.filter((c) => fadeOf(c) < cfg.fadeChalk && c.fp >= cfg.fpMeaningful);
   if (chalkHits.length) {
     const v = best(chalkHits, (a, b) => (a.fp !== b.fp ? a.fp > b.fp : a.ownership > b.ownership));
-    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "chalk-hit", line: line("chalk-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: r0(v.fp), total, tier: input.tier }) };
+    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "chalk-hit", line: line("chalk-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }) };
   }
 
   // 4. HAND-LEVEL — nothing notable among the holds. Honest, quiet.
