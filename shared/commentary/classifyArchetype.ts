@@ -133,10 +133,24 @@ export function classifyArchetype(input: CommentaryInput): ClassificationResult 
     return { ...base, archetype: "badge_explosion" };
   }
 
+  // ── Priority 2.4: Ugly win — ROOKIE win where the STAR ran cold (r < 0.8)
+  //    and depth scraped the hand across the floor. Must precede the
+  //    rookie_neutral catch-all below (which ignores r), or every ROOKIE win
+  //    routes to rookie_neutral and this never fires. Only the star-cold
+  //    subset reroutes — real-pipeline probe: ~3.5% of ROOKIE wins have the
+  //    top card at r < 0.8; the other ~96.5% (star fine, cast thin) stay
+  //    rookie_neutral. `r` is the same selectStar ratio computed above.
+  //    Fallback is balanced_win (archetype registry). This does NOT touch
+  //    high_score_low_reward (priority 5b) — that stays inactive/dead.
+  if (register === "win" && input.winTier === "ROOKIE" && r < 0.8) {
+    return { ...base, archetype: "ugly_win" };
+  }
+
   // ── Priority 2.5: ROOKIE win — neutral framing ──
   // ROOKIE is the in-between tier (just above bust). After achievement /
-  // career-night / badge-explosion overrides have had their shot, all other
-  // ROOKIE-tier wins route here so the templates don't celebrate a cash
+  // career-night / badge-explosion overrides AND the ugly_win (cold-star)
+  // peel-off above have had their shot, all remaining ROOKIE-tier wins
+  // (star at/above ~0.8) route here so the templates don't celebrate a cash
   // that's barely above the bust line. The framing reads as "held position",
   // not "won the hand".
   if (register === "win" && input.winTier === "ROOKIE") {

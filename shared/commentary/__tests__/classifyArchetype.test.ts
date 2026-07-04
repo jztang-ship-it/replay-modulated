@@ -91,15 +91,17 @@ describe("classifyArchetype", () => {
     })).archetype).toBe("star_cold");
   });
 
-  test("rookie_neutral preempts ugly_win for ROOKIE-tier wins", () => {
-    // Per design: ROOKIE is the in-between tier (just above bust), not a
-    // celebrated "win". ALL ROOKIE-tier wins route to rookie_neutral after
-    // achievement / career-night / badge-explosion overrides have had their
-    // shot, regardless of star ratio.
-    const lowRatio = makeCard({ actualFp: 20, projectedFp: 30 });
-    expect(classifyArchetype(makeInput({ roster: [lowRatio], winTier: "ROOKIE" })).archetype).toBe("rookie_neutral");
-    const highRatio = makeCard({ actualFp: 50, projectedFp: 30 });
-    expect(classifyArchetype(makeInput({ roster: [highRatio], winTier: "ROOKIE" })).archetype).toBe("rookie_neutral");
+  test("ugly_win fires for cold-star ROOKIE wins (r<0.8); rookie_neutral for the rest", () => {
+    // ugly_win rescue: a ROOKIE win where the top card ran cold (r<0.8) routes to
+    // ugly_win ("depth scraped it despite the cold star"); ROOKIE wins with the
+    // star at/above ~0.8 stay rookie_neutral ("held position, nothing happened").
+    // Achievement / career-night / badge-explosion overrides still preempt both
+    // (priority 0-2, above the r<0.8 check). Real-pipeline probe: ~3.5% of ROOKIE
+    // wins are cold-star (→ ugly_win); ~96.5% stay rookie_neutral.
+    const coldStar = makeCard({ actualFp: 20, projectedFp: 30 }); // r = 0.67 < 0.8
+    expect(classifyArchetype(makeInput({ roster: [coldStar], winTier: "ROOKIE" })).archetype).toBe("ugly_win");
+    const warmStar = makeCard({ actualFp: 50, projectedFp: 30 }); // r = 1.67 >= 0.8
+    expect(classifyArchetype(makeInput({ roster: [warmStar], winTier: "ROOKIE" })).archetype).toBe("rookie_neutral");
   });
 
   test("star_delivered fires for solid ratio win", () => {
