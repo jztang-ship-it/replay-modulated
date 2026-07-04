@@ -17,7 +17,7 @@
 // floor, which after the fix should be ~0.
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { selectCommentary } from "../selectCommentary";
+import { selectCommentary, RESULT_FRAMING } from "../selectCommentary";
 import type { CommentaryInput, WinTier } from "../types";
 
 // ── localStorage stub (selectCommentary's anti-repeat + tone history) ──
@@ -187,37 +187,15 @@ describe("achievement archetypes — modes-2/3 restriction (no framing) preserve
   // If the achievement modes-2/3 restriction breaks, framing from the
   // rookie pool would surface on a career-high hand. Drive 200 such
   // hands and assert NONE of those phrases ever appear.
-  // RESULT_FRAMING.rookie pool — verbatim from selectCommentary.ts:143-152.
+  // Derived from the LIVE RESULT_FRAMING.rookie pool (imported), so this guard
+  // can never silently desync from a rename of the pool strings.
   // EXCLUDES "Neither here nor there." which also appears verbatim as a
   // tail clause inside CHAD_ANALOGIES.rookie ("Showed up, signed in, signed
   // out. Neither here nor there.") and would false-positive when the
   // analogy fires correctly on an achievement hand (mode 2 or 3).
-  const ROOKIE_FRAMING_PHRASES = [
-    "Held the line.",
-    "Treaded water.",
-    "Even-Steven.",
-    "Refused to bust.",
-    "Kept your seat at the table.",
-    "Subsistence cash.",
-    "Hovered above zero.",
-    "Floor-level result.",
-    "Nominal payout.",
-    "Marginal green.",
-    "Token return.",
-    "Held position.",
-    "Functional not festive.",
-    "Not bust, not braggable.",
-    "Pushed the chair back even.",
-    "Hand of survival.",
-    "Crawled across the line.",
-    "Quietly survived.",
-    "Break-even kind of night.",
-    "Just kept the lights on.",
-    "Lukewarm green.",
-    "Stayed in the room.",
-    "Penny-ante cash.",
-    "Held even, held position.",
-  ];
+  const ROOKIE_FRAMING_PHRASES = RESULT_FRAMING.rookie.filter(
+    (p) => p !== "Neither here nor there.",
+  );
 
   it("historic_career hand at ROOKIE-tier totalFp never contains rookie RESULT_FRAMING", () => {
     const N = 200;
