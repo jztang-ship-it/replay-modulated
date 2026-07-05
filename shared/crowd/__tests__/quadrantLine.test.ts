@@ -11,18 +11,20 @@ const lead = (quadrant: ReadDrawQuadrant, name: string, ratio: number): ReadDraw
 });
 
 describe("renderQuadrantLine — the four extreme corners", () => {
-  it("contrarian-warm names the player + a clean multiple (double)", () => {
+  it("contrarian-warm opens on the EVENT (not 'You held') + a clean multiple (double)", () => {
+    // De-echo: the lead no longer re-announces ownership — the atom owns "You held X".
     expect(renderQuadrantLine(lead("contrarian-warm", "Nash", 2.0)))
-      .toBe("You held Nash. He gave you double his average — that's the whole game.");
+      .toBe("Nash gave you double his average — that's the whole game.");
   });
-  it("contrarian-cold names the player + a clean fraction (a third) + a dare closer", () => {
+  it("contrarian-cold opens on the EVENT + a clean fraction (a third) + a dare closer", () => {
     expect(renderQuadrantLine(lead("contrarian-cold", "Nash", 0.33)))
-      .toBe("You held Nash. He no-showed — a third of his number. Your turn — better dice?");
+      .toBe("Nash no-showed — a third of his number. Your turn — better dice?");
   });
-  it("a name ending in a period (Jr.) does not double the sentence dot", () => {
-    // endDot: "You held … Jr." not "… Jr..". Applies to every lead template.
+  it("a name ending in a period (Jr./Sr.) never double-periods", () => {
+    // Two mechanisms: chalk leads keep endDot ("… Jr." not "… Jr.."); the contrarian
+    // leads now open ON the name (space + verb follows), so no punctuation collides.
     expect(renderQuadrantLine(lead("contrarian-warm", "Jaren Jackson Jr.", 2.0)))
-      .toBe("You held Jaren Jackson Jr. He gave you double his average — that's the whole game.");
+      .toBe("Jaren Jackson Jr. gave you double his average — that's the whole game.");
     expect(renderQuadrantLine(lead("chalk-cold", "Kelly Oubre Jr.", 0.3)))
       .toBe("Everybody held Kelly Oubre Jr. Nobody got paid.");
   });

@@ -43,9 +43,13 @@ export function renderQuadrantLine(lead: ReadDrawLead): string {
   const name = lead.label.name;
   switch (lead.label.quadrant) {
     case "contrarian-warm":
-      return `You held ${name}${endDot(name)} He gave you ${phraseMultiple(lead.ratio)} his average — that's the whole game.`;
+      // Opens on the EVENT (headline voice), not "You held" — the atom owns "You
+      // held X" as the crown jewel; the lead re-announcing ownership read as
+      // template repetition. {name} leads the sentence, so no endDot (nothing to
+      // append; a "Jr." suffix period is the abbreviation, not a collision).
+      return `${name} gave you ${phraseMultiple(lead.ratio)} his average — that's the whole game.`;
     case "contrarian-cold":
-      return `You held ${name}${endDot(name)} He no-showed — ${phraseFraction(lead.ratio)} of his number. ${CONTRARIAN_COLD_CLOSER}`;
+      return `${name} no-showed — ${phraseFraction(lead.ratio)} of his number. ${CONTRARIAN_COLD_CLOSER}`;
     case "chalk-warm":
       return `You and the room both rode ${name}${endDot(name)} He delivered.`;
     case "chalk-cold":
