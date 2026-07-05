@@ -1684,6 +1684,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // as before and the verdict lands last — same surface, same pacing.
     // (Depth = terminal-beat-only for now; full commentary retarget is a follow-up.)
     const verdictSecondary = adapter.computeVerdict?.(roster, fp, winTier)?.line || undefined;
+    // Stage-3 read×draw headline (basketball). DRAW-led descriptive line for the
+    // most draw-extreme HELD card; null for all-neutral hands (~66% → existing
+    // copy unchanged). Leads ABOVE the verdict atom; never replaces it. Applied
+    // on the DEFAULT (non-trigger) verdict path only — the trigger-framed path
+    // keeps its own lead.
+    const quadrantLead = adapter.computeQuadrantLead?.(roster, fp, winTier) || undefined;
     // Phase 1 trigger split (2026-06-03): tracked NEAR_MISS_BAND with
     // the post-reveal commentary path. Today gaugeSnap.isNearMiss is not
     // consumed at this site (only nextTier/curMin/nextMin flow into
@@ -1845,7 +1851,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       return framed as any;
     }
 
-    const finalCopy = verdictSecondary ? { primary: baseCopy.primary, secondary: verdictSecondary } : baseCopy;
+    // Coexistence: the quadrant line LEADS (primary) and the verdict atom stays
+    // BELOW as room/result context (secondary) — the atom is never dropped. When
+    // there's no quadrant line (neutral hand / non-basketball), fall back to the
+    // exact prior shape (flavor primary + atom secondary, else baseCopy) → those
+    // hands are byte-identical to before.
+    const finalCopy = quadrantLead
+      ? { primary: quadrantLead, secondary: verdictSecondary ?? (baseCopy.secondary ?? "") }
+      : verdictSecondary
+        ? { primary: baseCopy.primary, secondary: verdictSecondary }
+        : baseCopy;
     postRevealCopyRef.current = finalCopy as any;
     postRevealCopyKeyRef.current = currentKey;
     return finalCopy;

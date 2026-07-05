@@ -143,6 +143,12 @@ export interface GameAdapter {
    *  (demotes FP/ceiling, hides the resting gauge bar). Sports that omit it keep
    *  the baseline reveal untouched. Returns null when the hand yields no verdict. */
   computeVerdict?: (roster: PlayerCard[], totalFp: number, tier: string) => Verdict | null;
+  /** Stage-3 read×draw headline: the DRAW-led descriptive line for the most
+   *  draw-extreme HELD card (coldest, else hottest). Present only for sports with
+   *  a crowd model. When present, GameView lands it as the LEAD above the verdict
+   *  atom at RESULTS. Returns null for an all-neutral hand (no line — existing
+   *  verdict copy unchanged). Descriptive/ungraded; never replaces the atom. */
+  computeQuadrantLead?: (roster: PlayerCard[], totalFp: number, tier: string) => string | null;
 
   // ── Components — sport-specific render slots ───────────────────────
   /** The roster card component (basketball: AthleteCard, baseball: BaseballCard).

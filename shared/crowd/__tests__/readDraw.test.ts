@@ -6,6 +6,7 @@ import {
   classifyReadDraw,
   readStance,
   drawState,
+  pickDrawLead,
   READ_DRAW_COLD,
   READ_DRAW_WARM,
   DEFAULT_READ_DRAW_CONFIG,
@@ -104,5 +105,50 @@ describe("classifyReadDraw (the 2×3 quadrant grid)", () => {
 
   it("empty roster → empty labels", () => {
     expect(classifyReadDraw([])).toEqual([]);
+  });
+});
+
+describe("pickDrawLead (headline held card = most draw-extreme)", () => {
+  it("null when no held card", () => {
+    expect(pickDrawLead([card({ wasHeld: false })])).toBeNull();
+  });
+  it("null when all held cards are neutral (the ~66% bulk falls back)", () => {
+    const lead = pickDrawLead([
+      card({ playerId: "1", actualFp: 30, projectedFp: 30 }), // 1.0
+      card({ playerId: "2", actualFp: 25, projectedFp: 30 }), // 0.83
+    ]);
+    expect(lead).toBeNull();
+  });
+  it("picks the coldest held card when any is cold", () => {
+    const lead = pickDrawLead([
+      card({ playerId: "a", name: "Mild", actualFp: 12, projectedFp: 30 }),  // 0.40 (cold)
+      card({ playerId: "b", name: "Coldest", actualFp: 6, projectedFp: 30 }), // 0.20 (cold)
+      card({ playerId: "c", name: "Hot", actualFp: 60, projectedFp: 30 }),    // 2.0 (warm)
+    ]);
+    expect(lead?.card.playerId).toBe("b"); // cold outranks warm; lowest ratio wins
+    expect(lead?.label.draw).toBe("cold");
+    expect(lead?.ratio).toBeCloseTo(0.2, 5);
+  });
+  it("picks the hottest held card when none is cold", () => {
+    const lead = pickDrawLead([
+      card({ playerId: "a", name: "Warm", actualFp: 50, projectedFp: 30 }),   // 1.67 (warm)
+      card({ playerId: "b", name: "Hottest", actualFp: 75, projectedFp: 30 }), // 2.5 (warm)
+      card({ playerId: "c", name: "Neut", actualFp: 30, projectedFp: 30 }),    // 1.0
+    ]);
+    expect(lead?.card.playerId).toBe("b");
+    expect(lead?.label.draw).toBe("warm");
+  });
+  it("carries the read stance of the picked card (contrarian vs chalk)", () => {
+    const lead = pickDrawLead([
+      card({ playerId: "x", ownership: CONTRARIAN_OWN, actualFp: 6, projectedFp: 30 }),
+    ]);
+    expect(lead?.label.quadrant).toBe("contrarian-cold");
+  });
+  it("excludes non-held even if more extreme", () => {
+    const lead = pickDrawLead([
+      card({ playerId: "held", wasHeld: true, actualFp: 55, projectedFp: 30 }),  // 1.83 warm
+      card({ playerId: "reroll", wasHeld: false, actualFp: 3, projectedFp: 30 }), // 0.10 cold but not held
+    ]);
+    expect(lead?.card.playerId).toBe("held");
   });
 });

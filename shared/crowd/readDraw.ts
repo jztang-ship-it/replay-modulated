@@ -140,3 +140,34 @@ export function classifyReadDraw(
       };
     });
 }
+
+/** A single held card singled out for a headline line, plus its draw ratio. */
+export interface ReadDrawLead {
+  card: ReadDrawCard;
+  label: ReadDrawLabel;
+  /** actualFp / projectedFp for `card` — the DRAW ratio that drove the pick. */
+  ratio: number;
+}
+
+/**
+ * Pick the DRAW-extreme HELD card for one headline line: the lowest-ratio COLD
+ * card if any held card is cold, else the highest-ratio WARM card if any is warm,
+ * else `null`. Draw-extreme wins because that is the interesting one; an
+ * all-neutral hand returns null so the caller falls back to its base copy (the
+ * ~66% neutral bulk gets no quadrant line). Cold outranks warm. Pure.
+ */
+export function pickDrawLead(
+  cards: ReadDrawCard[],
+  cfg: ReadDrawConfig = DEFAULT_READ_DRAW_CONFIG,
+): ReadDrawLead | null {
+  const scored = cards
+    .filter((c) => c.wasHeld && c.projectedFp > 0)
+    .map((c) => ({ c, ratio: c.actualFp / c.projectedFp, draw: drawState(c, cfg) }));
+  const cold = scored.filter((x) => x.draw === "cold");
+  const warm = scored.filter((x) => x.draw === "warm");
+  let pick: { c: ReadDrawCard; ratio: number } | null = null;
+  if (cold.length) pick = cold.reduce((a, b) => (b.ratio < a.ratio ? b : a)); // coldest
+  else if (warm.length) pick = warm.reduce((a, b) => (b.ratio > a.ratio ? b : a)); // hottest
+  else return null; // all held cards neutral → no lead
+  return { card: pick.c, label: classifyReadDraw([pick.c], cfg)[0], ratio: pick.ratio };
+}

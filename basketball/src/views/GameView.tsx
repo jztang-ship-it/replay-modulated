@@ -37,6 +37,7 @@ import {
   resolveRoster,
   computeRosterCeiling,
   computeBasketballVerdict,
+  computeBasketballQuadrantLine,
   getTodaysStars,
 } from "../adapters/gameAdapter";
 import {
@@ -250,6 +251,7 @@ export default function GameView({
     getTodaysStars,
     computeRosterCeiling,
     computeVerdict: computeBasketballVerdict,
+    computeQuadrantLead: computeBasketballQuadrantLine,
     // AthleteCard's Props type marks several fields optional (locked,
     // isMvp, flipped, etc.) that RosterGridCardProps requires. Functionally
     // the wider/looser AthleteCard shape can absorb any RosterGridCardProps

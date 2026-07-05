@@ -15,6 +15,8 @@ import { isSlateV2Enabled } from "@shared/featureFlags";
 import type { PlayerCard } from "./types";
 import { basketballCrowdOwnership, type CrowdPlayer, type CrowdLog } from "../crowd/basketballCrowd";
 import { computeVerdict, type Verdict } from "@shared/crowd/verdict";
+import { pickDrawLead, type ReadDrawCard } from "@shared/crowd/readDraw";
+import { renderQuadrantLine } from "@shared/crowd/quadrantLine";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
 
@@ -403,4 +405,55 @@ export function computeBasketballVerdict(roster: PlayerCard[], totalFp: number, 
     })
     .filter((c) => c.id);
   return computeVerdict({ cards, totalFp, tier });
+}
+
+/**
+ * The DRAW-led read×draw headline line (Stage 3). Parallels
+ * computeBasketballVerdict — SAME value-free ownership build — but classifies
+ * each HELD card on read×draw and renders ONE line for the most draw-extreme
+ * hold (coldest, else hottest). Returns null for an all-neutral hand, so the
+ * caller keeps its existing verdict copy (the ~66% neutral bulk gets no line).
+ * Descriptive/ungraded; the verdict atom is untouched — this line coexists as
+ * the lead. The ownership build is intentionally duplicated (not shared with
+ * computeBasketballVerdict) so the shipped verdict output stays byte-identical.
+ * totalFp/tier are unused today (kept for the adapter signature parity).
+ */
+export function computeBasketballQuadrantLine(roster: PlayerCard[], _totalFp: number, _tier: string): string | null {
+  if (!roster?.length) return null;
+  const logsByKey = getLogsByKey();
+  const crowdPlayers: CrowdPlayer[] = [];
+  const logsByBaseId = new Map<string, CrowdLog[]>();
+  for (const card of roster) {
+    const baseId = String((card as any).basePlayerId ?? (card as any).personKey ?? "").trim();
+    if (!baseId) continue;
+    crowdPlayers.push({
+      basePlayerId: baseId,
+      name: String((card as any).name ?? ""),
+      team: String((card as any).team ?? ""),
+      position: String((card as any).position ?? ""),
+    });
+    const seasonNum = Number(String((card as any).season ?? ""));
+    const seasonKey = Number.isFinite(seasonNum) && seasonNum > 0 ? `${baseId}|${Math.round(seasonNum)}` : null;
+    let candidates = seasonKey ? (logsByKey.get(seasonKey) ?? []) : [];
+    if (!candidates.length) candidates = logsByKey.get(baseId) ?? [];
+    logsByBaseId.set(baseId, candidates.map((l) => ({ stats: (l as any).stats ?? {} })));
+  }
+  if (!crowdPlayers.length) return null;
+  const ownership = basketballCrowdOwnership(crowdPlayers, logsByBaseId);
+  const cards: ReadDrawCard[] = roster
+    .map((c) => {
+      const baseId = String((c as any).basePlayerId ?? (c as any).personKey ?? "").trim();
+      return {
+        playerId: String((c as any).cardId ?? baseId),
+        name: String((c as any).name ?? ""),
+        wasHeld: Boolean((c as any).wasHeld ?? false),
+        actualFp: Number((c as any).actualFp ?? 0),
+        projectedFp: Number((c as any).projectedFp ?? 0),
+        ownership: ownership.get(baseId) ?? 0.3,
+        salary: Number((c as any).salary ?? 0),
+      };
+    })
+    .filter((c) => c.playerId);
+  const lead = pickDrawLead(cards);
+  return lead ? renderQuadrantLine(lead) : null;
 }
