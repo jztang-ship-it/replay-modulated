@@ -814,10 +814,16 @@ export function TierGauge({
       gap: (collapseBar || collapseBox) ? 0 : 4,
       boxSizing: "border-box",
       width: "100%",
+      // collapseBox zeroes the child heights below; overflow:hidden guarantees no
+      // residual child (e.g. the 96px commentary box) can spill a 0px track and
+      // eat taps on the DEAL row beneath. Gated on collapseBox so the verdict /
+      // normal gauge roots stay byte-identical (they never overflow — bar and
+      // commentary fit their 14px/96px tracks, each with its own overflow:hidden).
+      overflow: collapseBox ? "hidden" : undefined,
     }}>
 
       {/* Row 1: Bar — locked height */}
-      <div style={{ position: "relative", height: 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, visibility: hideBar ? "hidden" : "visible" }}>
+      <div style={{ position: "relative", height: collapseBox ? 0 : 14, background: "#ffffff0d", borderRadius: 999, overflow: "hidden", zIndex: 2, visibility: hideBar ? "hidden" : "visible" }}>
         <div style={{
           position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999,
           width: `${barFill * 100}%`,
@@ -828,7 +834,7 @@ export function TierGauge({
       </div>
 
       {/* Row 2: Commentary — locked height, maximized */}
-      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: 96, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
+      <div data-ftue-anchor="commentary" style={{ display: "flex", alignItems: "stretch", justifyContent: "flex-start", flexDirection: "column", height: collapseBox ? 0 : 96, textAlign: "left", overflow: "hidden", position: "relative", zIndex: commentaryOverride ? 1100 : 1 }}>
         {commentaryOverride && commentaryOverride.parts.length > 0 ? (() => {
           const part = commentaryOverride.parts[overridePart];
           const isString = typeof part === "string";
