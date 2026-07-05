@@ -11,6 +11,13 @@
  * caller keeps its existing verdict copy.
  */
 import type { ReadDrawLead } from "./readDraw";
+import { endDot } from "./nameText";
+
+/** Closer for the contrarian-cold "robbed" line — the designated strongest-share
+ *  lead. A DARE, not a consolation. Referenced by BOTH the standalone lead line
+ *  (renderQuadrantLine) and the convergent fold (renderQuadrantFold) so the two
+ *  can never drift; change it here and both move together. */
+const CONTRARIAN_COLD_CLOSER = "Your turn — better dice?";
 
 /** ratio ≥ WARM → a clean multiple phrase ("double"), never a raw decimal. */
 function phraseMultiple(r: number): string {
@@ -36,13 +43,13 @@ export function renderQuadrantLine(lead: ReadDrawLead): string {
   const name = lead.label.name;
   switch (lead.label.quadrant) {
     case "contrarian-warm":
-      return `You held ${name}. He gave you ${phraseMultiple(lead.ratio)} his average — that's the whole game.`;
+      return `You held ${name}${endDot(name)} He gave you ${phraseMultiple(lead.ratio)} his average — that's the whole game.`;
     case "contrarian-cold":
-      return `You held ${name}. He no-showed — ${phraseFraction(lead.ratio)} of his number. Right call, wrong night.`;
+      return `You held ${name}${endDot(name)} He no-showed — ${phraseFraction(lead.ratio)} of his number. ${CONTRARIAN_COLD_CLOSER}`;
     case "chalk-warm":
-      return `You and the room both rode ${name}. He delivered.`;
+      return `You and the room both rode ${name}${endDot(name)} He delivered.`;
     case "chalk-cold":
-      return `Everybody held ${name}. Nobody got paid.`;
+      return `Everybody held ${name}${endDot(name)} Nobody got paid.`;
     default:
       return "";
   }

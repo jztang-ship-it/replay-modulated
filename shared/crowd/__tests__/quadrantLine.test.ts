@@ -15,9 +15,16 @@ describe("renderQuadrantLine — the four extreme corners", () => {
     expect(renderQuadrantLine(lead("contrarian-warm", "Nash", 2.0)))
       .toBe("You held Nash. He gave you double his average — that's the whole game.");
   });
-  it("contrarian-cold names the player + a clean fraction (a third)", () => {
+  it("contrarian-cold names the player + a clean fraction (a third) + a dare closer", () => {
     expect(renderQuadrantLine(lead("contrarian-cold", "Nash", 0.33)))
-      .toBe("You held Nash. He no-showed — a third of his number. Right call, wrong night.");
+      .toBe("You held Nash. He no-showed — a third of his number. Your turn — better dice?");
+  });
+  it("a name ending in a period (Jr.) does not double the sentence dot", () => {
+    // endDot: "You held … Jr." not "… Jr..". Applies to every lead template.
+    expect(renderQuadrantLine(lead("contrarian-warm", "Jaren Jackson Jr.", 2.0)))
+      .toBe("You held Jaren Jackson Jr. He gave you double his average — that's the whole game.");
+    expect(renderQuadrantLine(lead("chalk-cold", "Kelly Oubre Jr.", 0.3)))
+      .toBe("Everybody held Kelly Oubre Jr. Nobody got paid.");
   });
   it("chalk-warm is the quiet 'you and the room both rode him'", () => {
     expect(renderQuadrantLine(lead("chalk-warm", "Jokic", 1.8)))
@@ -50,9 +57,9 @@ describe("renderQuadrantLine — human phrasing, never raw decimals", () => {
       }
     }
   });
-  it("ungraded: never says correct / optimal / right call... wait — 'Right call' is descriptive luck, not a grade", () => {
-    // guard the graded vocabulary we explicitly forbid; "Right call, wrong night"
-    // is a luck description (the DRAW was cold), not an evaluation of the pick.
+  it("ungraded: never says correct / optimal / best play / should have", () => {
+    // guard the graded vocabulary we explicitly forbid — the lines describe the
+    // read (fade) and the draw (luck), never evaluate the pick as right/wrong.
     for (const q of ["contrarian-warm", "chalk-warm", "chalk-cold"] as ReadDrawQuadrant[]) {
       expect(renderQuadrantLine(lead(q, "X", q.endsWith("cold") ? 0.3 : 2))).not.toMatch(/optimal|correct|best play|should have/i);
     }
