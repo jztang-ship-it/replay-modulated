@@ -91,6 +91,9 @@ interface TierGaugeProps {
   /** When true (pre-verdict inert), ALSO collapse the 96px commentary box, so the
    *  whole gauge span is 0 (no bar, no box). verdictLayout uses collapseBar only. */
   collapseBox?: boolean;
+  /** Pre-verdict IDLE voice line to render in the commentary box (resting text,
+   *  no typewriter). Only set on IDLE; null everywhere else. */
+  idleText?: string | null;
   /** Slot rendered between the gauge bar and commentary area */
   belowBarSlot?: ReactNode;
 }
@@ -592,6 +595,7 @@ export function TierGauge({
   hideBar = false,
   collapseBar = false,
   collapseBox = false,
+  idleText = null,
   belowBarSlot,
 }: TierGaugeProps) {
   const [barFill, setBarFill] = useState(0);
@@ -936,6 +940,17 @@ export function TierGauge({
                 />
               )}
             </div>
+        ) : idleText ? (
+          <div style={{ display: "flex", alignItems: "center", height: "100%", padding: "2px 2px 0" }}>
+            <span style={{
+              fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.72)",
+              fontFamily: FF, letterSpacing: "0.01em", lineHeight: 1.4, textAlign: "left",
+              display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any,
+              overflow: "hidden", maxWidth: "100%",
+            }}>
+              {idleText}
+            </span>
+          </div>
         ) : null}
       </div>
     </div>

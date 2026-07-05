@@ -77,7 +77,7 @@ import {
 } from "@shared/hooks/useEmotionalReveal";
 import { GameBar as SharedGameBar, type CelebrationData } from "@shared/components/GameBar";
 import { featureFlags } from "@shared/featureFlags";
-import { selectCommentary } from "@shared/commentary/selectCommentary";
+import { selectCommentary, selectPreVerdictIdle } from "@shared/commentary/selectCommentary";
 import { evaluateTrigger } from "@shared/utils/triggerEvaluation";
 import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
@@ -1860,8 +1860,27 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // FALSE where the space is genuinely used — verdict layout (44c1fc38), FTUE
   // coach text, or a live multiplier row (other sports' HOLD). REVEALING is
   // excluded (the bar fills there), matching the state list below.
+  // Pre-verdict IDLE voice band — stateless, IDLE only (non-FTUE, non-challenge).
+  // Picked once per hand (keyed on handCount) and cached in a ref so re-renders
+  // don't re-pick or thrash the anti-repeat window. NOT routed through the
+  // RESULTS-gated postRevealCopy useMemo.
+  const idleLineRef = useRef<string | null>(null);
+  const idleLineKeyRef = useRef<number | null>(null);
+  const idleLine = useMemo(() => {
+    if (gameState !== "IDLE" || challengeCtx || ftueActive) return null;
+    const key = handCount;
+    if (idleLineRef.current != null && idleLineKeyRef.current === key) return idleLineRef.current;
+    const line = selectPreVerdictIdle(sportKey, key);
+    idleLineRef.current = line;
+    idleLineKeyRef.current = key;
+    return line;
+  }, [gameState, challengeCtx, ftueActive, handCount, sportKey]);
+  // IDLE speaks (un-collapsed 96px box); DEALING/HOLD/DRAWING stay collapsed (air).
+  const gaugeIdleVoice = gameState === "IDLE" && !challengeCtx && !ftueActive && idleLine != null;
+
   const gaugeInert =
     !verdictLayout
+    && !gaugeIdleVoice   // IDLE with a voice line stays 96px (below); IDLE with none collapses to air like the rest
     && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING")
     && postRevealCopy == null
     && ftueCommentaryOverride == null
@@ -3262,9 +3281,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // card stage. Verdict branch stays byte-identical to 44c1fc38.
           gridTemplateRows: verdictLayout
             ? "72px 16px 0px 0px 0px 0px 96px 16px 74px"
-            : gaugeInert
-              ? "72px 8px 0px 0px 0px 0px 0px 8px 74px"
-              : "72px 4px 14px 8px 0px 4px 96px 2px 74px",
+            : gaugeIdleVoice
+              ? "72px 16px 0px 0px 0px 0px 96px 16px 74px"
+              : gaugeInert
+                ? "72px 8px 0px 0px 0px 0px 0px 8px 74px"
+                : "72px 4px 14px 8px 0px 4px 96px 2px 74px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -3520,8 +3541,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               postRevealCopy={postRevealCopy}
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
-              collapseBar={verdictLayout}
+              collapseBar={verdictLayout || gaugeIdleVoice}
               collapseBox={gaugeInert}
+              idleText={gaugeIdleVoice ? idleLine : null}
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"
                 // hasVerdict: the verdict is the resting payload, so the gauge bar is
                 // hidden at RESULTS/WIN_CELEBRATION. The reveal fill is RETAINED for

@@ -30,7 +30,7 @@ import type {
 import { classifyArchetype } from "./classifyArchetype";
 import { selectTone } from "./toneEngine";
 import { buildTemplateData, resolveTemplate, composeMessage } from "./templateResolver";
-import { scoreRepeatPenalty, recordUsage } from "./antiRepeat";
+import { scoreRepeatPenalty, recordUsage, getRepeatHistory } from "./antiRepeat";
 import { selectStamp } from "./priorities";
 import { getFallbackChain } from "./archetypes";
 import { selectStory } from "./storySelector";
@@ -52,6 +52,41 @@ const _libraries: Record<string, CommentaryLibrary> = {
 
 function loadLibrary(sport: string): CommentaryLibrary {
   return _libraries[sport] ?? {};
+}
+
+/** Pre-verdict IDLE voice. Stateless + unconditional (no `requires`, no per-card
+ *  detail, no cross-hand memory beyond the existing anti-repeat window). Picks one
+ *  line from `pre_verdict.idle` and rotates it through the SAME lineId/tone
+ *  anti-repeat the rest of the bank uses (isolated under a "pre_verdict_idle"
+ *  pseudo-archetype so it never mixes with result archetypes). Deliberately NOT
+ *  routed through selectCommentary / the RESULTS-gated postRevealCopy useMemo. */
+export function selectPreVerdictIdle(sport: string, seed: number): string | null {
+  const lib = loadLibrary(sport) as any;
+  const pool: Array<{ id: string; tone: ToneId; template: string; enabled?: boolean; qualityScore?: number }> =
+    lib?.pre_verdict?.idle ?? [];
+  const candidates = pool.filter((l) => l && l.enabled !== false && typeof l.template === "string");
+  if (candidates.length === 0) return null;
+  const PSEUDO = "pre_verdict_idle" as unknown as CommentaryArchetype;
+  // The idle pool (6) is smaller than the anti-repeat lineId window (10), so once
+  // every line is "recent" scoreRepeatPenalty returns 0 for all candidates. Drop
+  // the immediately-previous line (hard no-repeat), floor the penalty so it can't
+  // collapse to a single pick, and let the per-hand seed jitter rotate the rest.
+  // Exclude the most-recent IDLE line specifically (scan back through the shared
+  // window past any RESULTS ids recorded between two IDLE screens) → no immediate
+  // idle-repeat even with a played hand in between.
+  const idleIds = new Set(candidates.map((l) => l.id));
+  const hist = getRepeatHistory().lineIds;
+  const lastIdle = [...hist].reverse().find((id) => idleIds.has(id)) ?? null;
+  const eligible = candidates.length > 1 ? candidates.filter((l) => l.id !== lastIdle) : candidates;
+  const pickFrom = eligible.length ? eligible : candidates;
+  const scored = pickFrom.map((line, i) => {
+    const penalty = Math.max(scoreRepeatPenalty(line.id, PSEUDO, line.tone, line.template).score, 0.05);
+    return { line, score: penalty * (0.9 + seededRandom(seed, i) * 0.2) };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  const best = scored[0];
+  recordUsage(best.line.id, PSEUDO, best.line.tone, best.line.template);
+  return best.line.template;
 }
 
 // ── Intensity (same logic as composeCommentary) ────────────────────────────

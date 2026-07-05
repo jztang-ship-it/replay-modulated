@@ -1,4 +1,14 @@
 {
+  "pre_verdict": {
+    "idle": [
+      { "id": "bk_pv_idle_001", "sport": "basketball", "register": "win", "tone": "observational", "template": "Same slate as everybody. Different eyes.", "tags": [], "humorStyle": [], "qualityScore": 7, "enabled": true },
+      { "id": "bk_pv_idle_002", "sport": "basketball", "register": "win", "tone": "culture_wry", "template": "Whole room's staring at these five backs. Nobody's flipped a thing.", "tags": [], "humorStyle": [], "qualityScore": 7, "enabled": true },
+      { "id": "bk_pv_idle_003", "sport": "basketball", "register": "win", "tone": "deadpan", "template": "250 to spend and a whole season to argue about.", "tags": [], "humorStyle": [], "qualityScore": 7, "enabled": true },
+      { "id": "bk_pv_idle_004", "sport": "basketball", "register": "win", "tone": "warm", "template": "This is the quiet part. It never stays quiet.", "tags": [], "humorStyle": [], "qualityScore": 7, "enabled": true },
+      { "id": "bk_pv_idle_005", "sport": "basketball", "register": "win", "tone": "hype", "template": "Somewhere under there is your guy.", "tags": [], "humorStyle": [], "qualityScore": 7, "enabled": true },
+      { "id": "bk_pv_idle_006", "sport": "basketball", "register": "win", "tone": "culture_wry", "template": "The room's already wrong about somebody. You just don't know who yet.", "tags": [], "humorStyle": [], "qualityScore": 7, "enabled": true }
+    ]
+  },
   "historic_record": [
     { "id": "bb_hist_all_0001", "sport": "basketball", "archetype": "historic_record", "register": "win",
       "tone": "observational",
