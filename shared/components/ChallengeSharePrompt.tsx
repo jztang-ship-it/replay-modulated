@@ -14,6 +14,7 @@ import {
   type CommentaryFactsCard,
 } from "@shared/commentary/commentaryFacts";
 import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
+import { pickShareHeadline } from "@shared/utils/shareHeadlinePrecedence";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
@@ -42,6 +43,11 @@ interface Props {
   /** Caption stored on the challenge (big-game or season-reel copy).
    *  Rendered on the landing page and the share-card PNG. */
   shareHeadline?: string;
+  /** Read×draw grievance atom (contrarian-cold). When set, it is AUTHORITATIVE for
+   *  share_headline (the DM taunt) — beats the /api/headline authored line and the
+   *  bank fallback via pickShareHeadline (grievance > authored > fallback). DM-only;
+   *  never rendered on the landing (that stays a byte-replay from initial_roster). */
+  grievanceHeadline?: string;
   /** When set, the prompt is in rivalry-continuation mode (the player
    *  just beat a challenge and is sending a back-fire from a fresh
    *  hand). Surfaces "Send to {name}" framing instead of generic
@@ -79,7 +85,7 @@ export type ChallengeSendHandle = { startSend: () => void };
 
 export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(function ChallengeSharePrompt({
   sport, season, totalFp, winTier, roster, initialRoster,
-  badges, winTiersMap, serializeRoster, triggerResult, shareHeadline,
+  badges, winTiersMap, serializeRoster, triggerResult, shareHeadline, grievanceHeadline,
   rivalryTargetName, handId, onDismiss, onConsumed,
 }: Props, ref) {
   // Phase 5b piece 1 auth-surface unification (2026-05-29, doc lock
@@ -243,12 +249,17 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
       fpStatKeys: fpStatKeys ?? undefined,
       salience,
     });
-    if (factsResult.kind === "skip") return { effective: fallback, authored: null };
+    // Grievance precedence: grievance > authored > fallback (pickShareHeadline).
+    // Applied at BOTH finalize returns so a grievance send is authoritative for
+    // share_headline even when /api/headline yields a non-null authored line.
+    if (factsResult.kind === "skip") {
+      return { effective: pickShareHeadline({ grievance: grievanceHeadline, authored: null, fallback }), authored: null };
+    }
 
     setIsCraftingHeadline(true);
     try {
       const authored = await fetchAuthoredHeadline(factsResult.facts);
-      return { effective: authored ?? fallback, authored };
+      return { effective: pickShareHeadline({ grievance: grievanceHeadline, authored, fallback }), authored };
     } finally {
       setIsCraftingHeadline(false);
     }

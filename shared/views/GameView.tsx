@@ -2676,6 +2676,18 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     });
   }, [challengeTrigger, winTier]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cold GRIEVANCE atom (contrarian-cold read×draw) — the DM-taunt payload that
+  // unlocks the human sender on a hand carrying no trigger. computeQuadrantLead is
+  // roster-only (fp/tier params are unread — the 0/"" are inert), so gating on the
+  // returned quadrant is honest. Reveal-states only; DM-only (the landing stays a
+  // byte-replay from initial_roster — no narrative injection there). Basketball-only
+  // in practice (computeQuadrantLead is undefined for other adapters → null).
+  const grievance = useMemo(() => {
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") return null;
+    const q = adapter.computeQuadrantLead?.(roster, 0, "");
+    return q?.quadrant === "contrarian-cold" ? { line: q.line } : null;
+  }, [gameState, roster]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
   //   2. Tactical Chad chip lands as the commentary override — challenge-aware
@@ -3750,7 +3762,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         // (ChallengeSharePrompt + useChallengeShare + challengeSendRef + onChallenge)
         // stays mounted and intact for a future re-home onto Boss results.
         // Original gate: !challengeCtx && !!challengeTrigger && (RESULTS || WIN_CELEBRATION).
-        challengeAvailable={false}
+        // Pass A: restore the original gate, OR'd with the cold grievance (which
+        // carries its own reveal-state guard) so contrarian-cold hands surface the
+        // sender button even when they carry no trigger.
+        challengeAvailable={!challengeCtx && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance)}
         onChallenge={() => challengeSendRef.current?.startSend()}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
@@ -3962,7 +3977,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           GameBar trophy (BossScreen). The result screen keeps ONE primary
           (REPLAY). BossEntryCta is still used inside BossScreen. */}
 
-      {!challengeCtx && challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
+      {!challengeCtx && (challengeTrigger || grievance) && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
             ref={challengeSendRef}
@@ -3975,9 +3990,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             badges={rosterRef.current.flatMap((c: any) => c.achievements ?? [])}
             winTiersMap={adapter.winTiersMap}
             serializeRoster={(cards) => sportAdapter.serializeRoster(cards)}
-            triggerResult={challengeTrigger}
+            triggerResult={challengeTrigger ?? ({ trigger: "default", headline: grievance?.line ?? "" } as import("@shared/utils/triggerEvaluation").TriggerResult)}
             rivalryTargetName={challengeBackCtx?.challengerName ?? null}
             shareHeadline={computedShareHeadline}
+            grievanceHeadline={grievance?.line}
             handId={currentHandIdRef.current ?? undefined}
             onDismiss={() => {
               setChallengeTrigger(null);
