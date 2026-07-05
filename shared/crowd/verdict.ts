@@ -22,6 +22,8 @@
  * outranks riding consensus, and misses are surfaced honestly rather than buried.
  */
 
+import { endDot } from "./nameText";
+
 export type VerdictTone = "contrarian-hit" | "contrarian-miss" | "chalk-hit" | "hand-level";
 
 /** One resolved card handed to the verdict. `ownership` ∈ [0,1] is the room's
@@ -89,7 +91,8 @@ function line(tone: VerdictTone, o: { name?: string; fadePct: number; fp: number
   switch (tone) {
     case "contrarian-hit":
       // observable only: you held, the room faded, here's the number.
-      return `You held ${o.name}. ${o.fadePct}% of the room faded him. He went for ${o.fp.toFixed(1)} FP.`;
+      // endDot: a name already ending in "." (Jr./Sr.) doesn't get "Jr..".
+      return `You held ${o.name}${endDot(o.name)} ${o.fadePct}% of the room faded him. He went for ${o.fp.toFixed(1)} FP.`;
     case "contrarian-miss":
       // the losing kind of call — surfaced, not hidden.
       return `You backed ${o.name} against the room — ${o.fadePct}% faded him. He didn't land (${o.fp.toFixed(1)} FP).`;

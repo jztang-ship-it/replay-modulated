@@ -27,6 +27,13 @@ describe("verdict — contrarian-hit (a faded hold that went off)", () => {
     // guard #2: no skill/process narration
     expect(v.line).not.toMatch(/genius|great (process|read)|smart|clever/i);
   });
+  it("a name already ending in a period (Jr./Sr.) does not double the dot", () => {
+    const v2 = computeVerdict({
+      cards: [card("a", "Michael Porter Jr.", true, 45, FADED)],
+      totalFp: 210, tier: "STARTER",
+    });
+    expect(v2.line).toBe("You held Michael Porter Jr. 70% of the room faded him. He went for 45.0 FP.");
+  });
   it("a rerolled-in card can't be the verdict even if it's the biggest/most-faded", () => {
     expect(v.player).not.toBe("Bench");
   });
