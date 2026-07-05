@@ -26,6 +26,7 @@ import type { TierThreshold as GaugeTierThreshold } from "@shared/components/Tie
 import type { DailyBonusPlayer } from "@shared/utils/dailyBonus";
 import type { HandStatus } from "@shared/utils/handStatus";
 import type { Verdict } from "@shared/crowd/verdict";
+import type { QuadrantLead } from "@shared/crowd/quadrantLine";
 
 export interface GameAdapter {
   // ── Identity ───────────────────────────────────────────────────────
@@ -147,8 +148,10 @@ export interface GameAdapter {
    *  draw-extreme HELD card (coldest, else hottest). Present only for sports with
    *  a crowd model. When present, GameView lands it as the LEAD above the verdict
    *  atom at RESULTS. Returns null for an all-neutral hand (no line — existing
-   *  verdict copy unchanged). Descriptive/ungraded; never replaces the atom. */
-  computeQuadrantLead?: (roster: PlayerCard[], totalFp: number, tier: string) => string | null;
+   *  verdict copy unchanged). Descriptive/ungraded; never replaces the atom.
+   *  The structured return exposes the led player + a convergent fold so GameView
+   *  can suppress the atom when it would name the SAME player (see finalCopy). */
+  computeQuadrantLead?: (roster: PlayerCard[], totalFp: number, tier: string) => QuadrantLead | null;
 
   // ── Components — sport-specific render slots ───────────────────────
   /** The roster card component (basketball: AthleteCard, baseball: BaseballCard).

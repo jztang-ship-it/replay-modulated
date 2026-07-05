@@ -1,7 +1,7 @@
 // shared/crowd/__tests__/quadrantLine.test.ts — descriptive quadrant copy.
 // Renders one line per draw-extreme held card; ungraded (no correct/optimal).
 import { describe, expect, it } from "vitest";
-import { renderQuadrantLine } from "../quadrantLine";
+import { renderQuadrantLine, renderQuadrantFold } from "../quadrantLine";
 import type { ReadDrawLead, ReadDrawQuadrant } from "../readDraw";
 
 const lead = (quadrant: ReadDrawQuadrant, name: string, ratio: number): ReadDrawLead => ({
@@ -33,6 +33,27 @@ describe("renderQuadrantLine — the four extreme corners", () => {
   it("chalk-cold is the quiet 'everybody held him, nobody got paid'", () => {
     expect(renderQuadrantLine(lead("chalk-cold", "Jokic", 0.3)))
       .toBe("Everybody held Jokic. Nobody got paid.");
+  });
+});
+
+describe("renderQuadrantFold — the convergent single-sentence fold", () => {
+  // ownership 0.3 → fade 70%; actualFp = ratio * 30.
+  it("contrarian-warm folds fade% + RAW fp + the multiple into one sentence", () => {
+    expect(renderQuadrantFold(lead("contrarian-warm", "Giddey", 2.0)))
+      .toBe("You held Giddey — 70% of the room off him — and he went double his average (60.0 FP). That's the whole game.");
+  });
+  it("contrarian-cold folds fade% + RAW fp + the fraction, ending on the dare closer", () => {
+    expect(renderQuadrantFold(lead("contrarian-cold", "Wallace", 0.33)))
+      .toBe("You held Wallace — 70% of the room off him — and he no-showed, a third of his number (9.9 FP). Your turn — better dice?");
+  });
+  it("chalk quadrants do not fold (null → composed fallback)", () => {
+    expect(renderQuadrantFold(lead("chalk-warm", "Jokic", 1.8))).toBeNull();
+    expect(renderQuadrantFold(lead("chalk-cold", "Jokic", 0.3))).toBeNull();
+  });
+  it("anti-drift: the contrarian-cold lead closer and fold closer are the SAME string", () => {
+    const closer = "Your turn — better dice?";
+    expect(renderQuadrantLine(lead("contrarian-cold", "X", 0.33)).endsWith(closer)).toBe(true);
+    expect(renderQuadrantFold(lead("contrarian-cold", "X", 0.33))!.endsWith(closer)).toBe(true);
   });
 });
 

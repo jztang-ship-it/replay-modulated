@@ -1683,12 +1683,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // and landed as the SECONDARY (terminal) line, so the existing primary walks
     // as before and the verdict lands last — same surface, same pacing.
     // (Depth = terminal-beat-only for now; full commentary retarget is a follow-up.)
-    const verdictSecondary = adapter.computeVerdict?.(roster, fp, winTier)?.line || undefined;
+    const verdictAtom = adapter.computeVerdict?.(roster, fp, winTier) || undefined;
+    const verdictSecondary = verdictAtom?.line || undefined;
     // Stage-3 read×draw headline (basketball). DRAW-led descriptive line for the
     // most draw-extreme HELD card; null for all-neutral hands (~66% → existing
     // copy unchanged). Leads ABOVE the verdict atom; never replaces it. Applied
     // on the DEFAULT (non-trigger) verdict path only — the trigger-framed path
-    // keeps its own lead.
+    // keeps its own lead. Structured: carries the led player + convergent fold.
     const quadrantLead = adapter.computeQuadrantLead?.(roster, fp, winTier) || undefined;
     // Phase 1 trigger split (2026-06-03): tracked NEAR_MISS_BAND with
     // the post-reveal commentary path. Today gaugeSnap.isNearMiss is not
@@ -1856,8 +1857,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // there's no quadrant line (neutral hand / non-basketball), fall back to the
     // exact prior shape (flavor primary + atom secondary, else baseCopy) → those
     // hands are byte-identical to before.
+    //
+    // CONVERGENT FOLD: when the lead and the atom name the SAME held player (~29%
+    // of contrarian-cold, ~52% of contrarian-warm), the two lines stutter about
+    // one player. Suppress the atom and lead with the folded single sentence
+    // (folded carries the atom's fade%/FP, so nothing is lost). Fires ONLY when
+    // quadrantLead.folded is non-null (contrarian quadrants) AND the players match
+    // — every other hand (complementary ~69%, chalk, neutral, non-basketball)
+    // takes the unchanged branch below and is byte-identical to before.
+    const isConvergent = !!(quadrantLead?.folded && verdictAtom?.player && quadrantLead.leadPlayer === verdictAtom.player);
     const finalCopy = quadrantLead
-      ? { primary: quadrantLead, secondary: verdictSecondary ?? (baseCopy.secondary ?? "") }
+      ? (isConvergent
+          ? { primary: quadrantLead.folded as string, secondary: "" }
+          : { primary: quadrantLead.line, secondary: verdictSecondary ?? (baseCopy.secondary ?? "") })
       : verdictSecondary
         ? { primary: baseCopy.primary, secondary: verdictSecondary }
         : baseCopy;

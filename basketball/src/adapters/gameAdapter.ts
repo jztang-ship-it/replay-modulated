@@ -16,7 +16,7 @@ import type { PlayerCard } from "./types";
 import { basketballCrowdOwnership, type CrowdPlayer, type CrowdLog } from "../crowd/basketballCrowd";
 import { computeVerdict, type Verdict } from "@shared/crowd/verdict";
 import { pickDrawLead, type ReadDrawCard } from "@shared/crowd/readDraw";
-import { renderQuadrantLine } from "@shared/crowd/quadrantLine";
+import { renderQuadrantLine, renderQuadrantFold, type QuadrantLead } from "@shared/crowd/quadrantLine";
 import type { PlayerEval, GeneratedCard } from "../engines/rosterEngine";
 import type { EconomyConfig } from "../engines/economyEngine";
 
@@ -417,8 +417,12 @@ export function computeBasketballVerdict(roster: PlayerCard[], totalFp: number, 
  * the lead. The ownership build is intentionally duplicated (not shared with
  * computeBasketballVerdict) so the shipped verdict output stays byte-identical.
  * totalFp/tier are unused today (kept for the adapter signature parity).
+ *
+ * Returns the structured lead (line + the held player it names + the convergent
+ * fold form) so the verdict-surface caller can suppress the atom when the atom
+ * would name the SAME player. Null for an all-neutral hand (no lead).
  */
-export function computeBasketballQuadrantLine(roster: PlayerCard[], _totalFp: number, _tier: string): string | null {
+export function computeBasketballQuadrantLine(roster: PlayerCard[], _totalFp: number, _tier: string): QuadrantLead | null {
   if (!roster?.length) return null;
   const logsByKey = getLogsByKey();
   const crowdPlayers: CrowdPlayer[] = [];
@@ -455,5 +459,6 @@ export function computeBasketballQuadrantLine(roster: PlayerCard[], _totalFp: nu
     })
     .filter((c) => c.playerId);
   const lead = pickDrawLead(cards);
-  return lead ? renderQuadrantLine(lead) : null;
+  if (!lead) return null;
+  return { line: renderQuadrantLine(lead), leadPlayer: lead.label.name, folded: renderQuadrantFold(lead) };
 }

@@ -54,3 +54,36 @@ export function renderQuadrantLine(lead: ReadDrawLead): string {
       return "";
   }
 }
+
+/** Structured lead for the verdict surface: the rendered lead line, the held
+ *  player it names (so the caller can detect same-player convergence with the
+ *  verdict atom), and the FOLDED single-sentence form for that convergent case
+ *  (null for quadrants that don't fold). */
+export interface QuadrantLead {
+  line: string;
+  leadPlayer: string;
+  folded: string | null;
+}
+
+/**
+ * The CONVERGENT fold — one sentence that folds the atom's fade%/FP into the
+ * quadrant line, used ONLY when the lead and the verdict atom name the SAME
+ * player (~29% of contrarian-cold leads, ~52% of contrarian-warm). fade% + FP are
+ * pulled RAW from the lead's own card — identical to the atom's numbers (same room
+ * model, same resolved FP) — so the atom can be suppressed with no data loss.
+ * Returns null for chalk quadrants: chalk-cold NEVER converges and chalk-warm
+ * converges ~0.3% of the time, so both take the byte-identical composed fallback.
+ */
+export function renderQuadrantFold(lead: ReadDrawLead): string | null {
+  const name = lead.label.name;
+  const fadePct = Math.round((1 - lead.card.ownership) * 100);
+  const fp = lead.card.actualFp.toFixed(1);
+  switch (lead.label.quadrant) {
+    case "contrarian-warm":
+      return `You held ${name} — ${fadePct}% of the room off him — and he went ${phraseMultiple(lead.ratio)} his average (${fp} FP). That's the whole game.`;
+    case "contrarian-cold":
+      return `You held ${name} — ${fadePct}% of the room off him — and he no-showed, ${phraseFraction(lead.ratio)} of his number (${fp} FP). ${CONTRARIAN_COLD_CLOSER}`;
+    default:
+      return null;
+  }
+}
