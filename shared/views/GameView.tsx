@@ -1853,6 +1853,20 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   const regularFinalGaugeKick = false;
 
+  // Pre-verdict gauge collapse (Option A): on non-verdict states the TierGauge
+  // span (hidden bar + empty 96px commentary) is inert and reads as a dead band
+  // between the TEAM FP / BUDGET stats and the DEAL/NEXT button. When inert,
+  // collapse it and let the flex:1 card stage absorb the reclaimed ~112px. Kept
+  // FALSE where the space is genuinely used — verdict layout (44c1fc38), FTUE
+  // coach text, or a live multiplier row (other sports' HOLD). REVEALING is
+  // excluded (the bar fills there), matching the state list below.
+  const gaugeInert =
+    !verdictLayout
+    && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING")
+    && postRevealCopy == null
+    && ftueCommentaryOverride == null
+    && !(isPreRevealFooter && !challengeCtx && multiplierEnabled);
+
   // Tier result phase
   useEffect(() => {
     if ((gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier) {
@@ -3243,9 +3257,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // verdict→CTA (2→16) gaps for even rhythm. Both templates sum to 274px
           // (block height unchanged, nothing below shifts). Gauge span rows 3–7
           // then = 96px, matching the gauge's collapsed inner content (no clip).
+          // gaugeInert (pre-verdict): the inert gauge span (rows 3–7) collapses
+          // to 0; stats(72)+8+0+8+button(74) = 162px, reclaiming ~112px for the
+          // card stage. Verdict branch stays byte-identical to 44c1fc38.
           gridTemplateRows: verdictLayout
             ? "72px 16px 0px 0px 0px 0px 96px 16px 74px"
-            : "72px 4px 14px 8px 0px 4px 96px 2px 74px",
+            : gaugeInert
+              ? "72px 8px 0px 0px 0px 0px 0px 8px 74px"
+              : "72px 4px 14px 8px 0px 4px 96px 2px 74px",
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -3502,6 +3521,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
               collapseBar={verdictLayout}
+              collapseBox={gaugeInert}
               hideBar={gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING"
                 // hasVerdict: the verdict is the resting payload, so the gauge bar is
                 // hidden at RESULTS/WIN_CELEBRATION. The reveal fill is RETAINED for
