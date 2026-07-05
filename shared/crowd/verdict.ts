@@ -50,7 +50,12 @@ export interface Verdict {
   /** that player's resolved FP, rounded. 0 when there's no player. */
   fpDelivered: number;
   tone: VerdictTone;
+  /** Standalone atom sentence (the original two-line form's second line). */
   line: string;
+  /** Woven-tail form of the atom — a lower-case clause a flavor line can LAND on
+   *  as one sentence (`"<flavor>, and <clause>."`). Empty for hand-level (no held
+   *  call). Carries the same held name + fade% + FP as `line` (the share data). */
+  clause: string;
 }
 
 /** Tunable thresholds. Defaults chosen against the real ownership range
@@ -101,13 +106,28 @@ function line(tone: VerdictTone, o: { name?: string; fadePct: number; fp: number
   }
 }
 
+/** Lower-case woven-tail form of the atom (same data as `line`). A flavor line
+ *  lands on it as one sentence: `"<flavor>, and <clause>."`. Same four tones. */
+function clause(tone: VerdictTone, o: { name?: string; fadePct: number; fp: number }): string {
+  switch (tone) {
+    case "contrarian-hit":
+      return `the call that made it was ${o.name}: you held him, ${o.fadePct}% of the room faded him, and he went for ${o.fp.toFixed(1)} FP`;
+    case "contrarian-miss":
+      return `the call that cost you was ${o.name}: you held him against the room, ${o.fadePct}% faded him, and he didn't land (${o.fp.toFixed(1)} FP)`;
+    case "chalk-hit":
+      return `the room was on ${o.name} too — you just rode him for ${o.fp.toFixed(1)} FP`;
+    case "hand-level":
+      return ""; // no held call to weave; the flavor stands alone
+  }
+}
+
 /**
  * Resolve a hand into its verdict. Pure. Only HELD cards are eligible — the
  * verdict is about a call you MADE, not a card that rerolled into your lineup.
  */
 export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT_VERDICT_CONFIG): Verdict {
   const total = input.totalFp; // raw — line() formats the copy to 1 decimal
-  const handLevel = (): Verdict => ({ fadePct: 0, fpDelivered: 0, tone: "hand-level", line: line("hand-level", { fadePct: 0, fp: 0, total, tier: input.tier }) });
+  const handLevel = (): Verdict => ({ fadePct: 0, fpDelivered: 0, tone: "hand-level", line: line("hand-level", { fadePct: 0, fp: 0, total, tier: input.tier }), clause: "" });
 
   const held = input.cards.filter((c) => c.wasHeld);
   if (held.length === 0) return handLevel();
@@ -122,7 +142,7 @@ export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT
       const sa = fadeOf(a) * a.fp, sb = fadeOf(b) * b.fp;
       return sa !== sb ? sa > sb : a.fp !== b.fp ? a.fp > b.fp : a.ownership < b.ownership;
     });
-    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-hit", line: line("contrarian-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }) };
+    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-hit", line: line("contrarian-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }), clause: clause("contrarian-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp }) };
   }
 
   // 2. CONTRARIAN-MISS — a faded hold that busted. The boldest failed call:
@@ -133,7 +153,7 @@ export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT
       const fa = fadeOf(a), fb = fadeOf(b);
       return fa !== fb ? fa > fb : a.fp !== b.fp ? a.fp < b.fp : a.ownership < b.ownership;
     });
-    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-miss", line: line("contrarian-miss", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }) };
+    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "contrarian-miss", line: line("contrarian-miss", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }), clause: clause("contrarian-miss", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp }) };
   }
 
   // 3. CHALK-HIT — no bold call stood out, but you rode a high-owned hold to a big
@@ -141,7 +161,7 @@ export function computeVerdict(input: VerdictInput, cfg: VerdictConfig = DEFAULT
   const chalkHits = held.filter((c) => fadeOf(c) < cfg.fadeChalk && c.fp >= cfg.fpMeaningful);
   if (chalkHits.length) {
     const v = best(chalkHits, (a, b) => (a.fp !== b.fp ? a.fp > b.fp : a.ownership > b.ownership));
-    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "chalk-hit", line: line("chalk-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }) };
+    return { player: v.name, fadePct: pct(fadeOf(v)), fpDelivered: r0(v.fp), tone: "chalk-hit", line: line("chalk-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp, total, tier: input.tier }), clause: clause("chalk-hit", { name: v.name, fadePct: pct(fadeOf(v)), fp: v.fp }) };
   }
 
   // 4. HAND-LEVEL — nothing notable among the holds. Honest, quiet.
