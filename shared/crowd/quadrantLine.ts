@@ -10,7 +10,7 @@
  * The neutral bulk never reaches here — `pickDrawLead` returns null for it, so the
  * caller keeps its existing verdict copy.
  */
-import type { ReadDrawLead } from "./readDraw";
+import type { ReadDrawLead, ReadDrawQuadrant } from "./readDraw";
 import { endDot } from "./nameText";
 
 /** Closer for the contrarian-cold "robbed" line — the designated strongest-share
@@ -67,6 +67,9 @@ export interface QuadrantLead {
   line: string;
   leadPlayer: string;
   folded: string | null;
+  /** The read×draw quadrant — lets a caller gate on a SPECIFIC corner (e.g. the
+   *  contrarian-cold grievance) rather than the coarse `folded != null`. */
+  quadrant: ReadDrawQuadrant;
 }
 
 /**

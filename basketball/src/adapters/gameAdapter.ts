@@ -460,5 +460,5 @@ export function computeBasketballQuadrantLine(roster: PlayerCard[], _totalFp: nu
     .filter((c) => c.playerId);
   const lead = pickDrawLead(cards);
   if (!lead) return null;
-  return { line: renderQuadrantLine(lead), leadPlayer: lead.label.name, folded: renderQuadrantFold(lead) };
+  return { line: renderQuadrantLine(lead), leadPlayer: lead.label.name, folded: renderQuadrantFold(lead), quadrant: lead.label.quadrant };
 }
