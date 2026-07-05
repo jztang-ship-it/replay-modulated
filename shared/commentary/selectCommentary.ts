@@ -54,19 +54,20 @@ function loadLibrary(sport: string): CommentaryLibrary {
   return _libraries[sport] ?? {};
 }
 
-/** Pre-verdict IDLE voice. Stateless + unconditional (no `requires`, no per-card
- *  detail, no cross-hand memory beyond the existing anti-repeat window). Picks one
- *  line from `pre_verdict.idle` and rotates it through the SAME lineId/tone
- *  anti-repeat the rest of the bank uses (isolated under a "pre_verdict_idle"
- *  pseudo-archetype so it never mixes with result archetypes). Deliberately NOT
- *  routed through selectCommentary / the RESULTS-gated postRevealCopy useMemo. */
-export function selectPreVerdictIdle(sport: string, seed: number): string | null {
+/** Pre-verdict voice (IDLE / HOLD). Stateless + unconditional (no `requires`, no
+ *  per-card detail, no cross-hand memory beyond the existing anti-repeat window).
+ *  Picks one line from `pre_verdict[section]` and rotates it through the SAME
+ *  lineId/tone anti-repeat the rest of the bank uses (isolated under a
+ *  "pre_verdict_<section>" pseudo-archetype so it never mixes with result
+ *  archetypes). Deliberately NOT routed through selectCommentary / the
+ *  RESULTS-gated postRevealCopy useMemo. */
+export function selectPreVerdictVoice(sport: string, section: "idle" | "hold", seed: number): string | null {
   const lib = loadLibrary(sport) as any;
   const pool: Array<{ id: string; tone: ToneId; template: string; enabled?: boolean; qualityScore?: number }> =
-    lib?.pre_verdict?.idle ?? [];
+    lib?.pre_verdict?.[section] ?? [];
   const candidates = pool.filter((l) => l && l.enabled !== false && typeof l.template === "string");
   if (candidates.length === 0) return null;
-  const PSEUDO = "pre_verdict_idle" as unknown as CommentaryArchetype;
+  const PSEUDO = `pre_verdict_${section}` as unknown as CommentaryArchetype;
   // The idle pool (6) is smaller than the anti-repeat lineId window (10), so once
   // every line is "recent" scoreRepeatPenalty returns 0 for all candidates. Drop
   // the immediately-previous line (hard no-repeat), floor the penalty so it can't
