@@ -6,6 +6,27 @@
 
 ---
 
+## Pending doc update — session 2026-07-06
+
+**Auth re-decision — SUPERSEDES the Phase 5b "auth-before-send" lock (doc lock `2caa7a3`, commit `f95aa576`).**
+
+**Re-decision:** Auth converts from a **BLOCKING PRECONDITION** into a **USER-INITIATED UPGRADE**. Anonymous identity is the default; **play and send NEVER gate on auth**. Real accounts are an opt-in for **portable identity** (cross-device history, portable notifications), reached only when the user *chooses* to sign in. This is NOT "anon-mint replaces accounts" — accounts remain, as an upgrade, not a gate.
+
+**What changes:**
+- **Send no longer walls.** An anonymous-auth user mints on their existing **non-null anon uid** (`signInAnonymously`, established at app start). `ChallengeSharePrompt.tsx` (the `isAnonymous → RegisterModal` gate) falls through to the existing name → `createChallenge` path. The `RegisterModal` shows ONLY in the rare truly-unresolvable case (`authReady && !user.id` — `signInAnonymously` failed, so there is no mintable token); the loading window never blocks.
+- **Sign-in is user-initiated** — the profile "Save Account" entry (`ProfileScreen.tsx:295` → `App.tsx:735` → the same `RegisterModal` at `App.tsx:717`). Pre-existing; reused, not rebuilt. The challenge is already persisted server-side, so the upgrade loses nothing in-flight.
+- **Post-result nudge (anonymous only)** POINTS to that profile sign-in as **inert commentary text** — never a trigger, never a modal.
+
+**Rationale:** (1) the blocking wall added **funnel friction** (senders turned away before a link minted); (2) worse, the wall's auth round-trip **destroyed the in-flight grievance hand on re-auth** (glass-confirmed: "logged in → challenge gone"). Removing the wall removes the round-trip, so the hand-wipe can't fire — fixed by construction.
+
+**What anon-uid minting preserves** (all key on the non-null anon uid → keep working, device-bound): return notifications (`api/challenge/[id]/attempt.ts:310`), self-farm detection (`:84`), My Challenges (`YourChallengesPanel.tsx:46`), self-match (`ChallengeLandingScreen.tsx:214`). The RLS `created_by = auth.uid() AND auth.uid() IS NOT NULL` (migration 014) is satisfied by the anon uid.
+
+**Trade-off (accepted):** anon identity is **device/session-bound** — on browser-clear or device-switch the anon uid regenerates, so prior challenges' My-Challenges/notifications/self-match become invisible to the new session. Nothing BREAKS (no error, no server-side loss; the challenge row persists) — it RESETS. The opt-in real account is the portable-identity escape hatch.
+
+**Cross-ref:** `docs/h2h-reveal-arc-design.md` (Phase 5b auth-surface section) — the auth-before-send lock is superseded here.
+
+---
+
 ## Pending doc update — session 2026-06-08
 
 **H2H recipient play screen: dynamic per-draw commentary DISABLED for the investor demo.**

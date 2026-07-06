@@ -910,6 +910,8 @@ These ship as a smoke artifact (per phase 4/5 smoke-test pattern in `docs/smoke-
 
 ### Phase 5b piece 1 — U4 second amendment + password reset (locked 2026-05-28, supersedes U4-b and U4-d of the prior U4 amendment; adds U4-g for recovery)
 
+**EDIT 2026-07-06 (auth-before-send SUPERSEDED):** the "anonymous tap → RegisterModal *as a precondition of send*" behavior locked here (doc lock `2caa7a3`, commit `f95aa576`) is superseded by the **auth re-decision** in `docs/replaymod-design-decisions.md` ("Pending doc update — session 2026-07-06"): auth is now a **user-initiated upgrade**, not a blocking precondition — anon-auth users mint on their own uid, and sign-in moves to the profile Save-Account entry. This section's password-reset / recovery / in-place-reveal mechanics (U4-g etc.) remain valid for the *user-initiated* RegisterModal; only the auto-fire-on-send precondition is retired. Preserved below per the append-only convention.
+
 **Revision rationale:** the prior U4 amendment (locked at `1ad3797`) intended in-place reveal and visual continuity across the auth seam. The implementation at `216bf5f` did not fully honor U4-b — post-auth swaps the body content (auth section disappears, name + Send appears) rather than appending the name section below a now-confirmed auth section. The post-auth heading also kept the pre-auth copy verbatim, which reads stale once auth is done.
 
 A third issue surfaced in the same verification: email auth has no recovery path. Supabase prevents duplicate accounts server-side ("User already registered" / "Invalid login credentials" errors), so the original framing of "accidental duplicate creation" was wrong. The actual gap is users with forgotten passwords have no path forward — they hit the error and abandon.
