@@ -37,6 +37,16 @@ describe("FTUE-exit reel — the gate consumes it once, re-resolving today's REA
     expect(GATE).toMatch(/localStorage\.removeItem\("rm_ftue_exit_reel_pending"\)/);
     expect(GATE).toMatch(/setFtueExitReelPick\(null\)/);
   });
+  it("consumes the durable flag AT ARM-TIME (before the async manifest load) so a re-mount can't double-fire", () => {
+    // Fire-once guard: between the flag read and the awaited loadSeasonsManifest, the
+    // flag must already be removed — otherwise a navigation/login re-mount re-reads "1"
+    // and re-fires the reel (the pre-existing double-fire). Goes red if the consume is
+    // moved back to post-play only.
+    const readPos = GATE.indexOf('rm_ftue_exit_reel_pending") !== "1"');
+    const manifestPos = GATE.indexOf("loadSeasonsManifest(MANIFEST_URL)", readPos);
+    const armSlice = GATE.slice(readPos, manifestPos);
+    expect(armSlice).toMatch(/removeItem\("rm_ftue_exit_reel_pending"\)/);
+  });
 });
 
 describe("FTUE-exit reel — NON-stamping; normal entry-of-day path untouched", () => {

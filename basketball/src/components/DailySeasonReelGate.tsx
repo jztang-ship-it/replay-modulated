@@ -277,6 +277,13 @@ export function DailySeasonReelGate({ bypass = false, skipReel = false, bypassSe
     const arm = async () => {
       try { if (localStorage.getItem("rm_ftue_exit_reel_pending") !== "1") return; }
       catch { return; }
+      // Fire-once: consume the durable flag AT ARM-TIME (read-and-remove), BEFORE the
+      // async manifest load. Previously the flag was cleared only at onComplete, so any
+      // re-mount before then (navigation OR the login re-render — glass hit both) re-read
+      // a still-present "1" and re-fired the reel. Consuming here means a re-entry reads
+      // an absent flag and bails. The reel still plays from in-memory ftueExitReelPick;
+      // onComplete's removeItem below is now a redundant safety, kept idempotent.
+      try { localStorage.removeItem("rm_ftue_exit_reel_pending"); } catch { /* noop */ }
       try {
         const m = await loadSeasonsManifest(MANIFEST_URL);
         if (cancelled) return;
