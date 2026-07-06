@@ -81,9 +81,10 @@ describe("FTUE reveal walk — Pass A finale + completion", () => {
   });
 });
 
-describe("FTUE reveal walk — GameBar relabels AUTO → GAME TIME (FTUE only)", () => {
-  it("REVEALING label is GAME TIME under ftue, AUTO otherwise", () => {
-    expect(GAME_BAR).toMatch(/if \(state === "REVEALING"\) return ftue \? "GAME TIME" : "AUTO";/);
+describe("FTUE reveal walk — GameBar REVEALING CTA is GAME TIME", () => {
+  it("REVEALING label is GAME TIME for all sports / both FTUE + normal play (AUTO retired)", () => {
+    expect(GAME_BAR).toMatch(/if \(state === "REVEALING"\) return "GAME TIME";/);
+    expect(GAME_BAR).not.toMatch(/return ftue \? "GAME TIME" : "AUTO";/);
   });
   it("the primary-CTA blink OR-s ftuePrimaryPulse into the existing replay pulse", () => {
     expect(GAME_BAR).toMatch(/\(replayPulse \|\| ftuePrimaryPulse\) \? "replayPulse 1\.2s ease-in-out infinite" : "none"/);

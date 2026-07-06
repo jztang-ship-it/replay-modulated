@@ -247,9 +247,10 @@ function actionLabel(state: GameStateLabel, maxRounds: number, ftue = false): st
   // HOLD locks immediately, so the relabel can never reach them.
   if (state === "HOLD") return maxRounds > 1 ? "NEXT" : "DRAW";
   if (state === "DRAWING") return "...";
-  // FTUE reveal-walk relabels AUTO → "GAME TIME" (the affordance to flip the two
-  // given cards / start the walk). Normal play keeps "AUTO".
-  if (state === "REVEALING") return ftue ? "GAME TIME" : "AUTO";
+  // REVEALING primary CTA is "GAME TIME" for all sports, both FTUE + normal play (the
+  // affordance to flip the given cards / see the result). The former normal-play "AUTO"
+  // is retired; the `ftue` param is now vestigial for this label.
+  if (state === "REVEALING") return "GAME TIME";
   return "REPLAY";
 }
 
