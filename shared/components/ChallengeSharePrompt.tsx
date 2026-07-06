@@ -94,7 +94,7 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
   // context — no intermediate NameCaptureModal anon mode. signUp /
   // linkGoogle / signIn / signInGoogle pulled from AuthContext to feed
   // the unified RegisterModal.
-  const { isAnonymous, signUp, linkGoogle, signIn, signInGoogle } = useContext(AuthContext);
+  const { isAnonymous, user, authReady, signUp, linkGoogle, signIn, signInGoogle } = useContext(AuthContext);
   // Build lock rev 3 (2026-06-05): signed-in path now opens the same
   // ChallengeSentConfirmation modal the OAuth-resume path uses. The
   // prior `copied` + 2.5s `setTimeout` affordance on the CTA button is
@@ -272,11 +272,22 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
     // onBeforeGoogleRedirect hook persists share state to sessionStorage,
     // OAuth redirects the tree, ResumeShareSurface re-mounts the post-
     // auth half on return.
-    if (isAnonymous) {
+    // Auth re-decision (docs/replaymod-design-decisions.md, 2026-07-06): auth is a
+    // USER-INITIATED UPGRADE, not a send precondition. An anonymous-auth user mints on
+    // their existing non-null anon uid — fall through to the SAME name → send path as a
+    // signed-in user (createChallenge writes created_by = the anon uid). The RegisterModal
+    // fires ONLY when the anon session is truly unresolvable (authReady && no uid =
+    // signInAnonymously failed → no mintable token, create.ts would 401). The loading
+    // window (!authReady) does NOT block — it falls through optimistically; by the time
+    // the name modal is submitted, the anon session has resolved and the POST carries its
+    // token. This retires the auth-before-send wall (Phase 5b 2caa7a3, superseded).
+    if (isAnonymous && authReady && !user?.id) {
       setAuthModalOpen(true);
       return;
     }
-    // Signed-in user: existing NameCaptureModal confirm/edit flow (U6).
+    // Name → send (anon or signed-in). Anon has no nickname → NameCaptureModal "fresh"
+    // (the existing capture, not a new one); on submit OR cancel, continueShareAfterName
+    // mints (challenger_name defaults to "Anonymous" in create.ts).
     const stored = getNickname();
     if (isRealName(stored)) {
       setStoredName(stored);

@@ -28,6 +28,7 @@ beforeAll(() => {
 const baseAuthCtx = {
   user: null,
   uid: "u_test",
+  authReady: false,
   isAuthenticated: false,
   isAnonymous: true,
   signUp: async () => ({ error: null as any }),
@@ -37,9 +38,9 @@ const baseAuthCtx = {
   signOut: async () => ({ error: null as any }),
 };
 
-function withAuth(isAnonymous: boolean, children: React.ReactNode) {
+function withAuth(isAnonymous: boolean, children: React.ReactNode, override: Record<string, any> = {}) {
   return (
-    <AuthContext.Provider value={{ ...baseAuthCtx, isAnonymous, isAuthenticated: !isAnonymous }}>
+    <AuthContext.Provider value={{ ...baseAuthCtx, isAnonymous, isAuthenticated: !isAnonymous, ...override } as any}>
       {children}
     </AuthContext.Provider>
   );
@@ -76,33 +77,31 @@ beforeEach(() => {
 // startSend() handle (GameBar's "Challenge" button calls it via a ref). These
 // tests drive that handle directly — the auth/name-modal routing it triggers is
 // unchanged.
-describe("U1/U2/U4 — anonymous startSend opens RegisterModal in challenge context", () => {
-  it("anonymous startSend → unified auth surface appears (Google + email; name field hidden pre-auth)", () => {
+describe("anonymous startSend — anon-mint (name path), RegisterModal only when session unresolvable", () => {
+  // Auth re-decision (2026-07-06): auth is a user-initiated upgrade, not a send
+  // precondition. A resolved anonymous-auth session mints on its own uid — it takes the
+  // SAME NameCaptureModal → send path as a signed-in user; NO RegisterModal wall.
+  it("resolved anon session (authReady + uid) → NameCaptureModal, NOT the RegisterModal wall", () => {
     const ref = createRef<ChallengeSendHandle>();
     render(withAuth(true, (
       <ChallengeSharePrompt ref={ref} {...baseProps} triggerResult={makeTrigger("choke")} />
-    )));
+    ), { authReady: true, user: { id: "anon_uid", is_anonymous: true } }));
     act(() => { ref.current?.startSend(); });
-    // RegisterModal challenge-context pre-auth state per U4-a (2026-05-28
-    // amendment): Google button, email/password inputs, NO name field.
-    expect(screen.getByRole("button", { name: /continue with google/i })).toBeTruthy();
-    expect(screen.getByPlaceholderText(/email/i)).toBeTruthy();
-    expect(screen.queryByPlaceholderText(/your name/i)).toBeNull();
+    // NameCaptureModal fresh mode (the existing capture): name input visible, and the
+    // RegisterModal's Google button is ABSENT — the wall did not fire.
+    expect(screen.getByRole("textbox")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /continue with google/i })).toBeNull();
   });
 
-  it("does NOT open the legacy NameCaptureModal anon mode (gone post-unification)", () => {
+  it("unresolvable anon session (authReady, no uid = signInAnonymously failed) → RegisterModal fallback", () => {
     const ref = createRef<ChallengeSendHandle>();
     render(withAuth(true, (
       <ChallengeSharePrompt ref={ref} {...baseProps} triggerResult={makeTrigger("choke")} />
-    )));
+    ), { authReady: true, user: null }));
     act(() => { ref.current?.startSend(); });
-    // The babd079 anon-mode shape was a "Sign in to send" heading with
-    // Sign up + Sign in buttons and no Google button. Verify those
-    // anti-patterns are absent: there should be only ONE Sign up-related
-    // button (the RegisterModal email-submit button), not the two-button
-    // anon CTAs.
-    const signUpButtons = screen.queryAllByRole("button", { name: /^sign up$/i });
-    expect(signUpButtons.length).toBe(0);
+    // The ONLY case that still shows the modal: no mintable token, so sign-in is required.
+    expect(screen.getByRole("button", { name: /continue with google/i })).toBeTruthy();
+    expect(screen.getByPlaceholderText(/email/i)).toBeTruthy();
   });
 });
 
