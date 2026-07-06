@@ -639,6 +639,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [bigWinFired, setBigWinFired] = useState(false);
   const [challengeTrigger, setChallengeTrigger] = useState<import("@shared/utils/triggerEvaluation").TriggerResult | null>(null);
+  // Per-hand CHALLENGE-dismiss flag (CTA-row single-CTA model). Set true by GameBar's
+  // "not this one" dismiss → challengeAvailable false → REPLAY returns as the lone centered
+  // CTA. Component state only (NOT persisted). Reset on LEAVING the results states so a
+  // fresh hot hand re-offers — leak-proof, does NOT gate on IDLE (a REPLAY tap may skip it).
+  const [challengeDismissed, setChallengeDismissed] = useState(false);
+  useEffect(() => {
+    if (gameState !== "RESULTS" && gameState !== "WIN_CELEBRATION") setChallengeDismissed(false);
+  }, [gameState]);
   // TOP-slot snapshot of the last non-null challengeTrigger for the
   // current hand. Survives the ChallengeSharePrompt dismiss handler's
   // setChallengeTrigger(null) (~L2995) so the TOP-slot bank line
@@ -3784,8 +3792,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         // Pass A: restore the original gate, OR'd with the cold grievance (which
         // carries its own reveal-state guard) so contrarian-cold hands surface the
         // sender button even when they carry no trigger.
-        challengeAvailable={!challengeCtx && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance)}
+        challengeAvailable={!challengeCtx && !challengeDismissed && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance)}
         onChallenge={() => challengeSendRef.current?.startSend()}
+        onDismissChallenge={() => setChallengeDismissed(true)}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
         onWageAnimationComplete={() => {
@@ -3996,7 +4005,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           GameBar trophy (BossScreen). The result screen keeps ONE primary
           (REPLAY). BossEntryCta is still used inside BossScreen. */}
 
-      {!challengeCtx && (challengeTrigger || grievance) && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
+      {!challengeCtx && !challengeDismissed && (challengeTrigger || grievance) && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && (
         <Suspense fallback={null}>
           <ChallengeSharePrompt
             ref={challengeSendRef}

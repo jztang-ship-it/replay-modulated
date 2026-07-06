@@ -186,6 +186,10 @@ type Props = {
    *  onChallenge starts the send (GameView wires it to the prompt's startSend()). */
   challengeAvailable?: boolean;
   onChallenge?: () => void;
+  /** Per-hand dismiss of the hot-hand CHALLENGE CTA ("not this one"). When fired,
+   *  GameView flips challengeDismissed → challengeAvailable false → REPLAY returns as
+   *  the lone centered CTA. CHALLENGE and REPLAY are never co-present in the row. */
+  onDismissChallenge?: () => void;
   /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
    *  multipliers). Drives the fire-row label text. Optional for back-compat;
    *  when omitted, labels show "1x" fallbacks. */
@@ -1432,6 +1436,7 @@ export function GameBar({
   economyEnabled = true,
   challengeAvailable = false,
   onChallenge,
+  onDismissChallenge,
   streakTiers,
   onLegendOpened,
   onTrophyOpened,
@@ -1477,25 +1482,47 @@ export function GameBar({
   // between REPLAY and the icons (result-screen story state). Subdued vs the primary
   // REPLAY so REPLAY stays dominant. Null when no challenge is available (default),
   // so the row keeps its current single-REPLAY layout for all other sports/states.
+  // Single-CTA model: when challengeAvailable, CHALLENGE is the SOLE, dominant CTA in
+  // the row (REPLAY is hidden — gated on !challengeAvailable at both render sites), so
+  // the two are never co-present and REPLAY can't be shrunk/de-centered. The column is
+  // REPLAY-sized (min(168px,50%), row-relative) and centered; the filled button reads as
+  // THE action. A quiet "not this one" dismiss sits on its own line BELOW — in-flow (no
+  // absolute layer that could eat taps), with a padded hit area so it's a reliable Safari
+  // tap target (if dismiss were tap-eaten, the "just let me play" user would be trapped).
   const ChallengeButton = (challengeAvailable && onChallenge) ? (
-    <button
-      type="button"
-      onClick={onChallenge}
-      data-action="challenge"
-      style={{
-        flexShrink: 0,
-        padding: "10px 14px",
-        borderRadius: THEME.button.action.borderRadius,
-        border: "1px solid rgba(255,177,74,0.55)",
-        background: "rgba(255,177,74,0.14)",
-        color: "#FFB14A",
-        fontWeight: 900, fontSize: 13, letterSpacing: 1, textTransform: "uppercase",
-        cursor: "pointer", lineHeight: 1, whiteSpace: "nowrap",
-        pointerEvents: "auto" as const,
-      }}
-    >
-      Challenge
-    </button>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: "min(168px, 50%)" }}>
+      <button
+        type="button"
+        onClick={onChallenge}
+        data-action="challenge"
+        style={{
+          width: "100%",
+          borderRadius: THEME.button.action.borderRadius, border: "none",
+          padding: "11px 0",
+          fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
+          cursor: "pointer", lineHeight: 1, whiteSpace: "nowrap",
+          background: "linear-gradient(135deg, #FFB14A, #FF8A3D)",
+          color: "#0B0E14",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.30)",
+          pointerEvents: "auto" as const,
+        }}
+      >
+        Challenge
+      </button>
+      <button
+        type="button"
+        onClick={onDismissChallenge}
+        data-action="challenge-dismiss"
+        style={{
+          background: "none", border: "none",
+          padding: "6px 12px", margin: 0, lineHeight: 1,
+          color: "rgba(255,255,255,0.45)", fontSize: 12, fontWeight: 700, letterSpacing: 0.3,
+          cursor: "pointer", pointerEvents: "auto" as const,
+        }}
+      >
+        not this one
+      </button>
+    </div>
   ) : null;
 
   const TrophyButton = onViewLeaderboard ? (
@@ -1732,7 +1759,7 @@ export function GameBar({
               (REPLAY + Challenge, icons pushed right via marginLeft:auto); else
               the original centered-REPLAY + absolute-right-icons layout (so
               non-challenge sports/states are pixel-unchanged). */}
-          <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: 44, ...(challengeAvailable ? { gap: 8 } : { justifyContent: "center" as const }) }}>
+          <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: 44, justifyContent: "center" as const }}>
             {/* Left zone — round indicator (multi-round only) + wallet, side by
                 side in one absolute container so they never overlap. The
                 indicator never renders for single-shot sports, leaving the
@@ -1767,12 +1794,16 @@ export function GameBar({
               </div>
             )}
 
+            {/* REPLAY — the lone centered CTA on all non-challenge states/hands. Hidden
+                when challengeAvailable (CHALLENGE owns the slot), so it never shrinks or
+                de-centers. Width is ALWAYS min(168px,50%) — the challenge variant is gone. */}
+            {!challengeAvailable && (
             <button
               onClick={onAction}
               disabled={primaryDisabled}
               data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
               style={{
-                width: challengeAvailable ? 120 : "min(168px, 50%)",
+                width: "min(168px, 50%)",
                 borderRadius: THEME.button.action.borderRadius, border: "none",
                 padding: "11px 0",
                 fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
@@ -1788,15 +1819,16 @@ export function GameBar({
               {(replayPulse || ftuePrimaryPulse) && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
               {actionLabel(gameState, maxRounds, ftueActive)}
             </button>
+            )}
 
-            {/* Compact secondary Challenge button — in-flow flex sibling between
-                REPLAY and the icons (story state only; null otherwise). */}
+            {/* CHALLENGE-dominant CTA (+ "not this one" dismiss) — occupies the SAME
+                centered slot when challengeAvailable; mutually exclusive with REPLAY. */}
             {ChallengeButton}
 
             {/* Legend + trophy — right (both hidden during FTUE). In story state
                 pushed right via marginLeft:auto (in-flow); otherwise absolute-right
                 exactly as before so non-challenge rows are pixel-identical. */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, ...(challengeAvailable ? { marginLeft: "auto" as const } : { position: "absolute" as const, right: 0 }) }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, position: "absolute" as const, right: 0 }}>
               <button data-gb-anim="true" onClick={() => { setShowLegend(true); onLegendOpened?.(); }} style={{
                 width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
                 background: legendPulsing ? "rgba(255,215,0,0.9)" : "transparent",
@@ -2000,12 +2032,15 @@ export function GameBar({
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", paddingTop: 0, position: "relative" }}>
+              {/* REPLAY — hidden when challengeAvailable (CHALLENGE owns the slot), so it
+                  never shrinks/de-centers. Width ALWAYS min(168px,50%); challenge variant gone. */}
+              {!challengeAvailable && (
               <button
                 onClick={onAction}
                 disabled={primaryDisabled}
                 data-action={gameState === "IDLE" ? "deal" : gameState === "HOLD" ? "draw" : undefined}
                 style={{
-                  width: challengeAvailable ? 120 : "min(168px, 50%)",
+                  width: "min(168px, 50%)",
                   borderRadius: THEME.button.action.borderRadius, border: "none",
                   padding: "11px 0",
                   fontWeight: 900, fontSize: 16, letterSpacing: 2, textTransform: "uppercase",
@@ -2021,8 +2056,9 @@ export function GameBar({
                 {(replayPulse || ftuePrimaryPulse) && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
                 {actionLabel(gameState, maxRounds, ftueActive)}
               </button>
-              {/* Parity with the split path: Challenge button as an in-flow sibling
-                  (null unless challengeAvailable). */}
+              )}
+              {/* CHALLENGE-dominant CTA (+ dismiss) — same centered slot; mutually
+                  exclusive with REPLAY. */}
               {ChallengeButton}
               {TrophyButton}
             </div>
