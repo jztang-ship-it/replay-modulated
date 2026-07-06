@@ -582,7 +582,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   //   seals the glass-2b signed-in deal leak WITHOUT the glass-2 regression
   //   (the earlier `!!user` requirement wrongly excluded user=null cold users).
   const ftueActive = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
-    && authReady && isAnonymous;
+    && authReady && isAnonymous && !challengeBackCtx;
 
   // ── FTUE opening ceremony (pre-deal wall) ──────────────────────────────────
   // On the scripted-FTUE first run, IDLE shows five real First-Team cards face-up
@@ -2159,7 +2159,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // render-const ftueActive; by their next render the ref is already updated.
     if (gameState === "IDLE") soloFtueFirstRunRef.current = isSoloFtueFirstRun();
     const ftueActiveNow = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
-      && authReady && isAnonymous;
+      && authReady && isAnonymous && !challengeBackCtx;
     if (gameState === "IDLE") {
       // FTUE load-race gate: until the ceremony pool (players) is ready the wall
       // can't have mounted yet — swallow the tap so it can't deal past the

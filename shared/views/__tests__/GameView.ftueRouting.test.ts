@@ -27,7 +27,16 @@ describe("scripted FTUE — gate is structural (basketball + solo + first-run on
     // authReady (INITIAL_SESSION handled, isAnonymous trustworthy) + isAnonymous.
     // TRUE only for a settled anon (incl. localStorage-only user=null); FALSE for
     // signed-in AND the loading window (authReady=false).
-    expect(GAME_VIEW).toMatch(/&& authReady && isAnonymous;/);
+    //
+    // Rivalry-continuation exclusion: a Send-It-Back fresh hand sets challengeBackCtx
+    // and clears challengeCtx — the FTUE gate must NOT eat it (else the fresh hand
+    // deals the scripted FTUE hand and rivalry_back never lands). BOTH twins — the
+    // render gate (ftueActive) AND the deal authority (ftueActiveNow) — carry
+    // `&& !challengeBackCtx`. Asserting exactly 2 occurrences goes red if a future
+    // edit desyncs the twins (adds the exclusion to one gate but not the other).
+    expect(GAME_VIEW).toMatch(/&& authReady && isAnonymous && !challengeBackCtx;/);
+    const gateExclusions = GAME_VIEW.match(/&& authReady && isAnonymous && !challengeBackCtx;/g) ?? [];
+    expect(gateExclusions.length).toBe(2);
     // ...and the first-run ref is re-evaluated at each new-hand deal (termination),
     // with a FRESH ftueActiveNow gate used for the deal/round injections (no
     // one-deal-late double-deal).
