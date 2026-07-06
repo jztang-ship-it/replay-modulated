@@ -432,6 +432,16 @@ function hasPendingResumeShare(): boolean {
   }
 }
 
+/**
+ * Anonymous retention nudge — INERT TEXT ONLY. Appended to the post-result commentary
+ * when the player is anonymous (their result is device-bound and lost on browser-clear/
+ * device-switch). It POINTS to the profile sign-in (the user-initiated upgrade); it MUST
+ * NEVER be tappable or open a modal/overlay/auth surface. Making it an auth trigger would
+ * rebuild the "auth-before-send" wall in a new spot — the exact thing the 2026-07-06 auth
+ * re-decision retired. One string, one condition (anonymous + has a post-result).
+ */
+const ANON_SAVE_NUDGE = "Sign in from your profile to save this result before it's gone.";
+
 export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallengeCtx, setChallengeBackCtx, clearChallengeBackCtx, onTakeBoss }: Props) {
   const {
     sportKey,
@@ -3581,7 +3591,16 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               visible
               regularFinalCardKick={regularFinalGaugeKick}
               onTierCross={undefined}
-              postRevealCopy={postRevealCopy}
+              postRevealCopy={
+                // Anon retention nudge — inert text append (see ANON_SAVE_NUDGE). Gated
+                // on isAnonymous, so non-anon output is byte-identical. Appended only when
+                // secondary is a plain string (never mangles a trigger-framed Line).
+                isAnonymous && postRevealCopy && typeof postRevealCopy.secondary === "string"
+                  ? { ...postRevealCopy, secondary: postRevealCopy.secondary
+                        ? `${postRevealCopy.secondary} ${ANON_SAVE_NUDGE}`
+                        : ANON_SAVE_NUDGE }
+                  : postRevealCopy
+              }
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
               collapseBar={verdictLayout || gaugeVoice}
