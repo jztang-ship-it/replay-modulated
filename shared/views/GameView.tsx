@@ -2706,6 +2706,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     return q?.quadrant === "contrarian-cold" ? { line: q.line } : null;
   }, [gameState, roster]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Single-CTA "challenge stack" is showing (CHALLENGE + "not this one"). One source for
+  // both GameBar.challengeAvailable AND the taller action-grid row (BUG 1): the 2-line
+  // stack + safe-area padding overflows the fixed 74px row, so grid row 9 grows only when
+  // this is true; REPLAY-only hands stay byte-identical at the 274px board-lock total.
+  const challengeCtaActive = !challengeCtx && !challengeDismissed && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance);
+
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
   //   2. Tactical Chad chip lands as the commentary override — challenge-aware
@@ -3340,13 +3346,18 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // (IDLE+HOLD, gaugeVoice) / empty air (gaugeInert). The bar row (14px)
           // collapses to 0 on the collapsed-bar states; REVEALING keeps the bar
           // (fill) via the last shape. Verdict branch byte-identical to 44c1fc38.
+          // BUG 1: action row (last track) grows 74px→104px ONLY when the CHALLENGE
+          // stack shows, so the CHALLENGE + gap + "not this one" + safe-area fits without
+          // clipping. The ~30px grows into the flex:1 roster area (bottom grid is
+          // 0 0 auto, bottom-anchored). REPLAY-only hands keep 74px → the 274px board-lock
+          // total is byte-identical; only challenge hands shift row 1 up ~30px.
           gridTemplateRows: verdictLayout
-            ? "72px 16px 0px 0px 0px 0px 96px 16px 74px"
+            ? `72px 16px 0px 0px 0px 0px 96px 16px ${challengeCtaActive ? "104px" : "74px"}`
             : gaugeVoice
-              ? "72px 16px 0px 0px 0px 0px 96px 16px 74px"
+              ? `72px 16px 0px 0px 0px 0px 96px 16px ${challengeCtaActive ? "104px" : "74px"}`
               : gaugeInert
-                ? "72px 16px 0px 0px 0px 0px 96px 16px 74px"
-                : "72px 4px 14px 8px 0px 4px 96px 2px 74px",
+                ? `72px 16px 0px 0px 0px 0px 96px 16px ${challengeCtaActive ? "104px" : "74px"}`
+                : `72px 4px 14px 8px 0px 4px 96px 2px ${challengeCtaActive ? "104px" : "74px"}`,
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -3792,7 +3803,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         // Pass A: restore the original gate, OR'd with the cold grievance (which
         // carries its own reveal-state guard) so contrarian-cold hands surface the
         // sender button even when they carry no trigger.
-        challengeAvailable={!challengeCtx && !challengeDismissed && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance)}
+        challengeAvailable={challengeCtaActive}
         onChallenge={() => challengeSendRef.current?.startSend()}
         onDismissChallenge={() => setChallengeDismissed(true)}
         celebration={celebrationData}
