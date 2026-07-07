@@ -15,6 +15,7 @@ import {
 } from "@shared/commentary/commentaryFacts";
 import { fetchAuthoredHeadline } from "@shared/utils/fetchAuthoredHeadline";
 import { pickShareHeadline } from "@shared/utils/shareHeadlinePrecedence";
+import { persistSentChallenge, clearSentChallenge } from "@shared/utils/sentChallengePersist";
 import { NameCaptureModal, type NameCaptureMode } from "@shared/components/NameCaptureModal";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { writePendingChallengeShare } from "@shared/components/ResumeShareSurface";
@@ -275,7 +276,12 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
     // Reopen: if this hand already minted, re-show the SAME sheet (same link) instead of
     // minting a duplicate. One mint per hand — keeps the challenge funnel clean. Placed
     // BEFORE the auth/name/mint flow so it short-circuits without touching createChallenge.
-    if (sentCacheRef.current) { setSentModal(sentCacheRef.current); return; }
+    if (sentCacheRef.current) {
+      setSentModal(sentCacheRef.current);
+      // Re-persist so the reopened sheet also survives a cold-boot round-trip.
+      persistSentChallenge({ ...sentCacheRef.current, sport });
+      return;
+    }
     // Anonymous user: unified auth surface in challenge context (U2/U4).
     // Path α (email): RegisterModal observes auth flip in-modal, swaps
     // to post-auth state with name input enabled. Path β (Google): the
@@ -364,6 +370,9 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
     // value through the prop; the modal renders it as-is.
     setSentModal({ shareUrl: url, shareHeadline: effectiveHeadline });
     sentCacheRef.current = { shareUrl: url, shareHeadline: effectiveHeadline };
+    // Persist the minted link so the sheet survives an external-share cold-boot (BUG 2).
+    // Persistence only — the mint already happened; this caches the result, not the flow.
+    persistSentChallenge({ shareUrl: url, shareHeadline: effectiveHeadline, sport });
   }
 
   // Static labels for the fixed-text triggers. The miss trigger is
@@ -496,7 +505,7 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
           shareUrl={sentModal.shareUrl}
           sport={sport}
           shareHeadline={sentModal.shareHeadline}
-          onDismiss={() => { setSentModal(null); onConsumed?.(); }}
+          onDismiss={() => { setSentModal(null); clearSentChallenge(); onConsumed?.(); }}
         />
       )}
     </>

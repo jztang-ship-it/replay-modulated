@@ -31,6 +31,7 @@ import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ResumeShareSurface } from "@shared/components/ResumeShareSurface";
 import { ChallengeSentConfirmation } from "@shared/components/ChallengeSentConfirmation";
+import { readSentChallenge, clearSentChallenge } from "@shared/utils/sentChallengePersist";
 import { PasswordResetSurface } from "@shared/components/PasswordResetSurface";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
@@ -187,6 +188,20 @@ function AppInner() {
     sport: string;
     shareHeadline: string;
   } | null>(null);
+  // BUG 2: cold-boot restore. If an external-share round-trip discarded+reloaded the tab
+  // while a minted challenge sheet was open, re-show the SAME sheet (same link) from the
+  // sessionStorage cache so the challenge stays reachable. Consume-once: clear on restore
+  // so a later unrelated boot never re-shows it. challengeId derived from the URL (the
+  // sheet render uses only shareUrl/sport/shareHeadline). Reuses the resumeSent render.
+  useEffect(() => {
+    const s = readSentChallenge();
+    if (!s) return;
+    setResumeSent({
+      challengeId: s.shareUrl.split("/").filter(Boolean).pop() ?? "",
+      shareUrl: s.shareUrl, sport: s.sport, shareHeadline: s.shareHeadline,
+    });
+    clearSentChallenge();
+  }, []);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const showDebug = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("debug") === "1";
