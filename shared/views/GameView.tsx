@@ -4023,16 +4023,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             shareHeadline={computedShareHeadline}
             grievanceHeadline={grievance?.line}
             handId={currentHandIdRef.current ?? undefined}
+            // Single-CTA model: closing the share overlay must NOT collapse the
+            // challenge. Do NOT clear the trigger here — that would flip
+            // challengeAvailable false and swap CHALLENGE for REPLAY on one mis-tap.
+            // The challenge stays live/reopenable; challengeTrigger self-clears at IDLE
+            // (~L2665) on the next hand, so there's no cross-hand leak. Only GameBar's
+            // "not this one" (setChallengeDismissed) collapses to REPLAY. The
+            // challengeBackCtx clear stays (rivalry cleanup — its only reset).
             onDismiss={() => {
-              setChallengeTrigger(null);
               if (challengeBackCtx) clearChallengeBackCtx?.();
             }}
-            // Terminal SEND: the delivery modal's only dismiss route (its ✕)
-            // clears the trigger → the invisible owner unmounts; REPLAY (permanent)
-            // remains. Cleared AFTER send success only — createChallenge's
-            // `if (!cid) return` keeps a failed write from reaching the modal/clear.
             onConsumed={() => {
-              setChallengeTrigger(null);
               if (challengeBackCtx) clearChallengeBackCtx?.();
             }}
           />

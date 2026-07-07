@@ -1,5 +1,5 @@
 // shared/components/ChallengeSharePrompt.tsx
-import { useContext, useMemo, useState, forwardRef, useImperativeHandle } from "react";
+import { useContext, useMemo, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import type { GeneratedCard } from "@shared/types/index";
 import type { WinTierMap } from "@shared/utils/payoutLogic";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
@@ -107,6 +107,12 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
   // `effectiveHeadline` from settleHeadline() — passed by value, never
   // re-resolved inside the modal.
   const [sentModal, setSentModal] = useState<{ shareUrl: string; shareHeadline: string } | null>(null);
+  // Re-show-same-link cache: the mint result for THIS hand, held across a sheet close.
+  // ONE mint per hand — after a successful send, reopening CHALLENGE re-shows the SAME
+  // sheet (same shared_challenges row/link) instead of minting a duplicate. Naturally
+  // per-hand: the prompt unmounts on the next hand (challengeAvailable→false at IDLE),
+  // so the ref resets. Kept a ref (not state) so a sheet close doesn't have to preserve it.
+  const sentCacheRef = useRef<{ shareUrl: string; shareHeadline: string } | null>(null);
 
   // Rivalry-back mode forces the prominent prompt regardless of the
   // underlying trigger (default-trigger fresh hands would otherwise
@@ -266,6 +272,10 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
   }
 
   function onCtaTap() {
+    // Reopen: if this hand already minted, re-show the SAME sheet (same link) instead of
+    // minting a duplicate. One mint per hand — keeps the challenge funnel clean. Placed
+    // BEFORE the auth/name/mint flow so it short-circuits without touching createChallenge.
+    if (sentCacheRef.current) { setSentModal(sentCacheRef.current); return; }
     // Anonymous user: unified auth surface in challenge context (U2/U4).
     // Path α (email): RegisterModal observes auth flip in-modal, swaps
     // to post-auth state with name input enabled. Path β (Google): the
@@ -353,6 +363,7 @@ export const ChallengeSharePrompt = forwardRef<ChallengeSendHandle, Props>(funct
     // buttons, Copy link bar. effectiveHeadline arrives as a string by
     // value through the prop; the modal renders it as-is.
     setSentModal({ shareUrl: url, shareHeadline: effectiveHeadline });
+    sentCacheRef.current = { shareUrl: url, shareHeadline: effectiveHeadline };
   }
 
   // Static labels for the fixed-text triggers. The miss trigger is

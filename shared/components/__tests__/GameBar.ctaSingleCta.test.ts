@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const GAME_BAR = readFileSync(resolve(__dirname, "../GameBar.tsx"), "utf8");
+const GAME_VIEW = readFileSync(resolve(__dirname, "../../views/GameView.tsx"), "utf8");
 
 describe("CTA row — REPLAY and CHALLENGE are mutually exclusive (single-CTA)", () => {
   it("REPLAY is gated on !challengeAvailable at BOTH render sites (normal + WIN_CELEBRATION)", () => {
@@ -36,5 +37,19 @@ describe("CTA row — REPLAY and CHALLENGE are mutually exclusive (single-CTA)",
     expect(GAME_BAR).toMatch(/data-action="challenge"/);
     expect(GAME_BAR).toMatch(/data-action="challenge-dismiss"/);
     expect(GAME_BAR).toMatch(/not this one/);
+  });
+});
+
+describe("CTA row — closing the share overlay does NOT collapse the challenge", () => {
+  it("the ChallengeSharePrompt mount handlers (onDismiss/onConsumed) never clear the trigger", () => {
+    // Single-CTA regression pin: setChallengeTrigger(null) in these handlers would flip
+    // challengeAvailable false and swap CHALLENGE for REPLAY on one sheet-close mis-tap.
+    // Only "not this one" (setChallengeDismissed) may collapse. Goes red if a future edit
+    // re-adds the trigger clear to the mount handlers.
+    const start = GAME_VIEW.indexOf("<ChallengeSharePrompt");
+    const end = GAME_VIEW.indexOf("</Suspense>", start);
+    const mount = GAME_VIEW.slice(start, end);
+    expect(mount).toMatch(/onConsumed=/); // sanity: correct block
+    expect(mount).not.toMatch(/setChallengeTrigger\(null\)/);
   });
 });
