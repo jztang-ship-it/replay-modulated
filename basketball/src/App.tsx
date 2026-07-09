@@ -31,7 +31,7 @@ import { isSoloFtueFirstRun } from "@shared/utils/soloFtue";
 import { RegisterModal } from "@shared/components/RegisterModal";
 import { ResumeShareSurface } from "@shared/components/ResumeShareSurface";
 import { ChallengeSentConfirmation } from "@shared/components/ChallengeSentConfirmation";
-import { readSentChallenge, clearSentChallenge } from "@shared/utils/sentChallengePersist";
+import { readSentChallenge, hasSentChallenge } from "@shared/utils/sentChallengePersist";
 import { PasswordResetSurface } from "@shared/components/PasswordResetSurface";
 import { ProfileScreen } from "@shared/components/ProfileScreen";
 import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
@@ -188,11 +188,15 @@ function AppInner() {
     sport: string;
     shareHeadline: string;
   } | null>(null);
+  // BUG 2: peek (no burn) at mount whether a sent-challenge restore is pending, so we can
+  // SKIP the season reel for this boot — the reel shouldn't fire mid-restore and cover the
+  // restored sheet. Stable for the session; a fresh boot re-peeks (burned/expired → false).
+  const [restorePending] = useState(() => hasSentChallenge());
   // BUG 2: cold-boot restore. If an external-share round-trip discarded+reloaded the tab
   // while a minted challenge sheet was open, re-show the SAME sheet (same link) from the
-  // sessionStorage cache so the challenge stays reachable. Consume-once: clear on restore
-  // so a later unrelated boot never re-shows it. challengeId derived from the URL (the
-  // sheet render uses only shareUrl/sport/shareHeadline). Reuses the resumeSent render.
+  // localStorage cache so the challenge stays reachable. readSentChallenge burns-on-read
+  // (consume-once) so a later unrelated boot never re-shows it. challengeId derived from
+  // the URL (the sheet render uses only shareUrl/sport/shareHeadline).
   useEffect(() => {
     const s = readSentChallenge();
     if (!s) return;
@@ -200,7 +204,6 @@ function AppInner() {
       challengeId: s.shareUrl.split("/").filter(Boolean).pop() ?? "",
       shareUrl: s.shareUrl, sport: s.sport, shareHeadline: s.shareHeadline,
     });
-    clearSentChallenge();
   }, []);
   const { unlockedIds: ownUnlockedIds } = useAchievements();
   const showDebug = typeof window !== "undefined" &&
@@ -702,7 +705,7 @@ function AppInner() {
              cold-anon reel could fire before the FTUE is determined). After the
              FTUE completes the flag flips and the reel shows normally next entry. */
           authReady={authReady}
-          skipReel={!!challengeIdFromUrl || (isSoloFtueFirstRun() && authReady && isAnonymous)}
+          skipReel={!!challengeIdFromUrl || restorePending || (isSoloFtueFirstRun() && authReady && isAnonymous)}
           /* When the bypass is fired by challengeCtx (recipient accepted
              a challenge), pin the data engine to the CHALLENGE'S season,
              not FTUE_SEASON_KEY. Without this, retired players in the
