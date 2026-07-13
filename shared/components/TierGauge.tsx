@@ -58,10 +58,6 @@ interface TierGaugeProps {
    *  trigger framing fires (bucket 2 S1 slot-split). The renderer below
    *  walks parts when given a Line. */
   postRevealCopy?: { primary: string | Line; secondary?: string } | null;
-  /** Anon retention nudge — INERT text in its OWN slot: a dim line rendered BELOW the
-   *  verdict copy, so it never competes for or clips verdict space (verdict is rendered
-   *  first, with priority). Conversion CTA, not verdict copy — undefined = no nudge. */
-  postResultNudge?: string;
   /** Tier label for inline StampToken renders of stamp="miss". Sourced
    *  by GameView from challengeTrigger.nearMissNextTier. Mirrors
    *  TeamStamp's missTier prop — same source-of-truth pattern for both
@@ -591,7 +587,6 @@ export function TierGauge({
   isAnchorReveal = false,
   onTierCross,
   postRevealCopy,
-  postResultNudge,
   missTier,
   stickyLastOverride = false,
   onCommentaryDone,
@@ -943,18 +938,6 @@ export function TierGauge({
                   msPerChar={18}
                   onDone={onCommentaryDone}
                 />
-              )}
-              {/* Anon nudge — its OWN dim line, rendered AFTER (below) the verdict so the
-                  verdict has priority space and the nudge can never clip it. Plain text
-                  (a conversion CTA), not part of the verdict copy. */}
-              {postResultNudge && (
-                <div style={{
-                  fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.42)",
-                  fontFamily: FF, letterSpacing: "0.02em", lineHeight: 1.4,
-                  textAlign: "left", maxWidth: "100%", marginTop: 6,
-                }}>
-                  {postResultNudge}
-                </div>
               )}
             </div>
         ) : voiceText ? (
