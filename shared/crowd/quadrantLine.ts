@@ -70,6 +70,11 @@ export interface QuadrantLead {
   /** The read×draw quadrant — lets a caller gate on a SPECIFIC corner (e.g. the
    *  contrarian-cold grievance) rather than the coarse `folded != null`. */
   quadrant: ReadDrawQuadrant;
+  /** Severity inputs for the results-box composer (composeVerdictCommentary). Raw facts
+   *  from the lead's card; do NOT feed the DM (that reads `line`). fade% = round((1−own)·100). */
+  fadePct: number;
+  ratio: number;
+  fp: number;
 }
 
 /**

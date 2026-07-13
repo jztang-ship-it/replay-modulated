@@ -78,6 +78,7 @@ import {
 import { GameBar as SharedGameBar, type CelebrationData } from "@shared/components/GameBar";
 import { featureFlags } from "@shared/featureFlags";
 import { selectCommentary, selectPreVerdictVoice } from "@shared/commentary/selectCommentary";
+import { composeVerdictCommentary, VERDICT_COMMENTARY_BUDGET } from "@shared/crowd/verdictCommentary";
 import { evaluateTrigger } from "@shared/utils/triggerEvaluation";
 import { detectTopGame } from "@shared/data/recordDetector";
 import { selectStar } from "@shared/commentary/storySelector";
@@ -1883,11 +1884,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // quadrantLead.folded is non-null (contrarian quadrants) AND the players match
     // — every other hand (complementary ~69%, chalk, neutral, non-basketball)
     // takes the unchanged branch below and is byte-identical to before.
-    const isConvergent = !!(quadrantLead?.folded && verdictAtom?.player && quadrantLead.leadPlayer === verdictAtom.player);
+    // RESULTS-BOX composer (FENCED): on a draw-extreme quadrant hand, replace the old
+    // lead-line + atom-line / fold stack with ONE severity-braided sentence sized to the
+    // 96px box (composeVerdictCommentary). Structurally can't overflow (≤ budget). The DM
+    // share_headline is UNTOUCHED — it still reads renderQuadrantLine via pickShareHeadline;
+    // box and DM diverge by design for now. Neutral hands (no lead) keep the existing
+    // flavor-primary + atom-secondary fallback, byte-identical.
     const finalCopy = quadrantLead
-      ? (isConvergent
-          ? { primary: quadrantLead.folded as string, secondary: "" }
-          : { primary: quadrantLead.line, secondary: verdictSecondary ?? (baseCopy.secondary ?? "") })
+      ? { primary: composeVerdictCommentary(
+            { quadrant: quadrantLead.quadrant, name: quadrantLead.leadPlayer, fadePct: quadrantLead.fadePct, ratio: quadrantLead.ratio, fp: quadrantLead.fp },
+            winTier, fp, VERDICT_COMMENTARY_BUDGET,
+          ), secondary: "" }
       : verdictSecondary
         ? { primary: baseCopy.primary, secondary: verdictSecondary }
         : baseCopy;
@@ -3610,16 +3617,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               visible
               regularFinalCardKick={regularFinalGaugeKick}
               onTierCross={undefined}
-              postRevealCopy={
-                // Anon retention nudge — inert text append (see ANON_SAVE_NUDGE). Gated
-                // on isAnonymous, so non-anon output is byte-identical. Appended only when
-                // secondary is a plain string (never mangles a trigger-framed Line).
-                isAnonymous && postRevealCopy && typeof postRevealCopy.secondary === "string"
-                  ? { ...postRevealCopy, secondary: postRevealCopy.secondary
-                        ? `${postRevealCopy.secondary} ${ANON_SAVE_NUDGE}`
-                        : ANON_SAVE_NUDGE }
-                  : postRevealCopy
-              }
+              postRevealCopy={postRevealCopy}
+              // Anon retention nudge — INERT text in its OWN slot (not appended to the
+              // verdict): renders as a separate dim line BELOW the verdict, so it never
+              // competes for or clips verdict space (verdict has priority). Anon + a result.
+              postResultNudge={isAnonymous && postRevealCopy ? ANON_SAVE_NUDGE : undefined}
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
               commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
               collapseBar={verdictLayout || gaugeVoice}
