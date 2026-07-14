@@ -7,5 +7,27 @@
     { "source": "/baseball/((?!assets/|audio/|data/|headshots/).*)",   "destination": "/baseball/index.html" },
     { "source": "/football/((?!assets/|audio/|data/|headshots/).*)",   "destination": "/football/index.html" },
     { "source": "/((?!api/|basketball/|baseball/|football/|assets/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(basketball|baseball|football)/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/(basketball|baseball|football)/((?!assets/|data/|audio/|headshots/).*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/(basketball|baseball|football)",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
   ]
 }
