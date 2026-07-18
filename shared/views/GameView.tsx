@@ -3233,7 +3233,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           alignItems: "flex-start",
           justifyContent: "center",
           minHeight: 0,
-          maxHeight: 460,
+          maxHeight: 480,
           // SOLO: extra top breathing so the year·players row → cards has air
           // (band→row→cards rhythm). flex:1 absorbs it by scaling cards via
           // RosterGridScaleFit — never clips the fixed bottom grid. CHALLENGE: unchanged.
