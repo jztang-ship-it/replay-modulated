@@ -3233,7 +3233,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           alignItems: "flex-start",
           justifyContent: "center",
           minHeight: 0,
-          maxHeight: 480,
+          // NO maxHeight — a fixed cap here can bind below the cards' natural
+          // height on some devices (subpixel mh), forcing RosterGridScaleFit to
+          // DOWN-scale (small cards + dead space). The stage is flex:1 and
+          // RosterGridScaleFit fits-to-port + caps up-scale at 1.15, so the stage
+          // self-bounds: cards fill the leftover column space and cap out. The
+          // bottom grid is a separate flex:0 0 auto row, so nothing overflows.
+          // Do NOT reintroduce a maxHeight — it re-creates the down-scale failure.
           // SOLO: extra top breathing so the year·players row → cards has air
           // (band→row→cards rhythm). flex:1 absorbs it by scaling cards via
           // RosterGridScaleFit — never clips the fixed bottom grid. CHALLENGE: unchanged.
