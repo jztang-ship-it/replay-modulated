@@ -3028,7 +3028,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // flex:1 and absorbs the difference by scaling cards (RosterGridScaleFit),
           // so this never clips the fixed bottom grid. padding 0 → band runs
           // edge-to-edge. CHALLENGE: unchanged 10dvh.
-          flex: !challengeCtx ? "0 0 calc(13dvh + env(safe-area-inset-top, 0px))" : "0 0 10dvh",
+          flex: !challengeCtx ? "0 0 calc(10dvh + env(safe-area-inset-top, 0px))" : "0 0 10dvh",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
