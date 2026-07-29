@@ -2710,6 +2710,23 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // this is true; REPLAY-only hands stay byte-identical at the 274px board-lock total.
   const challengeCtaActive = !challengeCtx && !challengeDismissed && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance);
 
+  // Basketball-only bottom-grid reclaim (~44px into the flex:1 card stage).
+  // Both reductions are gated on the flag that governs the content the row
+  // would otherwise hold, so baseball/worldcup (both flags default true) stay
+  // byte-identical at their 274/304 board-lock. Within a sport the flags are
+  // runtime-constant, so all four phase branches still sum equal.
+  //  - Track 1 (stats row): basketball has multiplierEnabled:false, so the HOLD
+  //    bet-multiplier line never renders → content ~48px fits 52px (4px buffer).
+  //  - Track 9 (action row): basketball has streaksEnabled:false, so no
+  //    StreakFireRow above the button → 50px (REPLAY) / 80px (challenge stack)
+  //    hold button(38)+minHeight(40)+pad. Safe-area inset is lifted out of the
+  //    grid to the inner container (see Row 9 host + inner column below), so the
+  //    50/80 no longer has to reserve the notch internally.
+  const gridStatsRow = multiplierEnabled ? "72px" : "52px";
+  const gridActionRow = streaksEnabled
+    ? (challengeCtaActive ? "104px" : "74px")
+    : (challengeCtaActive ? "80px" : "50px");
+
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
   //   2. Tactical Chad chip lands as the commentary override — challenge-aware
@@ -3018,6 +3035,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         maxWidth: "min(480px, 100%)",
         margin: "0 auto",
         boxSizing: "border-box",
+        // Basketball-only safe-area lift: the notch inset is reserved ONCE here,
+        // outside the bottom-grid sum, so the reclaimed 50/80 action row no longer
+        // carries it internally. Baseball/worldcup keep the inset in-grid (Row 9
+        // host above) → this stays 0 for them → byte-identical.
+        paddingBottom: streaksEnabled ? 0 : "max(env(safe-area-inset-bottom, 0px), 8px)",
       }}>
 
         {/* 1 — Header */}
@@ -3356,12 +3378,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           // 0 0 auto, bottom-anchored). REPLAY-only hands keep 74px → the 274px board-lock
           // total is byte-identical; only challenge hands shift row 1 up ~30px.
           gridTemplateRows: verdictLayout
-            ? `72px 16px 0px 0px 0px 0px 96px 16px ${challengeCtaActive ? "104px" : "74px"}`
+            ? `${gridStatsRow} 16px 0px 0px 0px 0px 96px 16px ${gridActionRow}`
             : gaugeVoice
-              ? `72px 16px 0px 0px 0px 0px 96px 16px ${challengeCtaActive ? "104px" : "74px"}`
+              ? `${gridStatsRow} 16px 0px 0px 0px 0px 96px 16px ${gridActionRow}`
               : gaugeInert
-                ? `72px 16px 0px 0px 0px 0px 96px 16px ${challengeCtaActive ? "104px" : "74px"}`
-                : `72px 4px 14px 8px 0px 4px 96px 2px ${challengeCtaActive ? "104px" : "74px"}`,
+                ? `${gridStatsRow} 16px 0px 0px 0px 0px 96px 16px ${gridActionRow}`
+                : `${gridStatsRow} 4px 14px 8px 0px 4px 96px 2px ${gridActionRow}`,
           gridTemplateColumns: "1fr",
           padding: "0 12px",
           boxSizing: "border-box",
@@ -3678,7 +3700,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 flexDirection: "column",
                 justifyContent: "flex-end",
                 minHeight: 0,
-                paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)",
+                // Basketball lifts the notch inset to the inner container (below),
+                // so the reclaimed 50/80 action row keeps it OUT of the grid sum.
+                // Baseball/worldcup keep the in-grid padding — byte-identical.
+                paddingBottom: streaksEnabled ? "max(env(safe-area-inset-bottom, 0px), 8px)" : 0,
                 boxSizing: "border-box",
                 overflow: "hidden",
               }}

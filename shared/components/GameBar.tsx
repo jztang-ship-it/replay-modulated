@@ -1759,7 +1759,7 @@ export function GameBar({
               (REPLAY + Challenge, icons pushed right via marginLeft:auto); else
               the original centered-REPLAY + absolute-right-icons layout (so
               non-challenge sports/states are pixel-unchanged). */}
-          <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: 44, justifyContent: "center" as const }}>
+          <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: showStreak ? 44 : 40, justifyContent: "center" as const }}>
             {/* Left zone — round indicator (multi-round only) + wallet, side by
                 side in one absolute container so they never overlap. The
                 indicator never renders for single-shot sports, leaving the
