@@ -72,7 +72,11 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-const MAX = parseInt(opt("--max", "80"), 10);
+// Default 50 (was 80) — keeps headroom under the free-tier 100/day quota
+// even when minute-level 429 backoffs trigger one retry per call (which
+// also counts against the daily quota). CLI/workflow can override with
+// --max=80 etc. when you know the day's quota is fresh.
+const MAX = parseInt(opt("--max", "50"), 10);
 const FORCE = argMap.has("--force");
 const DRY_RUN = argMap.has("--dry-run");
 const THRESHOLD = parseInt(opt("--threshold", "8"), 10);
@@ -191,6 +195,26 @@ async function downloadImage(apiFootballId, basePlayerId) {
   }
 }
 
+/**
+ * Thrown when API-Football's daily request quota is exhausted. Caller
+ * (the lookup loop) catches this and bails out cleanly — no further
+ * retries, save partial progress, exit 0 so the workflow still creates
+ * a PR for whatever was resolved before the limit hit.
+ */
+class DailyLimitError extends Error {
+  constructor(detail) {
+    super(`API-Football daily quota reached: ${detail}`);
+    this.name = "DailyLimitError";
+  }
+}
+
+/** Heuristic match against API-Football's daily-limit error strings.
+ *  Matches both "You have reached the request limit for the day" and
+ *  variants like "daily limit" / "request limit reached". */
+function isDailyLimitMessage(text) {
+  return /limit\s+for\s+the\s+day|daily\s+limit|requests?\s+limit\s+reached/i.test(String(text));
+}
+
 async function searchProfiles(query, attempt = 0) {
   // API-Football's search field accepts only alphanumerics + spaces.
   // Strip hyphens, periods, apostrophes, etc. that survived diacritic
@@ -204,9 +228,30 @@ async function searchProfiles(query, attempt = 0) {
       "x-rapidapi-host": "v3.football.api-sports.io",
     },
   });
-  // Free-tier rate limit is ~10 req/minute. Back off and retry once on 429.
+
+  // Try to parse the body even on non-2xx — API-Football returns the
+  // daily-quota message in the JSON body alongside a 429 status.
+  let data = null;
+  try {
+    data = await resp.json();
+  } catch { /* non-JSON body — leave data null */ }
+
+  // Daily-limit detection: terminal. Throw so the caller stops the run.
+  // Handles both response-body signal (the user-reported case) and the
+  // proactive header signal when API-Football populates it.
+  const errMsg = data?.errors ? JSON.stringify(data.errors) : "";
+  if (isDailyLimitMessage(errMsg)) {
+    throw new DailyLimitError(errMsg);
+  }
+  const remainingHdr = resp.headers.get("x-ratelimit-requests-remaining");
+  if (remainingHdr !== null && parseInt(remainingHdr, 10) <= 0) {
+    throw new DailyLimitError(`x-ratelimit-requests-remaining=${remainingHdr}`);
+  }
+
+  // Minute-level 429 (10 req/min limit). Back off and retry once. We do
+  // NOT retry if the daily-limit check above already triggered.
   if (resp.status === 429 && attempt === 0) {
-    console.warn(`  HTTP 429: rate-limited, backing off 65s and retrying once…`);
+    console.warn(`  HTTP 429 (minute-rate): backing off 65s and retrying once…`);
     await new Promise(r => setTimeout(r, 65_000));
     return searchProfiles(query, 1);
   }
@@ -214,12 +259,11 @@ async function searchProfiles(query, attempt = 0) {
     console.warn(`  HTTP ${resp.status}: ${resp.statusText}`);
     return [];
   }
-  const data = await resp.json();
-  if (data.errors && Object.keys(data.errors).length > 0) {
+  if (data?.errors && Object.keys(data.errors).length > 0) {
     console.warn(`  API errors:`, data.errors);
     return [];
   }
-  return Array.isArray(data.response) ? data.response : [];
+  return Array.isArray(data?.response) ? data.response : [];
 }
 
 /** Strip Unicode diacritics so API-Football's alphanumeric-only search
@@ -352,6 +396,8 @@ if (BACKFILL_IMAGES) {
 
 const queriedThisRun = todo.slice(0, MAX);
 let httpCalls = 0;
+let dailyLimitReached = false;
+let playersAttempted = 0;
 
 for (let i = 0; i < queriedThisRun.length; i++) {
   const p = queriedThisRun[i];
@@ -367,19 +413,36 @@ for (let i = 0; i < queriedThisRun.length; i++) {
   }
 
   process.stdout.write(`[${i + 1}/${queriedThisRun.length}] ${ourName} (${ourTeam}) → `);
+  playersAttempted = i + 1;
 
-  // Strategy 1: surname only (normalized for diacritics)
-  let candidates = await searchProfiles(normalize(ourSurname));
-  httpCalls += 1;
+  let candidates;
+  try {
+    // Strategy 1: surname only (normalized for diacritics)
+    candidates = await searchProfiles(normalize(ourSurname));
+    httpCalls += 1;
 
-  // Strategy 2: if no good initial match, retry with first+last (normalized)
-  if (candidates.length === 0 || candidates.every(c => scoreCandidate(c, ourName, ourTeam, ourSurname, ourFirstName) < THRESHOLD)) {
-    const flw = firstAndLastWord(ourName);
-    if (flw && flw !== ourSurname) {
-      const more = await searchProfiles(normalize(flw));
-      httpCalls += 1;
-      candidates = candidates.concat(more);
+    // Strategy 2: if no good initial match, retry with first+last (normalized)
+    if (candidates.length === 0 || candidates.every(c => scoreCandidate(c, ourName, ourTeam, ourSurname, ourFirstName) < THRESHOLD)) {
+      const flw = firstAndLastWord(ourName);
+      if (flw && flw !== ourSurname) {
+        const more = await searchProfiles(normalize(flw));
+        httpCalls += 1;
+        candidates = candidates.concat(more);
+      }
     }
+  } catch (err) {
+    if (err instanceof DailyLimitError) {
+      // Terminal — bail the loop. Partial progress (already in `updated`)
+      // gets written below; workflow opens its rolling PR with whatever
+      // landed before the limit hit.
+      console.log("DAILY LIMIT");
+      dailyLimitReached = true;
+      // This player wasn't resolved before the throw — don't count it as a
+      // confirmed no-match. Leave queriedThisRun[i] for the next run.
+      playersAttempted = i;
+      break;
+    }
+    throw err;
   }
 
   let best = null;
@@ -409,9 +472,18 @@ for (let i = 0; i < queriedThisRun.length; i++) {
   await new Promise(r => setTimeout(r, 7_000));
 }
 
-// ── Write manifest ──────────────────────────────────────────────────────────
+// ── Summary + write manifest ────────────────────────────────────────────────
 
 console.log("\n" + "─".repeat(60));
+if (dailyLimitReached) {
+  console.log("🛑 API-Football daily request limit reached — stopped early.");
+  console.log(`   Players attempted this run: ${playersAttempted} / ${queriedThisRun.length} planned`);
+  console.log(`   New manifest entries: ${found.length}`);
+  console.log(`   No-confident-match this run: ${noMatch.length}`);
+  console.log(`   Players still pending across pool: ${todo.length - found.length - noMatch.length}`);
+  console.log(`   Resumes automatically on the next run (after the API quota resets at 00:00 UTC).`);
+  console.log("─".repeat(60));
+}
 console.log(`HTTP calls this run: ${httpCalls}`);
 console.log(`Matched: ${found.length}`);
 console.log(`No match: ${noMatch.length}`);
