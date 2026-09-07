@@ -1,15 +1,15 @@
 /**
  * api/leaderboard.ts — Vercel serverless function.
  *
- * POST { action: "submit", sport, [competition], metric, value, uid, nickname }
+ * POST { action: "submit", sport, [competition], metric, handId, nickname }
  * GET  ?sport=basketball&metric=streak|wins|fp|hand_best|hand_avg|money_won|session_score
  *      &scope=daily|alltime&limit=20[&competition=...]
  *
  * KV keys:
- *   lb:{sport}:{metric}:daily:{YYYY-MM-DD}                       (basketball, baseball)
- *   lb:{sport}:{metric}:alltime                                  (basketball, baseball)
- *   lb:{sport}:{competition}:{metric}:daily:{YYYY-MM-DD}         (football)
- *   lb:{sport}:{competition}:{metric}:alltime                    (football)
+ *   lb:v2:{sport}:{metric}:daily:{YYYY-MM-DD}                       (basketball, baseball)
+ *   lb:v2:{sport}:{metric}:alltime                                  (basketball, baseball)
+ *   lb:v2:{sport}:{competition}:{metric}:daily:{YYYY-MM-DD}         (football)
+ *   lb:v2:{sport}:{competition}:{metric}:alltime                    (football)
  *
  * Sport scoping is mandatory — basketball and baseball have different scoring rules,
  * so their boards are separate sorted sets. Football adds an extra competition
@@ -22,6 +22,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kv } from "@vercel/kv";
+import { quota, boundedBody } from "./hand/_lib/security.js";
 import { createClient } from "@supabase/supabase-js";
 // Phase 2-mount Host route A′: the daily boss instance id, folded into the GET
 // response for the post-results CTA. Basketball-only, KV-cached, lazy upsert.
@@ -60,7 +61,7 @@ function todayUTC(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-const VALID_METRICS = ["streak", "wins", "fp", "hand_best", "hand_avg", "money_won", "session_score"];
+const VALID_METRICS = ["hand_best"];
 const VALID_SPORTS = ["basketball", "baseball", "football"] as const;
 type Sport = typeof VALID_SPORTS[number];
 
@@ -79,17 +80,18 @@ function validateCompetition(sport: string, competition?: string): string | null
       return `Unsupported competition for ${sport}: ${competition}`;
     }
   }
+  if (competition && !COMPETITION_REQUIRED.has(sport as Sport)) return "Unexpected competition";
   return null;
 }
 
 /** Build the leaderboard key prefix. Sports without competition tracking use
- *  the 2-segment shape (lb:{sport}); football uses the 3-segment shape
- *  (lb:{sport}:{competition}). */
+ *  the 2-segment shape (lb:v2:{sport}); football uses the 3-segment shape
+ *  (lb:v2:{sport}:{competition}). */
 function lbKeyBase(sport: string, competition?: string): string {
   if (competition && COMPETITION_REQUIRED.has(sport as Sport)) {
-    return `lb:${sport}:${competition}`;
+    return `lb:v2:${sport}:${competition}`;
   }
-  return `lb:${sport}`;
+  return `lb:v2:${sport}`;
 }
 
 // Per-sport realistic ceilings for FP-shaped metrics. Above these = data corruption / cheating.
@@ -135,8 +137,8 @@ async function resolveBoss(sport: string): Promise<BossField | null> {
     // Step 2: read the distinct-player participation counter alongside the id
     // (KV-only — written at boss-attempt time in api/challenge/[id]/attempt.ts).
     // Null when nobody has attempted yet; the CTA degrades (count is Upgrade).
-    const countRaw = await kv.get<number>(`boss:basketball:attempts:${date}`);
-    const bossPlayerCount = countRaw == null ? null : Number(countRaw);
+    const { data: counts } = supabaseServer ? await supabaseServer.from("shared_challenges").select("attempt_count").eq("challenge_id", id).maybeSingle() : { data: null };
+    const bossPlayerCount = counts == null ? null : Number(counts.attempt_count);
     return { bossChallengeId: id, bossPlayerCount };
   } catch (err) {
     console.error("[leaderboard] boss resolve failed (non-fatal):", err);
@@ -164,84 +166,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleSubmit(req: VercelRequest, res: VercelResponse) {
-  const { action, sport, metric, value, uid, nickname: rawNickname, proof } = req.body ?? {};
-  const sessionId = ((req.body?.session_id ?? '') as string).toString().slice(0, 32) || null;
-  // Cap nickname server-side. player_profiles.nickname has a 32-char CHECK in
-  // migration 004, but submissions can come from clients that read a stale
-  // localStorage nickname or a hand-crafted curl. Truncate rather than reject
-  // so cosmetic over-runs don't drop legitimate scores.
-  const nickname = typeof rawNickname === "string" ? rawNickname.slice(0, 32) : "Player";
+  try { req.body = boundedBody(req); } catch { return json(res, 400, { error: "Invalid body" }); }
+  const { action, sport, metric } = req.body;
 
-  // Rate limit — burst window: max 20 submissions per 10 seconds per uid
-  // (keeps existing tap-spam protection across all metrics).
-  if (uid) {
-    try {
-      const rlKey = `rl:lb:${uid}`;
-      const count = await kv.incr(rlKey);
-      if (count === 1) await kv.expire(rlKey, 10);
-      if (count > 20) {
-        return json(res, 429, { error: "Too many submissions. Try again shortly." });
-      }
-    } catch { /* don't block on rate limit failure */ }
+  const authHeader = req.headers.authorization as string | undefined;
+  const tokenResult = await verifyToken(authHeader);
+  if (!tokenResult.verified || !tokenResult.uid) {
+    return json(res, 401, { error: "Authorization required" });
   }
+  const trustedUid = tokenResult.uid;
 
+  if (!await quota(`lb:${trustedUid}`, 20, 10)) return json(res,429,{error:"Too many submissions"});
   if (action !== "submit") return json(res, 400, { error: "Invalid action" });
   if (!VALID_SPORTS.includes(sport)) return json(res, 400, { error: "Invalid sport" });
-  if (!VALID_METRICS.includes(metric)) return json(res, 400, { error: "Invalid metric" });
-  if (typeof value !== "number" || value <= 0) return json(res, 400, { error: "Invalid value" });
+  if (!VALID_METRICS.includes(metric)) return json(res, 403, { error: "Metric is server-only" });
   const competition = (req.body?.competition ?? undefined) as string | undefined;
   const compErr = validateCompetition(sport, competition);
   if (compErr) return json(res, 400, { error: compErr });
 
-  // Tighter per-hand rate limit — at most 1 hand_best submission per 5s per
-  // uid. Real hands take 15-30s end-to-end; anything faster is fake.
-  if (metric === "hand_best" && uid) {
-    try {
-      const rlKey = `rl:lb:hb:${uid}`;
-      const count = await kv.incr(rlKey);
-      if (count === 1) await kv.expire(rlKey, 5);
-      if (count > 1) {
-        return json(res, 429, { error: "Slow down — at most one hand_best per 5s." });
-      }
-    } catch { /* don't block on rate limit failure */ }
-  }
-  // Sport-specific FP ceiling — basketball and baseball have very different realistic maxes.
-  const fpCeiling = FP_CEILING_BY_SPORT[sport as Sport];
-  if ((metric === "fp" || metric === "hand_best" || metric === "hand_avg") && value > fpCeiling) {
-    return json(res, 400, { error: "Invalid score" });
-  }
-  if (metric === "session_score" && value > fpCeiling * 50) {
-    return json(res, 400, { error: "Invalid score" });
-  }
-  if (metric === "streak" && value > 100) {
-    return json(res, 400, { error: "Invalid score" });
-  }
-  if (metric === "money_won" && value > 1000000) {
-    return json(res, 400, { error: "Invalid score" });
-  }
-  // hand_best requires a proof payload (roster IDs + checksum).
-  // Missing proof is allowed for backward compat but logged.
-  if (metric === "hand_best" && proof) {
-    if (!proof.checksum || typeof proof.checksum !== "string" || proof.checksum.length < 5) {
-      return json(res, 400, { error: "Invalid proof" });
-    }
-  }
-  if (metric === "hand_avg") {
-    const { handCount } = req.body ?? {};
-    if (typeof handCount !== "number" || handCount < 8) {
-      return json(res, 400, { error: "hand_avg requires handCount >= 8" });
-    }
-  }
-  if (!uid || typeof uid !== "string") return json(res, 400, { error: "Missing uid" });
-
-  const authHeader = req.headers.authorization as string | undefined;
-  const tokenResult = await verifyToken(authHeader);
-
-  if (tokenResult.verified && tokenResult.uid !== uid) {
-    return json(res, 403, { error: "UID mismatch" });
-  }
-
-  const member = `${uid}:${nickname}:${sessionId ?? ''}`;
   const today = todayUTC();
   const base = lbKeyBase(sport, competition);
   const dailyKey = `${base}:${metric}:daily:${today}`;
@@ -253,57 +195,30 @@ async function handleSubmit(req: VercelRequest, res: VercelResponse) {
     if (!handIdRaw || typeof handIdRaw !== "string" || handIdRaw.length > 64) {
       return json(res, 400, { error: "Invalid handId" });
     }
-    // Defense-in-depth: confirm a hand_log row exists for (uid, handId).
-    // Skip when uid is a local-fallback id (prefix "u_" — see logHandToDb in
-    // _useSharedGameState.ts:303 — those clients can't write to Supabase) or
-    // when supabaseServer isn't configured. Retry once with a 400ms delay to
-    // ride out commit lag between the client's hand_log insert and this
-    // Vercel function's read.
-    const isSupabaseUid = !uid.startsWith("u_");
-    if (supabaseServer && isSupabaseUid) {
-      let found = false;
-      for (let attempt = 0; attempt < 2 && !found; attempt++) {
-        if (attempt > 0) await new Promise(r => setTimeout(r, 400));
-        const { data } = await supabaseServer
-          .from("hand_log")
-          .select("id")
-          .eq("hand_id", handIdRaw)
-          .eq("player_id", uid)
-          .maybeSingle();
-        if (data) found = true;
-      }
-      if (!found) {
-        return json(res, 400, { error: "Hand not found in audit log" });
-      }
+    // Only a server-verified hand may enter the board.
+    if (!supabaseServer) return json(res, 503, { error: "Server authority unavailable" });
+    const { data: hand, error: handErr } = await supabaseServer
+      .from("hand_log")
+      .select("hand_id, player_id, total_fp, verified, sport, competition, created_at")
+      .eq("hand_id", handIdRaw)
+      .eq("player_id", trustedUid)
+      .eq("verified", true)
+      .eq("authority_version", 2)
+      .maybeSingle();
+    const serverValue = Number(hand?.total_fp);
+    if (handErr || !hand || hand.sport !== sport || !Number.isFinite(serverValue)
+        || (hand.competition ?? null) !== (competition ?? null) || !Number.isFinite(Date.parse(hand.created_at))) {
+      return json(res, 400, { error: "Hand is not a matching verified result" });
     }
-    const handMember = `${uid}:${nickname}:${handIdRaw}`;
-    await kv.zadd(dailyKey, { score: value, member: handMember });
-    await kv.zadd(alltimeKey, { score: value, member: handMember });
-    try { await kv.expire(dailyKey, TTL_48H); } catch {}
-    return json(res, 200, { ok: true });
-  }
+    const handMember = `${trustedUid}:${handIdRaw}`;
+    // Never replay a historical result into today's ranking.
+    if (new Date(hand.created_at).toISOString().slice(0,10) === today) {
+      await kv.zadd(dailyKey, { score: serverValue, member: handMember });
+      await kv.expire(dailyKey, TTL_48H);
+    }
+    await kv.zadd(alltimeKey, { score: serverValue, member: handMember });
 
-  if (metric === "wins" || metric === "money_won" || metric === "session_score") {
-    // Additive metrics — increment
-    try {
-      await kv.zincrby(dailyKey, value, member);
-      await kv.zincrby(alltimeKey, value, member);
-    } catch {
-      const currentDaily = (await kv.zscore(dailyKey, member)) ?? 0;
-      await kv.zadd(dailyKey, { score: Number(currentDaily) + value, member });
-      const currentAll = (await kv.zscore(alltimeKey, member)) ?? 0;
-      await kv.zadd(alltimeKey, { score: Number(currentAll) + value, member });
-    }
-  } else {
-    // streak, fp, hand_avg — only update if personal best
-    const currentAll = (await kv.zscore(alltimeKey, member)) ?? 0;
-    if (value > Number(currentAll)) {
-      await kv.zadd(alltimeKey, { score: value, member });
-    }
-    const currentDaily = (await kv.zscore(dailyKey, member)) ?? 0;
-    if (value > Number(currentDaily)) {
-      await kv.zadd(dailyKey, { score: value, member });
-    }
+    return json(res, 200, { ok: true });
   }
 
   // Set TTL on daily keys
@@ -347,6 +262,7 @@ async function handleBossBoard(
     .from("challenge_attempts")
     .select("user_id, anon_uid, user_name, score")
     .eq(scopeCol, scopeVal)
+    .eq("authority_version", 2)
     .order("score", { ascending: false })
     .limit(500);
   if (error || !data) return json(res, 200, { entries: [], bossChallengeId });
@@ -368,7 +284,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
   const sport = String(req.query.sport ?? "");
   const metric = String(req.query.metric ?? "streak");
   const scope = String(req.query.scope ?? "daily");
-  const limit = Math.min(50, Math.max(1, Number(req.query.limit ?? 20)));
+  const limit = Math.min(50, Math.max(1, (Number(req.query.limit ?? 20) || 20)));
   const competition = req.query.competition ? String(req.query.competition) : undefined;
 
   if (!VALID_SPORTS.includes(sport as Sport)) return json(res, 400, { error: "Invalid sport" });
@@ -399,19 +315,8 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
   const entries: { uid: string; nickname: string; score: number; session_id: string | null }[] = [];
 
   function parseMember(raw: string): { uid: string; nickname: string; session_id: string | null } {
-    // Format: uid:nickname:sessionId (new) or uid:nickname (legacy)
-    const firstColon = raw.indexOf(":");
-    const uid = raw.slice(0, firstColon);
-    const rest = raw.slice(firstColon + 1);
-    const lastColon = rest.lastIndexOf(":");
-    // If rest contains another colon it's the new format
-    if (lastColon > 0 && lastColon < rest.length - 1) {
-      const nickname = rest.slice(0, lastColon);
-      const session_id = rest.slice(lastColon + 1) || null;
-      return { uid, nickname, session_id };
-    }
-    // Legacy format — no session_id
-    return { uid, nickname: rest, session_id: null };
+    const [uid, session_id] = raw.split(":");
+    return { uid, nickname: "Player", session_id: session_id ?? null };
   }
 
   if (raw.length > 0 && typeof raw[0] === "object" && "member" in raw[0]) {
@@ -428,6 +333,12 @@ async function handleGet(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // Names are display metadata, never sorted-set identity.
+  if (entries.length && supabaseServer) {
+    const { data: profiles } = await supabaseServer.from("player_profiles").select("id,nickname").in("id", [...new Set(entries.map(e=>e.uid))]);
+    const names = new Map((profiles ?? []).map(p=>[p.id,p.nickname]));
+    for (const entry of entries) entry.nickname = String(names.get(entry.uid) ?? "Player").slice(0,32);
+  }
   // Host route A′: fold the boss instance id + participation count in
   // (basketball-only, KV-cached). Additive sibling fields — all six GET
   // consumers read only .entries/metric/scope, and non-basketball sports get
