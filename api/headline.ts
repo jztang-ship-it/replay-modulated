@@ -17,10 +17,8 @@
 // fall back to today's chadShareTrashTalk bank pick. Create is NEVER
 // blocked on the headline (lock §"Fallback").
 //
-// Auth: NONE in v1. The OAuth-resume side-channel needs to call this
-// before the user has a session. Rate-limiting (per-IP via Upstash KV;
-// the router's KV namespace is already wired) is the separate fast-
-// follow that closes the abuse window — NOT part of this commit.
+// Auth: verified Supabase session, bounded input, fail-closed per-user/IP/global quotas.
+// Unauthenticated clients retain their local non-AI copy fallback.
 //
 // IMPORTANT — bundle hygiene: this file imports VOICE_CONTRACT but NOT
 // the full commentaryFacts builder. The types live in a pure-types
@@ -31,6 +29,8 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { waitUntil } from "@vercel/functions";
+import { verifyAuth } from "./hand/_lib/auth.js";
+import { quota, ipKey, boundedBody } from "./hand/_lib/security.js";
 import type {
   CommentaryFacts,
   CommentaryWinTier,
@@ -486,6 +486,19 @@ function isValidFactsBody(body: any): body is { facts: CommentaryFacts } {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
+  res.setHeader("Cache-Control", "no-store");
+  try { req.body = boundedBody(req); } catch { return res.status(413).json({ error: "Invalid or oversized request" }); }
+  try {
+    const { user } = await verifyAuth(req);
+    if (!user) return res.status(401).json({ error: "Authentication required" });
+    const configured = Number(process.env.AI_DAILY_REQUEST_LIMIT ?? 1000);
+    const cap = Number.isSafeInteger(configured) && configured >= 0 ? Math.min(configured, 10000) : 1000;
+    if (!await quota(`ai:user:${user.id}`, 20, 86400)
+      || !await quota(`ai:ip:${ipKey(req)}`, 60, 86400)
+      || !await quota("ai:global", cap, 86400)) {
+      return res.status(429).json({ error: "Generation quota exceeded" });
+    }
+  } catch { return res.status(503).json({ error: "Generation temporarily unavailable" }); }
 
   // RD7.12 — Flavor sub-route, discriminated by body.kind. Folded into this
   // function (not a separate /api/flavor) because Hobby caps at 12 functions
