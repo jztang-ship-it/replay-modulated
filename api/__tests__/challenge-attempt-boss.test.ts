@@ -19,6 +19,7 @@ const { mockState, notificationInsertSpy, attemptInsertSpy, challengeUpdateSpy }
     priorAttempts: { data: [], error: null },
     insertedAttempt: null,
     updatedCounters: null,
+    hand: null,
     sharedChallengesSingleCallCount: 0,
   };
   return {
@@ -58,6 +59,14 @@ vi.mock("../hand/_lib/supabaseServer.js", () => {
     return b;
   };
 
+  const handLogBuilder = () => {
+    const b: any = {};
+    b.select = vi.fn(() => b);
+    b.eq = vi.fn(() => b);
+    b.maybeSingle = vi.fn(() => Promise.resolve(mockState.hand));
+    return b;
+  };
+
   const userNotificationsBuilder = () => {
     const b: any = {};
     b.insert = vi.fn((arg: any) => {
@@ -72,11 +81,13 @@ vi.mock("../hand/_lib/supabaseServer.js", () => {
       from: vi.fn((table: string) => {
         if (table === "shared_challenges") return sharedChallengesBuilder();
         if (table === "challenge_attempts") return challengeAttemptsBuilder();
+        if (table === "hand_log") return handLogBuilder();
         if (table === "user_notifications") return userNotificationsBuilder();
         return {};
       }),
       rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
     },
+    supabaseAuth: { auth: { getUser: vi.fn(async () => ({ data: { user: { id: ATTEMPTER } }, error: null })) } },
   };
 });
 
@@ -86,7 +97,7 @@ const VALID_ID = "00000000-0000-4000-8000-0000000000bb";
 const ATTEMPTER = "22222222-2222-4222-8222-222222222222";
 
 function makeReq(body: any): any {
-  return { method: "POST", query: { id: VALID_ID }, body, headers: {} };
+  return { method: "POST", query: { id: VALID_ID }, body, headers: { authorization: "Bearer test-token" } };
 }
 function makeRes() {
   const res: any = {};
@@ -105,6 +116,9 @@ beforeEach(() => {
       challenge_id: VALID_ID,
       created_by: null,
       sender_kind: "boss",
+      sport: "basketball",
+      season: "2425",
+      instance_key: "2026-09-07|0|BOS-2324",
       target_fp: 142.5,
       attempt_count: 0,
       winner_count: 0,
@@ -114,6 +128,7 @@ beforeEach(() => {
     error: null,
   };
   mockState.priorAttempts = { data: [], error: null };
+  mockState.hand = { data: { hand_id: "44444444-4444-4444-8444-444444444444", player_id: ATTEMPTER, sport: "basketball", season: "2425", total_fp: 150, final_roster: [{ id: "server-card", actualFp: 150 }], verified: true }, error: null };
   mockState.insertedAttempt = {
     data: { attempt_id: "att-boss-1", created_at: new Date().toISOString() },
     error: null,
@@ -130,9 +145,10 @@ describe("POST /api/challenge/:id/attempt — boss safety (Commit 4)", () => {
     const res = makeRes();
     await handler(
       makeReq({
-        score: 150,
-        is_winner: true,
-        user_id: ATTEMPTER,
+        hand_id: "44444444-4444-4444-8444-444444444444",
+        score: 1,
+        is_winner: false,
+        user_id: "forged-user",
         user_name: "Alice",
         score_breakdown: [{ id: "p1" }],
       }),
@@ -166,12 +182,16 @@ describe("POST /api/challenge/:id/attempt — boss safety (Commit 4)", () => {
   });
 
   it("a losing boss attempt also writes + counts but never notifies (no owner to defend)", async () => {
+    mockState.hand.data.total_fp = 100;
+    mockState.hand.data.final_roster = [{ id: "server-card", actualFp: 100 }];
+    mockState.updatedCounters.data = { attempt_count: 1, winner_count: 0, best_score: 100, best_user_name: "Bob" };
     const res = makeRes();
     await handler(
       makeReq({
-        score: 100,
+        hand_id: "44444444-4444-4444-8444-444444444444",
+        score: 1,
         is_winner: false,
-        user_id: ATTEMPTER,
+        user_id: "forged-user",
         user_name: "Bob",
       }),
       res,
@@ -179,6 +199,11 @@ describe("POST /api/challenge/:id/attempt — boss safety (Commit 4)", () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(attemptInsertSpy).toHaveBeenCalledTimes(1);
+    expect(attemptInsertSpy.mock.calls[0][0]).toMatchObject({
+      hand_id: "44444444-4444-4444-8444-444444444444",
+      score: 100,
+      is_winner: false,
+    });
     expect(notificationInsertSpy).not.toHaveBeenCalled();
   });
 });
