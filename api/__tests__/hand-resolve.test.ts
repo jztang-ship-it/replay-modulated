@@ -1,190 +1,32 @@
-﻿/**
- * Contract tests for the server-owned hand resolution boundary.
- * The browser may provide a bounded roster selection, but authoritative
- * score, tier, payout, win flags, seed/protection flags, and achievements
- * are derived or controlled by the API.
- */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-const { state, authGetUser, rpc, kvGet, kvSet, awardAchievements } = vi.hoisted(() => ({
-  state: {
-    rpcResult: { data: { hand_id: "hand-1" }, error: null } as any,
-    existing: null as any,
-    updatePayloads: [] as any[],
-  },
-  authGetUser: vi.fn(),
-  rpc: vi.fn(),
-  kvGet: vi.fn(),
-  kvSet: vi.fn(),
-  awardAchievements: vi.fn(),
-}));
-
-vi.mock("../hand/_lib/auth.js", () => ({
-  verifyAuth: (req: any) => authGetUser(req),
-}));
-
-vi.mock("../hand/_lib/achievements.js", () => ({
-  awardVerifiedAchievements: awardAchievements,
-}));
-
-vi.mock("@vercel/kv", () => ({
-  kv: {
-    get: kvGet,
-    set: kvSet,
-  },
-}));
-
-vi.mock("../hand/_lib/supabaseServer.js", () => {
-  const builder = (table: string) => {
-    const b: any = {};
-    b.select = vi.fn(() => b);
-    b.update = vi.fn((payload: any) => {
-      state.updatePayloads.push({ table, payload });
-      return b;
-    });
-    b.eq = vi.fn(() => b);
-    b.maybeSingle = vi.fn(() => Promise.resolve(state.existing));
-    b.then = (resolve: any, reject: any) => Promise.resolve({ data: null, error: null }).then(resolve, reject);
-    return b;
-  };
-
-  return {
-    supabaseAdmin: {
-      rpc,
-      from: vi.fn((table: string) => builder(table)),
-    },
-  };
-});
-
-import handler from "../hand/resolve.ts";
-
-const USER_ID = "11111111-1111-4111-8111-111111111111";
-const HAND_ID = "22222222-2222-4222-8222-222222222222";
-
-function makeReq(body: any, token = "test-token"): any {
-  return {
-    method: "POST",
-    body,
-    headers: { authorization: `Bearer ${token}` },
-  };
-}
-
-function makeRes() {
-  const res: any = {};
-  res.setHeader = vi.fn().mockReturnValue(res);
-  res.status = vi.fn().mockReturnValue(res);
-  res.json = vi.fn().mockReturnValue(res);
-  return res;
-}
-
-function validBody(overrides: Record<string, unknown> = {}) {
-  return {
-    hand_id: HAND_ID,
-    sport: "basketball",
-    season: "2425",
-    bet_amount: 100,
-    tier: "LEGEND",
-    payout: 999999,
-    is_win: false,
-    achievements: ["forged_badge"],
-    final_roster: [
-      {
-        basePlayerId: "player-a",
-        actualFp: 100,
-        projectedFp: 1,
-        fpDelta: 9999,
-        name: "A",
-        team: "T",
-        stats: { points: 999999, forged: true },
-      },
-      {
-        basePlayerId: "player-b",
-        actualFp: 80,
-        projectedFp: 2,
-        name: "B",
-      },
-    ],
-    ...overrides,
-  };
-}
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  state.rpcResult = { data: { hand_id: HAND_ID }, error: null };
-  state.existing = null;
-  state.updatePayloads = [];
-  authGetUser.mockResolvedValue({ user: { id: USER_ID }, error: null });
-  rpc.mockResolvedValue(state.rpcResult);
-  kvGet.mockResolvedValue(null);
-  kvSet.mockResolvedValue("OK");
-  awardAchievements.mockResolvedValue(["server_badge"]);
-});
-
-describe("POST /api/hand/resolve", () => {
-  it("requires a valid authenticated session", async () => {
-    authGetUser.mockResolvedValueOnce({ user: null, error: { message: "invalid" } });
-    const res = makeRes();
-    await handler(makeReq(validBody()), res);
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(rpc).not.toHaveBeenCalled();
-  });
-
-  it("recomputes tier, payout, win and fpDelta, ignoring forged client authority fields", async () => {
-    const res = makeRes();
-    await handler(makeReq(validBody()), res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(rpc).toHaveBeenCalledTimes(1);
-    const args = rpc.mock.calls[0][1];
-    expect(args).toMatchObject({
-      p_user_id: USER_ID,
-      p_hand_id: HAND_ID,
-      p_bet_amount: 100,
-      p_total_fp: 180,
-      p_tier: "STARTER",
-      p_base_payout: 150,
-      p_is_win: true,
-      p_roster_ids: ["player-a", "player-b"],
-      p_scores: { "player-a": 100, "player-b": 80 },
-      p_seed: "",
-      p_is_ftue: false,
-      p_is_protected: false,
-    });
-    expect(args.p_final_roster).toHaveLength(2);
-    expect(args.p_final_roster[0]).toMatchObject({ actualFp: 100, projectedFp: 1, fpDelta: 99, achievements: [] });
-    expect(args.p_final_roster[0]).not.toHaveProperty("forged");
-    expect(awardAchievements).toHaveBeenCalledWith(USER_ID, HAND_ID, "basketball", "2425");
-    expect(kvSet).toHaveBeenCalledWith("bonus_pool:basketball", 1005);
-  });
-
-  it("rejects unsupported bet amounts and duplicate roster players before RPC", async () => {
-    const badBet = makeRes();
-    await handler(makeReq(validBody({ bet_amount: 25 })), badBet);
-    expect(badBet.status).toHaveBeenCalledWith(400);
-    expect(rpc).not.toHaveBeenCalled();
-
-    const duplicate = makeRes();
-    await handler(makeReq(validBody({
-      final_roster: [
-        { basePlayerId: "same", actualFp: 100 },
-        { basePlayerId: "same", actualFp: 80 },
-      ],
-    })), duplicate);
-    expect(duplicate.status).toHaveBeenCalledWith(400);
-    expect(rpc).not.toHaveBeenCalled();
-  });
-
-  it("does not add rake again when the RPC reports an idempotent duplicate", async () => {
-    state.rpcResult = { data: null, error: { message: "duplicate key value violates unique constraint" } };
-    rpc.mockResolvedValue(state.rpcResult);
-    state.existing = { hand_id: HAND_ID, total_fp: 180, tier: "STARTER", payout: 150, streak_at_play: 1 };
-
-    const res = makeRes();
-    await handler(makeReq(validBody()), res);
-
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json.mock.calls[0][0]).toMatchObject({ ok: true, idempotent: true });
-    expect(kvSet).not.toHaveBeenCalled();
-    expect(awardAchievements).toHaveBeenCalledTimes(1);
-  });
+import { describe,it,expect,vi,beforeEach } from 'vitest';
+const m=vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn(),rpc:vi.fn(),award:vi.fn(),deal:vi.fn(),draw:vi.fn(),resolve:vi.fn(),outcome:vi.fn(),row:null as any,filters:[] as any[]}));
+vi.mock('../hand/_lib/auth.js',()=>({verifyAuth:m.auth}));
+vi.mock('../hand/_lib/achievements.js',()=>({awardVerifiedAchievements:m.award}));
+vi.mock('../hand/_lib/security.js',async()=>{const real:any=await vi.importActual('../hand/_lib/security.js');return {...real,quota:m.quota};});
+vi.mock('../hand/_lib/catalog.js',()=>({SPORTS:['basketball','baseball','football'],deal:m.deal,draw:m.draw,resolve:m.resolve,outcome:m.outcome}));
+vi.mock('../hand/_lib/supabaseServer.js',()=>({supabaseAdmin:{rpc:m.rpc,from:()=>{const b:any={select:()=>b,eq:(...args:any[])=>{m.filters.push(args);return b},maybeSingle:async()=>({data:m.row,error:null}),single:async()=>({data:m.row,error:null})};return b;}}}));
+import handler from '../hand/resolve';
+const uid='11111111-1111-4111-8111-111111111111',id='22222222-2222-4222-8222-222222222222';
+const cards=Array.from({length:5},(_,i)=>({basePlayerId:String(i),actualFp:10,wasHeld:false}));
+const session=()=>({hand_id:id,player_id:uid,revision:0,sport:'basketball',season:'2425',competition:null,challenge_id:null,bet_amount:0,created_at:new Date().toISOString(),expires_at:new Date(Date.now()+60000).toISOString(),settled:false,state:{roster:cards,draws:0,resolved:false}});
+async function call(body:any,method='POST'){const r:any={setHeader:vi.fn(),status:vi.fn().mockReturnThis(),json:vi.fn().mockReturnThis()};await handler({method,body,headers:{},socket:{remoteAddress:'test'}} as any,r);return {status:r.status.mock.calls.at(-1)?.[0],data:r.json.mock.calls.at(-1)?.[0]};}
+beforeEach(()=>{vi.clearAllMocks();m.row=null;m.filters=[];m.auth.mockResolvedValue({user:{id:uid},error:null});m.quota.mockResolvedValue(true);m.award.mockResolvedValue([]);m.deal.mockReturnValue(cards);m.draw.mockReturnValue(cards);m.resolve.mockReturnValue(cards);m.outcome.mockReturnValue({tier:'STARTER',multiplier:1.5});m.rpc.mockImplementation(async(_n,p)=>({data:{...session(),revision:1,settled:!!p.p_settle,state:p.p_state??session().state},error:null}));});
+describe('authoritative hand boundary',()=>{
+ it('cannot unlock a previously committed held card',async()=>{m.row=session();m.row.state={...m.row.state,draws:1,roster:cards.map((c,i)=>({...c,wasHeld:i===0}))};expect((await call({action:'draw',hand_id:id,revision:0,held_slots:[]})).status).toBe(409);expect(m.draw).not.toHaveBeenCalled();expect(m.rpc).not.toHaveBeenCalled();});
+ it('rejects anonymous before any game write',async()=>{m.auth.mockResolvedValue({user:null,error:{status:401}});expect((await call({action:'start'})).status).toBe(401);expect(m.rpc).not.toHaveBeenCalled();});
+ it('rejects the old forged-score contract',async()=>{expect((await call({hand_id:id,sport:'basketball',actualFp:999999,roster:cards})).status).toBe(400);expect(m.rpc).not.toHaveBeenCalled();});
+ it('fails closed when quota storage fails',async()=>{m.quota.mockRejectedValue(new Error('offline'));expect((await call({action:'start'})).status).toBe(503);expect(m.deal).not.toHaveBeenCalled();});
+ it('requires valid context and uses server dealt cards and free basketball stake',async()=>{const r=await call({action:'start',request_id:id,sport:'basketball',season:'2425',bet_amount:99999,roster:[{actualFp:99999}]});expect(r.status).toBe(200);expect(m.rpc.mock.calls[0][1]).toMatchObject({p_user:uid,p_bet:0,p_state:{roster:cards}});});
+ it.each(['../secret','2022/x','20222'])('rejects season %s',async season=>{expect((await call({action:'start',request_id:id,sport:'basketball',season})).status).toBe(400);});
+ it('requires a legal paid stake',async()=>{expect((await call({action:'start',request_id:id,sport:'football',season:'2022',competition:'world_cup',bet_amount:0})).status).toBe(400);});
+ it('does not redeal or debit the same start request',async()=>{m.row=session();expect((await call({action:'start',request_id:id,sport:'basketball',season:'2425'})).status).toBe(200);expect(m.deal).not.toHaveBeenCalled();expect(m.rpc).not.toHaveBeenCalled();});
+ it('never updates metadata on a duplicate settled hand',async()=>{m.row={...session(),settled:true,state:{roster:cards,hand:{tier:'STARTER'}}};expect((await call({action:'lock',hand_id:id,revision:100,held_slots:[],sport:'football',season:'2022',actualFp:900})).status).toBe(200);expect(m.rpc).not.toHaveBeenCalled();expect(m.award).toHaveBeenCalledWith(uid,id,'basketball','2425');});
+ it('looks up sessions under the authenticated owner',async()=>{expect((await call({action:'status',hand_id:id})).status).toBe(404);expect(m.filters).toContainEqual(['player_id',uid]);});
+ it.each([[0,0],[5],[-1],[1.5]])('rejects invalid held indices %j',async(...held)=>{m.row=session();expect((await call({action:'draw',hand_id:id,revision:0,held_slots:held})).status).toBe(400);expect(m.draw).not.toHaveBeenCalled();});
+ it('ignores client scores and cards on lock',async()=>{m.row=session();expect((await call({action:'lock',hand_id:id,revision:0,held_slots:[0],actualFp:9000,tier:'LEGEND',payout:9999,roster:[{}]})).status).toBe(200);const p=m.rpc.mock.calls[0][1];expect(p.p_tier).toBe('STARTER');expect(p.p_state.roster).toEqual(cards);expect(p.p_multiplier).toBe(1.5);});
+ it('rejects stale revision without drawing',async()=>{m.row=session();expect((await call({action:'draw',hand_id:id,revision:2})).status).toBe(409);expect(m.draw).not.toHaveBeenCalled();});
+ it('rejects expired hand',async()=>{m.row={...session(),expires_at:'2020-01-01'};expect((await call({action:'lock',hand_id:id,revision:0})).status).toBe(409);});
+ it('enforces two basketball redraws',async()=>{m.row=session();m.row.state.draws=2;expect((await call({action:'draw',hand_id:id,revision:0})).status).toBe(409);expect(m.draw).not.toHaveBeenCalled();});
+ it('does not resolve an already revealed roster again at lock',async()=>{m.row=session();m.row.state.resolved=true;await call({action:'lock',hand_id:id,revision:0,held_slots:[]});expect(m.resolve).not.toHaveBeenCalled();});
+ it('propagates a CAS conflict without speculative rewards',async()=>{m.row=session();m.rpc.mockResolvedValue({data:null,error:{message:'stale'}});expect((await call({action:'lock',hand_id:id,revision:0})).status).toBe(409);expect(m.award).not.toHaveBeenCalled();});
 });
