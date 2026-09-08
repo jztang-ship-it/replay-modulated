@@ -40,12 +40,10 @@ export type ComparisonState = ChallengeAttemptState;
 
 interface Props {
   challengeCtx: ChallengeCtx;
+  /** Current recipient hand_log ID, generated before reveal and verified by the server. */
+  handId?: string | null;
   myScore: number;
-  /** Recipient's resolved roster (post-RESOLVE). Phase 5b commit 2
-   *  (2026-05-28): threaded through to useChallengeAttempt so the
-   *  legacy comparison-sheet path also populates
-   *  challenge_attempts.score_breakdown + user_notifications.payload.
-   *  attempter_roster, parity with the H2HRecipientReveal path. */
+  /** Recipient's resolved roster used for local rendering only. */
   myRoster: GeneratedCard[];
   myWinTier: string;
   sport: string;
@@ -77,7 +75,7 @@ interface Props {
 }
 
 export function ChallengeComparisonScreen({
-  challengeCtx, myScore, myRoster, myWinTier, sport,
+  challengeCtx, handId, myScore, myRoster, myWinTier, sport,
   collapsed = false,
   // onPlayAgain retired with the Step-2 boss-fork removal (kept optional on
   // Props so GameView's call site stays valid; no longer consumed here).
@@ -99,11 +97,11 @@ export function ChallengeComparisonScreen({
     localIsPractice,
   } = useChallengeAttempt({
     challengeId: challengeCtx.challengeId,
+    handId,
     myScore,
     targetScore: challengeCtx.targetScore,
     sport,
     enabled: true,
-    resolvedRoster: myRoster,
   });
   const resolvedRef = useRef(false);
 
