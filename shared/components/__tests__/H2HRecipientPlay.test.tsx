@@ -27,7 +27,7 @@
  */
 
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
-import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
+import { render as rtlRender, screen, fireEvent, act, waitFor } from "@testing-library/react";
 
 // FIX 1 — mock dataEngine so ensureLoaded resolves immediately. The
 // real dataEngine fetches JSON files which isn't possible under JSDOM.
@@ -48,6 +48,39 @@ vi.mock("@shared/engines/dataEngine", async () => {
     ensureLoaded: vi.fn(() => Promise.resolve()),
   };
 });
+
+// Transport-boundary fixture: callbacks below synthesize SERVER responses only.
+// Production receives separate forbidden client callbacks so these layout tests
+// also fail if gameplay silently falls back to a browser engine.
+const serverFixture = vi.hoisted(()=>({props:null as any,ctx:null as any,start:vi.fn(),turn:vi.fn()}));
+vi.mock("../../utils/authoritativeHand",()=>({AuthoritativeHand:class {
+ snapshot:any=null;
+ async start(context:any){
+  serverFixture.start(context);
+  this.snapshot={hand_id:"server-hand",revision:0,settled:false,hand:null,...context,
+   roster:serverFixture.ctx.initialRoster.map((c:any)=>({...c,wasHeld:false}))};
+  return this.snapshot;
+ }
+ async turn(action:string,held:number[]){
+  serverFixture.turn(action,held);
+  const cards=this.snapshot.roster;
+  const result=action==="draw"
+   ? await serverFixture.props.redrawRoster({currentCards:cards,lockedCardIds:new Set(held.map(i=>cards[i].cardId)),sport:this.snapshot.sport})
+   : await serverFixture.props.resolveRoster({finalCards:cards,sport:this.snapshot.sport});
+  if(!result || !Array.isArray(result.roster) || result.roster.length!==5)throw new Error("Invalid server response");
+  this.snapshot={...this.snapshot,roster:result.roster,revision:this.snapshot.revision+1,settled:action==="lock",
+   hand:action==="lock"?{tier:serverFixture.props.calculateWinTier(result.roster.reduce((sum:number,c:any)=>sum+c.actualFp,0))}:null};
+  return this.snapshot;
+ }
+}}));
+async function render(element:any){
+ serverFixture.props=element.props;serverFixture.ctx=element.props.challengeCtx;
+ const forbidden=()=>{throw new Error("Browser gameplay engine must never run");};
+ const secure=(el:any)=>({...el,props:{...el.props,redrawRoster:forbidden,resolveRoster:forbidden,calculateWinTier:forbidden}});
+ let result!:ReturnType<typeof rtlRender>;
+ await act(async()=>{result=rtlRender(secure(element));});
+ return {...result,rerender:async(el:any)=>{serverFixture.props=el.props;serverFixture.ctx=el.props.challengeCtx;await act(async()=>result.rerender(secure(el)));}};
+}
 
 import {
   H2HRecipientPlay,
@@ -197,9 +230,9 @@ function baseProps(overrides: Partial<React.ComponentProps<typeof H2HRecipientPl
 // render returns, data-playing-state === "deal_in" with cardsLanded=0.
 
 describe("H2HRecipientPlay — initial render lands in deal_in", () => {
-  it("mounts the playing surface with challengeCtx present, in deal_in", () => {
+  it("mounts the playing surface with challengeCtx present, in deal_in", async () => {
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     const root = container.querySelector("[data-h2h-recipient-play]");
@@ -207,7 +240,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(root?.getAttribute("data-playing-state")).toBe("deal_in");
   });
 
-  it("opponent strip is VISIBLE in deal_in (Option A locked layout — slot b shown from first screen)", () => {
+  it("opponent strip is VISIBLE in deal_in (Option A locked layout — slot b shown from first screen)", async () => {
     // 2026-06-24 Option A (BEHAVIORAL CHANGE, glass item): the opponent
     // mini-row (slot b) is now un-collapsed from deal_in/hold_select, not
     // deferred to Layout B. This REVERSES the prior "Mike's box isn't empty
@@ -216,7 +249,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     // wrapper is expanded (height = MINI_CELL_HEIGHT_PX = HAND_STRIP_HEIGHT_PX,
     // opacity 1) and the collapsed/aria-hidden flags are absent.
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     const stripWrapper = container.querySelector(
@@ -229,7 +262,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(stripWrapper?.style.opacity).toBe("1");
   });
 
-  it("bottom-strip mini-cell height equals the imported HAND_STRIP_HEIGHT_PX (RD2 lockstep gate)", () => {
+  it("bottom-strip mini-cell height equals the imported HAND_STRIP_HEIGHT_PX (RD2 lockstep gate)", async () => {
     // RD2 (2026-06-08): the play-screen mini-cells must shrink in
     // lockstep with the reveal-arc strip. Pre-RD2 this surface hard-
     // coded 80 next to a comment claiming "matches HAND_STRIP_HEIGHT_PX
@@ -237,7 +270,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     // constant. This test fails closed if the import is removed or the
     // local MINI_CELL_HEIGHT_PX stops being keyed to it.
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     const bottomStrip = container.querySelector(
@@ -247,7 +280,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(bottomStrip!.style.height).toBe(`${HAND_STRIP_HEIGHT_PX}px`);
   });
 
-  it("RD2.1: top-strip cell carries containerType + inner uses cqw scale", () => {
+  it("RD2.1: top-strip cell carries containerType + inner uses cqw scale", async () => {
     // RD2.1 (2026-06-09): the inner card's scale must track the cell's
     // flex-resolved width via container queries. Mechanism-wired proxy
     // — the real-browser width===width gate runs in
@@ -257,7 +290,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     // border-inset content box. We assert presence of both the
     // containerType wiring and the cqw transform.
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay
         {...baseProps()}
         challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })}
@@ -279,13 +312,13 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(innerStyle).toMatch(/scale\(calc\(100cqw\s*\/\s*150px\)\)/);
   });
 
-  it("RD2.1: outer cells use aspect-ratio + flexShrink:1 (no fixed width)", () => {
+  it("RD2.1: outer cells use aspect-ratio + flexShrink:1 (no fixed width)", async () => {
     // RD2.1 lock — the play cells stop hardcoding width:55 + flexShrink:0
     // (which produced strip overflow) and use the same flex-shrink
     // aspect-ratio model as reveal/results so they shrink to fit the
     // strip wrapper. Width-tracking depends on this.
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay
         {...baseProps()}
         challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })}
@@ -305,17 +338,17 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     }
   });
 
-  it("renders 5 empty placeholders on bottom strip at cardsLanded=0", () => {
+  it("renders 5 empty placeholders on bottom strip at cardsLanded=0", async () => {
     vi.useFakeTimers();
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     for (let i = 0; i < 5; i++) {
       expect(screen.getByTestId(`bottom-strip-empty-${i}`)).toBeTruthy();
     }
   });
 
-  it("renders Draw CTA disabled during deal_in (no Deal CTA — pre_deal killed)", () => {
+  it("renders Draw CTA disabled during deal_in (no Deal CTA — pre_deal killed)", async () => {
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     expect(container.querySelector("[data-cta-label='Deal']")).toBeNull();
@@ -324,17 +357,17 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(drawBtn?.disabled).toBe(true);
   });
 
-  it("renders no replacement names (path β at rest)", () => {
+  it("renders no replacement names (path β at rest)", async () => {
     vi.useFakeTimers();
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     for (let i = 0; i < 5; i++) {
       expect(screen.queryByText(`Final-${i}`)).toBeNull();
     }
   });
 
-  it("renders framed top + bottom + hero zones in deal_in (doc EDIT B1/B3 carries forward)", () => {
+  it("renders framed top + bottom + hero zones in deal_in (doc EDIT B1/B3 carries forward)", async () => {
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx({ challengerName: "Mike" })} />,
     );
     expect(container.querySelector(`[data-h2h-board-zone="top"]`)).not.toBeNull();
@@ -346,18 +379,18 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
     expect(bottomZoneText.length).toBeGreaterThan(0);
   });
 
-  it("falls back to 'your friend' label when challengerName is not a real name", () => {
+  it("falls back to 'your friend' label when challengerName is not a real name", async () => {
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx({ challengerName: null as any })} />,
     );
     const topZoneText = (container.querySelector(`[data-h2h-board-zone="top"]`)?.textContent ?? "").toLowerCase();
     expect(topZoneText).toContain("your friend");
   });
 
-  it("bottom label is the literal 'YOU' (design-lock §1: random handle killed)", () => {
+  it("bottom label is the literal 'YOU' (design-lock §1: random handle killed)", async () => {
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
     );
     const bottomLabel = container.querySelector(
@@ -372,7 +405,7 @@ describe("H2HRecipientPlay — initial render lands in deal_in", () => {
 describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
   it("Deal tap starts the cascade; first card lands within DEAL_CASCADE_INTERVAL_MS", async () => {
     vi.useFakeTimers();
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -387,7 +420,7 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
 
   it("cascade lands 5 face-up cells in positional order from initialRoster", async () => {
     vi.useFakeTimers();
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -403,7 +436,7 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
 
   it("Draw CTA stays disabled during deal_in cascade; enables on hold_select", async () => {
     vi.useFakeTimers();
-    const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    const { container } = await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     // Mid-cascade: Draw (the CTA slot for Layout A) is disabled.
     // No "Deal" button exists — pre_deal is killed.
     await act(async () => { vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS); });
@@ -424,7 +457,7 @@ describe("H2HRecipientPlay — state 2 (deal_in cascade)", () => {
 describe("H2HRecipientPlay — state 2 → hold_select (P7 MVP functional tap)", () => {
   async function dealThrough(initialCtx = makeCtx(), overrides = {}) {
     vi.useFakeTimers();
-    const utils = render(
+    const utils = await render(
       <H2HRecipientPlay {...baseProps(overrides)} challengeCtx={initialCtx} />
     );
     // Layout A/B restructure: pre_deal is killed; the loading →
@@ -485,7 +518,7 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     vi.useFakeTimers();
     const ctx = makeCtx();
     const props = baseProps();
-    render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -526,7 +559,7 @@ describe("H2HRecipientPlay — state 3a (redraw_running) — path β", () => {
     } as any);
 
     vi.useFakeTimers();
-    render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -578,7 +611,7 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
     } as any);
 
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
     );
     await act(async () => {
@@ -635,7 +668,7 @@ describe("H2HRecipientPlay — state 3a/3b — Drawing window copy is retired", 
     // RD8 copy supersedes that decision.
     vi.useRealTimers();
     const props = baseProps();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
     );
     await waitFor(
@@ -686,7 +719,7 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
   async function advanceToYourFlip(heldSlot: number) {
     vi.useFakeTimers();
     const props = baseProps();
-    render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -768,7 +801,7 @@ describe("H2HRecipientPlay — state 3b (your_redraw_flip) — LEFT→RIGHT bott
   it("column ordering: bottom column N+1 begins ONLY after column N completes (fake-timer check)", async () => {
     vi.useFakeTimers();
     const props = baseProps();
-    render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -806,7 +839,7 @@ describe("H2HRecipientPlay — ab_transition (Layout A → Layout B beat)", () =
   it("reaches ab_transition after your_redraw_flip; opponent strip uncollapses", async () => {
     vi.useFakeTimers();
     const props = baseProps();
-    render(<H2HRecipientPlay {...props} challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })} />);
     await act(async () => {
       vi.advanceTimersByTime(DEAL_CASCADE_INTERVAL_MS * 7);
     });
@@ -843,7 +876,7 @@ describe("H2HRecipientPlay — S5 held-card position invariant", () => {
     vi.useFakeTimers();
     const props = baseProps();
     const ctx = makeCtx();
-    render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -882,7 +915,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
   it("after column-flip pass, holds PRE_REVEAL_HOLD_MS then calls resolveRoster ONCE on POST-redraw finalRoster", async () => {
     const props = baseProps();
     // No fake timers — let the real timer flow drive transitions end-to-end.
-    render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={makeCtx()} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -917,7 +950,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
 
   it("mounts H2HRecipientReveal INSIDE the still-mounted playing canvas (Fix C2 single-canvas continuity)", async () => {
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
     );
     // Layout A/B restructure: pre_deal is killed; the loading →
@@ -977,7 +1010,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
       resolveRoster: vi.fn(() => new Promise((res) => { resolveFn = res; })),
     } as any);
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={ctx} />
     );
     await waitFor(
@@ -1047,7 +1080,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
       resolveRoster: vi.fn(async () => { throw new Error("boom"); }),
     } as any);
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={ctx} />
     );
     // Layout A/B restructure: pre_deal is killed; the loading →
@@ -1093,7 +1126,7 @@ describe("H2HRecipientPlay — state 4 handoff", () => {
 describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () => {
   it("at Layout B (settle-pause / arc), each top cell renders its sender card (Sender-N), NOT the placeholder", async () => {
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />
     );
     await waitFor(
@@ -1126,7 +1159,7 @@ describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () =
   });
 
   it("falls back to the '?' placeholder when resolvedSenderHand is absent", async () => {
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     await waitFor(
@@ -1156,13 +1189,13 @@ describe("H2HRecipientPlay — top strip renders sender faces in Layout B", () =
 // ── 8. Try Again remount → loading → deal_in (App.tsx h2hPlayKey bump) ─
 
 describe("H2HRecipientPlay — Try Again remount lands in deal_in", () => {
-  it("re-rendering with a new React key resets to deal_in (loading auto-advances)", () => {
+  it("re-rendering with a new React key resets to deal_in (loading auto-advances)", async () => {
     vi.useFakeTimers();
     const ctx = makeCtx();
-    const { container, rerender } = render(
+    const { container, rerender } = await render(
       <H2HRecipientPlay key="A" {...baseProps()} challengeCtx={ctx} />
     );
-    rerender(
+    await rerender(
       <H2HRecipientPlay key="B" {...baseProps()} challengeCtx={ctx} />
     );
     const root = container.querySelector("[data-h2h-recipient-play]");
@@ -1177,8 +1210,8 @@ describe("H2HRecipientPlay — Try Again remount lands in deal_in", () => {
 // ── 9. Anonymous path (P5 — retained from 2b+2c) ───────────────────
 
 describe("H2HRecipientPlay — anonymous path (P5)", () => {
-  it("does not render any auth prompt during playing", () => {
-    const { container } = render(
+  it("does not render any auth prompt during playing", async () => {
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />
     );
     expect(container.querySelector("[data-register-modal]")).toBeNull();
@@ -1226,7 +1259,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
   it("Fix 2 leak-immunity: even with snapshot wasHeld:true, NO H badge renders at deal-in / hold_select", async () => {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={makeLeakyCtx()} />,
     );
     // Layout A/B restructure: pre_deal is killed; the loading →
@@ -1249,7 +1282,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
   it("Fix 1 tap drives badge under #11 preview-then-hold: first tap previews (no badge), second tap holds (badge in cell 2), third tap unholds (badge gone — reversible within the round)", async () => {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={makeLeakyCtx()} />,
     );
     // Layout A/B restructure: pre_deal is killed; the loading →
@@ -1284,7 +1317,7 @@ describe("H2HRecipientPlay — bottom-strip H badge regression-locks", () => {
     const ctx = makeLeakyCtx();
     // initialRoster[2].cardId in the leaky ctx is "init-2".
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
-    render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -1329,7 +1362,7 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
     const { ensureLoadedMock, restore } = await forceAsyncLoadPath();
     ensureLoadedMock.mockClear();
     ensureLoadedMock.mockReturnValueOnce(Promise.resolve());
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     expect(ensureLoadedMock).toHaveBeenCalledTimes(1);
     restore();
   });
@@ -1342,7 +1375,7 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
     const heldLoad = new Promise<void>((r) => { resolveLoad = r; });
     ensureLoadedMock.mockReturnValueOnce(heldLoad);
 
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
     );
     // Loading state: headline copy + CTA disabled. The state-attribute
@@ -1373,26 +1406,28 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
   it("ensureLoaded rejects → 'Try again' CTA + reveal NOT mounted", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
     const { ensureLoadedMock, restore } = await forceAsyncLoadPath();
+    serverFixture.start.mockClear();
     ensureLoadedMock.mockReturnValueOnce(Promise.reject(new Error("network blip")));
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />,
     );
     await waitFor(
       () => expect(container.querySelector("[data-h2h-play-cta][data-cta-label='Try again']")).not.toBeNull(),
     );
     expect(container.querySelector("[data-h2h-recipient-reveal]")).toBeNull();
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(serverFixture.start).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
     restore();
   });
 
-  it("sync short-circuit: when isLoaded() is true, ensureLoaded is NOT called", async () => {
+  it("cached client data never bypasses authoritative session start", async () => {
     const dataEngine = await import("@shared/engines/dataEngine");
     const ensureLoadedMock = dataEngine.ensureLoaded as ReturnType<typeof vi.fn>;
     ensureLoadedMock.mockClear();
     // Default isLoaded mock returns true; no override needed.
-    render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
-    expect(ensureLoadedMock).not.toHaveBeenCalled();
+    await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
+    expect(ensureLoadedMock).toHaveBeenCalledTimes(1);
+    expect(serverFixture.start).toHaveBeenLastCalledWith({sport:"basketball",season:"2425",challenge_id:"test-challenge-id",bet_amount:0});
   });
 });
 
@@ -1418,7 +1453,7 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
       })),
     } as any);
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
 
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
@@ -1462,7 +1497,7 @@ describe("H2HRecipientPlay — happy-path E2E (regression-lock for C/D fixed)", 
 describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
   async function dealThroughCtx(ctx: ChallengeCtx) {
     vi.useFakeTimers();
-    const utils = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
+    const utils = await render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -1513,9 +1548,9 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
     expect(container.querySelector('[data-h2h-play-intro="stage2"]')).toBeNull();
   });
 
-  it("does not mount the instruction line during deal_in (deal-intro placeholder occupies that beat)", () => {
+  it("does not mount the instruction line during deal_in (deal-intro placeholder occupies that beat)", async () => {
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...baseProps()} challengeCtx={s3Ctx()} />,
     );
     // At deal_in entry (right after the loading → deal_in auto-advance),
@@ -1530,7 +1565,7 @@ describe("H2HRecipientPlay — Stage 1/2 intro mount (Phase 5c S3)", () => {
   it("collapses the instruction line past hold_select (handoff_resolving → settle-pause)", async () => {
     const ctx = s3Ctx();
     const props = baseProps();
-    const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     // Wait for hold_select.
     await waitFor(
       () => {
@@ -1571,7 +1606,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
   async function dealThroughPreview(ctx = makeCtx()) {
     vi.useFakeTimers();
     const props = baseProps({ renderPlayingStripCard: badgeRenderer } as any);
-    const utils = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    const utils = await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -1697,7 +1732,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
       resolvedSenderHand: makeSenderHand(),
       anchorBasePlayerId: "p3",
     });
-    const { container } = render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...baseProps()} challengeCtx={ctx} />);
     // Layout A/B restructure: pre_deal is killed; the loading →
     // deal_in auto-advance fires synchronously inside the useEffect
     // chain that render()'s act() flushes. The deal_in cascade is
@@ -1743,7 +1778,7 @@ describe("H2HRecipientPlay — Polish #11 preview-then-hold", () => {
     vi.useRealTimers();
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} challengeCtx={ctx} />);
     await waitFor(
       () => {
         const btn = screen.queryByText("Next") as HTMLButtonElement | null;
@@ -1803,7 +1838,7 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
       redrawRoster: vi.fn(() => heldRedraw),
     } as any);
     vi.useFakeTimers();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={makeCtx()} />,
     );
     await act(async () => {
@@ -1883,7 +1918,7 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     // DOM node when the predicate stays true across re-renders.
     vi.useFakeTimers();
     const props = baseProps();
-    const { container } = render(
+    const { container } = await render(
       <H2HRecipientPlay {...props} challengeCtx={makeCtx({ resolvedSenderHand: makeSenderHand() })} />,
     );
     await act(async () => {
@@ -1976,7 +2011,7 @@ describe("H2HRecipientPlay — RD3 armed rail (continuous mount + no-snap)", () 
     // so the H1 parity (challengeCtx.targetScore == sender.totalFp)
     // is encoded in the test inputs.
     const TARGET = 175;
-    const arcHarness = render(
+    const arcHarness = await render(
       <div data-arc-harness="true">
         {/* RD3-C mirror: arc revealing-first-frame props for JOHN
             (opponent) and YOU (user). JOHN: displayTotal=sender.totalFp
@@ -2036,7 +2071,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("defined opponent hand: first Draw loops back to hold_select (round 2), not straight to arc", async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     // Reach hold_select (round 1) — Draw enabled.
     await waitFor(
       () => {
@@ -2064,7 +2099,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("cumulative holds: a slot held in round 1 stays held in round 2 without re-holding (carried, not lost)", { timeout: 8000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2089,7 +2124,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("cross-round permanence: a hold committed at Next is LOCKED in the next round (cannot be unheld)", { timeout: 8000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2116,7 +2151,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("within-round unhold then Next: an unheld slot is NOT locked next round (only committed holds lock)", { timeout: 8000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2144,7 +2179,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("round signage shows N/maxRounds as a separate element and advances 1/3 → 2/3", { timeout: 8000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2165,7 +2200,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("signage advances on the committing Next tap, leading the flip (not after it completes)", { timeout: 8000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2185,7 +2220,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("collapse: holding every slot in round 1 skips the flip, jumps signage to 3/3, and still reveals", { timeout: 10000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2219,7 +2254,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
   it("signage persists into the conclusion/reveal (arc) and shows the final round 3/3", { timeout: 12000 }, async () => {
     const props = baseProps();
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand() });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
@@ -2262,7 +2297,7 @@ describe("H2HRecipientPlay §9 — main path: 3 rounds before resolve (not singl
     // The component has no senderKind branch; startMode is App-level only. A
     // boss-style ctx must run byte-identically to a human one.
     const ctx = makeCtx({ resolvedSenderHand: makeSenderHand(), startMode: "draft-fresh" });
-    const { container } = render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
+    const { container } = await render(<H2HRecipientPlay {...props} maxRounds={3} challengeCtx={ctx} />);
     await waitFor(
       () => expect((screen.queryByText("Next") as HTMLButtonElement | null)?.disabled).toBe(false),
       { timeout: 2000 },
