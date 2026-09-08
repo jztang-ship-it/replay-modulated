@@ -36,10 +36,28 @@ This check matters more than the unique-commit count. SHA divergence ≠ work di
 
 ### `main` — active
 
-- **Path:** `~/Desktop/ReplayMod`
-- **Branch:** `main`
-- **State:** active workhorse
-- **Last reviewed:** 2026-05-23
+- **Path (current Windows checkout):** `E:\work\replay-mod\ReplayMod`
+- **Branch:** `main`, local HEAD `970d1cb5`
+- **State:** active; security hardening Applied locally, not committed/pushed
+- **Uncommitted state:** pre-existing API/UI/config/docs changes, deleted `scripts/_recon-roundsnap.mjs`, and changed `shared/node_modules` retained; additional security code/tests/migrations are dirty/untracked. Do not clean/reset wholesale.
+- **Local vs origin/main:** `git log origin/main..main` is empty at this review (user updated main); no fetch/commit/push performed by this repair session.
+- **Stashes:** none reported by local `git stash list`.
+- **Last reviewed:** 2026-09-07
+
+### Windows worktree scan — 2026-09-07
+
+`git worktree list` additionally reports the following missing macOS paths as
+**prunable**. Only local Git metadata was inspected; their contents/equivalence
+were not verified, and no prune/remove/branch operation was performed. Historical
+registry entries below remain historical, not proof that these paths exist here.
+
+| Branch | Recorded HEAD | Recorded directory under `/Users/john/Desktop/ReplayMod/.claude/worktrees/` |
+| --- | --- | --- |
+| `feat/3round-h2h` | `77025ef1` | `feat-3round-h2h` |
+| `feat/boss-mobile-fit` | `3823cbdd` | `feat-boss-mobile-fit` |
+| `feat/boss-winscreen-cta` | `e2f85bc4` | `feat-boss-winscreen-cta` |
+| `feat/cta-row` | `808afeea` | `feat-cta-row` |
+| `feat/rd8-rivalry-divergence` | `adbafbbb` | `feat-rd8-rivalry-divergence` |
 
 ---
 

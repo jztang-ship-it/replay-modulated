@@ -6,6 +6,36 @@
 
 ---
 
+## Security hardening — local Applied changes, 2026-09-07 (NOT shipped)
+
+The user requested fixes to the remaining backend-authority/security audit. The
+Windows main checkout at `E:\work\replay-mod\ReplayMod` now has local edits for
+server-generated hands and transactional settlement, browser write/RPC privilege
+revocation, once-only feedback rewards, challenge-bound attempts, v2 leaderboard
+identity/date validation, and authenticated, fail-closed AI quotas.
+
+**Deployment authority:** this note does not mean production is repaired. No
+migration has been run against production, and no commit/push was made in this
+security session. Existing dirty files and local commits were retained.
+
+**Security boundary:** a verified Supabase session is required; anonymous-auth
+sessions remain supported (this is not a mandatory real-account upgrade). The
+browser sends context/held indices, not authoritative cards, score or payout.
+
+**Compatibility gates before production:** scripted browser FTUE outcomes are
+currently disabled; server gameplay currently uses the trusted season catalog,
+not the existing curated daily slate/hybrid promotional pool. Therefore the old
+FTUE/pool-distribution design locks are NOT claimed as implemented equivalently.
+Port those rules to the backend or explicitly accept the changed gameplay before
+release. Paid stakes debit once at start and sessions expire after one hour;
+reload recovery/refund UX is not yet implemented. Old v1 results/human challenges
+are kept but excluded from v2 authority; old balances need a separate audited
+reconciliation, not an automatic destructive reset.
+
+See `docs/security-rollout-2026-09-07.md` for rollout, tests, and remaining limits.
+
+---
+
 ## Pending doc update — session 2026-07-06
 
 **Auth re-decision — SUPERSEDES the Phase 5b "auth-before-send" lock (doc lock `2caa7a3`, commit `f95aa576`).**
