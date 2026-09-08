@@ -4,7 +4,7 @@
  */
 
 import type { TierColor, SportConfigShape, PlayerCard, EconomyConfig } from "../types";
-import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine";
+import { DEFAULT_ECONOMY_CONFIG } from "../engines/economyEngine.js";
 
 export class SportAdapter {
   public config: SportConfigShape;
