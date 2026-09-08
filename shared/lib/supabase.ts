@@ -5,8 +5,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undef
 
 /** Stub client used when env vars are missing. Prevents the app from crashing
  *  at module load — downstream auth calls resolve to "no session" and DB calls
- *  return empty results. The app still renders and plays; server-dependent
- *  features (leaderboard submit, hand audit log) no-op gracefully. */
+ *  return empty results. The shell still renders, but authoritative gameplay
+ *  requires a real authenticated session and must not fall back to local results. */
 function makeStubClient(): SupabaseClient {
   const noSession = async () => ({ data: { session: null }, error: null });
   const noUser = async () => ({ data: { user: null }, error: null });
