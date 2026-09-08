@@ -1,3 +1,4 @@
+import { authorityUnavailable } from "./hand/_lib/authorityErrors.js";
 /** Read-only pool API. Verified settlement contributes inside the PostgreSQL
  * transaction. Legacy browser-controlled KV pools are deliberately not imported.
  * A missing row starts at 1000; storage errors return 503, never a fake balance. */
@@ -59,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     return json(res, 405, { error: "Method not allowed" });
-  } catch {
-    return json(res, 503, { error: "Bonus pool unavailable" });
+  } catch (error) {
+    return json(res, 503, authorityUnavailable(error, "Bonus pool unavailable"));
   }
 }
