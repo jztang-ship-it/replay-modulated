@@ -13,7 +13,9 @@ assert all(m['Type']!='bind' for m in info['Mounts']), 'Refusing host-mounted da
 DB='security_'+uuid.uuid4().hex
 
 def execute(text,db=DB):
- return subprocess.run(['docker','exec','-i',CONTAINER,'psql','-U','postgres','-d',db,'-X','-q','-t','-A','-v','ON_ERROR_STOP=1'],input=text,encoding='utf8',capture_output=True)
+ p = subprocess.run(['docker','exec','-i',CONTAINER,'psql','-U','postgres','-d',db,'-X','-q','-t','-A','-v','ON_ERROR_STOP=1'],input=text.encode('utf-8'),capture_output=True)
+ p.stdout=p.stdout.decode('utf-8'); p.stderr=p.stderr.decode('utf-8')
+ return p
 def sql(text,db=DB):
  p=execute(text,db)
  assert p.returncode==0,p.stderr
@@ -38,7 +40,10 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authentica
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon,authenticated,service_role;
 """)
 for f in sorted((ROOT/'supabase/migrations').glob('*.sql')):sql(f.read_text(encoding='utf-8-sig'))
-print('PASS: migrations 001-019 execute on fresh PostgreSQL')
+print('PASS: all repository migrations execute on fresh PostgreSQL (optional catalog absent)')
+# Exercise the separately imported legacy catalog as well as fresh installs.
+import runpy
+runpy.run_path(str(ROOT/'scripts/test-catalog-security-db.py'), init_globals={'sql':sql,'denied':denied,'ROOT':ROOT,'DB':DB})
 U='11111111-1111-4111-8111-111111111111';V='22222222-2222-4222-8222-222222222222'
 C='33333333-3333-4333-8333-333333333333';C2='44444444-4444-4444-8444-444444444444'
 sql(f"INSERT INTO auth.users(id,is_anonymous) VALUES('{U}',true),('{V}',false); INSERT INTO public.player_state(id,balance) VALUES('{U}',1000),('{V}',1000);")
