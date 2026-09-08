@@ -5,7 +5,7 @@
  * Badges: position-specific, data-validated thresholds.
  */
 
-import type { SportConfigShape } from "@shared/types";
+import type { SportConfigShape } from "../../../shared/types/index.js";
 
 export const FootballSportConfig: SportConfigShape = {
   sportKey: "football",
