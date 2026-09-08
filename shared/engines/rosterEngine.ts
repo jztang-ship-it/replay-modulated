@@ -3,13 +3,13 @@
  */
 
 import type { EconomyConfig, SlotRequirement, RosterConfig, PlayerEval, GeneratedCard } from "../types";
-import { totalSalary } from "./economyEngine";
+import { totalSalary } from "./economyEngine.js";
 
 export type { SlotRequirement, RosterConfig, PlayerEval, GeneratedCard };
 
-// Re-export to preserve `import { mulberry32 } from "../engines/rosterEngine"`
+// Re-export to preserve `import { mulberry32 } from "../engines/rosterEngine.js"`
 // in sport adapters (basketball/baseball/football).
-export { mulberry32 } from "../utils/seededRng";
+export { mulberry32 } from "../utils/seededRng.js";
 
 export function randomSeed(): number {
   return Date.now() ^ Math.floor(Math.random() * 1e9);
@@ -37,81 +37,53 @@ export function generateRoster(evalPool: PlayerEval[], config: RosterConfig, eco
 
   const usedPeople = new Set<string>();
   const roster: Array<GeneratedCard | null> = Array(rosterSize).fill(null);
-
+  const excludePos = new Set((config.excludeFromFlex ?? ["GK"]).map(p => p.toUpperCase()));
+  const pools = slotRequirements.map(req => evalPool.filter(p => req === "FLEX"
+    ? !excludePos.has(p.position.toUpperCase()) : p.position.toUpperCase() === req.toUpperCase())
+    .sort((a, b) => a.salary - b.salary));
   const anchorThreshold = economyConfig.tierThresholds.find(t => t.tier === "ORANGE")?.minSalary ?? 52;
-  const maxAnchorSalary = cap - (rosterSize - 1) * minSalary;
-  // Find the anchor slot: first non-FLEX, non-GK required slot
   const anchorSlotIdx = slotRequirements.findIndex(req => req !== "FLEX" && req.toUpperCase() !== "GK");
-  const anchorSlotPos = anchorSlotIdx >= 0 ? slotRequirements[anchorSlotIdx].toUpperCase() : null;
+  const order = Array.from({ length: rosterSize }, (_, i) => i).sort((a, b) =>
+    (a === anchorSlotIdx ? -1 : b === anchorSlotIdx ? 1 :
+      Number(slotRequirements[a] === "FLEX") - Number(slotRequirements[b] === "FLEX")));
   let budgetRemaining = cap;
 
-  if (anchorSlotIdx >= 0 && anchorSlotPos) {
-    // Anchor MUST match the slot's required position (e.g. DEF for slot 1).
-    // Tier check first (per-pool truth from players.json); salary threshold
-    // is a fallback for sports whose JSON lacks tier info.
-    const posPool = byPos[anchorSlotPos] ?? evalPool;
-    const isAnchorTier = (p: PlayerEval) => {
-      const t = String(p.tier ?? "").toUpperCase();
-      return t === "RED" || t === "ORANGE";
-    };
-    const tierPool = posPool.filter(p => isAnchorTier(p) && p.salary <= maxAnchorSalary);
-    const anchorPool = (tierPool.length > 0 ? tierPool : posPool.filter(p => p.salary >= anchorThreshold && p.salary <= maxAnchorSalary))
-      .sort((a, b) => b.salary - a.salary);
-    const anchor = anchorPool.length > 0
-      ? (pickWeightedRandom(anchorPool, usedPeople, rnd) ?? anchorPool[0])
-      : null;
-    if (anchor) {
-      usedPeople.add(anchor.personKey);
-      budgetRemaining -= anchor.salary;
-      roster[anchorSlotIdx] = toGeneratedCard(anchor, anchorSlotIdx);
+  // Reserve an actual eligible, distinct-player completion, not global minSalary
+  // times empty slots. The old bound could leave a P/GK slot unfunded, then
+  // "repair" it with a BAT/other position. An impossible pool fails closed.
+  const reserveCompletion = (indices: number[], unavailable: Set<string>): number => {
+    const reserved = new Set(unavailable);
+    let cost = 0;
+    for (const i of [...indices].sort((a, b) => pools[a].length - pools[b].length)) {
+      const p = pools[i].find(p => !reserved.has(p.personKey));
+      if (!p) return Infinity;
+      reserved.add(p.personKey);
+      cost += p.salary;
     }
-  }
-
-  for (let i = 0; i < rosterSize; i++) {
-    if (roster[i] !== null) continue;
-    const req = slotRequirements[i];
-    if (req === "FLEX") continue;
-    const slotsStillEmpty = roster.filter((s, idx) => s === null && idx >= i).length;
-    const maxForSlot = budgetRemaining - (slotsStillEmpty - 1) * minSalary;
-    const posPool = byPos[req.toUpperCase()] ?? [];
-    const candidates = posPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot);
-    const picked = candidates.length
-      ? (pickWeightedRandom(candidates, usedPeople, rnd) ?? candidates[candidates.length - 1])
-      : cheapestAvailable(posPool.length ? posPool : evalPool, usedPeople, maxForSlot);
-    if (picked) { usedPeople.add(picked.personKey); budgetRemaining -= picked.salary; roster[i] = toGeneratedCard(picked, i); }
-  }
-
-  const excludePos = new Set(config.excludeFromFlex ?? ["GK"]);
-  const flexPool = evalPool.filter(p => !excludePos.has(p.position.toUpperCase())).sort((a, b) => b.salary - a.salary);
-  for (let i = 0; i < rosterSize; i++) {
-    if (roster[i] !== null) continue;
-    const slotsStillEmpty = roster.filter((s, idx) => s === null && idx >= i).length;
-    const maxForSlot = budgetRemaining - (slotsStillEmpty - 1) * minSalary;
-    const candidates = flexPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot);
-    const picked = candidates.length
-      ? (pickWeightedRandom(candidates, usedPeople, rnd) ?? candidates[candidates.length - 1])
-      : cheapestAvailable(evalPool, usedPeople, maxForSlot);
-    if (picked) { usedPeople.add(picked.personKey); budgetRemaining -= picked.salary; roster[i] = toGeneratedCard(picked, i); }
-  }
-
-  for (let i = 0; i < rosterSize; i++) {
-    if (roster[i] !== null) continue;
-    const slotsStillEmpty = roster.filter((s, idx) => s === null && idx >= i).length;
-    const maxForSlot = budgetRemaining - (slotsStillEmpty - 1) * minSalary;
-    // Prefer cheapest-that-fits; if budget is squeezed, take the absolute cheapest
-    // unused player (never pick an arbitrary player that blows the cap).
-    const fallback = cheapestAvailable(evalPool, usedPeople, maxForSlot)
-      ?? [...evalPool].filter(p => !usedPeople.has(p.personKey)).sort((a, b) => a.salary - b.salary)[0]
-      ?? evalPool[0];
-    usedPeople.add(fallback.personKey);
-    budgetRemaining -= fallback.salary;
-    roster[i] = toGeneratedCard(fallback, i);
+    return cost;
+  };
+  for (let step = 0; step < order.length; step++) {
+    const i = order[step];
+    const remaining = order.slice(step + 1);
+    let candidates = pools[i].filter(p => !usedPeople.has(p.personKey)
+      && p.salary + reserveCompletion(remaining, new Set([...usedPeople, p.personKey])) <= budgetRemaining);
+    if (i === anchorSlotIdx) {
+      const premium = candidates.filter(p => ["RED", "ORANGE"].includes(String(p.tier).toUpperCase()));
+      const salaryAnchors = candidates.filter(p => p.salary >= anchorThreshold);
+      if (premium.length) candidates = premium;
+      else if (salaryAnchors.length) candidates = salaryAnchors;
+    }
+    const picked = pickWeightedRandom(candidates, usedPeople, rnd);
+    if (!picked) throw new Error("No legal roster within budget");
+    usedPeople.add(picked.personKey);
+    budgetRemaining -= picked.salary;
+    roster[i] = toGeneratedCard(picked, i);
   }
 
   const filled = roster.filter(Boolean) as GeneratedCard[];
   const arranged = arrangeAnchors(filled, slotRequirements);
-  const result = enforceCapWithReplacement(arranged, evalPool, byPos, slotRequirements, economyConfig, rnd);
-  const guaranteed = guaranteeTierFloor(result, evalPool, economyConfig, rnd, []);
+  const result = enforceCapWithReplacement(arranged, evalPool, byPos, slotRequirements, economyConfig, rnd, undefined, config);
+  const guaranteed = guaranteeTierFloor(result, evalPool, economyConfig, rnd, [], config);
   const finalTotal = totalSalary(guaranteed.map(c => c.salary));
   if (finalTotal > cap) console.warn(`[RosterEngine] CAP BREACH: $${finalTotal} > $${cap}`);
   return guaranteed;
@@ -125,32 +97,24 @@ export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, e
   }
 
   const heldMask = current.map((_, i) => heldSlots.has(i));
-  const usedPeople = new Set<string>();
-  const result = current.map((c, i) => { if (heldMask[i]) { usedPeople.add(c.personKey); return { ...c, wasHeld: true }; } return { ...c, wasHeld: false }; });
-  const heldSalary = current.reduce((sum, c, i) => heldMask[i] ? sum + c.salary : sum, 0);
-  let budgetRemaining = economyConfig.capMax - heldSalary;
-  let openSlotsRemaining = heldMask.filter(h => !h).length;
-  const minSalary = Math.min(...evalPool.map(p => p.salary));
-  const byPos = buildPositionPools(evalPool);
-  for (let i = 0; i < result.length; i++) {
+  const result = current.map((c,i) => ({...c,wasHeld:heldMask[i]}));
+  const usedPeople = new Set(current.map(c=>c.personKey));
+  for (let i=0;i<result.length;i++) {
     if (heldMask[i]) continue;
+    const previous = result[i];
+    usedPeople.delete(previous.personKey);
     const req = config.slotRequirements[i] ?? "FLEX";
-    const maxForSlot = budgetRemaining - (openSlotsRemaining - 1) * minSalary;
-    const posPool = req === "FLEX"
-      ? evalPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot)
-      : (byPos[req.toUpperCase()] ?? evalPool).filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot);
-    const picked = posPool.length
-      ? (pickWeightedRandom(posPool, usedPeople, rnd) ?? posPool[posPool.length - 1])
-      : (cheapestAvailable(evalPool, usedPeople, maxForSlot)
-          ?? [...evalPool].filter(p => !usedPeople.has(p.personKey)).sort((a, b) => a.salary - b.salary)[0]
-          ?? evalPool[0]);
+    // Reserve the actual cost of every untouched slot, not the cheapest player
+    // in an unrelated position. The prior legal card is always a safe fallback.
+    const budget = economyConfig.capMax - totalSalary(result.map(c=>c.salary)) + previous.salary;
+    const candidates = evalPool.filter(p=>!usedPeople.has(p.personKey) && p.salary<=budget &&
+      (req === "FLEX" ? !config.excludeFromFlex?.includes(p.position) : p.position.toUpperCase()===req.toUpperCase()));
+    const picked = pickWeightedRandom(candidates,usedPeople,rnd) ?? previous;
+    result[i] = {...toGeneratedCard(picked,i),wasHeld:false};
     usedPeople.add(picked.personKey);
-    budgetRemaining -= picked.salary;
-    openSlotsRemaining--;
-    result[i] = { ...toGeneratedCard(picked, i), wasHeld: false };
   }
-  const afterCap = enforceCapWithReplacement(result as GeneratedCard[], evalPool, buildPositionPools(evalPool), config.slotRequirements, economyConfig, rnd, heldMask);
-  return guaranteeTierFloor(afterCap, evalPool, economyConfig, rnd, heldMask);
+  const afterCap = enforceCapWithReplacement(result as GeneratedCard[], evalPool, buildPositionPools(evalPool), config.slotRequirements, economyConfig, rnd, heldMask, config);
+  return guaranteeTierFloor(afterCap, evalPool, economyConfig, rnd, heldMask, config);
 }
 
 // ── guaranteeTierFloor ────────────────────────────────────────────────────
@@ -162,12 +126,17 @@ export function redrawRoster(current: GeneratedCard[], heldSlots: Set<number>, e
 //
 // Secondary responsibility: enforce a minimum spend (cap - 6 = $244 at the
 // $250 cap) by upgrading cheapest non-held cards until the roster reaches it.
-function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], economyConfig: EconomyConfig, rnd: () => number, heldMask: boolean[]) {
+function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], economyConfig: EconomyConfig, rnd: () => number, heldMask: boolean[], rosterConfig?: RosterConfig) {
   const cap = economyConfig.capMax;
   const minSpend = cap - 6;
   const result = [...roster];
   const usedPeople = new Set(result.map(c => c.personKey));
 
+  const fitsSlot = (p: PlayerEval, i: number) => {
+    if (!rosterConfig || rosterConfig.positionAware === false) return true;
+    const req = rosterConfig.slotRequirements[i] ?? "FLEX";
+    return req === "FLEX" ? !rosterConfig.excludeFromFlex?.includes(p.position) : p.position.toUpperCase() === req.toUpperCase();
+  };
   const tierOf = (c: { tier?: string }) => String(c.tier ?? "").toUpperCase();
   // RED counts as a premium anchor interchangeably with ORANGE. A hand with Jokić
   // (RED) satisfies the anchor guarantee the same way an ORANGE card does.
@@ -189,7 +158,7 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
       const upgrades = evalPool
         .filter((p: any) => {
           if (usedPeople.has(p.personKey) && p.personKey !== c.personKey) return false;
-          if (p.salary > budget) return false;
+          if (p.salary > budget || !fitsSlot(p, i)) return false;
           const pt = String(p.tier ?? "").toUpperCase();
           return pt === "RED" || pt === "ORANGE";
         })
@@ -219,7 +188,7 @@ function guaranteeTierFloor(roster: GeneratedCard[], evalPool: PlayerEval[], eco
       // Recalculate gap each iteration so upgrades never push total past cap
       const gap = Math.min(minSpend - spendTotal, cap - spendTotal);
       if (gap <= 0) break;
-      const upgrades = evalPool.filter((p: any) => (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary > c.salary && p.salary <= c.salary + gap).sort((a: any, b: any) => b.salary - a.salary);
+      const upgrades = evalPool.filter((p: any) => fitsSlot(p, i) && (!usedPeople.has(p.personKey) || p.personKey === c.personKey) && p.salary > c.salary && p.salary <= c.salary + gap).sort((a: any, b: any) => b.salary - a.salary);
       if (!upgrades.length) continue;
       const excl = new Set([...usedPeople].filter(k => k !== c.personKey));
       const picked = pickWeightedRandom(upgrades, excl, rnd) ?? upgrades[0];
@@ -389,9 +358,14 @@ function arrangeAnchors(cards: GeneratedCard[], slotRequirements: SlotRequiremen
   return result;
 }
 
-function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval[], byPos: Record<string, PlayerEval[]>, slotRequirements: SlotRequirement[], config: EconomyConfig, rnd: () => number, heldMask?: boolean[]): GeneratedCard[] {
+function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval[], byPos: Record<string, PlayerEval[]>, slotRequirements: SlotRequirement[], config: EconomyConfig, rnd: () => number, heldMask?: boolean[], rosterConfig?: RosterConfig): GeneratedCard[] {
   const clone = roster.map(c => ({ ...c }));
   const isHeld = (i: number) => heldMask ? !!heldMask[i] : false;
+  const eligible = (p: PlayerEval, i: number) => {
+    const req = slotRequirements[i] ?? "FLEX";
+    return req === "FLEX" ? !(rosterConfig?.excludeFromFlex ?? []).includes(p.position)
+      : p.position.toUpperCase() === req.toUpperCase();
+  };
   let guard = 0;
   // Pass 1 — preferred path: swap non-premium cards for cheaper same-position replacements.
   while (totalSalary(clone.map(c => c.salary)) > config.capMax && guard++ < 200) {
@@ -415,38 +389,27 @@ function enforceCapWithReplacement(roster: GeneratedCard[], evalPool: PlayerEval
     const usedPeople = new Set<string>(clone.map(c => c.personKey));
     usedPeople.delete(cur.personKey);
     const posPool = req === "FLEX" ? evalPool : (byPos[req.toUpperCase()] ?? evalPool);
-    const candidates = posPool.filter(p => !usedPeople.has(p.personKey) && p.salary <= maxForSlot && p.salary < cur.salary);
+    const candidates = posPool.filter(p => eligible(p, idx) && !usedPeople.has(p.personKey) && p.salary <= maxForSlot && p.salary < cur.salary);
     if (!candidates.length) break;
     candidates.sort((a, b) => b.salary - a.salary);
     clone[idx] = toGeneratedCard(candidates[0], idx);
   }
 
-  // Pass 2 — hard safety net: if still over cap, force-downgrade most expensive
-  // non-held card (any position) to the cheapest available player. This guarantees
-  // the final roster never exceeds the cap, no matter how pass 1 fails.
+  // Pass 2 may sacrifice a premium tier, never position legality or held cards.
+  // Try every swappable slot; one expensive slot with no cheaper substitute
+  // must not force an illegal cross-position replacement.
   let safetyGuard = 0;
-  while (totalSalary(clone.map(c => c.salary)) > config.capMax && safetyGuard++ < 20) {
-    const currentTotal = totalSalary(clone.map(c => c.salary));
-    const swappable = clone.map((c, i) => ({ i, c }))
-      .filter(({ i }) => !isHeld(i))
-      .sort((a, b) => b.c.salary - a.c.salary);
-    if (!swappable.length) {
-      console.warn(`[RosterEngine] CAP BREACH unresolvable: $${currentTotal} > $${config.capMax}, all cards held`);
+  while (totalSalary(clone.map(c => c.salary)) > config.capMax && safetyGuard++ < 200) {
+    let changed = false;
+    for (const { i, c } of clone.map((c, i) => ({ c, i })).filter(({ i }) => !isHeld(i)).sort((a, b) => b.c.salary - a.c.salary)) {
+      const used = new Set(clone.filter((_, j) => j !== i).map(p => p.personKey));
+      const cheaper = evalPool.filter(p => eligible(p, i) && !used.has(p.personKey) && p.salary < c.salary).sort((a, b) => a.salary - b.salary)[0];
+      if (!cheaper) continue;
+      clone[i] = toGeneratedCard(cheaper, i);
+      changed = true;
       break;
     }
-    const { i: idx, c: cur } = swappable[0];
-    const usedPeople = new Set<string>(clone.map(c => c.personKey));
-    usedPeople.delete(cur.personKey);
-    // Take the cheapest available player from any position. Ignores slotRequirements
-    // because the priority is cap compliance — if we're in pass 2, we're past elegance.
-    const cheapest = evalPool
-      .filter(p => !usedPeople.has(p.personKey) && p.salary < cur.salary)
-      .sort((a, b) => a.salary - b.salary)[0];
-    if (!cheapest) {
-      console.warn(`[RosterEngine] CAP BREACH unresolvable: $${currentTotal} > $${config.capMax}, no cheaper player available`);
-      break;
-    }
-    clone[idx] = toGeneratedCard(cheapest, idx);
+    if (!changed) break; // Caller must reject an infeasible roster; never fake legality.
   }
 
   clone.forEach((c, i) => { c.slotIndex = i; });
