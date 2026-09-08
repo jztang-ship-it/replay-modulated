@@ -17,6 +17,7 @@ import type { CommentaryFacts } from "@shared/commentary/commentaryFacts";
 /** Client-side timeout. Slightly larger than the server-side 2.5s so the
  *  server's apology-sentinel / validator-null surfaces as a parsed null
  *  response, not a client-side timeout (better diagnostics). */
+import { supabase } from "../lib/supabase";
 const CLIENT_TIMEOUT_MS = 4000;
 
 /** POST facts to /api/headline. Returns the validated headline string
@@ -27,9 +28,11 @@ export async function fetchAuthoredHeadline(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
     const resp = await fetch("/api/headline", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ facts }),
       signal: controller.signal,
     });

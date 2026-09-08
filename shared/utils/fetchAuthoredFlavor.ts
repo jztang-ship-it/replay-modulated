@@ -16,6 +16,7 @@ import { validateFlavor, type FlavorFacts } from "@shared/explanation/flavorVali
 
 /** Slightly larger than the server-side timeout so the server's validator-null
  *  surfaces as a parsed null, not a client abort (better diagnostics). */
+import { supabase } from "../lib/supabase";
 const CLIENT_TIMEOUT_MS = 4000;
 
 /** POST firewalled facts to /api/flavor. Returns the validated line or null.
@@ -24,9 +25,11 @@ export async function fetchAuthoredFlavor(facts: FlavorFacts): Promise<string | 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
     const resp = await fetch("/api/headline", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
       body: JSON.stringify({ kind: "flavor", facts }),
       signal: controller.signal,
     });
