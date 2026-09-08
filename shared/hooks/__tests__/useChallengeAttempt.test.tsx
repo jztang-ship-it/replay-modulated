@@ -1,71 +1,45 @@
-// @vitest-environment jsdom
-/**
- * shared/hooks/__tests__/useChallengeAttempt.test.tsx
- *
- * Phase 5b commit 2 (2026-05-28): contract-lock on the POST body shape.
- * The hook is the single recipient-side site that posts attempts; both
- * production wrappers (H2HRecipientReveal, ChallengeComparisonScreen)
- * pass through to it. Two calls to lock:
- *
- *   1. score_breakdown must travel WHEN resolvedRoster is supplied.
- *      Sender-side overlay (phase 5b commits 3-4) consumes the JSON.
- *   2. score_breakdown must be OMITTED when resolvedRoster is undefined,
- *      so the server's `?? null` default applies and the pre-phase-5b
- *      call shape stays wire-compatible.
- */
+﻿// @vitest-environment jsdom
+/** Contract tests for the client side of the authoritative attempt boundary. */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+
+vi.mock("@shared/lib/supabase", () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn(async () => ({
+        data: { session: { access_token: "test-token" } },
+        error: null,
+      })),
+    },
+  },
+}));
+
+vi.mock("@shared/analytics/analytics",()=>({track:vi.fn()}));
+
 import { useChallengeAttempt } from "../useChallengeAttempt";
-import type { GeneratedCard } from "@shared/types";
 
-function makeCard(over: Partial<GeneratedCard> = {}): GeneratedCard {
-  return {
-    id: "p1",
-    basePlayerId: "p1",
-    personKey: "p1",
-    cardId: "c1",
-    name: "Test Player",
-    team: "ABC",
-    season: "2425",
-    position: "PG",
-    photoCode: "playte01",
-    salary: 50,
-    tier: "PURPLE",
-    projectedFp: 30,
-    slotIndex: 0,
-    wasHeld: false,
-    actualFp: 25,
-    fpDelta: -5,
-    gameInfo: { date: "2025-01-01", opponent: "XYZ" },
-    statLine: { pts: 20 },
-    achievements: [],
-    ...over,
-  } as GeneratedCard;
-}
+const HAND_ID = "33333333-3333-4333-8333-333333333333";
 
-const fetchMock = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () =>
-      Promise.resolve({
-        attempt_id: "test-attempt",
-        attempt_count: 1,
-        winner_count: 0,
-        best_score: null,
-        best_user_name: null,
-        is_best: false,
-        is_window_open: true,
-        window_closes_at_ms: Date.now() + 3600_000,
-      }),
+const fetchMock = vi.fn(() => Promise.resolve({
+  ok: true,
+  json: () => Promise.resolve({
+    attempt_id: "test-attempt",
+    score: 101,
+    is_winner: true,
+    attempt_count: 1,
+    winner_count: 1,
+    best_score: 101,
+    best_user_name: "Alice",
+    is_best: true,
+    is_window_open: true,
+    window_closes_at_ms: Date.now() + 3600_000,
   }),
-);
+}));
 
 beforeEach(() => {
   fetchMock.mockClear();
   // @ts-expect-error global fetch stub
   globalThis.fetch = fetchMock;
-  // Fresh localStorage between tests so markChallengeAttempted state
-  // doesn't bleed across.
   try { window.localStorage.clear(); } catch {}
 });
 
@@ -74,115 +48,61 @@ afterEach(() => {
   delete globalThis.fetch;
 });
 
-describe("useChallengeAttempt POST body — phase 5b commit 2 contract", () => {
-  it("includes score_breakdown as a serialized array when resolvedRoster is supplied", async () => {
-    const roster = Array.from({ length: 6 }, (_, i) =>
-      makeCard({ slotIndex: i, cardId: `c-${i}`, id: `p-${i}` }),
-    );
-
-    renderHook(() =>
-      useChallengeAttempt({
-        challengeId: "test-challenge",
-        myScore: 100,
-        targetScore: 90,
-        sport: "basketball",
-        enabled: true,
-        resolvedRoster: roster,
-      }),
-    );
+describe("useChallengeAttempt server-authoritative request contract", () => {
+  it("sends only hand_id and presentation metadata, never client score/winner/roster", async () => {
+    renderHook(() => useChallengeAttempt({
+      challengeId: "00000000-0000-4000-8000-000000000001",
+      handId: HAND_ID,
+      myScore: 9999,
+      targetScore: 90,
+      sport: "basketball",
+      enabled: true,
+      referrerToken: "GLASS-REF-001",
+    }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("/api/challenge/test-challenge/attempt");
+    expect(url).toBe("/api/challenge/00000000-0000-4000-8000-000000000001/attempt");
     expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer test-token");
 
     const body = JSON.parse(init.body as string);
-    expect(body.score).toBe(100);
-    expect(body.is_winner).toBe(true);
-    expect(Array.isArray(body.score_breakdown)).toBe(true);
-    expect(body.score_breakdown).toHaveLength(6);
-    // Shape sanity — the picker output must include the locked fields.
-    expect(body.score_breakdown[0]).toMatchObject({
-      id: "p-0",
-      basePlayerId: "p1",
-      slotIndex: 0,
-      salary: 50,
-      tier: "PURPLE",
-      gameInfo: { date: "2025-01-01", opponent: "XYZ" },
+    expect(body).toEqual({
+      hand_id: HAND_ID,
+      user_name: expect.any(String),
+      referrer_token: "GLASS-REF-001",
     });
+    expect(body).not.toHaveProperty("score");
+    expect(body).not.toHaveProperty("is_winner");
+    expect(body).not.toHaveProperty("score_breakdown");
+    expect(body).not.toHaveProperty("user_id");
+    expect(body).not.toHaveProperty("anon_uid");
   });
 
-  it("omits score_breakdown when resolvedRoster is not supplied", async () => {
-    renderHook(() =>
-      useChallengeAttempt({
-        challengeId: "test-challenge",
-        myScore: 80,
-        targetScore: 90,
-        sport: "basketball",
-        enabled: true,
-        // resolvedRoster intentionally omitted
-      }),
-    );
+  it("uses the server score and winner in the returned state", async () => {
+    const { result } = renderHook(() => useChallengeAttempt({
+      challengeId: "00000000-0000-4000-8000-000000000001",
+      handId: HAND_ID,
+      myScore: 1,
+      targetScore: 90,
+      sport: "basketball",
+      enabled: true,
+    }));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
-    const body = JSON.parse(init.body as string);
-    expect("score_breakdown" in body).toBe(false);
-    expect(body.score).toBe(80);
-    expect(body.is_winner).toBe(false);
+    await waitFor(() => expect(result.current.attemptResult?.score).toBe(101));
+    expect(result.current.attemptResult?.is_winner).toBe(true);
+    expect(result.current.state).toBe("WIN");
   });
 
-  it("includes referrer_token when referrerToken is supplied (layer C delta-b)", async () => {
-    renderHook(() =>
-      useChallengeAttempt({
-        challengeId: "test-challenge",
-        myScore: 100,
-        targetScore: 90,
-        sport: "basketball",
-        enabled: true,
-        referrerToken: "GLASS-REF-001",
-      }),
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
-    const body = JSON.parse(init.body as string);
-    expect(body.referrer_token).toBe("GLASS-REF-001");
-  });
-
-  it("omits referrer_token when referrerToken is not supplied (byte-identical no-ref body)", async () => {
-    renderHook(() =>
-      useChallengeAttempt({
-        challengeId: "test-challenge",
-        myScore: 80,
-        targetScore: 90,
-        sport: "basketball",
-        enabled: true,
-        // referrerToken intentionally omitted
-      }),
-    );
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
-    const body = JSON.parse(init.body as string);
-    // Absent (key not present), not null — the optionality the server's null
-    // default + the no-ref byte-identical guarantee depend on.
-    expect("referrer_token" in body).toBe(false);
-  });
-
-  it("does not POST when enabled is false", async () => {
-    renderHook(() =>
-      useChallengeAttempt({
-        challengeId: "test-challenge",
-        myScore: 100,
-        targetScore: 90,
-        sport: "basketball",
-        enabled: false,
-        resolvedRoster: [makeCard()],
-      }),
-    );
-
+  it("does not POST until a verified hand id is available", async () => {
+    renderHook(() => useChallengeAttempt({
+      challengeId: "00000000-0000-4000-8000-000000000001",
+      handId: null,
+      myScore: 100,
+      targetScore: 90,
+      sport: "basketball",
+      enabled: true,
+    }));
     await new Promise(r => setTimeout(r, 30));
     expect(fetchMock).not.toHaveBeenCalled();
   });
