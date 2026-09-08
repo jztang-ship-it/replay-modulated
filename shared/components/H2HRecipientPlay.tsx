@@ -1,3 +1,4 @@
+import { AuthoritativeHand } from "../utils/authoritativeHand";
 // shared/components/H2HRecipientPlay.tsx
 //
 // Layout A / Layout B restructure
@@ -364,36 +365,28 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // with a matching season). Synchronous short-circuit avoids a
   // useless re-render and lets the tests render → tap Deal without a
   // microtask flush in between.
-  const [dataReady, setDataReady] = useState(() => isLoaded());
+  const serverGame = useRef(new AuthoritativeHand());
+  const [serverRoster, setServerRoster] = useState<GeneratedCard[] | null>(null);
+  const [dataReady, setDataReady] = useState(false);
   const [dataLoadError, setDataLoadError] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   useEffect(() => {
     setActiveSeason(challengeCtx.season);
-    // setActiveSeason invalidates the cache when keys differ — re-check
-    // and short-circuit if we're still loaded after the pin.
-    if (isLoaded()) {
-      setDataReady(true);
-      setDataLoadError(false);
-      return;
-    }
     let cancelled = false;
     setDataReady(false);
     setDataLoadError(false);
-    ensureLoaded()
-      .then(() => { if (!cancelled) setDataReady(true); })
-      .catch((err) => {
-        if (cancelled) return;
-        // eslint-disable-next-line no-console
-        console.error("[h2h-play] dataEngine load failed:", err);
-        chDebug("dataLoadError:set", {
-          message: err instanceof Error ? err.message : String(err),
-          seasonKey: challengeCtx.season,
-          attempt: loadAttempt,
-        });
-        setDataLoadError(true);
+    void (async () => {
+      await ensureLoaded();
+      const previous = serverGame.current.snapshot;
+      if (previous && (previous.challenge_id !== challengeCtx.challengeId || previous.sport !== sport || previous.season !== challengeCtx.season)) serverGame.current = new AuthoritativeHand();
+      const session = serverGame.current.snapshot ?? await serverGame.current.start({
+        sport, season: challengeCtx.season, challenge_id: challengeCtx.challengeId,
+        ...(sport === "football" ? { competition: "world_cup" } : {}), bet_amount: 0,
       });
+      if (!cancelled) { setServerRoster(session.roster); setDataReady(true); }
+    })().catch(() => { if (!cancelled) setDataLoadError(true); });
     return () => { cancelled = true; };
-  }, [challengeCtx.season, loadAttempt]);
+  }, [challengeCtx.challengeId, challengeCtx.season, sport, loadAttempt]);
   // FIX 2 — engine error guardrail. Set when redrawRoster or
   // resolveRoster throws (or returns invalid). Surfaces the same
   // error state on the shell so the user is never dropped into a
@@ -423,7 +416,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
   // base read (deal / hold / redraw / strip) consumes `initialRoster`, which now
   // resolves to the CURRENT round's base — no per-site rewiring needed.
   const [redrawnBase, setRedrawnBase] = useState<GeneratedCard[] | null>(null);
-  const initialRoster = redrawnBase ?? inheritedRoster;
+  const initialRoster = redrawnBase ?? serverRoster ?? inheritedRoster;
   // The deal is lineup 1 (GameView convention); each redraw commits a round
   // through commitRound. maxRounds=3 → 2 redraws → 3 lineups. Ref is read inside
   // the async commit callback so it never sees a stale closure.
@@ -565,11 +558,8 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       let finalRoster: GeneratedCard[] = initialRoster;
       let redrawThrew = false;
       try {
-        const res = await redrawRef.current({
-          currentCards: initialRoster,
-          lockedCardIds,
-        });
-        finalRoster = (res?.roster ?? res?.cards ?? initialRoster) as GeneratedCard[];
+        const res = await serverGame.current.turn("draw", [...heldSet]);
+        finalRoster = (res?.roster ?? initialRoster) as GeneratedCard[];
       } catch (err) {
         // FIX 2 guardrail: a redraw throw means the engine is unavailable
         // (most often dataEngine not loaded — but covers any future
@@ -743,8 +733,8 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       let resolved: GeneratedCard[] = final;
       let resolveThrew = false;
       try {
-        const res = await resolveRef.current({ finalCards: final });
-        resolved = (res?.roster ?? res?.cards ?? final) as GeneratedCard[];
+        const res = await serverGame.current.turn("lock", [...state.held]);
+        resolved = (res?.roster ?? final) as GeneratedCard[];
       } catch (err) {
         // FIX 2 guardrail: resolve throw → same surface treatment as
         // redraw throw. Do NOT fall through to a degenerate reveal
@@ -760,7 +750,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
         return;
       }
       const score = resolved.reduce((s, c: any) => s + Number(c.actualFp ?? 0), 0);
-      const tier = calcTierRef.current(score) ?? "BUST";
+      const tier = serverGame.current.snapshot?.hand?.tier ?? "BUST";
       setState({
         kind: "arc",
         resolvedRoster: resolved,
@@ -983,7 +973,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     // recovers cleanly; for persistent failures the user sees the
     // same error state again. Either way, no degenerate reveal.
     chDebug("handleRetry:tap", { loadAttempt });
-    onTryAgain();
+    if (engineError) {
+      if (engineError === "redraw") redrawFiredRef.current = false;
+      else handoffFiredRef.current = false;
+      setEngineError(null);
+      setState(s => ({ ...s })); // same held selection, same server command id
+    } else retryDataLoad();
   };
 
   const handleDraw = () => {
@@ -1593,6 +1588,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     // finalRoster → resolveRoster → arc seam.
     <H2HRecipientReveal
       challengeCtx={challengeCtx}
+      handId={serverGame.current.snapshot?.hand_id}
       myScore={state.resolvedScore}
       myRoster={state.resolvedRoster}
       myWinTier={state.resolvedTier}

@@ -82,9 +82,11 @@ export const FINAL_HOLD_MS = 150;
 
 export interface H2HRecipientRevealProps {
   challengeCtx: ChallengeCtx;
+  /** Current recipient hand_log ID, generated before reveal and verified by the server. */
+  handId?: string | null;
   /** Recipient's total FP, computed by the caller from `myRoster`. */
   myScore: number;
-  /** Recipient's resolved roster (post-RESOLVE). */
+  /** Recipient's resolved roster used for local rendering only. */
   myRoster: GeneratedCard[];
   /** Recipient's win tier (BUST/ROOKIE/...) — passed to H2HHand.tier
    *  for the recipient column. The overlay's render block doesn't
@@ -151,7 +153,7 @@ interface InnerProps extends H2HRecipientRevealProps {
 
 function H2HRecipientRevealInner(props: InnerProps) {
   const {
-    challengeCtx, senderResolved, myScore, myRoster, myWinTier, sport,
+    challengeCtx, senderResolved, handId, myScore, myRoster, myWinTier, sport,
     renderBattlefieldCard, renderOverlayCard,
     onSendItBack, onTryAgain, onPlayOwnHand, onDismiss, roundSignageLabel,
     devGlassState,
@@ -161,11 +163,11 @@ function H2HRecipientRevealInner(props: InnerProps) {
 
   const attempt = useChallengeAttempt({
     challengeId: challengeCtx.challengeId,
+    handId,
     myScore,
     targetScore: challengeCtx.targetScore,
     sport,
     enabled: true,
-    resolvedRoster: myRoster,
     // Layer C, delta-b/c: carry the forwarded ?ref token (if any) onto this
     // attempt. Optional — undefined for direct/human attempts (byte-identical).
     referrerToken: challengeCtx.refToken,
