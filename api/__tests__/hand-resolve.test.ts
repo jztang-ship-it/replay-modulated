@@ -1,16 +1,16 @@
 import { describe,it,expect,vi,beforeEach } from 'vitest';
-const m=vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn(),rpc:vi.fn(),award:vi.fn(),deal:vi.fn(),draw:vi.fn(),resolve:vi.fn(),outcome:vi.fn(),row:null as any,filters:[] as any[]}));
+const m=vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn(),rpc:vi.fn(),award:vi.fn(),deal:vi.fn(),draw:vi.fn(),resolve:vi.fn(),outcome:vi.fn(),row:null as any,queryError:null as any,filters:[] as any[]}));
 vi.mock('../hand/_lib/auth.js',()=>({verifyAuth:m.auth}));
 vi.mock('../hand/_lib/achievements.js',()=>({awardVerifiedAchievements:m.award}));
 vi.mock('../hand/_lib/security.js',async()=>{const real:any=await vi.importActual('../hand/_lib/security.js');return {...real,quota:m.quota};});
 vi.mock('../hand/_lib/catalog.js',()=>({SPORTS:['basketball','baseball','football'],deal:m.deal,draw:m.draw,resolve:m.resolve,outcome:m.outcome}));
-vi.mock('../hand/_lib/supabaseServer.js',()=>({supabaseAdmin:{rpc:m.rpc,from:()=>{const b:any={select:()=>b,eq:(...args:any[])=>{m.filters.push(args);return b},maybeSingle:async()=>({data:m.row,error:null}),single:async()=>({data:m.row,error:null})};return b;}}}));
+vi.mock('../hand/_lib/supabaseServer.js',()=>({supabaseAdmin:{rpc:m.rpc,from:()=>{const b:any={select:()=>b,eq:(...args:any[])=>{m.filters.push(args);return b},maybeSingle:async()=>({data:m.row,error:m.queryError}),single:async()=>({data:m.row,error:m.queryError})};return b;}}}));
 import handler from '../hand/resolve';
 const uid='11111111-1111-4111-8111-111111111111',id='22222222-2222-4222-8222-222222222222';
 const cards=Array.from({length:5},(_,i)=>({basePlayerId:String(i),actualFp:10,wasHeld:false}));
 const session=()=>({hand_id:id,player_id:uid,revision:0,sport:'basketball',season:'2425',competition:null,challenge_id:null,bet_amount:0,created_at:new Date().toISOString(),expires_at:new Date(Date.now()+60000).toISOString(),settled:false,state:{roster:cards,draws:0,resolved:false}});
 async function call(body:any,method='POST'){const r:any={setHeader:vi.fn(),status:vi.fn().mockReturnThis(),json:vi.fn().mockReturnThis()};await handler({method,body,headers:{},socket:{remoteAddress:'test'}} as any,r);return {status:r.status.mock.calls.at(-1)?.[0],data:r.json.mock.calls.at(-1)?.[0]};}
-beforeEach(()=>{vi.clearAllMocks();m.row=null;m.filters=[];m.auth.mockResolvedValue({user:{id:uid},error:null});m.quota.mockResolvedValue(true);m.award.mockResolvedValue([]);m.deal.mockReturnValue(cards);m.draw.mockReturnValue(cards);m.resolve.mockReturnValue(cards);m.outcome.mockReturnValue({tier:'STARTER',multiplier:1.5});m.rpc.mockImplementation(async(_n,p)=>({data:{...session(),revision:1,settled:!!p.p_settle,state:p.p_state??session().state},error:null}));});
+beforeEach(()=>{vi.clearAllMocks();m.row=null;m.queryError=null;m.filters=[];m.auth.mockResolvedValue({user:{id:uid},error:null});m.quota.mockResolvedValue(true);m.award.mockResolvedValue([]);m.deal.mockReturnValue(cards);m.draw.mockReturnValue(cards);m.resolve.mockReturnValue(cards);m.outcome.mockReturnValue({tier:'STARTER',multiplier:1.5});m.rpc.mockImplementation(async(_n,p)=>({data:{...session(),revision:1,settled:!!p.p_settle,state:p.p_state??session().state},error:null}));});
 describe('authoritative hand boundary',()=>{
  it('cannot unlock a previously committed held card',async()=>{m.row=session();m.row.state={...m.row.state,draws:1,roster:cards.map((c,i)=>({...c,wasHeld:i===0}))};expect((await call({action:'draw',hand_id:id,revision:0,held_slots:[]})).status).toBe(409);expect(m.draw).not.toHaveBeenCalled();expect(m.rpc).not.toHaveBeenCalled();});
  it('rejects anonymous before any game write',async()=>{m.auth.mockResolvedValue({user:null,error:{status:401}});expect((await call({action:'start'})).status).toBe(401);expect(m.rpc).not.toHaveBeenCalled();});
@@ -29,4 +29,16 @@ describe('authoritative hand boundary',()=>{
  it('enforces two basketball redraws',async()=>{m.row=session();m.row.state.draws=2;expect((await call({action:'draw',hand_id:id,revision:0})).status).toBe(409);expect(m.draw).not.toHaveBeenCalled();});
  it('does not resolve an already revealed roster again at lock',async()=>{m.row=session();m.row.state.resolved=true;await call({action:'lock',hand_id:id,revision:0,held_slots:[]});expect(m.resolve).not.toHaveBeenCalled();});
  it('propagates a CAS conflict without speculative rewards',async()=>{m.row=session();m.rpc.mockResolvedValue({data:null,error:{message:'stale'}});expect((await call({action:'lock',hand_id:id,revision:0})).status).toBe(409);expect(m.award).not.toHaveBeenCalled();});
+});
+
+it('reports missing authority tables without dealing or leaking DB details',async()=>{
+ m.queryError={code:'PGRST205',message:'private database details'};
+ const result=await call({action:'start',sport:'basketball',season:'2425',request_id:id,bet_amount:0});
+ expect(result.status).toBe(503);expect(result.data.code).toBe('AUTHORITY_SCHEMA_MISSING');
+ expect(JSON.stringify(result.data)).not.toContain('private database details');expect(m.deal).not.toHaveBeenCalled();expect(m.rpc).not.toHaveBeenCalled();
+});
+it('reports a missing settlement RPC as deployment failure rather than retryable conflict',async()=>{
+ m.row=session();m.rpc.mockResolvedValue({data:null,error:{code:'PGRST202',message:'missing RPC'}});
+ const result=await call({action:'lock',hand_id:id,revision:0,held_slots:[]});
+ expect(result.status).toBe(503);expect(result.data.code).toBe('AUTHORITY_SCHEMA_MISSING');expect(m.award).not.toHaveBeenCalled();
 });
