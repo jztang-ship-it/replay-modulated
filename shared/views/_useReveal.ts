@@ -43,7 +43,6 @@ import type { WinTierKey } from "@shared/utils/payoutLogic";
 import type { PlayerCard } from "@shared/types";
 import { soundManager } from "@shared/utils/soundManager";
 import { audioDirector } from "@shared/utils/audioDirector";
-import { buildScoreProof } from "@shared/utils/scoreProof";
 import { track } from "@shared/analytics/analytics";
 import type { GameAdapter } from "./GameAdapter";
 import { nsKey } from "./_useSharedGameState";
@@ -353,8 +352,10 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     const totalFp = rosterRef.current.reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
     runSpring(totalFp, () => {
       lockedGaugeFpRef.current = totalFp;
-      const tier = calculateWinTier(totalFp);
-      const payout = calculatePayoutWithStreak(tier, currentBet, streak);
+      const server = state.serverResultRef.current;
+      if (!server) return; // No speculative reward or leaderboard submission.
+      const tier = server.tier as WinTierKey;
+      const payout = Number(server.payout);
       setWinTier(tier);
       setWinPayout(payout);
       const bust = !tier || tier === "BUST";
@@ -417,40 +418,21 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
         // first_share_invitation, etc.) silently broken.
         incrementHandCount();
         pendingBalanceUpdateRef.current = () => {
-          // F2P: bypass the payout credit when the economy is off — the wallet
-          // never moves (the debit is bypassed in GameView's charge effect too).
-          if (economyEnabled && payout > 0) {
-            setBalance(prev => { const next = prev + payout; persistBalance(next); return next; });
-          }
-          const proof = buildScoreProof(rosterRef.current as any[], totalFp);
-          if (isStreakWin) {
-            // STARTER+ = streak advances. incrementStreak writes through nsKey
-            // and returns the new value.
-            const next = incrementStreak();
-            if (next === 3 || next === 5 || next === 10) soundManager.playStreakMilestone(next);
-            submitToLeaderboard("streak", next);
-            submitToLeaderboard("wins", 1);
-            submitToLeaderboard("money_won", payout);
-          } else if (isStreakLoss) {
-            // BUST = streak resets. resetStreak writes through nsKey.
-            resetStreak();
-          }
-          // ROOKIE: streak unchanged (neutral) — no increment, no reset
+          setBalance(Number(server.balance));
+          persistBalance(Number(server.balance));
+          state.setStreak(Number(server.streak_at_play));
           // These fire for all non-bust hands (ROOKIE still counts for leaderboard/session)
           if (!bust) {
-            submitToLeaderboard("fp", totalFp);
-            if (handCount >= 8) submitToLeaderboard("hand_avg", totalFp, { handCount });
             // Reuse the lock-generated handId (currentHandIdRef) — api/leaderboard
             // looks it up in hand_log to confirm the submission corresponds to a
             // real audit-trail row. Guard: skip the linked submit if the ref is
             // unset rather than send an unlinked row (binding: no silent null link).
             if (handIdForAudit) {
-              submitToLeaderboard("hand_best", totalFp, { proof, handId: handIdForAudit });
+              submitToLeaderboard("hand_best", totalFp, { handId: handIdForAudit });
             } else {
               // eslint-disable-next-line no-console
               console.warn("[reveal] lock handId missing — skipping hand_best submit");
             }
-            submitToLeaderboard("session_score", parseFloat(totalFp.toFixed(1)));
             track("gameplay", "score_submitted", {
               sport: adapter.sportKey,
               score: parseFloat(totalFp.toFixed(1)),

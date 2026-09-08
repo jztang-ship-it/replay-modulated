@@ -25,31 +25,9 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SRC = readFileSync(resolve(__dirname, "../_useSharedGameState.ts"), "utf8");
 
-// Scope the gated-path assertions to the logHandToDb useCallback body so a
-// like-named pattern elsewhere can't satisfy or break them.
-const logHandToDbBody = (() => {
-  const m = /const logHandToDb = useCallback\(async \(([\s\S]*?)\n  \}, \[adapter, evaluateAchievementsAndSave, handCount\]\);/.exec(SRC);
-  expect(m, "logHandToDb useCallback body must be locatable").not.toBeNull();
-  return m![1];
-})();
-
-describe("B-lite — auth read off the charge-gating path", () => {
-  it("logHandToDb reads `verified` synchronously from verifiedRef (no auth await)", () => {
-    expect(logHandToDbBody).toMatch(/const verified = verifiedRef\.current;/);
-  });
-
-  it("logHandToDb does NOT await supabase.auth.getSession() in the gated path", () => {
-    // The getSession await was the auth-race source; it must not live inside the
-    // bounded persist. (Seeding getSession is allowed OUTSIDE this body, in the
-    // subscription effect — asserted below.)
-    expect(logHandToDbBody).not.toMatch(/supabase\.auth\.getSession\(\)/);
-  });
-
-  it("the hand_log INSERT still occurs in the gated path with `verified` (record-before-money held)", () => {
-    expect(logHandToDbBody).toMatch(/supabase\.from\("hand_log"\)\.insert\(/);
-    // verified is still persisted on the row (the value just comes from the ref now).
-    expect(logHandToDbBody).toMatch(/\bverified,/);
-  });
+describe("client cannot write verified hands",()=>{
+ it("the compatibility callback requires a server settlement",()=>{expect(SRC).toContain('if (!serverResultRef.current) throw new Error("Server settlement required")');});
+ it("never inserts client hand_log rows",()=>{expect(SRC).not.toMatch(/from\("hand_log"\)\.insert\(/);});
 });
 
 describe("B-lite — verifiedRef kept fresh off the hand path", () => {

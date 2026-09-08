@@ -56,7 +56,8 @@ import {
 import { useSharedGameState } from "./_useSharedGameState";
 import { useReveal } from "./_useReveal";
 import { commitRound } from "./_roundMachine";
-import { boundedPersist } from "./_persistLock";
+import { AuthoritativeHand, handErrorMessage } from "../utils/authoritativeHand";
+import { getActiveSeason } from "../engines/dataEngine";
 import type { GameAdapter } from "./GameAdapter";
 import type { GamePhase, PlayerCard } from "@shared/types";
 import type { WinTierKey } from "@shared/utils/payoutLogic";
@@ -94,7 +95,7 @@ import { TierGauge, computeGaugeState } from "@shared/components/TierGauge";
 import { TeamStamp } from "@shared/components/TeamStamp";
 import { useEngagement } from "@shared/engagement/useEngagement";
 import { soundManager } from "@shared/utils/soundManager";
-import { getBonusPool, contributeBet } from "@shared/utils/bonusPoolStore";
+import { getBonusPool } from "@shared/utils/bonusPoolStore";
 import { audioDirector } from "@shared/utils/audioDirector";
 import {
   getPlayerUid,
@@ -302,51 +303,12 @@ function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competit
     if (!pulse) setDisplayAmount(amount);
   }, [amount, pulse]);
 
-  // 5% rake on every bet — push to server, animate locally for feedback.
-  // Decoupled from the Pill render: when the economy is off the rake never
-  // accrues (no contributeBet, no animation), regardless of whether the Pill is
-  // mounted. This is the call-site guard — the render gate at the call site only
-  // HIDES the surface; this is what stops the rake.
+  // Pool mutations happen only inside the server hand-resolution transaction.
+  // The client only polls the resulting value; it never submits a rake amount.
   useEffect(() => {
-    if (!economyEnabled) return;
     if (betNonce === prevNonceRef.current) return;
     prevNonceRef.current = betNonce;
-    const rake = parseFloat((betAmount * 0.05).toFixed(2));
-    if (rake <= 0) return;
-
-    const startVal = amount;
-    const endVal = parseFloat((amount + rake).toFixed(2));
-
-    setPulse(true);
-    const startTime = performance.now();
-    const duration = 800;
-    const tick = () => {
-      const elapsed = performance.now() - startTime;
-      const t = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setDisplayAmount(Math.round(startVal + (endVal - startVal) * eased));
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        setDisplayAmount(endVal);
-        setTimeout(() => setPulse(false), 400);
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-
-    (async () => {
-      try {
-        const next = await contributeBet(sportKey, betAmount, competition);
-        setAmount(next);
-        onAmountChange?.(next);
-      } catch {
-        setAmount(endVal);
-        onAmountChange?.(endVal);
-      }
-    })();
-
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [betNonce, economyEnabled]); // eslint-disable-line
+  }, [betNonce]);
 
   return (
     <div style={{
@@ -515,7 +477,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     winPayout, setWinPayout,
     streak,
     handCount,
-    currentHandIdRef,
+    currentHandIdRef, serverResultRef,
     revealIndex,
     revealedSalary, setRevealedSalary,
     lastRevealedCardId, setLastRevealedCardId,
@@ -532,13 +494,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     incrementHandCount,
     newlyUnlockedAchievements,
     clearNewlyUnlockedAchievements,
-    // Lock-time hand_log persist (sets currentHandIdRef, writes the audit row).
+    // Lock-time server resolve (sets currentHandIdRef and records the audit result).
     // Referenced by persistLock at the commitRound seam (~:1944); the binding was
     // lost from this destructure, orphaning that call (esbuild ships unbound names;
     // the spy-tested round machine never invoked the real wiring) — so every hand
-    // threw a swallowed ReferenceError: no handId, no hand_log row, entry_fee_skipped.
+    // threw a swallowed ReferenceError: no handId, no server audit result, entry_fee_skipped.
     logHandToDb,
   } = shared;
+  const serverGame = useRef(new AuthoritativeHand());
 
   const {
     taskStates,
@@ -583,8 +546,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   //   (isAnonymous=false) AND for the loading window (authReady=false), which
   //   seals the glass-2b signed-in deal leak WITHOUT the glass-2 regression
   //   (the earlier `!!user` requirement wrongly excluded user=null cold users).
-  const ftueActive = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
-    && authReady && isAnonymous && !challengeBackCtx;
+  const ftueActive = false; // Server hands use the real dealt roster.
 
   // ── FTUE opening ceremony (pre-deal wall) ──────────────────────────────────
   // On the scripted-FTUE first run, IDLE shows five real First-Team cards face-up
@@ -2174,8 +2136,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     // closure BEFORE the re-read → stale for one deal). The effects/UI keep the
     // render-const ftueActive; by their next render the ref is already updated.
     if (gameState === "IDLE") soloFtueFirstRunRef.current = isSoloFtueFirstRun();
-    const ftueActiveNow = soloFtueFirstRunRef.current && !challengeCtx && !!adapter.ftueScriptedHand
-      && authReady && isAnonymous && !challengeBackCtx;
+    const ftueActiveNow = false; // Scripted client outcomes are not authoritative.
     if (gameState === "IDLE") {
       // FTUE load-race gate: until the ceremony pool (players) is ready the wall
       // can't have mounted yet — swallow the tap so it can't deal past the
@@ -2195,7 +2156,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // moves). Outer-wrapped so the inner `if (balance < currentBet)` line stays
       // byte-identical for the pinned betOncePerHand assertion.
       if (economyEnabled) {
-        if (balance < currentBet) { alert("Insufficient balance!"); return; }
+        // Affordability is checked under the server wallet lock, not localStorage.
       }
       resetReveal();
       resetAllOverlays();
@@ -2225,32 +2186,23 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         // the snapshot" misrouted any post-dismiss DEAL tap back into the
         // same challenge. When the intent isn't set, clear the stale
         // challengeCtx and deal a fresh hand (FTUE-aware).
-        if (challengeCtx && challengeNextDealRef.current) {
-          // Phase 0 challenge-snapshot-enrichment bleed clear (2026-06-02,
-          // lock: docs/challenge-landing-v2-phase0-snapshot-enrichment-lock.md).
-          // The deserialized initialRoster now carries the SENDER's
-          // wasHeld (display-only on the landing) — strip it here so the
-          // recipient's own deal starts with all cards un-held. Mirrors
-          // the H2HRecipientPlay.tsx:371-374 defensive pattern; deal-site
-          // owns the clear so the invariant holds regardless of what
-          // deserializeRoster returns.
-          res = { roster: challengeCtx.initialRoster.map(c => ({ ...c, wasHeld: false })) };
-          challengeNextDealRef.current = false;
-        } else {
-          if (challengeCtx) clearChallengeCtx?.();
-          // FTUE removed (slice 1): every hand — including hand 1 — deals a
-          // real roster. The old `ftueStillActive` localStorage/URL gate that
-          // routed first-timers into ftueDealRoster() is gone. It was
-          // INDEPENDENT of the FTUE flag (the second deal gate), so cut here
-          // is what actually stops the scripted Tatum hand from dealing.
-          res = ftueActiveNow ? await adapter.ftueScriptedHand!.deal() : await dealInitialRoster();
-        }
+        const isChallenge = !!challengeCtx && challengeNextDealRef.current;
+        const session = await serverGame.current.start({
+          sport: sportKey,
+          season: isChallenge ? challengeCtx!.season : (getActiveSeason() ?? (sportKey === "football" ? "2022" : "2425")),
+          competition: adapter.competition,
+          bet_amount: currentBet,
+          ...(isChallenge ? { challenge_id: challengeCtx!.challengeId } : {}),
+        });
+        res = { roster: session.roster };
+        currentHandIdRef.current = session.hand_id;
+        serverResultRef.current = null;
+        challengeNextDealRef.current = false;
+        if (!isChallenge && challengeCtx) clearChallengeCtx?.();
       } catch (e) {
-        // Surface the real error to the console — the on-screen banner is
-        // intentionally generic, but the underlying message (server 4xx, auth
-        // failure, balance check) is the only useful debugging signal.
+        // Distinguish missing deployment/auth setup from a retryable deal failure.
         console.error("[deal] dealInitialRoster failed:", e);
-        setGameError("Couldn't deal a hand. Tap to try again.");
+        setGameError(handErrorMessage(e, "Couldn't deal a hand. Tap to try again."));
         setGameState("IDLE");
         return;
       }
@@ -2310,11 +2262,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // Gated to maxRounds > 1: a single-shot sport has no early lock, so earlyLock
       // stays false → redraw head + userTappedReveal:false, byte-identical to today.
       const allHeld = markedRoster.length > 0 && markedRoster.every(c => (c as any).wasHeld);
-      const earlyLock = allHeld && maxRounds > 1 && !ftueActiveNow;
+      const retryLock = serverGame.current.pendingAction === "lock";
+      const earlyLock = retryLock || (allHeld && maxRounds > 1 && !ftueActiveNow);
       let finalRoster: PlayerCard[];
       let mvp: string | undefined;
 
-      if (earlyLock) {
+      if (retryLock) {
+        finalRoster = serverGame.current.snapshot!.roster;
+      } else if (earlyLock) {
         // ── EARLY-LOCK HEAD: lock what the player is looking at, no redraw. ──
         // Resolution keys off round state, not card inspection (dealt cards carry
         // actualFp:0, so resolution can't be detected from the cards):
@@ -2325,7 +2280,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         if (roundsUsed === 1) {
           let resolveRes: any;
           try {
-            resolveRes = ftueActiveNow ? await adapter.ftueScriptedHand!.resolve({ finalCards: markedRoster }) : await resolveRoster({ finalCards: markedRoster });
+            resolveRes = await serverGame.current.turn("lock", markedRoster.flatMap((c, i) => c.wasHeld ? [i] : []));
           } catch {
             setGameError("Something went wrong. Tap to try again.");
             setGameState("HOLD");
@@ -2345,9 +2300,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         await sleep(DRAWING_DWELL_MS);
         let drawRes: any, resolveRes: any;
         try {
-          drawRes = ftueActiveNow ? await adapter.ftueScriptedHand!.redraw({ currentCards: markedRoster, roundsUsed }) : await redrawRoster({ currentCards: markedRoster, lockedCardIds });
-          const drawnRoster = (drawRes?.roster ?? drawRes?.cards ?? markedRoster) as PlayerCard[];
-          resolveRes = ftueActiveNow ? await adapter.ftueScriptedHand!.resolve({ finalCards: drawnRoster }) : await resolveRoster({ finalCards: drawnRoster });
+          drawRes = await serverGame.current.turn("draw", markedRoster.flatMap((c, i) => c.wasHeld ? [i] : []));
+          resolveRes = drawRes;
         } catch {
           setGameError("Something went wrong during the draw. Tap to try again.");
           setGameState("HOLD");
@@ -2357,6 +2311,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         finalRoster = (resolveRes?.roster ?? resolveRes?.cards ?? drawnRoster) as PlayerCard[];
         mvp = resolveRes?.mvpCardId ?? resolveRes?.mvpId;
       }
+      if (earlyLock || roundsUsed + 1 >= maxRounds) {
+        try {
+          const locked = await serverGame.current.turn("lock", finalRoster.flatMap((c, i) => c.wasHeld ? [i] : []));
+          finalRoster = locked.roster;
+          serverResultRef.current = locked.hand;
+          currentHandIdRef.current = locked.hand_id;
+        } catch (error) {
+          setGameError("Result not confirmed. Tap to retry; no local reward was granted.");
+          setGameState("HOLD");
+          return;
+        }
+      }
+      mvp = finalRoster.reduce((best: any, c: any) => !best || c.actualFp > best.actualFp ? c : best, null)?.cardId;
       if (mvp) setMvpId(mvp);
 
       // ── Round-machine decision. Loop back to HOLD (free) or lock to REVEALING.
@@ -2389,23 +2356,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             if (!economyEnabled && (ev === "entry_fee_committed" || ev === "entry_fee_skipped")) return;
             track("gameplay", ev, { sport: sportKey, hand_number: handCount, ...(meta ?? {}) });
           },
-          persistLock: (rec) => {
-            const handId = (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function")
-              ? crypto.randomUUID()
-              : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-            // Bounded: a slow/hung hand_log insert must NOT block REVEALING. ok=true
-            // only when the write confirms within PERSIST_TIMEOUT_MS — the controller
-            // gates the charge on it (record-before-money). logHandToDb sets
-            // currentHandIdRef synchronously before its network insert, so _useReveal's
-            // handId linkage holds even when the write is bounded out (and the row may
-            // still land later — reconcilable via the entry_fee_skipped handId).
-            return boundedPersist(
-              () => logHandToDb(rec.roster as any[], rec.totalFp, rec.tier, rec.payout, rec.streak, handId),
-              handId,
-            );
-          },
-          charge: (fee) => setBalance(prev => { const next = prev - fee; if (!economyEnabled) return prev; saveBalance(next); return next; }),
-          rake: () => setBetNonce(n => n + 1),
+          persistLock: async () => ({ ok: !!serverResultRef.current, handId: currentHandIdRef.current ?? "" }),
+          charge: () => {}, // Wallet debit and credit are one-time server transactions.
+          rake: () => {},
         },
       });
       setRoundsUsed(decision.roundsUsed);
@@ -4080,6 +4033,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         <Suspense fallback={null}>
           <ChallengeComparisonScreen
             challengeCtx={challengeCtx}
+            handId={currentHandIdRef.current}
             myScore={rosterRef.current.reduce((s: number, c: any) => s + Number(c.actualFp ?? 0), 0)}
             myRoster={rosterRef.current as import("@shared/types/index").GeneratedCard[]}
             myWinTier={winTier ?? "BUST"}

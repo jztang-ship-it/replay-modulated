@@ -48,9 +48,8 @@ import type { WinTierKey } from "@shared/utils/payoutLogic";
 import type { PlayerCard } from "@shared/types";
 import { getPlayerUid, getNickname, getSessionId } from "@shared/utils/playerIdentity";
 import { supabase } from "@shared/lib/supabase";
-import { addBigWinMessage } from "@shared/inbox/inbox";
 import { useAchievements } from "@shared/hooks/useAchievements";
-import { serializeResolvedRoster } from "@shared/utils/resolvedRosterSerialization";
+
 import type { GameAdapter } from "./GameAdapter";
 
 export type GameState =
@@ -199,30 +198,34 @@ export function useSharedGameState(
     value: number,
     extra?: Record<string, unknown>,
   ) => {
-    const uid = getPlayerUid();
+    // Leaderboard writes are intentionally narrow: the API accepts only a
+    // server-verified hand_best result. Do not fall back to anonymous or
+    // client-identified submissions.
+    const handId = typeof extra?.handId === "string" ? extra.handId : "";
+    if (metric !== "hand_best" || !handId || value <= 0) return;
     const nickname = getNickname();
-    if (!uid || value <= 0) return;
-    let authHeader: Record<string, string> = {};
+    let accessToken = "";
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        authHeader = { Authorization: `Bearer ${session.access_token}` };
-      }
-    } catch { /* auth not available, submit unverified */ }
+      accessToken = session?.access_token ?? "";
+    } catch {
+      return;
+    }
+    if (!accessToken) return;
     try {
       const resp = await fetch("/api/leaderboard", {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           action: "submit",
           sport: adapter.leaderboardScope,
-          competition: adapter.competition,  // football: "world_cup"; others: undefined
-          metric,
-          value,
-          uid,
+          competition: adapter.competition,
+          metric: "hand_best",
           nickname,
-          session_id: getSessionId(),
-          ...extra,
+          handId,
         }),
       });
       if (!resp.ok) console.warn("[leaderboard] submit failed", metric, resp.status);
@@ -298,22 +301,18 @@ export function useSharedGameState(
     return next;
   }, []);
 
-  // Latest handId persisted via logHandToDb. Exposed so downstream surfaces
-  // (specifically ChallengeSharePrompt) can reuse the same audit ID when
-  // creating a challenge from this hand — without this, the prompt would
-  // mint a fresh UUID and shared_challenges.hand_id would have no matching
-  // hand_log row, breaking the H2H reveal arc's sender-hand endpoint
+  // Latest handId submitted to the server resolve endpoint. Exposed so
+  // downstream surfaces (specifically ChallengeSharePrompt) can reuse the
+  // same verified audit ID when creating a challenge from this hand — without
+  // this, the prompt would mint a fresh UUID and lose the H2H reveal linkage
   // premise. See docs/h2h-reveal-arc-design.md "handId threading fix".
   const currentHandIdRef = useRef<string | null>(null);
+  const serverResultRef = useRef<any>(null);
 
-  // B-lite (auth-race close): auth-verified state kept fresh OFF the hand path so
-  // logHandToDb can read it SYNCHRONOUSLY. Previously logHandToDb did
-  // `await supabase.auth.getSession()` INSIDE the bounded persist that gates the
-  // charge — a slow auth refresh flipped the charge gate (persist times out →
-  // entry_fee_skipped → no charge). Sourcing `verified` from this ref removes the
-  // only auth await from the gated path while the hand_log INSERT stays inside the
-  // bound (record-before-money invariant preserved). Seed once + subscribe; clean
-  // up on unmount. Defensive: auth is never allowed to throw into the hand path
+  // Keep auth-verified state fresh outside the bounded hand path. This prevents
+  // an unauthenticated client from entering the server resolve request while
+  // avoiding an auth refresh inside the charge-gating callback. Seed once +
+  // subscribe; clean up on unmount. Defensive: auth is never allowed to throw into the hand path
   // (mirrors AuthProvider; the test supabase mock returns a no-op subscription).
   const verifiedRef = useRef(false);
   useEffect(() => {
@@ -331,87 +330,10 @@ export function useSharedGameState(
     return () => { active = false; try { unsubscribe?.(); } catch { /* ignore */ } };
   }, []);
 
-  const logHandToDb = useCallback(async (
-    rosterArg: any[],
-    totalFp: number,
-    tier: string,
-    payout: number,
-    streakAtPlay: number,
-    handId?: string,
-  ) => {
-    // Write to the shared ref first so the ChallengeSharePrompt mount —
-    // which reads from this ref at RESULTS — sees the correct ID even if
-    // the network insert below races / fails. The audit-DB write being
-    // best-effort doesn't change the contract: the handId associated with
-    // *this* hand is whatever _useReveal generated and passed in.
-    if (handId) currentHandIdRef.current = handId;
-    const season = String((rosterArg[0] as any)?.season ?? "");
-    try {
-      const uid = getPlayerUid();
-      if (!uid || uid.startsWith("u_")) return; // Only log with real Supabase UID
-      const rosterIds = rosterArg
-        .map((c: any) => String(c.basePlayerId ?? ""))
-        .filter(Boolean);
-      // B-lite: read auth-verified SYNCHRONOUSLY from the off-hand-path ref — NO
-      // getSession await inside the charge-gating bounded persist (closes the
-      // parked auth-race). The insert below still awaits within the bound, so
-      // record-before-money holds.
-      const verified = verifiedRef.current;
-      // final_roster: GeneratedCard-shaped per-card resolved data, populated
-      // on every hand from 2026-05-26 forward. Consumed by the H2H reveal
-      // arc data path (GET /api/challenge/{id}/sender-hand). Pre-cutover
-      // rows are NULL → endpoint returns sender_resolved:false with
-      // reason:"legacy_pre_h2h_capture". Field picker is explicit so future
-      // GeneratedCard additions don't accidentally bloat the JSONB without
-      // an intentional decision. See docs/h2h-reveal-arc-design.md
-      // "Data model gap — RESOLVED for phase 1" for the locked schema.
-      const finalRoster = serializeResolvedRoster(rosterArg);
-      await supabase.from("hand_log").insert({
-        player_id: uid,
-        hand_id: handId ?? null,
-        roster_ids: rosterIds,
-        total_fp: totalFp,
-        tier,
-        payout,
-        streak_at_play: streakAtPlay,
-        verified,
-        sport: adapter.sportKey,
-        season,
-        final_roster: finalRoster,
-      });
-      // Trigger inbox big-win recap for elite tiers
-      if (tier === "MVP+" || tier === "LEGEND") {
-        const hand_id = `hand-${Date.now()}`;
-        await addBigWinMessage(uid, { tier, fp: totalFp, hand_id });
-      }
-    } catch { /* silent — audit trail is best-effort */ }
-
-    // Fire-and-forget: evaluate + persist any newly unlocked achievements.
-    // Runs after the hand_log insert but never blocks or throws.
-    const isWin = !["BUST", "ROOKIE"].includes(tier);
-    const newStreak = isWin ? streakAtPlay + 1 : 0;
-    void evaluateAchievementsAndSave({
-      sport: adapter.sportKey,
-      season,
-      handId: handId ?? "",
-      totalFp,
-      fpTier: tier,
-      isWin,
-      rosterIds: rosterArg.map((c: any) => String(c.basePlayerId ?? "")).filter(Boolean),
-      cards: rosterArg.map((c: any) => ({
-        fp: Number(c.actualFp ?? 0),
-        stats: (c.statLine ?? {}) as Record<string, unknown>,
-        position: String(c.position ?? ""),
-        name: String(c.name ?? ""),
-        team: String(c.team ?? ""),
-        tier: String(c.tier ?? "WHITE"),
-        season: String(c.season ?? ""),
-        photoCode: c.photoCode ?? undefined,
-      })),
-      streak: newStreak,
-      handsPlayed: handCount,
-    });
-  }, [adapter, evaluateAchievementsAndSave, handCount]);
+  // Compatibility seam for existing consumers. Never turn a client roster into a verified result.
+  const logHandToDb = useCallback(async (..._args: any[]) => {
+    if (!serverResultRef.current) throw new Error("Server settlement required");
+  }, []);
 
   return {
     // Core flow
@@ -438,7 +360,7 @@ export function useSharedGameState(
     winPayout, setWinPayout,
     streak, setStreak,
     handCount, setHandCount,
-    currentHandIdRef,
+    currentHandIdRef, serverResultRef,
 
     // Reveal state
     revealIndex, setRevealIndex,
@@ -469,7 +391,7 @@ export function useSharedGameState(
     resetStreak,
     incrementHandCount,
 
-    // Achievement state (fire-and-forget evaluation happens inside logHandToDb)
+    // Achievement state is read-only on the client; unlocks are server-issued
     unlockedAchievementIds,
     newlyUnlockedAchievements,
     clearNewlyUnlockedAchievements,
