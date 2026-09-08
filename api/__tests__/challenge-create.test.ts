@@ -1,3 +1,4 @@
+vi.mock("../hand/_lib/security.js",async()=>({...await vi.importActual<any>("../hand/_lib/security.js"),quota:vi.fn(async()=>true)}));
 /**
  * api/__tests__/challenge-create.test.ts
  *
@@ -30,6 +31,8 @@ const { capturedInserts, makeBuilder } = vi.hoisted(() => {
       return builder;
     });
     builder.select = vi.fn(() => builder);
+    builder.eq = vi.fn(() => builder);
+    builder.maybeSingle = vi.fn(async()=>({data:{hand_id:"hand-1",sport:"basketball",season:"2425",total_fp:165,final_roster:[{basePlayerId:"1",actualFp:165}],verified:true,authority_version:2},error:null}));
     builder.single = vi.fn(() =>
       Promise.resolve({
         data: {
@@ -183,10 +186,11 @@ describe("api/challenge/create — trigger-detail body→insert mapping", () => 
     expect(payload.sport).toBe("basketball");
     expect(payload.season).toBe("2425");
     expect(payload.target_fp).toBe(165);
-    expect(payload.initial_roster).toEqual({ cards: [] });
+    expect(payload.initial_roster).toEqual([{basePlayerId:"1",actualFp:165}]);
+    expect(payload.authority_version).toBe(2);
     expect(payload.challenger_name).toBe("Test User");
     expect(payload.share_headline).toBe("headline");
     expect(payload.hand_id).toBe("hand-1");
-    expect(payload.roster_size).toBe(0); // cards: [] → length 0
+    expect(payload.roster_size).toBe(1); // cards: [] → length 0
   });
 });

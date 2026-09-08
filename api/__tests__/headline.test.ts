@@ -34,6 +34,9 @@ vi.mock("@vercel/functions", () => ({
   waitUntil: mockWaitUntil,
 }));
 
+const securityMock = vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn()}));
+vi.mock("../hand/_lib/auth.js",()=>({verifyAuth:securityMock.auth}));
+vi.mock("../hand/_lib/security.js",async()=>({...await vi.importActual<any>("../hand/_lib/security.js"),quota:securityMock.quota}));
 const mod = await import("../headline.js");
 const handler = mod.default;
 const { validateHeadline, withTimeout, generateHeadline } = mod;
@@ -118,6 +121,8 @@ function factsNumericLowBand(): any {
 }
 
 beforeEach(() => {
+  securityMock.auth.mockResolvedValue({user:{id:"test-user"},error:null});
+  securityMock.quota.mockResolvedValue(true);
   mockRouteCommentary.mockReset();
   mockWaitUntil.mockReset();
   // Default the env so buildRouterConfig doesn't throw. Individual
@@ -132,7 +137,7 @@ describe("api/headline — method gate", () => {
     expect(res.statusCode).toBe(405);
   });
 
-  it("does NOT require auth in v1 (anonymous OAuth-resume path needs it)", async () => {
+  it("accepts verified sessions when quotas permit", async () => {
     mockRouteCommentary.mockResolvedValueOnce({
       commentary: "Wade hangs 48 on CHI, again.",
       tone: "observational",
@@ -415,4 +420,11 @@ describe("generateHeadline — composes VOICE_CONTRACT + routes", () => {
     expect(r.raw).toBe("Wade does the thing.");
     expect(r.modelUsed).toBe("claude-haiku-4-5");
   });
+});
+
+describe("paid AI security boundary",()=>{
+ it.each([undefined,"flavor"])("denies missing session for %s",async kind=>{securityMock.auth.mockResolvedValue({user:null});const {req,res}=makeReqRes({kind,facts:factsRarePullWade()});await handler(req,res);expect(res.statusCode).toBe(401);expect(mockRouteCommentary).not.toHaveBeenCalled();});
+ it("fails closed on quota storage failure",async()=>{securityMock.quota.mockRejectedValueOnce(new Error("offline"));const {req,res}=makeReqRes({facts:factsRarePullWade()});await handler(req,res);expect(res.statusCode).toBe(503);expect(mockRouteCommentary).not.toHaveBeenCalled();});
+ it("denies exhausted quotas before model invocation",async()=>{securityMock.quota.mockResolvedValueOnce(false);const {req,res}=makeReqRes({facts:factsRarePullWade()});await handler(req,res);expect(res.statusCode).toBe(429);expect(mockRouteCommentary).not.toHaveBeenCalled();});
+ it("caps user, IP and global calls",async()=>{const {req,res}=makeReqRes({facts:factsRarePullWade()});await handler(req,res);expect(securityMock.quota).toHaveBeenCalledWith("ai:user:test-user",20,86400);expect(securityMock.quota).toHaveBeenCalledWith("ai:global",1000,86400);});
 });

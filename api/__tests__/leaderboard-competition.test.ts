@@ -4,8 +4,8 @@
  * Per-competition keying validation tests. Verifies:
  *   - Football requires the competition param (POST + GET)
  *   - Football validates competition values (only world_cup at launch)
- *   - Football KV keys include the competition segment (lb:football:world_cup:...)
- *   - Basketball/baseball keep the legacy 4-segment key shape (lb:basketball:...)
+ *   - Football KV keys include the competition segment (lb:v2:football:world_cup:...)
+ *   - Basketball/baseball keep the legacy 4-segment key shape (lb:v2:basketball:...)
  *
  * Doesn't test the full submit flow (that lives in production smoke tests).
  * Focused on the new competition-routing logic added in PR 2.
@@ -72,7 +72,7 @@ describe('GET ?sport=football — competition required', () => {
     expect(res.json.mock.calls[0][0].error.toLowerCase()).toMatch(/unsupported competition/);
   });
 
-  it('returns 200 + uses lb:football:world_cup:... key when competition=world_cup', async () => {
+  it('returns 200 + uses lb:v2:football:world_cup:... key when competition=world_cup', async () => {
     mockKv.zrange.mockResolvedValue([]);
     const req = makeReq('GET', {
       sport: 'football',
@@ -86,39 +86,25 @@ describe('GET ?sport=football — competition required', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     // The KV key should include the competition segment.
     const keyArg = mockKv.zrange.mock.calls[0][0];
-    expect(keyArg).toMatch(/^lb:football:world_cup:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
+    expect(keyArg).toMatch(/^lb:v2:football:world_cup:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
   });
 });
 
 describe('GET ?sport=basketball — no competition required', () => {
-  it('returns 200 + uses lb:basketball:... key (no competition segment)', async () => {
+  it('returns 200 + uses lb:v2:basketball:... key (no competition segment)', async () => {
     mockKv.zrange.mockResolvedValue([]);
     const req = makeReq('GET', { sport: 'basketball', metric: 'hand_best', scope: 'daily' });
     const res = makeRes();
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const keyArg = mockKv.zrange.mock.calls[0][0];
-    expect(keyArg).toMatch(/^lb:basketball:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
+    expect(keyArg).toMatch(/^lb:v2:basketball:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
   });
 
-  it('ignores competition param if accidentally included for basketball', async () => {
-    // Forward-compatibility: if a future basketball hand sent competition=nba_2024,
-    // we silently ignore it (no error) since basketball isn't in COMPETITION_REQUIRED.
-    mockKv.zrange.mockResolvedValue([]);
-    const req = makeReq('GET', {
-      sport: 'basketball',
-      competition: 'nba_2024',
-      metric: 'hand_best',
-      scope: 'daily',
-    });
-    const res = makeRes();
-    await handler(req, res);
-    expect(res.status).toHaveBeenCalledWith(200);
-    // Key remains the 2-segment basketball form — competition is ignored.
-    const keyArg = mockKv.zrange.mock.calls[0][0];
-    expect(keyArg).toMatch(/^lb:basketball:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
-  });
-});
+  it('rejects an unexpected basketball competition', async()=>{
+    const res=makeRes();await handler(makeReq('GET',{sport:'basketball',competition:'nba_2024',metric:'hand_best'}),res);
+    expect(res.status).toHaveBeenCalledWith(400);expect(mockKv.zrange).not.toHaveBeenCalled();
+  });});
 
 // ────────────────────────────────────────────────────────────────────────────
 // Sport whitelist still enforced

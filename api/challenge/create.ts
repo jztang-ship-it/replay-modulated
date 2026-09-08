@@ -2,6 +2,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { supabaseAdmin } from "../hand/_lib/supabaseServer.js";
 import { verifyAuth } from "../hand/_lib/auth.js";
+import { boundedBody,quota } from "../hand/_lib/security.js";
 
 // Build-time version marker. Surfaces in Vercel function logs so we can
 // prove which create.ts is actually running (Phase 5c had two deploys
@@ -16,10 +17,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // One-line version log per request — surfaces in Vercel function logs.
   // Cheap permanent marker so future "is the new code actually deployed?"
   // questions can be answered without re-instrumenting.
+  res.setHeader("Cache-Control", "no-store");
+  try {
+  try { req.body = boundedBody(req,16384); } catch { return res.status(400).json({error:"Invalid body"}); }
   console.info("[create.ts]", CREATE_VERSION);
 
   const { user, error: authErr } = await verifyAuth(req);
-  if (authErr) return res.status(authErr.status).json({ error: "UNAUTHORIZED" });
+  if (authErr || !user) return res.status(401).json({ error: "UNAUTHORIZED" });
+  if (!await quota(`challenge:create:${user.id}`,30,3600)) return res.status(429).json({error:"Too many challenges"});
 
   const {
     hand_id, sport, season, target_score, score_breakdown,
@@ -39,13 +44,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     authored_headline,
   } = req.body ?? {};
 
-  if (!sport || !season || target_score == null || !initial_roster) {
-    return res.status(400).json({ error: "Missing required fields" });
+  const safeSport = typeof sport === "string" ? sport.trim().toLowerCase() : "";
+  const safeSeason = typeof season === "string" ? season.trim().slice(0, 16) : "";
+  const safeHandId = typeof hand_id === "string" ? hand_id.trim() : "";
+  if (!safeSport || !safeSeason || !safeHandId) {
+    return res.status(400).json({ error: "Verified hand_id, sport, and season required" });
   }
 
-  const rosterSize = Array.isArray((initial_roster as any).cards)
-    ? (initial_roster as any).cards.length
-    : 5;
+  const { data: verifiedHand, error: handErr } = await supabaseAdmin
+    .from("hand_log")
+    .select("hand_id, sport, season, total_fp, final_roster, verified")
+    .eq("hand_id", safeHandId)
+    .eq("player_id", user.id)
+    .eq("verified", true)
+    .eq("authority_version", 2)
+    .maybeSingle();
+  if (handErr || !verifiedHand || verifiedHand.sport !== safeSport || verifiedHand.season !== safeSeason || !verifiedHand.final_roster) {
+    return res.status(400).json({ error: "Hand must be server-verified before sharing" });
+  }
+
+  const verifiedRoster = Array.isArray(verifiedHand.final_roster)
+    ? verifiedHand.final_roster
+    : { cards: verifiedHand.final_roster };
+  const rosterSize = Array.isArray((verifiedRoster as any).cards)
+    ? (verifiedRoster as any).cards.length
+    : Array.isArray(verifiedRoster) ? verifiedRoster.length : 0;
+  if (rosterSize < 1 || rosterSize > 12) {
+    return res.status(400).json({ error: "Invalid verified roster" });
+  }
 
   // Construct the insert payload once so we can log + insert from the same
   // object. Locking this in a single binding rules out any "payload at log
@@ -53,16 +79,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // round couldn't fully exclude. Going forward, ANY change to the four
   // detail fields lives here at the binding, NOT inline at the call site.
   const insertPayload = {
+    authority_version: 2,
     created_by: user.id,
-    hand_id: hand_id ?? crypto.randomUUID(),
-    sport,
-    season,
+    hand_id: safeHandId,
+    sport: safeSport,
+    season: safeSeason,
     slate_seed: "",
-    target_fp: Number(target_score),
-    initial_roster,
-    challenger_name: challenger_name ?? "Anonymous",
+    target_fp: Number(verifiedHand.total_fp),
+    initial_roster: verifiedRoster,
+    challenger_name: typeof challenger_name === "string" && challenger_name.trim() ? challenger_name.trim().slice(0,32) : "Player",
     trigger_type: trigger_type ?? "default",
-    share_headline: share_headline ?? "",
+    share_headline: typeof share_headline === "string" ? share_headline.slice(0,320) : "",
     roster_size: rosterSize,
     near_miss_gap: near_miss_gap ?? null,
     near_miss_next_tier: near_miss_next_tier ?? null,
@@ -75,7 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // careless edit might) cannot reach the landing's TAKE.
     authored_headline:
       typeof authored_headline === "string" && authored_headline.trim().length > 0
-        ? authored_headline.trim()
+        ? authored_headline.trim().slice(0,160)
         : null,
   };
 
@@ -95,4 +122,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const cardUrl = `https://replayifs.com/api/share/card?challenge_id=${challengeId}`;
 
   return res.status(200).json({ challenge_id: challengeId, share_url: shareUrl, card_url: cardUrl });
+  } catch { return res.status(503).json({error:"Challenge service unavailable"}); }
 }
