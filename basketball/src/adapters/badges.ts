@@ -15,7 +15,7 @@
  * (browser, Node sim, test).
  */
 
-import type { Achievement } from "@shared/types/index";
+import type { Achievement } from "../../../shared/types/index.js";
 
 export interface BadgeDef {
   id: string;
