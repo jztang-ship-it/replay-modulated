@@ -237,5 +237,5 @@ export async function submitFeedback(
 
 export async function grantFeedbackCoins(amount: number): Promise<void> {
   const { error } = await supabase.rpc('grant_coins', { p_amount: amount, p_reason: 'feedback_v1' });
-  if (error) console.warn('[inbox] grantFeedbackCoins failed', error);
+  if (error) throw new Error('Feedback reward unavailable or already claimed');
 }

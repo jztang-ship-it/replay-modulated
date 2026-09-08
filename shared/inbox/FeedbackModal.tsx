@@ -105,8 +105,8 @@ export function FeedbackModal({ userId, onClose, metadata = {} }: Props) {
     const ok = await submitFeedback(userId, { kind: 'survey', ...surveyAnswers }, submissionNumber, metadata);
     let coinsGranted = 0;
     if (ok && submissionNumber === 1) {
-      await grantFeedbackCoins(COIN_REWARD);
-      coinsGranted = COIN_REWARD;
+      try { await grantFeedbackCoins(COIN_REWARD); coinsGranted = COIN_REWARD; }
+      catch { /* Feedback succeeded; do not display an unconfirmed coin reward. */ }
     }
     track('inbox', 'feedback_submitted', {
       kind: 'survey',
