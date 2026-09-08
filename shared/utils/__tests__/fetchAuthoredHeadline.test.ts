@@ -1,3 +1,4 @@
+vi.mock("../../lib/supabase",()=>({supabase:{auth:{getSession:vi.fn(async()=>({data:{session:{access_token:"test-token"}}}))}}}));
 // shared/utils/__tests__/fetchAuthoredHeadline.test.ts
 //
 // Phase 3 step 1 fallback gates (lock §"Fallback"). The wrapper around

@@ -1,3 +1,4 @@
+vi.mock("../../lib/supabase",()=>({supabase:{auth:{getSession:vi.fn(async()=>({data:{session:{access_token:"test-token"}}}))}}}));
 // RD7.12 — the client wrapper ALWAYS resolves, NEVER throws, returns null on
 // any failure → the result screen falls back to the deterministic line and
 // never blocks. Belt-and-suspenders: it re-validates the server line client-side.
