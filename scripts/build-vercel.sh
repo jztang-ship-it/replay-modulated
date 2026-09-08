@@ -18,6 +18,8 @@
 
 set -euo pipefail
 
+node scripts/build-authority-data.mjs
+
 echo "── repo-root install (api function deps) ──"
 npm install --no-audit --no-fund
 
