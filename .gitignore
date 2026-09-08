@@ -48,3 +48,8 @@ basketball/public/headshots/*.png
 basketball/public/headshots/safe-headshot-map.json
 !basketball/public/headshots/_silhouette.png
 supabase/.temp/
+
+# Generated private server-side catalogs
+/server-data/
+
+/node_modules.security-backup-*/

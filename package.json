@@ -10,6 +10,7 @@
     "dev:basketball": "npm --prefix basketball run dev",
     "dev:baseball": "npm --prefix baseball run dev",
     "dev:worldcup": "npm --prefix worldcup run dev",
+    "dev:api": "node --import tsx scripts/dev-api.mjs",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -20,7 +21,8 @@
     "check:nodenext": "node scripts/check-nodenext-imports.mjs",
     "typecheck:unbound": "node scripts/check-unbound-symbols.mjs",
     "digest": "node scripts/buildDigest.mjs",
-    "smoke:headline": "node --import tsx --env-file=.env.local scripts/smoke-headline.mjs"
+    "smoke:headline": "node --import tsx --env-file=.env.local scripts/smoke-headline.mjs",
+    "check:backend": "node --import tsx scripts/check-local-backend.mjs"
   },
   "keywords": [
     "fantasy-sports",

@@ -3,31 +3,73 @@
   "outputDirectory": "dist",
   "installCommand": "echo 'install handled by build-vercel.sh'",
   "rewrites": [
-    { "source": "/basketball/((?!assets/|audio/|data/|headshots/).*)", "destination": "/basketball/index.html" },
-    { "source": "/baseball/((?!assets/|audio/|data/|headshots/).*)",   "destination": "/baseball/index.html" },
-    { "source": "/football/((?!assets/|audio/|data/|headshots/).*)",   "destination": "/football/index.html" },
-    { "source": "/((?!api/|basketball/|baseball/|football/|assets/).*)", "destination": "/index.html" }
+    {
+      "source": "/basketball/((?!assets/|audio/|data/|headshots/).*)",
+      "destination": "/basketball/index.html"
+    },
+    {
+      "source": "/baseball/((?!assets/|audio/|data/|headshots/).*)",
+      "destination": "/baseball/index.html"
+    },
+    {
+      "source": "/football/((?!assets/|audio/|data/|headshots/).*)",
+      "destination": "/football/index.html"
+    },
+    {
+      "source": "/((?!api/|basketball/|baseball/|football/|assets/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/(basketball|baseball|football)/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/(basketball|baseball|football)/((?!assets/|data/|audio/|headshots/).*)",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     },
     {
       "source": "/(basketball|baseball|football)",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     },
     {
       "source": "/",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     }
-  ]
+  ],
+  "functions": {
+    "api/hand/resolve.ts": {
+      "includeFiles": "server-data/**"
+    }
+  }
 }
