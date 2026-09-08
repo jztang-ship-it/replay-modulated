@@ -15,16 +15,17 @@
 // (isWindowOpen ?? true, etc.) when `attemptResult` stays null.
 
 import { useEffect, useRef, useState } from "react";
-import type { GeneratedCard } from "@shared/types";
-import { getPlayerUid, getNickname } from "@shared/utils/playerIdentity";
+import { getNickname } from "@shared/utils/playerIdentity";
+import { supabase } from "@shared/lib/supabase";
 import { hasAttemptedChallenge, markChallengeAttempted } from "@shared/hooks/useChallengeShare";
-import { serializeResolvedRoster } from "@shared/utils/resolvedRosterSerialization";
 import { track } from "@shared/analytics/analytics";
 import { chDebug } from "@shared/lib/chDebug";
 
 export interface AttemptResult {
   attempt_id: string;
   is_best: boolean;
+  score?: number;
+  is_winner?: boolean;
   is_practice?: boolean;
   is_personal_best?: boolean;
   winner_count_flipped?: boolean;
@@ -47,6 +48,8 @@ export type ChallengeAttemptState = "WIN" | "LOSS_OPEN" | "LOSS_CLOSED";
 
 export interface UseChallengeAttemptArgs {
   challengeId: string | null;
+  /** Server-verified hand_log ID used as the only score source. */
+  handId?: string | null;
   myScore: number;
   targetScore: number;
   /** Sport identifier — required for analytics tracking inside the
@@ -57,15 +60,6 @@ export interface UseChallengeAttemptArgs {
    *  ChallengeComparisonScreen always passes true (POST-on-mount
    *  behavior); phase 5a's H2H wrapper waits for the arc to settle. */
   enabled: boolean;
-  /** Recipient's resolved roster after their hand resolves. Phase 5b
-   *  commit 2 (2026-05-28): when provided, the POST body includes
-   *  score_breakdown = serializeResolvedRoster(resolvedRoster). The
-   *  server writes that blob to both challenge_attempts.score_breakdown
-   *  and user_notifications.payload.attempter_roster (see
-   *  api/challenge/[id]/attempt.ts). Optional so the hook stays usable
-   *  in pre-resolve call paths; in those cases score_breakdown is
-   *  omitted and the server's existing `?? null` default applies. */
-  resolvedRoster?: GeneratedCard[];
   /** Layer C, delta-b/c: the sender-stable referral token captured off a
    *  forwarded boss link's ?ref param. When present, the POST body includes
    *  referrer_token so the attempt row carries it (challenge_attempts
@@ -77,7 +71,7 @@ export interface UseChallengeAttemptArgs {
 
 export interface UseChallengeAttemptReturn {
   state: ChallengeAttemptState;
-  /** Signed: myScore - targetScore. Positive = recipient won. */
+  /** Signed display delta. Before the response arrives this uses the local display score; after that it uses the server score. */
   delta: number;
   absDelta: number;
   /** absDelta <= 1, preserving the existing threshold from
@@ -103,9 +97,10 @@ export interface UseChallengeAttemptReturn {
 }
 
 export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallengeAttemptReturn {
-  const { challengeId, myScore, targetScore, sport, enabled, resolvedRoster, referrerToken } = args;
+  const { challengeId, handId, myScore, targetScore, sport, enabled, referrerToken } = args;
 
   const [attemptResult, setAttemptResult] = useState<AttemptResult | null>(null);
+  const [authoritativeScore, setAuthoritativeScore] = useState<number | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const submittedRef = useRef(false);
 
@@ -117,7 +112,9 @@ export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallenge
     challengeId ? hasAttemptedChallenge(challengeId) : false,
   );
 
-  const delta = myScore - targetScore;
+  // myScore is presentation-only. The server response becomes authoritative as soon as it arrives.
+  const effectiveScore = authoritativeScore ?? myScore;
+  const delta = effectiveScore - targetScore;
   const absDelta = Math.abs(delta);
   const isPhotoFinish = absDelta <= 1;
 
@@ -134,83 +131,62 @@ export function useChallengeAttempt(args: UseChallengeAttemptArgs): UseChallenge
         : "LOSS_CLOSED";
 
   // Submit attempt POST exactly once per mount when enabled.
-  // Verbatim from ChallengeComparisonScreen.tsx:150-199 — the only
-  // changes are: pulling values from hook args instead of props
-  // (challengeId, sport, myScore, delta, localIsPractice), and capturing
-  // the error in hook state instead of silently dropping it.
+  // Submit only the verified hand reference and presentation metadata.
+  // Score, winner and score_breakdown are intentionally absent: the API
+  // derives them from the authenticated user's verified hand_log row.
   useEffect(() => {
     if (!enabled) return;
     if (!challengeId) return;
     if (submittedRef.current) return;
+    if (!handId) return;
     submittedRef.current = true;
-    const uid = getPlayerUid();
     const name = getNickname() || "Anonymous";
-    markChallengeAttempted(challengeId);
-
-    // The server needs an identity to anchor the 1-hour replay window
-    // to. For signed-in players the Supabase auth uuid (a real uuid)
-    // lands in user_id. For anonymous players getPlayerUid returns the
-    // localStorage rm_uid (e.g. "u_abc123def") — not a uuid, so we send
-    // it as anon_uid so the server can still cluster prior attempts by
-    // this browser. Sending both is harmless: the server uses user_id
-    // when it parses as a uuid and only falls back to anon_uid
-    // otherwise. (See attempt.ts and migration 010.)
-    const isAuthUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid);
-
-    fetch(`/api/challenge/${challengeId}/attempt`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        score: myScore,
-        is_winner: delta > 0,
-        is_practice: localIsPractice,
-        user_id: isAuthUuid ? uid : undefined,
-        anon_uid: isAuthUuid ? undefined : uid,
-        user_name: name,
-        // Phase 5b commit 2 (2026-05-28): when a resolved roster is in
-        // scope at the call site, ship it as score_breakdown. Server
-        // persists to challenge_attempts.score_breakdown AND
-        // user_notifications.payload.attempter_roster so the sender-side
-        // overlay (phase 5b commits 3-4) can render the attempter's hand.
-        score_breakdown: resolvedRoster ? serializeResolvedRoster(resolvedRoster) : undefined,
-        // Layer C, delta-b/c: include the forwarded ?ref token ONLY when present
-        // so non-forwarded attempts send a byte-identical body (the key is
-        // absent, not null). Server writes challenge_attempts.referrer_token.
-        ...(referrerToken ? { referrer_token: referrerToken } : {}),
-      }),
-    })
-      .then(r => r.json())
-      .then((d: AttemptResult) => {
-        setAttemptResult(d);
-        track("challenges", (delta > 0) ? "challenge_win" : "challenge_loss", {
-          challenge_id: challengeId,
-          sport,
-          score_delta: Math.round(delta * 10) / 10,
-          attempt_count: d.attempt_count,
-          is_practice: d.is_practice ?? localIsPractice,
-          winner_flipped: d.winner_count_flipped ?? false,
-          is_personal_best: d.is_personal_best ?? false,
-          window_open: d.is_window_open ?? null,
-        });
-        track("challenges", "challenge_attempt_complete", {
-          challenge_id: challengeId, sport,
-          is_winner: delta > 0, score: myScore,
-          is_practice: d.is_practice ?? localIsPractice,
-        });
-      })
+    void (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Authentication is required to submit a challenge attempt");
+      }
+      const response = await fetch(`/api/challenge/${challengeId}/attempt`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          hand_id: handId,
+          user_name: name,
+          ...(referrerToken ? { referrer_token: referrerToken } : {}),
+        }),
+      });
+      const d = await response.json() as AttemptResult & { score?: number; is_winner?: boolean; error?: string };
+      if (!response.ok) throw new Error(d.error || "Challenge attempt failed");
+      if (typeof d.score === "number" && Number.isFinite(d.score)) setAuthoritativeScore(d.score);
+      setAttemptResult(d);
+      track("challenges", (d.is_winner === true) ? "challenge_win" : "challenge_loss", {
+        challenge_id: challengeId,
+        sport,
+        score_delta: Math.round(((d.score ?? effectiveScore) - targetScore) * 10) / 10,
+        attempt_count: d.attempt_count,
+        is_practice: d.is_practice ?? localIsPractice,
+        winner_flipped: d.winner_count_flipped ?? false,
+        is_personal_best: d.is_personal_best ?? false,
+        window_open: d.is_window_open ?? null,
+      });
+      track("challenges", "challenge_attempt_complete", {
+        challenge_id: challengeId, sport,
+        is_winner: d.is_winner ?? ((d.score ?? effectiveScore) > targetScore),
+        score: d.score ?? effectiveScore,
+        is_practice: d.is_practice ?? localIsPractice,
+      });
+    })()
       .catch((e) => {
-        // silent — UI still works with optimistic defaults. Preserved
-        // verbatim from ChallengeComparisonScreen.tsx:198. Error is
-        // captured on hook state for forward-compat (phase 5a commits
-        // 2/3 may render fallback UI on error); existing consumers
-        // don't read it.
         chDebug("useChallengeAttempt:postFail", {
           challengeId,
           error: e instanceof Error ? e.message : String(e),
         });
         setError(e instanceof Error ? e : new Error(String(e)));
       });
-  }, [enabled, challengeId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [enabled, challengeId, handId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isLoading = enabled && !!challengeId && attemptResult === null && error === null;
 

@@ -35,55 +35,14 @@ export function useAchievements() {
       });
   }, [authUid]);
 
+  // Achievement predicates and writes are server-only. Keep this
+  // compatibility callback so existing consumers do not need a flag day,
+  // but never derive permanent unlocks from client-controlled card state.
   const evaluateAndSave = useCallback(async (
-    ctx: Omit<AchievementContext, "existingAchievementIds">,
+    _ctx: Omit<AchievementContext, "existingAchievementIds">,
   ) => {
-    const uid = getPlayerUid();
-    if (!uid || uid.startsWith("u_")) return;
-
-    const fullCtx: AchievementContext = { ...ctx, existingAchievementIds: unlockedIds };
-    const newOnes = evaluateAchievements(fullCtx);
-    if (newOnes.length === 0) return;
-
-    const mvp = ctx.cards.length > 0
-      ? ctx.cards.reduce((best, c) => (c.fp > best.fp ? c : best), ctx.cards[0])
-      : null;
-
-    const rows = newOnes.map(r => ({
-      user_id: uid,
-      achievement_id: r.achievementId,
-      sport: r.sport,
-      source_hand_id: r.sourceHandId || null,
-      source_data: {
-        totalFp: ctx.totalFp,
-        fpTier: ctx.fpTier,
-        season: ctx.season,
-        mvpCard: mvp ? {
-          photoCode: mvp.photoCode,
-          name: mvp.name,
-          team: mvp.team,
-          position: mvp.position,
-          tier: mvp.tier,
-          season: mvp.season,
-          fp: mvp.fp,
-        } : null,
-      },
-    }));
-
-    // Fire-and-forget — achievement writes never block the UI. Upsert with
-    // ignoreDuplicates so a re-submit of an already-earned achievement is a
-    // no-op rather than a 409 against the (user_id, achievement_id) unique
-    // constraint (the dedup set can lag the write when auth resolves late).
-    void supabase
-      .from("user_achievements")
-      .upsert(rows, { onConflict: "user_id,achievement_id", ignoreDuplicates: true })
-      .then(({ error }) => {
-        if (!error) {
-          setUnlockedIds(prev => Array.from(new Set([...prev, ...newOnes.map(r => r.achievementId)])));
-          setNewlyUnlocked(prev => [...prev, ...newOnes]);
-        }
-      });
-  }, [unlockedIds]);
+    return;
+  }, []);
 
   const clearNewlyUnlocked = useCallback(() => {
     setNewlyUnlocked([]);
