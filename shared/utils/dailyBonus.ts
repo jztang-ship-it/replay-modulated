@@ -19,7 +19,7 @@
  * ("did you see Jrue is +20 today?").
  */
 
-import { hashStr, mulberry32 as seededRng } from "./seededRng";
+import { hashStr, mulberry32 as seededRng } from "./seededRng.js";
 
 /** Today's date key in UTC (YYYY-MM-DD) — global rotation, not local. */
 export function getDailyBonusDateKey(date?: Date): string {
