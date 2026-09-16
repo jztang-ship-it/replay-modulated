@@ -8,21 +8,13 @@
       "destination": "/basketball/index.html"
     },
     {
-      "source": "/baseball/((?!assets/|audio/|data/|headshots/).*)",
-      "destination": "/baseball/index.html"
-    },
-    {
-      "source": "/football/((?!assets/|audio/|data/|headshots/).*)",
-      "destination": "/football/index.html"
-    },
-    {
-      "source": "/((?!api/|basketball/|baseball/|football/|assets/).*)",
+      "source": "/((?!api/|basketball/|assets/).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/(basketball|baseball|football)/assets/(.*)",
+      "source": "/basketball/assets/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -40,7 +32,7 @@
       ]
     },
     {
-      "source": "/(basketball|baseball|football)/((?!assets/|data/|audio/|headshots/).*)",
+      "source": "/basketball/((?!assets/|data/|audio/|headshots/).*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -49,7 +41,7 @@
       ]
     },
     {
-      "source": "/(basketball|baseball|football)",
+      "source": "/basketball",
       "headers": [
         {
           "key": "Cache-Control",
@@ -69,7 +61,7 @@
   ],
   "functions": {
     "api/hand/resolve.ts": {
-      "includeFiles": "server-data/**"
+      "includeFiles": "server-data/basketball/**"
     }
   }
 }

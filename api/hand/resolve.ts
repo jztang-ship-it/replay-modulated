@@ -21,7 +21,7 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
   if(!await quota(`hand:write:${user.id}`,240,3600))return res.status(429).json({error:'Too many requests'});
   if(b.action==='start') {
    if(!SPORTS.includes(b.sport)||typeof b.season!=='string'||!/^\d{4}$/.test(b.season)||!UUID.test(b.request_id??''))return res.status(400).json({error:'Invalid game context'});
-   const competition=b.sport==='football'?'world_cup':null;
+   const competition=null;
    if((b.competition??null)!==competition)return res.status(400).json({error:'Invalid competition'});
    let challenge:any=null;
    if(b.challenge_id){
@@ -31,9 +31,9 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
     if(error||!data||data.sport!==b.sport||data.season!==b.season||(data.sender_kind!=='boss'&&data.authority_version!==2))return res.status(409).json({error:'Challenge unavailable; legacy challenges must be recreated'});
     challenge=data;
    }
-   // Basketball has its economy disabled; challenges never debit the wallet.
-   const bet=challenge||b.sport==='basketball'?0:b.bet_amount;
-   if(!Number.isInteger(bet)||!(bet===0||[10,30,50,100].includes(bet))||(!challenge&&b.sport!=='basketball'&&bet===0))return res.status(400).json({error:'Invalid stake'});
+   // The controlled beta is free-to-play; a client cannot introduce a stake.
+   const bet=0;
+   if(b.bet_amount!=null&&b.bet_amount!==0)return res.status(400).json({error:'Invalid stake'});
    const {data:existing,error:lookupError}=await supabaseAdmin.from('hand_sessions').select('*').eq('player_id',user.id).eq('request_id',b.request_id).maybeSingle();
    if(lookupError)throw lookupError;
    if(existing){

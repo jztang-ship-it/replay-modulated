@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const action  = String(evt.action ?? evt.event ?? '')
       const props   = evt.props ?? {}
       const sport   = String(props.sport ?? 'basketball')
-      const uid     = String(props.uid ?? props.userId ?? props.distinct_id ?? '')
+      const uid     = String(evt.userId ?? props.uid ?? props.userId ?? props.distinct_id ?? '')
 
       // ── New / Returning user tracking ──────────────────────────────────────
       // Client sends user_status: "new" | "returning" on every event.

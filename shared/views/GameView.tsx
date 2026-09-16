@@ -446,15 +446,17 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     leaderboardScope,
   }), [sportKey, adapter.localStorageNamespace, leaderboardScope]);
   const shared = useSharedGameState(sharedAdapter, { rosterSize: ROSTER_SIZE });
-  // Phase 2-mount Step 3/4: today's boss for the post-results entry CTA.
-  // Basketball-only inside the hook; null elsewhere → CTA never renders.
-  const bossEntry = useBossEntry(sportKey);
+  // Boss is deliberately parked for the controlled basketball beta. Keeping
+  // its engine behind this one gate avoids both its network read and any
+  // player-facing route while preserving the implementation for a later launch.
+  const BOSS_BETA_ENABLED = false;
+  const bossEntry = useBossEntry(BOSS_BETA_ENABLED ? sportKey : "");
   // Defect 1 (boss-flow): hub-level boss-detail fetch so BossScreen mounts
   // populated (no "Today's Boss" fallback flash). Gated on bossChallengeId
   // (non-null only) — no speculative fire on no-boss days.
-  const bossDetail = useBossDetail(bossEntry.bossChallengeId);
+  const bossDetail = useBossDetail(BOSS_BETA_ENABLED ? bossEntry.bossChallengeId : null);
   // Boss availability — drives the top BOSS pill (basketball-only) + its tell.
-  const bossLive = !!bossEntry.bossChallengeId;
+  const bossLive = BOSS_BETA_ENABLED && !!bossEntry.bossChallengeId;
   // Attempted-today is per-device local memory (getBossResult, presence ===
   // attempted) — matches BossEntryCta, no new query. Drives the pill emphasis:
   // unattempted → occasional glow pulse; attempted → steady gold.
@@ -696,7 +698,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
-    setFtueCommentaryOverride({ parts: [chadMessage("welcome")], sticky: true });
+    setFtueCommentaryOverride({ parts: [chadMessage("welcome", !economyEnabled)], sticky: true });
   }, [gameState]); // eslint-disable-line
 
   // ── Challenge mode: auto-deal on accept + intro chip ──
@@ -852,7 +854,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
     localStorage.setItem("rm_usher_rookie_first_win", "1");
     setLegendGold(true);
-    setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win")], sticky: true });
+    setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win", !economyEnabled)], sticky: true });
   }, [gameState, winTier, challengeCtx]); // eslint-disable-line
 
   // All other Chad messages — evaluated once per IDLE.
@@ -900,7 +902,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       localStorage.setItem("rm_chad_last_hand", String(handCount));
       chadFiredThisIdleRef.current = true;
       chadLastHandRef.current = handCount;
-      setFtueCommentaryOverride({ parts: [chadMessage(topic)], sticky: true });
+      setFtueCommentaryOverride({ parts: [chadMessage(topic, !economyEnabled)], sticky: true });
       if (topic === "leaderboard_intro" || topic === "leaderboard_explainer") {
         setTrophyPulsing(true);
       } else {
@@ -3551,7 +3553,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     );
                   })()}
                 </div>
-                {gameState === "HOLD" && !challengeCtx && multiplierEnabled && (
+                {gameState === "HOLD" && !challengeCtx && multiplierEnabled && economyEnabled && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
                     <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
                       {BASE_BET} × {betMultiplier}x =
@@ -3811,7 +3813,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         trophyBurst={trophyBurst}
         // Boss-live tell: static gold on the trophy when a boss is available.
         // Naturally false for non-basketball (useBossEntry returns null there).
-        bossLive={!!bossEntry.bossChallengeId}
+        bossLive={bossLive}
         streak={streak}
         showStreak={streaksEnabled}
         economyEnabled={economyEnabled}
@@ -3842,7 +3844,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           />
         )}
 
-        {showBoss && (
+        {BOSS_BETA_ENABLED && showBoss && (
           <BossScreen
             sport={leaderboardScope}
             currentUid={getPlayerUid()}

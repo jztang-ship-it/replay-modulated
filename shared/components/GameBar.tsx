@@ -1243,12 +1243,14 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
 type WagePhase = "idle" | "glow" | "thud" | "flip" | "fly" | "settled";
 
 function WageDisplay({
-  baseBet, betMultiplier, celebration, onFlyComplete,
+  baseBet, betMultiplier, celebration, onFlyComplete, visible = true,
 }: {
   baseBet: number;
   betMultiplier: number;
   celebration?: CelebrationData;
   onFlyComplete: (isLoss: boolean) => void;
+  /** Keep the completion callback alive while suppressing all money UI in F2P. */
+  visible?: boolean;
 }) {
   const [phase, setPhase] = useState<WagePhase>("idle");
   const prevKeyRef = useRef<string>("");
@@ -1299,6 +1301,12 @@ function WageDisplay({
       flexShrink: 0,
     }}>Wage</span>
   );
+
+  // Basketball's free-play mode still needs the completion timer: it applies
+  // the server-confirmed score/balance state after a reveal. Hide the entire
+  // monetary surface rather than skipping the component and stranding that
+  // callback.
+  if (!visible) return null;
 
   if (phase === "idle" || !celebration) {
     return (
@@ -1704,6 +1712,7 @@ export function GameBar({
               baseBet={baseBet}
               betMultiplier={betMultiplier}
               celebration={isCelebration ? celebration : undefined}
+              visible={economyEnabled}
               onFlyComplete={(isLoss) => {
                 setBalanceColor(isLoss ? "loss" : "win");
                 if (celebration && (celebration.payout > 0 || celebration.isLoss)) {
@@ -2009,6 +2018,7 @@ export function GameBar({
                   baseBet={baseBet}
                   betMultiplier={betMultiplier}
                   celebration={isCelebration ? celebration : undefined}
+                  visible={economyEnabled}
                   onFlyComplete={(isLoss) => {
                     setBalanceColor(isLoss ? "loss" : "win");
                     if (celebration && (celebration.payout > 0 || celebration.isLoss)) {

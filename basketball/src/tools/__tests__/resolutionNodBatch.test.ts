@@ -6,12 +6,13 @@
 // Engine, and writes a plain-text review file with NOD and ARGUE columns
 // for John. Hold/fade is modeled (no user); the FP/gamelog pulls are REAL.
 //
-// Output: ~/Desktop/replaymod-handoff/<date>/rd7.2-nod-batch.txt
-// (reviewer-bound output → handoff dir, NOT committed to the repo.)
+// Output: a temporary file during test execution. Review artifacts belong in a
+// deliberate handoff step, never in a developer-specific path in the test run.
 
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as os from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { computeBasketballFp } from "../../adapters/fantasyPoints";
 import { computeBasketballBadges } from "../../adapters/badges";
@@ -25,7 +26,6 @@ const CAP = 250;
 const ROSTER = 6;
 const BATCH = 80;
 const SEED = 7;
-const HANDOFF_DATE = "2026-06-14";
 
 const dir = fileURLToPath(new URL(`../../../public/data/seasons/${SEASON}`, import.meta.url));
 const logsAll: any[] = JSON.parse(fs.readFileSync(`${dir}/gamelogs.json`, "utf8"));
@@ -274,9 +274,8 @@ describe("RD7.2 Phase 3 — nod+argue batch (PRODUCTION FIDELITY: independent pu
     const body = hands.map((h) => h.row).join("\n\n" + "-".repeat(90) + "\n\n");
     const out = `${header}${body}\n`;
 
-    const handoffDir = `${os.homedir()}/Desktop/replaymod-handoff/${HANDOFF_DATE}`;
-    fs.mkdirSync(handoffDir, { recursive: true });
-    const outPath = `${handoffDir}/rd7.2-nod-batch.prod.txt`; // production-fidelity batch (independent pulls)
+    const handoffDir = fs.mkdtempSync(join(os.tmpdir(), "replaymod-resolution-batch-"));
+    const outPath = join(handoffDir, "rd7.2-nod-batch.prod.txt");
     fs.writeFileSync(outPath, out);
 
     expect((out.match(/^   >>> {3}/gm) ?? []).length).toBe(BATCH);

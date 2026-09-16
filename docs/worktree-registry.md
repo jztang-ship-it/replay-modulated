@@ -37,12 +37,13 @@ This check matters more than the unique-commit count. SHA divergence ≠ work di
 ### `main` — active
 
 - **Path (current Windows checkout):** `E:\work\replay-mod\ReplayMod`
-- **Branch:** `main`, local HEAD `970d1cb5`
-- **State:** active; security hardening Applied locally, not committed/pushed
-- **Uncommitted state:** pre-existing API/UI/config/docs changes, deleted `scripts/_recon-roundsnap.mjs`, and changed `shared/node_modules` retained; additional security code/tests/migrations are dirty/untracked. Do not clean/reset wholesale.
-- **Local vs origin/main:** `git log origin/main..main` is empty at this review (user updated main); no fetch/commit/push performed by this repair session.
-- **Stashes:** none reported by local `git stash list`.
-- **Last reviewed:** 2026-09-07
+- **Candidate path:** `/Users/john/Documents/Codex/2026-09-08/referenced-chatgpt-conversation-this-is-an/work/replay-modulated-audit` (the Windows path above is historical).
+- **Branch:** `main`, local HEAD `32144561a6d39104941834d506218680d258eabc`
+- **State:** active candidate for the basketball-only controlled beta.
+- **Uncommitted state:** clean.
+- **Local vs origin/main:** aligned; `git log origin/main..main` is empty. No fetch, commit, push, or deployment action performed by this release-readiness session.
+- **Stashes:** none.
+- **Last reviewed:** 2026-09-15
 
 ### Windows worktree scan — 2026-09-07
 

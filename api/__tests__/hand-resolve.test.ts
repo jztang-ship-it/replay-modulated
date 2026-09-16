@@ -3,7 +3,7 @@ const m=vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn(),rpc:vi.fn(),award:vi.fn(),de
 vi.mock('../hand/_lib/auth.js',()=>({verifyAuth:m.auth}));
 vi.mock('../hand/_lib/achievements.js',()=>({awardVerifiedAchievements:m.award}));
 vi.mock('../hand/_lib/security.js',async()=>{const real:any=await vi.importActual('../hand/_lib/security.js');return {...real,quota:m.quota};});
-vi.mock('../hand/_lib/catalog.js',()=>({SPORTS:['basketball','baseball','football'],deal:m.deal,draw:m.draw,resolve:m.resolve,outcome:m.outcome}));
+vi.mock('../hand/_lib/catalog.js',()=>({SPORTS:['basketball'],deal:m.deal,draw:m.draw,resolve:m.resolve,outcome:m.outcome}));
 vi.mock('../hand/_lib/supabaseServer.js',()=>({supabaseAdmin:{rpc:m.rpc,from:()=>{const b:any={select:()=>b,eq:(...args:any[])=>{m.filters.push(args);return b},maybeSingle:async()=>({data:m.row,error:m.queryError}),single:async()=>({data:m.row,error:m.queryError})};return b;}}}));
 import handler from '../hand/resolve';
 const uid='11111111-1111-4111-8111-111111111111',id='22222222-2222-4222-8222-222222222222';
@@ -16,9 +16,9 @@ describe('authoritative hand boundary',()=>{
  it('rejects anonymous before any game write',async()=>{m.auth.mockResolvedValue({user:null,error:{status:401}});expect((await call({action:'start'})).status).toBe(401);expect(m.rpc).not.toHaveBeenCalled();});
  it('rejects the old forged-score contract',async()=>{expect((await call({hand_id:id,sport:'basketball',actualFp:999999,roster:cards})).status).toBe(400);expect(m.rpc).not.toHaveBeenCalled();});
  it('fails closed when quota storage fails',async()=>{m.quota.mockRejectedValue(new Error('offline'));expect((await call({action:'start'})).status).toBe(503);expect(m.deal).not.toHaveBeenCalled();});
- it('requires valid context and uses server dealt cards and free basketball stake',async()=>{const r=await call({action:'start',request_id:id,sport:'basketball',season:'2425',bet_amount:99999,roster:[{actualFp:99999}]});expect(r.status).toBe(200);expect(m.rpc.mock.calls[0][1]).toMatchObject({p_user:uid,p_bet:0,p_state:{roster:cards}});});
+ it('requires valid context and uses server dealt cards and a free basketball stake',async()=>{const r=await call({action:'start',request_id:id,sport:'basketball',season:'2425',bet_amount:0,roster:[{actualFp:99999}]});expect(r.status).toBe(200);expect(m.rpc.mock.calls[0][1]).toMatchObject({p_user:uid,p_bet:0,p_state:{roster:cards}});});
  it.each(['../secret','2022/x','20222'])('rejects season %s',async season=>{expect((await call({action:'start',request_id:id,sport:'basketball',season})).status).toBe(400);});
- it('requires a legal paid stake',async()=>{expect((await call({action:'start',request_id:id,sport:'football',season:'2022',competition:'world_cup',bet_amount:0})).status).toBe(400);});
+ it('rejects other sports and any non-zero stake',async()=>{expect((await call({action:'start',request_id:id,sport:'football',season:'2022',competition:'world_cup',bet_amount:0})).status).toBe(400);expect((await call({action:'start',request_id:id,sport:'basketball',season:'2425',bet_amount:10})).status).toBe(400);});
  it('does not redeal or debit the same start request',async()=>{m.row=session();expect((await call({action:'start',request_id:id,sport:'basketball',season:'2425'})).status).toBe(200);expect(m.deal).not.toHaveBeenCalled();expect(m.rpc).not.toHaveBeenCalled();});
  it('never updates metadata on a duplicate settled hand',async()=>{m.row={...session(),settled:true,state:{roster:cards,hand:{tier:'STARTER'}}};expect((await call({action:'lock',hand_id:id,revision:100,held_slots:[],sport:'football',season:'2022',actualFp:900})).status).toBe(200);expect(m.rpc).not.toHaveBeenCalled();expect(m.award).toHaveBeenCalledWith(uid,id,'basketball','2425');});
  it('looks up sessions under the authenticated owner',async()=>{expect((await call({action:'status',hand_id:id})).status).toBe(404);expect(m.filters).toContainEqual(['player_id',uid]);});

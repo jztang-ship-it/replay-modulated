@@ -1,7 +1,11 @@
-// api/share/card.ts
+// parked-api/share/card.ts
+//
+// Parked for the basketball controlled beta. Keeping this H2H share-image
+// generator outside api/ avoids consuming a Vercel Serverless Function slot;
+// restore it to api/share/card.ts when the H2H social surface returns.
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { ImageResponse } from "@vercel/og";
-import { supabaseAdmin } from "../hand/_lib/supabaseServer.js";
+import { supabaseAdmin } from "../../api/hand/_lib/supabaseServer.js";
 
 // Tier accent colors for card backgrounds
 const TIER_ACCENT: Record<string, string> = {

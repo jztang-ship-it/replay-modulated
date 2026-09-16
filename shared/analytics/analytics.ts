@@ -70,7 +70,7 @@ const DEFAULT_CONFIG: AnalyticsConfig = {
   endpoint:   '/api/analytics',
   appVersion: '1.0.0',
   platform:   'web',
-  debug:      true,
+  debug:      import.meta.env.DEV,
   batchSize:  1,
   batchMs:    1000,
   disabled:   false,
@@ -138,7 +138,6 @@ class Analytics {
   }
 
   track(feature: Feature, action: string, props: Record<string, string | number | boolean | null> = {}, product?: Product): void {
-    console.log('TRACK CALLED', feature, action);
     if (this.config.disabled) return;
     let event: ReplayEvent | null = {
       userId: this.userId, sessionId: this.sessionId,
@@ -247,14 +246,15 @@ class Analytics {
     }));
 
     try {
-      console.log('POSTHOG SENDING:', batch);
       const r = await fetch(`${POSTHOG_HOST}/batch/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ api_key: POSTHOG_KEY, batch }),
         keepalive: true,
       });
-      console.log('POSTHOG RESPONSE:', await r.json());
+      if (!r.ok && this.config.debug) {
+        console.warn(`[Analytics] PostHog send got ${r.status}`);
+      }
     } catch (e) {
       // PostHog is non-critical — log in debug, never re-queue, never block
       if (this.config.debug) console.warn('[Analytics] PostHog send failed:', e);
