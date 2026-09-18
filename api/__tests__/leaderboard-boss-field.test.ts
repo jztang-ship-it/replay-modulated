@@ -63,7 +63,7 @@ describe("GET /api/leaderboard — boss field (Host route A′)", () => {
     expect(mockGetTodaysBoss).toHaveBeenCalledTimes(1);
     // KV cached under the date-stamped boss key.
     const setKey = mockKv.set.mock.calls[0][0];
-    expect(setKey).toMatch(/^boss:basketball:today:\d{4}-\d{2}-\d{2}$/);
+    expect(setKey).toMatch(/^replay-free-play:v1:boss:basketball:today:\d{4}-\d{2}-\d{2}$/);
     expect(mockKv.set.mock.calls[0][1]).toBe("fresh-boss-uuid");
     const payload = res.json.mock.calls[0][0];
     expect(payload.bossChallengeId).toBe("fresh-boss-uuid");

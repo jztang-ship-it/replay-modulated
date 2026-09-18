@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { kv } from "@vercel/kv";
+import { redisKey } from "../../_lib/redisKey.js";
 export function digest(value: string): string { return createHash("sha256").update(value).digest("hex"); }
 // INCR and TTL are one operation. Storage failure MUST NOT open a paid/write path.
 export async function quota(key: string, limit: number, seconds: number): Promise<boolean> {
- const count = await kv.eval(`local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return n`, ["security:v2:"+key], [seconds]);
+ const count = await kv.eval(`local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return n`, [redisKey("security:v2:"+key)], [seconds]);
  const n=Number(count);
  if(!Number.isSafeInteger(n)||n<1)throw new Error("Invalid quota response");
  return n<=limit;

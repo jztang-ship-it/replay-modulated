@@ -22,6 +22,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { kv } from "@vercel/kv";
+import { redisKey } from "./_lib/redisKey.js";
 import { quota, boundedBody } from "./hand/_lib/security.js";
 import { createClient } from "@supabase/supabase-js";
 // Phase 2-mount Host route A′: the daily boss instance id, folded into the GET
@@ -89,9 +90,9 @@ function validateCompetition(sport: string, competition?: string): string | null
  *  (lb:v2:{sport}:{competition}). */
 function lbKeyBase(sport: string, competition?: string): string {
   if (competition && COMPETITION_REQUIRED.has(sport as Sport)) {
-    return `lb:v2:${sport}:${competition}`;
+    return redisKey(`lb:v2:${sport}:${competition}`);
   }
-  return `lb:v2:${sport}`;
+  return redisKey(`lb:v2:${sport}`);
 }
 
 // Per-sport realistic ceilings for FP-shaped metrics. Above these = data corruption / cheating.
@@ -128,7 +129,7 @@ async function resolveBoss(sport: string): Promise<BossField | null> {
       import("./boss/_lib/todaysBoss.js"),
     ]);
     const date = getRotationDateKey();
-    const cacheKey = `boss:basketball:today:${date}`;
+    const cacheKey = redisKey(`boss:basketball:today:${date}`);
     let id = await kv.get<string>(cacheKey);
     if (!id) {
       id = await getTodaysBossChallengeId({ date });

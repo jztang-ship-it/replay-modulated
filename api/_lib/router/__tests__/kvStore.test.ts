@@ -4,23 +4,23 @@ import { modelScoreKey, tierScoreKey, recentPhrasesKey, primaryModelKey, challen
 describe('KV key builders', () => {
   it('modelScoreKey returns namespaced key', () => {
     expect(modelScoreKey('replaymod', 'claude-haiku-4-5'))
-      .toBe('replaymod:model:claude-haiku-4-5:scores')
+      .toBe('replay-free-play:v1:replaymod:model:claude-haiku-4-5:scores')
   })
 
   it('tierScoreKey returns namespaced tier key', () => {
     expect(tierScoreKey('replaymod', 'llama-3.3-70b-versatile', 'BUST'))
-      .toBe('replaymod:model:llama-3.3-70b-versatile:tier:BUST:scores')
+      .toBe('replay-free-play:v1:replaymod:model:llama-3.3-70b-versatile:tier:BUST:scores')
   })
 
   it('recentPhrasesKey returns namespaced key', () => {
-    expect(recentPhrasesKey('replaymod')).toBe('replaymod:recent:phrases')
+    expect(recentPhrasesKey('replaymod')).toBe('replay-free-play:v1:replaymod:recent:phrases')
   })
 
   it('primaryModelKey returns namespaced key', () => {
-    expect(primaryModelKey('replaymod')).toBe('replaymod:routing:primary')
+    expect(primaryModelKey('replaymod')).toBe('replay-free-play:v1:replaymod:routing:primary')
   })
 
   it('challengerCounterKey returns namespaced key', () => {
-    expect(challengerCounterKey('replaymod')).toBe('replaymod:challenger:counter')
+    expect(challengerCounterKey('replaymod')).toBe('replay-free-play:v1:replaymod:challenger:counter')
   })
 })

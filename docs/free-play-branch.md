@@ -36,3 +36,7 @@ John authorized deployment as the improvement baseline, then explicitly approved
 - Vercel `replay-free-play`: `prj_dclS1pib6k3ThwaJcyglMmzjWaSj`. Production source is `release/basketball-free-play`. Only isolated database settings are configured.
 - Mother database and production version remain unchanged. Both source branches are now backed up on origin.
 - Redis provisioning and real gameplay verification are pending. Do not label a deployment playable until the hand API, score history and challenges pass against the isolated backend.
+
+## Shared free Redis — 2026-09-19
+
+John authorized reuse of existing `replay-analytics` Free store. Every Redis key in this branch uses fixed `replay-free-play:v1:` prefix, including Lua rate limits and router pipelines. Existing mother keys remain untouched; no legacy keys are read or migrated. Shared capacity and command allowance apply; no new paid store. Separate Supabase remains mandatory. Connect only after isolated code has been deployed, then redeploy with Production credentials and verify live gameplay.

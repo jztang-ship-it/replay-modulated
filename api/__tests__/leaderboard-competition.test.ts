@@ -86,7 +86,7 @@ describe('GET ?sport=football — competition required', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     // The KV key should include the competition segment.
     const keyArg = mockKv.zrange.mock.calls[0][0];
-    expect(keyArg).toMatch(/^lb:v2:football:world_cup:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
+    expect(keyArg).toMatch(/^replay-free-play:v1:lb:v2:football:world_cup:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
   });
 });
 
@@ -98,7 +98,7 @@ describe('GET ?sport=basketball — no competition required', () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(200);
     const keyArg = mockKv.zrange.mock.calls[0][0];
-    expect(keyArg).toMatch(/^lb:v2:basketball:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
+    expect(keyArg).toMatch(/^replay-free-play:v1:lb:v2:basketball:hand_best:daily:\d{4}-\d{2}-\d{2}$/);
   });
 
   it('rejects an unexpected basketball competition', async()=>{

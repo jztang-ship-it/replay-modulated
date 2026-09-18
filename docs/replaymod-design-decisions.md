@@ -1,3 +1,7 @@
+## 2026-09-19 — LOCKED: reuse existing free Redis
+
+John authorized sharing `replay-analytics` with the mother deployment. All Redis keys in this child must begin `replay-free-play:v1:` (rate limits, leaderboards, boss cache, analytics and router storage). Supabase remains separate. No paid provisioning, legacy data migration, or mother key changes. Verify namespace isolation including Lua and pipelines, full tests, release build, then live deal/draw/reveal/replay and challenge smoke.
+
 ## 2026-09-19 — LOCKED: free-play hidden-economy removal
 
 For `release/basketball-free-play`, remove dormant economy implementation, not only UI visibility. Keep the all-features mother branch unchanged. Score thresholds and lineup-budget rules remain. Dedicated empty free-play database only; migration 022 refuses existing financial records. Verification: full regression suite, release build with economy artifact guard, disposable PostgreSQL schema/access checks. Live backend and deployment remain unconfigured/unverified. See `docs/free-play-branch.md`.

@@ -1,25 +1,26 @@
 import { Redis } from '@upstash/redis'
+import { redisKey } from '../redisKey.js'
 import type { RouterModel, PayoutTier, GradeScore } from './types.js'
 
 // ── Key builders (exported for tests) ────────────────────────────────────────
 
 export const modelScoreKey = (ns: string, model: RouterModel) =>
-  `${ns}:model:${model}:scores`
+  redisKey(`${ns}:model:${model}:scores`)
 
 export const tierScoreKey = (ns: string, model: RouterModel, tier: PayoutTier) =>
-  `${ns}:model:${model}:tier:${tier}:scores`
+  redisKey(`${ns}:model:${model}:tier:${tier}:scores`)
 
-export const recentPhrasesKey = (ns: string) => `${ns}:recent:phrases`
+export const recentPhrasesKey = (ns: string) => redisKey(`${ns}:recent:phrases`)
 
-export const recentTonesKey = (ns: string) => `${ns}:recent:tones`
+export const recentTonesKey = (ns: string) => redisKey(`${ns}:recent:tones`)
 
-export const primaryModelKey = (ns: string) => `${ns}:routing:primary`
+export const primaryModelKey = (ns: string) => redisKey(`${ns}:routing:primary`)
 
-export const primaryByTierKey = (ns: string) => `${ns}:routing:primary_by_tier`
+export const primaryByTierKey = (ns: string) => redisKey(`${ns}:routing:primary_by_tier`)
 
-export const challengerCounterKey = (ns: string) => `${ns}:challenger:counter`
+export const challengerCounterKey = (ns: string) => redisKey(`${ns}:challenger:counter`)
 
-export const gradesAllKey = (ns: string) => `${ns}:grades:all`
+export const gradesAllKey = (ns: string) => redisKey(`${ns}:grades:all`)
 
 // ── KV client factory ─────────────────────────────────────────────────────────
 

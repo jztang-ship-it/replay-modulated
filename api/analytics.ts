@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { kv } from '@vercel/kv'
+import { redisKey } from './_lib/redisKey.js'
 
 const YEAR = 60 * 60 * 24 * 365
 const DAY = 60 * 60 * 24
 
 async function inc(key: string, value: number, ttl: number) {
-  await kv.incrby(key, value)
-  await kv.expire(key, ttl)
+  await kv.incrby(redisKey(key), value)
+  await kv.expire(redisKey(key), ttl)
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -36,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Client sends user_status: "new" | "returning" on every event.
       // We count unique users per day via a set, then increment the counter.
       if (uid && props.user_status) {
-        const dauKey = `dau:${d}`
+        const dauKey = redisKey(`dau:${d}`)
         const added = await kv.zadd(dauKey, { score: Date.now(), member: uid })
         await kv.expire(dauKey, YEAR)
 
