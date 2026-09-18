@@ -9,7 +9,7 @@ import { BasketballSportConfig } from '../../../basketball/src/adapters/basketba
 import { computeBasketballFp } from '../../../basketball/src/adapters/fantasyPoints.js';
 import { computeBasketballBadges } from '../../../basketball/src/adapters/badges.js';
 import { buildDailyBonusMap } from '../../../shared/utils/dailyBonus.js';
-import thresholds from '../../../basketball/src/data/winThresholds.json' with { type: 'json' };
+import { getSeasonThresholds } from '../../../basketball/src/utils/seasonThresholds.js';
 // Controlled beta scope: only basketball may be dealt or resolved. Other sport
 // source remains parked, but is neither bundled into this authority path nor
 // accepted by the public hand API.
@@ -74,7 +74,7 @@ export function resolve(sport:string,season:string,cards:any[],createdAt:string,
 }
 export function outcome(sport:string,season:string,roster:any[]) {
  const fp=Math.round(roster.reduce((n,c)=>n+c.actualFp,0)*10)/10;
- const bb=(thresholds as any)[season];
+ const bb=getSeasonThresholds(season);
  if(sport!=='basketball') throw new Error('Unsupported sport');
  const rows=Object.entries(bb??{}).map(([tier,minFp])=>({tier,minFp:Number(minFp)}));
  if(!rows.length)throw new Error('Season thresholds unavailable');

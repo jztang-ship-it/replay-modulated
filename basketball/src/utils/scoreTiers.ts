@@ -5,7 +5,7 @@ import {
 import type { WinTierKey, WinTierMap } from "@shared/utils/scoreTiers";
 import { getActiveSeason } from "@shared/engines/dataEngine";
 import { getHandStatus, type HandStatus } from "@shared/utils/handStatus";
-import perSeasonThresholds from "../data/winThresholds.json";
+import { getSeasonThresholds } from "./seasonThresholds.js";
 
 export const HEATER_MIN = 255;
 export const COLD_NIGHT_MAX = 120;
@@ -22,17 +22,10 @@ import type { TierThreshold as GaugeTierThreshold } from "@shared/components/Tie
 export type { WinTierKey };
 export type WinTier = WinTierKey;
 
-const FALLBACK_MIN_FP: Record<Exclude<WinTierKey, "BUST">, number> = {
-  LEGEND: 246, MVP: 224, ALL_STAR: 207, STARTER: 185, ROOKIE: 0,
-};
-
-type SeasonThresholds = Record<Exclude<WinTierKey, "BUST">, number>;
-const SEASON_TABLE = perSeasonThresholds as Record<string, SeasonThresholds>;
-
 /** Build the WinTierMap for the active season (or fallback if unset). */
 export function getBasketballWinTiers(): WinTierMap {
   const season = getActiveSeason();
-  const minFps = (season && SEASON_TABLE[season]) ? SEASON_TABLE[season] : FALLBACK_MIN_FP;
+  const minFps = getSeasonThresholds(season);
   return {
     LEGEND:   { minFp: minFps.LEGEND },
     MVP:      { minFp: minFps.MVP },

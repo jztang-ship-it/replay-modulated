@@ -1,3 +1,7 @@
+## 2026-09-19 — LOCKED: repair current-season settlement
+
+Use one browser/server basketball season-threshold resolver. Preserve existing browser fallback values for seasons without calibrated rows, including 2526; do not recalibrate tiers. Verify 2526 full server deal/draw/outcome, tier boundaries, full suite/build, live settlement and replay. John authorized fixing the blocker and redeploying.
+
 ## 2026-09-19 — LOCKED: reuse existing free Redis
 
 John authorized sharing `replay-analytics` with the mother deployment. All Redis keys in this child must begin `replay-free-play:v1:` (rate limits, leaderboards, boss cache, analytics and router storage). Supabase remains separate. No paid provisioning, legacy data migration, or mother key changes. Verify namespace isolation including Lua and pipelines, full tests, release build, then live deal/draw/reveal/replay and challenge smoke.
