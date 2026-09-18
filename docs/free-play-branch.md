@@ -27,3 +27,12 @@ The score-only database test is `scripts/tests/free-play-db.mjs`. It uses dispos
 Remove, rather than hide, the dormant pool leaderboard, pool store, payout/streak calculators, wallet/bet state, payout celebration, and monetary simulators from this branch. Preserve score tiers and the nonmonetary lineup budget. Keep only defensive rejection/filtering of legacy monetary inputs/messages. The basketball bundle must not import parked-sport money commentary.
 
 Release verification includes a built-artifact economy guard, solo and friend-challenge regression tests, and disposable database checks proving the final schema has no wallet or monetary hand-log fields. Migration 022 must refuse an unmarked database or existing financial history. No live migration, push, or deployment is authorized by this cleanup.
+
+## Isolated deployment — 2026-09-19
+
+John authorized deployment as the improvement baseline, then explicitly approved guest sign-in and connecting the clean branch/new backend credentials. This supersedes the earlier local-only boundary.
+
+- Supabase `replay-free-play`: `gvlgtyaljojesaultumv`, Seoul. Applied migrations 001–022 to verified empty schema; live checks confirm free-play sessions exist and wallet, monetary sessions, monetary hand-log columns and legacy money functions are absent.
+- Vercel `replay-free-play`: `prj_dclS1pib6k3ThwaJcyglMmzjWaSj`. Production source is `release/basketball-free-play`. Only isolated database settings are configured.
+- Mother database and production version remain unchanged. Both source branches are now backed up on origin.
+- Redis provisioning and real gameplay verification are pending. Do not label a deployment playable until the hand API, score history and challenges pass against the isolated backend.
