@@ -45,7 +45,7 @@ import { normalizeTriggerType, normalizeSenderKind } from "@shared/adapters/chal
 import { isRealName } from "@shared/utils/isRealName";
 import { lookupCulture } from "@shared/commentary/selectCommentary";
 import type { CultureShape } from "@shared/commentary/selectCommentary";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
+import type { WinTierKey } from "@shared/utils/scoreTiers";
 import { track } from "@shared/analytics/analytics";
 import { pickHeadlineAndCta, FALLBACK_CTA, type SealVisual } from "./landingHeadlines";
 import { getBossResult } from "@shared/utils/bossResultMemory";

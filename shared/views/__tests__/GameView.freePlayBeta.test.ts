@@ -10,8 +10,8 @@ describe("controlled basketball beta scope", () => {
     expect(GAME_VIEW).toContain("BOSS_BETA_ENABLED && showBoss && (");
   });
 
-  it("uses the free-play commentary bank when the economy is disabled", () => {
-    expect(GAME_VIEW).toContain('chadMessage("welcome", !economyEnabled)');
-    expect(GAME_VIEW).toContain('chadMessage("rookie_first_win", !economyEnabled)');
+  it("uses the free-play commentary bank without an economy switch", () => {
+    expect(GAME_VIEW).toContain('chadMessage("welcome", true)');
+    expect(GAME_VIEW).toContain('chadMessage("rookie_first_win", true)');
   });
 });

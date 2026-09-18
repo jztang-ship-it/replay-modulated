@@ -19,8 +19,7 @@ import type { CardRenderer } from "@shared/components/H2HRevealScreen";
 import type {
   WinTierKey,
   WinTierMap,
-  StreakTier,
-} from "@shared/utils/payoutLogic";
+} from "@shared/utils/scoreTiers";
 import type { WinTierDisplay, LegendData } from "@shared/components/GameBar";
 import type { TierThreshold as GaugeTierThreshold } from "@shared/components/TierGauge";
 import type { DailyBonusPlayer } from "@shared/utils/dailyBonus";
@@ -60,27 +59,13 @@ export interface GameAdapter {
   /** Maps a final FP total to a tier key. Basketball uses BASKETBALL_WIN_TIERS;
    *  baseball will plug in equivalents in Task 6. */
   calculateWinTier: (totalFp: number) => WinTierKey;
-  /** Calculates the payout, with streak bonus folded in. */
-  calculatePayoutWithStreak: (
-    tier: WinTierKey,
-    bet: number,
-    streak: number,
-  ) => number;
-  /** Win-tier table — used by the celebration banner for tier multipliers. */
+
   winTiersMap: WinTierMap;
-  /** Streak multiplier function. Reads the sport's per-sport STREAK_TIERS
-   *  internally — caller passes streak count only. */
-  getStreakMultiplier: (streak: number) => number;
-  /** The sport's streak schedule (e.g., 3-win/5-win/10-win tiers with their
-   *  multipliers). Used by shared GameBar (display labels) and shared
-   *  CommentaryInput (streak_proximity nudges) so the UI/copy match the
-   *  active sport's schedule. */
-  streakTiers: StreakTier[];
 
   // ── GameBar visual config (per-sport thresholds, colors, legend copy) ──
   /** Win-tier visual rows (label, minFp, color, glow) for the tier bar. */
   gameBarWinTiers: WinTierDisplay[];
-  /** Legend modal data (payout rows, badges, scoring rules). */
+
   gameBarLegend: LegendData;
 
   // ── Roster lifecycle (non-FTUE) ────────────────────────────────────
@@ -169,30 +154,10 @@ export interface GameAdapter {
    *  GameView reads `adapter.maxRounds ?? 1`; absent ⇒ 1 ⇒ single-shot (today's
    *  flow), so baseball/football are unchanged until their own cross-sport port. */
   maxRounds?: number;
-  /** Build-phase v1 (basketball). When false, the bet collapses to a single
-   *  entryFee — the multiplier is pinned to 1 and its selector hidden, but the
-   *  betMultiplier state/setter stay intact (re-wireable). GameView reads
-   *  `adapter.multiplierEnabled ?? true`; absent ⇒ true ⇒ multiplier live (today's
-   *  flow). The `?? true` / `?? 1` defaults live at the shared read site so a
-   *  sport that doesn't set these fields keeps current behavior. */
-  multiplierEnabled?: boolean;
-  /** Build-phase v1 (basketball). When false, win streaks are PAUSED: the streak
-   *  fire-row display is hidden, the streak multiplier is neutralized (no effect on
-   *  the cosmetic payout / celebration), and no streak-driven surfacing fires. The
-   *  streak STATE, counting logic (incrementStreak/resetStreak), and the
-   *  streak_at_play column stay intact and re-wireable for the economy layer —
-   *  same hide-don't-delete pattern as the dormant multiplier. GameView reads
-   *  `adapter.streaksEnabled ?? true`; absent ⇒ true ⇒ streaks live (today's flow),
-   *  so baseball/football are unchanged. */
+
+
   streaksEnabled?: boolean;
-  /** Build-phase F2P layer (basketball). When false, the money seam is bypassed:
-   *  no entry-fee debit, no affordability lockout, no payout credit — the wallet
-   *  never moves. The charge/gate/credit code stays intact (re-wireable for the
-   *  economy layer); only its effect is bypassed at the call sites. GameView/
-   *  _useReveal read `adapter.economyEnabled ?? true`; absent ⇒ true ⇒ economy
-   *  LIVE (today's flow), so baseball/football keep charging. Basketball sets
-   *  false. NOT a runtime toggle — a one-way dormant seam for this layer. */
-  economyEnabled?: boolean;
+
   /** Optional hand-status classifier (basketball). Maps a hand's total FP to a
    *  sparse, ABSOLUTE, tier-orthogonal flag (🔥 HEATER / ❄️ COLD_NIGHT) or null.
    *  Display-only flavor that sits on top of any win tier. Absent ⇒ no status for
@@ -222,7 +187,7 @@ export interface GameAdapter {
     isBust: boolean;
     nearMissGap: number;
     nearMissNextTier: string | null;
-    winPayout: number;
+
     currentUid: string;
     onPlayAgain: () => void;
     onViewLeaderboard: () => void;

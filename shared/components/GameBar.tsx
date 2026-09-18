@@ -1,15 +1,4 @@
-/**
- * shared/components/GameBar.tsx
- * LAYER 1: Sport-agnostic bottom game bar.
- *
- * WIN_CELEBRATION mode transforms the bar in-place:
- *   - Zone above gauge (score/budget) → blurred, shows tier name + coins won
- *   - Tier gauge + team FP → stays live, unblurred, same position
- *   - Zone below gauge (multipliers/wallet/action) → blurred, shows streak hook
- *   - Tap either blurred zone → onWinCelebrationComplete() → RESULTS
- *
- * No separate PostGameOverlay needed. The celebration IS the GameBar.
- */
+
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import ReactDOM from "react-dom";
@@ -18,7 +7,6 @@ import type { JSX as ReactJSX } from "react";
 import { track } from "@shared/analytics/analytics";
 import { formatBonusCountdown, getMsUntilNextBonusRotation } from "@shared/utils/dailyBonus";
 import { isSlateV2Enabled } from "@shared/featureFlags";
-import type { StreakTier } from "@shared/utils/payoutLogic";
 import type { HandStatus } from "@shared/utils/handStatus";
 
 /** Live countdown string to next UTC midnight (daily bonus rotation). */
@@ -58,7 +46,7 @@ export interface BadgeInfo {
 }
 
 export interface LegendData {
-  payoutRows: Array<{ label: string; score: string; payout: string; color: string; bg: string; border: string }>;
+  tierRows: Array<{ label: string; score: string;  color: string; bg: string; border: string }>;
   bonusRows?: Array<{ label: string; condition: string; reward: string }>;
   scoringRules: ScoringRule[];
   stamps?: BadgeInfo[];
@@ -72,15 +60,12 @@ export interface CelebrationData {
   tierLabel: string;       // e.g. "ALL-STAR"
   tierColor: string;       // e.g. "#C9A84C"
   tierGlow: string;        // e.g. "#C9A84C55"
-  payout: number;          // coins earned (tier win only, not including bonus)
+
   streak: number;          // current win streak
   isBust: boolean;
-  betMultiplier: number;   // user-selected multiplier (1/3/5/10)
-  tierMultiplier: number;  // tier payout multiplier (0/0.5/3/8/15/50)
-  baseBet: number;         // base wager amount (10)
+
   isLoss: boolean;         // true for ROOKIE (partial loss) and BUST (full loss)
-  lossAmount: number;      // amount lost (0 for wins, baseBet*betMultiplier for bust, half for rookie)
-  streakMultiplier?: number;    // streak-based multiplier (1.0 / 1.3 / 1.7 / 2.5)
+
   /** Tier-orthogonal flavor flag (🔥 HEATER / ❄️ COLD_NIGHT) or null. Display
    *  only — Cold Night also drives the loss-coloring hook (isLoss) BUST vacated. */
   handStatus?: HandStatus | null;
@@ -88,19 +73,13 @@ export interface CelebrationData {
 
 type Props = {
   gameState: GameStateLabel;
-  balance: number;
-  isBalanceAnimating?: boolean;
+
   totalFp: number;
   capMax: number;
   capUsed: number;
   lockedSalary: number;
   revealedSalary: number;
-  betMultiplier: number;
-  baseBet: number;
-  onBetMultiplier: (m: number) => void;
-  /** When false, the bet-multiplier selector is hidden (entryFee/build-phase mode).
-   *  Default true ⇒ selector shown (current behavior). State/handlers stay intact. */
-  showBetMultiplier?: boolean;
+
   onAction: () => void;
   /** Sport-specific win tier thresholds + colors */
   winTiers: WinTierDisplay[];
@@ -114,7 +93,7 @@ type Props = {
   celebration?: CelebrationData;
   /** Called when user taps blurred zone to exit celebration */
   onWinCelebrationComplete?: () => void;
-  onWageAnimationComplete?: () => void;
+
   /** Pulse the replay/deal button to draw attention on results. */
   replayPulse?: boolean;
   /** FTUE only: relabel the REVEALING primary CTA "AUTO" → "GAME TIME". */
@@ -127,22 +106,18 @@ type Props = {
    *  beat's locked stage — reuses the existing disabled dim (opacity 0.3, no
    *  action), and suppresses the pulse. Off (default) → no change. */
   ftuePrimaryLocked?: boolean;
-  /** Challenge mode: the recipient is playing a friend's hand. Hides
-   *  the bet-multiplier selector AND the balance/wallet display since
-   *  the matchup is decided by head-to-head score comparison, not by
-   *  bet payout. Internally the effective multiplier is locked to 1x
-   *  by the caller (GameView) — this prop only controls visibility. */
+
   challengeMode?: boolean;
   /** Hide the built-in TierBar — use when an external TierGauge is shown */
   hideTierBar?: boolean;
-  /** Slot rendered between tier bar and multipliers — used for external TierGauge */
+
   tierGaugeSlot?: React.ReactNode;
-  /** When set, multiplier row and wallet/action render into these DOM nodes (single GameBar instance, split layout) */
+
   splitFooter?: {
     multipliersHost: HTMLElement | null;
     controlsHost: HTMLElement | null;
   };
-  /** When false with splitFooter, multiplier buttons are not portaled (host can stay mounted). Default true. */
+
   splitMultiplierRowVisible?: boolean;
   /**
    * Tap target for the leaderboard trophy button rendered to the right of the
@@ -167,33 +142,18 @@ type Props = {
    *  not persist across hands. The durable iconBlink pulse keeps running
    *  via the rm_board_ack-derived pulseActive read below. */
   onBurstEnd?: () => void;
-  /** Current win streak for fire emoji display under balance */
+  /** Current win streak for fire emoji display in the game bar */
   streak?: number;
-  /** When false, the streak fire-row is hidden (streaks paused — basketball F2P
-   *  layer). Default true ⇒ shown (today's flow). Mirrors showBetMultiplier; the
-   *  streak prop/state is still passed and preserved, just not surfaced. */
+
   showStreak?: boolean;
-  /** When false, the balance/wallet readout is hidden (F2P money seam off — the
-   *  wallet never moves). Default true ⇒ shown. Hide-don't-delete: the balance
-   *  prop is still passed; only the readout is suppressed. (Does NOT affect the
-   *  separate `coins` engagement currency.) */
-  economyEnabled?: boolean;
-  /** When true, a compact secondary "Challenge" button renders between REPLAY and
-   *  the i/🏆 icons (result-screen story state), and the action row switches to an
-   *  in-flow two-button layout (shortened REPLAY + Challenge, icons marginLeft:auto).
-   *  Default false ⇒ NOT rendered and the row keeps its exact current layout (REPLAY
-   *  centered, icons absolute-right) — so non-challenge sports are pixel-unaffected.
-   *  onChallenge starts the send (GameView wires it to the prompt's startSend()). */
+
   challengeAvailable?: boolean;
   onChallenge?: () => void;
   /** Per-hand dismiss of the hot-hand CHALLENGE CTA ("not this one"). When fired,
    *  GameView flips challengeDismissed → challengeAvailable false → REPLAY returns as
    *  the lone centered CTA. CHALLENGE and REPLAY are never co-present in the row. */
   onDismissChallenge?: () => void;
-  /** Sport-specific streak schedule (e.g., 3-win/5-win/10-win tiers with their
-   *  multipliers). Drives the fire-row label text. Optional for back-compat;
-   *  when omitted, labels show "1x" fallbacks. */
-  streakTiers?: StreakTier[];
+
   /** Called when user opens the legend modal — parent can clear pulse state */
   onLegendOpened?: () => void;
   /** Called when user taps the trophy/leaderboard icon — parent can clear pulse state */
@@ -216,7 +176,6 @@ type Props = {
   maxRounds?: number;
 };
 
-const MULTIPLIERS = [1, 3, 5, 10];
 const FF = "'Rajdhani','Arial Narrow',sans-serif";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -274,17 +233,6 @@ function actionTextColor(state: GameStateLabel): string {
 function isDisabled(state: GameStateLabel): boolean {
   return state === "DEALING" || state === "DRAWING";
 }
-
-// ── Streak fire row with flash (light-up) and extinguish (streak-break) effects ──
-// Layout: 3 / 5 / 10 flames, multiplier label above the threshold flame.
-// Tiers unlock progressively: tier 2 appears at 3 wins, tier 3 at 5 wins.
-// Labels derive from the sport's STREAK_TIERS, passed in via the
-// streakTiers prop — basketball / baseball / football may schedule
-// different multipliers.
-
-
-
-
 
 function salarySpent(state: GameStateLabel, capUsed: number, lockedSalary: number, revealedSalary: number): number {
   if (state === "IDLE") return 0;
@@ -358,24 +306,6 @@ function useCountUp(target: number, duration = 900, delay = 0): number {
   return val;
 }
 
-// ── Coin Burst ─────────────────────────────────────────────────────────────
-
-
-
-
-// ── TierBar ────────────────────────────────────────────────────────────────
-//
-// Overshoot = damped spring oscillation, driven directly by lastCardProgress.
-//
-// Timeline (last 30% of rollup, p: 0.7 → 1.0):
-//   Normalize t = (p - 0.7) / 0.3  →  0 to 1
-//   Spring: A * e^(-damping*t) * cos(freq*t)
-//   At t=0: displacement = +A (forward of target)
-//   Oscillates: forward → back past target → forward (smaller) → settles at 0 by t=1
-//
-// Magnitude A scales with the card's bar contribution so a big card = big tug.
-// Both the real FP and the spring use the same clock → always land together.
-
 function TierBar({
   totalFp, gameState, winTiers, isCelebration,
   lastCardProgress, lastCardFp, onOvershootSettled,
@@ -410,15 +340,6 @@ function TierBar({
   // A = amplitude in % of bar width. Min 12 so it's always perceptible.
   const A = Math.min(22, Math.max(12, cardBarContrib * 0.6));
 
-  // Keyframe spring: hardcoded offsets as multiples of A
-  // t=0: 0 (bar at real value, spring starts)
-  // bounce 1: peaks at +A (t≈0.20)  — surges PAST landing spot
-  // bounce 2: troughs at -0.8*A (t≈0.50) — pulls BACK below landing spot
-  // bounce 3: peaks at +0.4*A (t≈0.75) — small forward again
-  // t=1: 0 (lands exactly on truth)
-  //
-  // Implemented as piecewise linear between keyframes so the values are exact.
-  // Keyframes: [t, offset_multiple_of_A]
   const KEYS: [number, number][] = [
     [0.00, 0.0],   // start: bar at real value
     [0.35, 1.0],   // +A   : surge forward past target  (feels like launch)
@@ -541,7 +462,6 @@ function TierBar({
   );
 }
 
-
 // ── Legend modal (unchanged) ────────────────────────────────────────────────
 
 const colHdr: React.CSSProperties = {
@@ -553,16 +473,14 @@ function LegendModal({
   onClose,
   legend,
   sportKey,
-  economyEnabled: _ignoredEconomyEnabled,
+
 }: {
   onClose: () => void;
   legend: LegendData;
   sportKey?: string;
-  /** When false (F2P layer — basketball), the legend's Payout column is hidden.
-   *  Default true ⇒ shown (live-economy sports). Row data is unchanged. */
-  economyEnabled?: boolean;
+
 }) {
-  const economyEnabled = false;
+
   const [tab, setTab] = useState<"tiers" | "scoring" | "badges">("tiers");
   // Bonus row is shown only when slate v2 is OFF for this sport. When ON,
   // the slate panel (landing drawer + in-game chip overlay) is the single
@@ -652,32 +570,24 @@ function LegendModal({
                   </div>
                 </div>
               )}
-              {/* Payout column is gated on economyEnabled: hidden for the F2P
-                  layer (basketball), shown for live-economy sports (baseball/
-                  football, economyEnabled ?? true). The payout DATA on each row is
-                  untouched — only the column render is suppressed. */}
-              <div style={{ display: "grid", gridTemplateColumns: economyEnabled ? "1fr auto auto" : "1fr auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 2 }}>
                 <span style={colHdr}>Tier</span>
                 <span style={{ ...colHdr, textAlign: "right" }}>Team FP</span>
                 {null}
               </div>
-              {legend.payoutRows.map(r => (
-                <div key={r.label} style={{ display: "grid", gridTemplateColumns: economyEnabled ? "1fr auto auto" : "1fr auto", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 10, background: r.bg, border: `1px solid ${r.border}` }}>
+              {legend.tierRows.map(r => (
+                <div key={r.label} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center", padding: "8px 12px", borderRadius: 10, background: r.bg, border: `1px solid ${r.border}` }}>
                   <span style={{ fontSize: 12, fontWeight: 900, letterSpacing: 0.8, color: r.color }}>{r.label}</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", textAlign: "right" }}>{r.score}</span>
                   {null}
                 </div>
               ))}
-              {/* Tier identity ladder STAYS. Only the money framing
-                  ("Payout = bet × multiplier") is gated on economyEnabled. */}
+
               <div style={{ marginTop: 8, fontSize: 10, color: "rgba(255,255,255,0.3)", lineHeight: 1.6 }}>
                 Team FP = sum of all 5 players' fantasy points.{null}
               </div>
 
-              {/* STREAK WINS / bonusRows is a money-framing block (1.2x/1.5x/2.0x
-                  payout multipliers + the bonus-pool rake note). Gated entirely on
-                  economyEnabled — hidden for the F2P layer, kept for live-economy
-                  sports. The bonusRows DATA on the adapter is untouched. */}
               {null}
             </div>
           )}
@@ -747,26 +657,6 @@ function LegendModal({
     </div>
   );
 }
-
-// ── CelebrationTop ───────────────────────────────────────────────────────────
-// Shown in Zone A after the overshoot has settled.
-// Tier name (large) + coins won (large) side by side.
-// Tapping triggers coin-fly-to-wallet animation then calls onDismiss.
-
-
-
-
-// ── CoinFlyToWallet ──────────────────────────────────────────────────────────
-// Spawns coin particles that arc from the coins display toward the wallet element.
-
-
-
-
-// ── CoinFlyFromPoint ─────────────────────────────────────────────────────────
-// Same as CoinFlyToWallet but origin is a fixed {x,y} point (tap position).
-
-
-// ── CelebrationBottom ────────────────────────────────────────────────────────
 
 function CelebrationBottom({ celebration, onDismiss }: { celebration: CelebrationData; onDismiss: () => void }) {
   const [visible, setVisible] = useState(false);
@@ -840,7 +730,6 @@ function CelebrationBottom({ celebration, onDismiss }: { celebration: Celebratio
   );
 }
 
-
 // ── Wage animation keyframes ─────────────────────────────────────────────────
 const WAGE_STYLE_ID = "gb-wage-anim";
 if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) {
@@ -864,21 +753,7 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
       0%   { transform: perspective(300px) rotateX(0deg);  opacity: 1; }
       100% { transform: perspective(300px) rotateX(90deg); opacity: 0; }
     }
-    @keyframes payoutFlipIn {
-      0%   { transform: perspective(300px) rotateX(-90deg); opacity: 0; }
-      100% { transform: perspective(300px) rotateX(0deg);   opacity: 1; }
-    }
-    @keyframes payoutFlyToBalance {
-      0%   { transform: translateX(0)      scale(1);    opacity: 1; }
-      30%  { transform: translateX(-12px)  scale(1.12); opacity: 1; }
-      100% { transform: translateX(-110px) scale(0.3);  opacity: 0; }
-    }
-    @keyframes balanceBlink {
-      0%   { color: #FFFFFF; }
-      15%  { color: var(--blink-color); filter: drop-shadow(0 0 6px var(--blink-color)); }
-      45%  { color: var(--blink-color); filter: drop-shadow(0 0 4px var(--blink-color)); }
-      100% { color: #FFFFFF; filter: none; }
-    }
+
   `;
   document.head.appendChild(st);
 }
@@ -886,18 +761,16 @@ if (typeof document !== "undefined" && !document.getElementById(WAGE_STYLE_ID)) 
 // ── Wage animation state machine ──────────────────────────────────────────
 type WagePhase = "idle" | "glow" | "thud" | "flip" | "fly" | "settled";
 
-
-
 // ── GameBar ─────────────────────────────────────────────────────────────────
 
 export function GameBar({
-  gameState, balance, isBalanceAnimating, totalFp,
+  gameState,   totalFp,
   lastCardProgress = 0,
   lastCardFp = 0,
   capMax, capUsed, lockedSalary, revealedSalary,
-  betMultiplier, baseBet, onBetMultiplier, showBetMultiplier: _ignoredShowBetMultiplier, onAction,
+      onAction,
   winTiers, legend,
-  celebration, onWinCelebrationComplete, onWageAnimationComplete,
+  celebration, onWinCelebrationComplete,
   replayPulse = false,
   challengeMode = false,
   hideTierBar = false,
@@ -912,11 +785,11 @@ export function GameBar({
   onBurstEnd,
   streak = 0,
   showStreak: _ignoredShowStreak,
-  economyEnabled: _ignoredEconomyEnabled,
+
   challengeAvailable = false,
   onChallenge,
   onDismissChallenge,
-  streakTiers,
+
   onLegendOpened,
   onTrophyOpened,
   sportKey,
@@ -930,8 +803,7 @@ export function GameBar({
   // FTUE Pass B: the primary CTA is disabled/dimmed when the state disables it
   // (DEALING/DRAWING) OR when the history beat locks REPLAY. Superset of the
   // normal gate → non-FTUE (ftuePrimaryLocked=false) is byte-identical.
-  const economyEnabled = false;
-  const showBetMultiplier = false;
+
   const showStreak = false;
   const primaryDisabled = isDisabled(gameState) || ftuePrimaryLocked;
   // x/N hold-loop indicator + "NEXT" relabel — multi-round only. Single-shot
@@ -960,17 +832,7 @@ export function GameBar({
         && localStorage.getItem("rm_board_ack") !== "1";
     } catch { return false; }
   })();
-  // Compact secondary "Challenge" button — rendered as a real in-flow flex sibling
-  // between REPLAY and the icons (result-screen story state). Subdued vs the primary
-  // REPLAY so REPLAY stays dominant. Null when no challenge is available (default),
-  // so the row keeps its current single-REPLAY layout for all other sports/states.
-  // Single-CTA model: when challengeAvailable, CHALLENGE is the SOLE, dominant CTA in
-  // the row (REPLAY is hidden — gated on !challengeAvailable at both render sites), so
-  // the two are never co-present and REPLAY can't be shrunk/de-centered. The column is
-  // REPLAY-sized (min(168px,50%), row-relative) and centered; the filled button reads as
-  // THE action. A quiet "not this one" dismiss sits on its own line BELOW — in-flow (no
-  // absolute layer that could eat taps), with a padded hit area so it's a reliable Safari
-  // tap target (if dismiss were tap-eaten, the "just let me play" user would be trapped).
+
   const ChallengeButton = (challengeAvailable && onChallenge) ? (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, width: "min(168px, 50%)" }}>
       <button
@@ -1088,7 +950,7 @@ export function GameBar({
           transition: "filter 0.35s ease, opacity 0.35s ease",
           pointerEvents: showCelebContent ? "none" : "auto",
         }}>
-          {/* Wage display — invisible, drives the payout animation callback */}
+
           <div style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
 
             <></>
@@ -1130,21 +992,11 @@ export function GameBar({
               Hidden when showStreak is false (streaks paused — basketball). */}
           {null}
 
-          {/* Action row — 👛 wallet left, button center, legend+trophy right.
-              When challengeAvailable, switches to an in-flow two-button layout
-              (REPLAY + Challenge, icons pushed right via marginLeft:auto); else
-              the original centered-REPLAY + absolute-right-icons layout (so
-              non-challenge sports/states are pixel-unchanged). */}
           <div style={{ display: "flex", alignItems: "center", position: "relative", paddingTop: 2, minHeight: showStreak ? 44 : 40, justifyContent: "center" as const }}>
-            {/* Left zone — round indicator (multi-round only) + wallet, side by
-                side in one absolute container so they never overlap. The
-                indicator never renders for single-shot sports, leaving the
-                wallet at left:0 exactly as before (extra wrapper is layout-inert
-                with one child). */}
-            {(showRoundIndicator || (!challengeMode && economyEnabled)) && (
+
+            {showRoundIndicator && (
               <div style={{ position: "absolute", left: 0, display: "flex", alignItems: "center", gap: 8 }}>
-                {/* x/N round indicator — left of the wallet; CTA stays centered.
-                    Finality is carried here (snaps to N/N at lock), not the button. */}
+
                 {showRoundIndicator && (
                   <span data-testid="round-indicator" style={{
                     fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
@@ -1153,8 +1005,7 @@ export function GameBar({
                     {roundsUsed}/{maxRounds}
                   </span>
                 )}
-                {/* Wallet chip. Hidden in challenge mode (no wager) and when the
-                    economy is off (F2P money seam — wallet never moves). */}
+
                 {null}
               </div>
             )}
@@ -1259,7 +1110,7 @@ export function GameBar({
     return (
       <>
         {showLegend && ReactDOM.createPortal(
-          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} economyEnabled={null} />,
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey}  />,
           document.body
         )}
       </>
@@ -1270,7 +1121,7 @@ export function GameBar({
     return (
       <>
         {showLegend && ReactDOM.createPortal(
-          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} economyEnabled={null} />,
+          <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey}  />,
           document.body
         )}
         {ReactDOM.createPortal(
@@ -1285,7 +1136,7 @@ export function GameBar({
   return (
     <>
       {showLegend && ReactDOM.createPortal(
-        <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey} economyEnabled={null} />,
+        <LegendModal onClose={() => setShowLegend(false)} legend={legend} sportKey={sportKey}  />,
         document.body
       )}
 
@@ -1315,10 +1166,6 @@ export function GameBar({
           />
         </div>}
 
-        {/* Invisible wallet target for coin fly — lives outside blur zone */}
-
-
-        {/* Coin fly from tap point → wallet */}
         {null}
 
         {/* ── ZONE B.5: external TierGauge slot (e.g. GameView) — omit wrapper when unused so footer height isn’t reserved ── */}
@@ -1328,7 +1175,6 @@ export function GameBar({
           </div>
         )}
 
-        {/* ── ZONE C: Multipliers/Wallet/Action ↔ Streak hook ─────── */}
         <div style={{ position: "relative", overflow: "hidden", paddingBottom: "max(32px, env(safe-area-inset-bottom, 20px))" }}>
 
           {/* Normal content */}
@@ -1342,8 +1188,7 @@ export function GameBar({
 
             <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 6, marginBottom: 6, opacity: challengeMode ? 0 : 1, pointerEvents: challengeMode ? "none" as const : "auto" as const, transition: "opacity 0.3s ease" }}>
               {/* Balance — left */}
-              {/* walletRef node stays mounted (coin-fly anchor); the visible
-                  Balance readout is hidden when the economy is off. */}
+
               <div style={{ flexShrink: 0 }}>
                 {null}
               </div>

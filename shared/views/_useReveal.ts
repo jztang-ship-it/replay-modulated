@@ -1,45 +1,7 @@
-/**
- * shared/views/_useReveal.ts
- *
- * Phase 2 sub-PR 04 — owns the reveal + spring orchestration that fires
- * during the REVEALING → RESULTS transition. Consumed by per-sport
- * GameView wrappers, which pass it the adapter, the destructured return
- * of `useSharedGameState`, plus a small bag of per-sport callbacks
- * (win-tier math, engagement counters, FTUE refs).
- *
- * What lives here:
- *   - runSpring  — the 4-segment damped spring that animates the gauge
- *     after the anchor card resolves
- *   - onCardFpStart — budget rolldown trigger (deduct non-held salary as
- *     each card's FP rolls up)
- *   - onCardComplete — bumps revealIndex / lastRevealedCardId, kicks the
- *     FTUE gauge oscillation when Tatum's stamp lands
- *   - onAnchorFpComplete — calculates winTier/payout, records analytics,
- *     branches FTUE-vs-non-FTUE for pendingBalanceUpdateRef wiring
- *   - All paired refs: springTimersRef, springRafRef, frozenBarFpRef,
- *     lockedGaugeFpRef, springHasFiredRef, anchorFpCallCountRef,
- *     prevRevealTierRef, nearMissChoreTimersRef,
- *     deductedSalaryCardsRef, latestGaugeFpRef, pendingBalanceUpdateRef
- *   - Derived `displayFp` and `lockedSalary` (deferred from Task 3 because
- *     they fold reveal-state refs)
- *
- * What stays per-sport:
- *   - Win-tier math (calculateWinTier, calculatePayoutWithStreak) —
- *     passed in via args. Basketball ships its own; baseball will plug
- *     in its equivalents in Task 6.
- *   - useEmotionalReveal usage — the callbacks returned from this hook
- *     are passed *into* useEmotionalReveal at the call site, since the
- *     hook also returns isSkippingRef + anchorCardId which must be wired
- *     back into our callbacks via the args.refs bundle.
- *
- * Streak / hand-count localStorage writes route through the
- * incrementStreak/resetStreak helpers on `state`, which themselves
- * wrap nsKey(adapter, ...). This preserves byte-identical behavior
- * today (namespace = "") while making the namespace flip safe later.
- */
+
 
 import { useRef, useCallback, useMemo } from "react";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
+import type { WinTierKey } from "@shared/utils/scoreTiers";
 import type { PlayerCard } from "@shared/types";
 import { soundManager } from "@shared/utils/soundManager";
 import { audioDirector } from "@shared/utils/audioDirector";
@@ -82,23 +44,6 @@ export interface UseRevealArgs {
    *  May return null if the sport's win-tier function can't classify the
    *  total (baseball's wrapper, wired in Task 6, is the motivating case). */
   calculateWinTier: (totalFp: number) => WinTierKey | null;
-  /** Calculates the payout, with streak bonus. Accepts null tier to
-   *  match calculateWinTier's return — null collapses to no-payout. */
-  calculatePayoutWithStreak: (
-    tier: WinTierKey | null,
-    bet: number,
-    streak: number,
-  ) => number;
-
-  /** Current bet (BASE_BET * betMultiplier in basketball). */
-  currentBet: number;
-  /** Bet multiplier (passed separately for engagement.recordMultiplierUsed). */
-  betMultiplier: number;
-  /** F2P money seam. When false (basketball), the payout CREDIT to the wallet is
-   *  bypassed (the wallet never moves). The payout is still computed (cosmetic) and
-   *  the money_won leaderboard submit is untouched — only the balance write is
-   *  skipped. Absent ⇒ true ⇒ credit applied (today's flow). */
-  economyEnabled?: boolean;
 
   // ── Roster / FTUE refs ──────────────────────────────────────────────
   /** Mutable ref containing the live roster (resolved actualFp). */
@@ -114,7 +59,6 @@ export interface UseRevealArgs {
   setOnBoardTick: (updater: (t: number) => number) => void;
 
   // ── Engagement counters ─────────────────────────────────────────────
-
 
   // ── Analytics ───────────────────────────────────────────────────────
   gameAnalytics: { handResolved: (fp: number, tier: string, bust: boolean, badges: number, ts: number) => void };
@@ -137,9 +81,6 @@ export interface UseRevealReturn {
   // Spring orchestrator
   runSpring: (finalFp: number, onSettled: () => void) => void;
 
-  // Refs the caller may need to wire (e.g. handleCardRevealStart writes
-  // frozenBarFpRef when the true anchor starts, and the JSX reads
-  // pendingBalanceUpdateRef on wage-animation complete).
   springTimersRef: React.MutableRefObject<number[]>;
   springRafRef: React.MutableRefObject<number>;
   frozenBarFpRef: React.MutableRefObject<number | null>;
@@ -150,7 +91,6 @@ export interface UseRevealReturn {
   prevRevealTierRef: React.MutableRefObject<string>;
   nearMissChoreTimersRef: React.MutableRefObject<number[]>;
   deductedSalaryCardsRef: React.MutableRefObject<Set<string>>;
-  pendingBalanceUpdateRef: React.MutableRefObject<(() => void) | null>;
 
   // Derived display values
   /** Bar position during reveal: spring while running, frozen during
@@ -173,12 +113,10 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
   const {
     adapter, state,
     springTiers = DEFAULT_SPRING_TIERS,
-    calculateWinTier, calculatePayoutWithStreak,
-    currentBet, betMultiplier,
-    economyEnabled = true,
+    calculateWinTier,
+
     rosterRef,
     isAnonymous, setBigWinFired, setOnBoardTick,
-
 
     gameAnalytics, getTopGameInfo,
   } = args;
@@ -190,9 +128,9 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     streak, handCount,
     setRevealedSalary, setRevealIndex, setLastRevealedCardId,
     setSpringFp, setSpringSettled,
-    setWinTier, setWinPayout,
-    setGameState, setBalance,
-    persistBalance,
+    setWinTier,
+    setGameState,
+
     submitToLeaderboard, checkLeaderboardRank, currentHandIdRef,
     incrementStreak, resetStreak, incrementHandCount,
   } = state;
@@ -205,7 +143,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
   // ── Spring oscillation refs ─────────────────────────────────────────
   const springRafRef = useRef<number>(0);
   const springTimersRef = useRef<number[]>([]);
-  const pendingBalanceUpdateRef = useRef<(() => void) | null>(null);
+
   const springHasFiredRef = useRef(false);
   // FTUE: tracks onAnchorFpComplete calls to skip non-held anchor
   const anchorFpCallCountRef = useRef(0);
@@ -348,9 +286,9 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
       const server = state.serverResultRef.current;
       if (!server) return; // No speculative reward or leaderboard submission.
       const tier = server.tier as WinTierKey;
-      const payout = 0;
+
       setWinTier(tier);
-      setWinPayout(payout);
+
       const bust = !tier || tier === "BUST";
       // ROOKIE = neutral for streak (doesn't advance or break). BUST = streak reset.
       const isStreakWin = !bust && tier !== "ROOKIE";  // STARTER+ advances streak
@@ -446,14 +384,13 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     });
   }, [
     adapter,
-    currentBet, betMultiplier, economyEnabled, streak, handCount, isAnonymous,
+       streak, handCount, isAnonymous,
     rosterRef,
-    runSpring, calculateWinTier, calculatePayoutWithStreak,
-    setWinTier, setWinPayout, setBalance, persistBalance, setGameState,
+    runSpring, calculateWinTier,
+    setWinTier,    setGameState,
     submitToLeaderboard, checkLeaderboardRank,
     incrementStreak, resetStreak, incrementHandCount,
     setBigWinFired, setOnBoardTick, gameAnalytics, getTopGameInfo,
-
 
   ]);
 
@@ -488,7 +425,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     prevRevealTierRef,
     nearMissChoreTimersRef,
     deductedSalaryCardsRef,
-    pendingBalanceUpdateRef,
+
     computeDisplayFp,
     computeLockedSalary,
     bindIsSkippingRef,

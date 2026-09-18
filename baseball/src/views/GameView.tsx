@@ -48,11 +48,11 @@ import {
 import { BaseballCard, resetAllOverlays } from "../components/BaseballCard";
 import {
   calculateWinTier,
-  calculatePayoutWithStreak,
-  getStreakMultiplier,
+
+
   BASEBALL_WIN_TIERS,
-  STREAK_TIERS,
-} from "../utils/payoutLogic";
+
+} from "../utils/scoreTiers";
 
 // Tier gauge thresholds — baseball-specific FP cutoffs.
 const GAUGE_THRESHOLDS: GaugeTierThreshold[] = [
@@ -73,13 +73,13 @@ const WIN_TIERS: WinTierDisplay[] = [
 ];
 
 const LEGEND_DATA: LegendData = {
-  payoutRows: [
-    { label: "LEGEND",   score: "310+ FP", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.3)"    },
-    { label: "MVP",      score: "260+ FP", payout: "15x",  color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.28)"  },
-    { label: "ALL-STAR", score: "230+ FP", payout: "7x",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.28)" },
-    { label: "STARTER",  score: "200+ FP", payout: "2.5x", color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"   },
-    { label: "ROOKIE",   score: "170+ FP", payout: "0.5x", color: "#22C55E", bg: "rgba(34,197,94,0.08)",    border: "rgba(34,197,94,0.22)"   },
-    { label: "BUST",     score: "< 170 FP",payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
+  tierRows: [
+    { label: "LEGEND",   score: "310+ FP",   color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.3)"    },
+    { label: "MVP",      score: "260+ FP",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.28)"  },
+    { label: "ALL-STAR", score: "230+ FP",    color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.28)" },
+    { label: "STARTER",  score: "200+ FP",  color: "#00FFD8", bg: "rgba(0,255,216,0.08)",    border: "rgba(0,255,216,0.25)"   },
+    { label: "ROOKIE",   score: "170+ FP",  color: "#22C55E", bg: "rgba(34,197,94,0.08)",    border: "rgba(34,197,94,0.22)"   },
+    { label: "BUST",     score: "< 170 FP",    color: "#6B7280", bg: "rgba(107,114,128,0.06)",  border: "rgba(107,114,128,0.18)" },
   ],
   bonusRows: [
     { label: "3-WIN STREAK", condition: "3 wins in a row", reward: "1.3x payout"  },
@@ -173,10 +173,10 @@ export default function GameView() {
     gaugeThresholds: GAUGE_THRESHOLDS,
     tierFromSalary,
     calculateWinTier,
-    calculatePayoutWithStreak,
+
     winTiersMap: BASEBALL_WIN_TIERS,
-    getStreakMultiplier,
-    streakTiers: STREAK_TIERS,
+
+
     gameBarWinTiers: WIN_TIERS,
     gameBarLegend: LEGEND_DATA,
     dealInitialRoster,

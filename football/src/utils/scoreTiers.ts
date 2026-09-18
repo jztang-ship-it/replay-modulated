@@ -1,5 +1,5 @@
 /**
- * football/src/utils/payoutLogic.ts
+ * football/src/utils/scoreTiers.ts
  *
  * Football win tier thresholds + payout multipliers.
  *
@@ -20,51 +20,36 @@
  */
 import {
   calculateWinTier         as _calculateWinTier,
-  calculatePayout          as _calculatePayout,
-  calculatePayoutWithStreak as _calculatePayoutWithStreak,
   getStreakMultiplier      as _getStreakMultiplier,
   getNextStreakTier        as _getNextStreakTier,
-} from "@shared/utils/payoutLogic";
-import type { WinTierKey, WinTierMap, StreakTier } from "@shared/utils/payoutLogic";
+} from "@shared/utils/scoreTiers";
+import type { WinTierKey, WinTierMap } from "@shared/utils/scoreTiers";
 
 // Football streak schedule — historical 3/5/10 → 1.3/1.7/2.5 values.
-export const STREAK_TIERS: StreakTier[] = [
-  { wins: 10, multiplier: 2.5 },
-  { wins: 5,  multiplier: 1.7 },
-  { wins: 3,  multiplier: 1.3 },
-];
+
 
 /** Football streak multiplier — sport-bound wrapper. */
-export function getStreakMultiplier(streak: number): number {
-  return _getStreakMultiplier(streak, STREAK_TIERS);
-}
+
 /** Football next-streak-tier — sport-bound wrapper. */
-export function getNextStreakTier(streak: number): StreakTier | null {
-  return _getNextStreakTier(streak, STREAK_TIERS);
-}
-export type { StreakTier };
+
+
 
 export type { WinTierKey };
 export type WinTier = WinTierKey;
 
 /** Football win tier map. Keys are shared WinTierKey; display names live in GameView. */
 export const FOOTBALL_WIN_TIERS: WinTierMap = {
-  LEGEND:   { minFp: 215, multiplier: 50  },  // LEGEND tier
-  MVP:      { minFp: 192, multiplier: 8   },  // MOTM tier
-  ALL_STAR: { minFp: 167, multiplier: 3   },  // CAPTAIN tier
-  STARTER:  { minFp: 150, multiplier: 1.5 },  // STARTER tier
-  ROOKIE:   { minFp: 130, multiplier: 0.5 },  // SUB tier
-  BUST:     { minFp: 0,   multiplier: 0   },
+  LEGEND:   { minFp: 215  },  // LEGEND tier
+  MVP:      { minFp: 192   },  // MOTM tier
+  ALL_STAR: { minFp: 167   },  // CAPTAIN tier
+  STARTER:  { minFp: 150 },  // STARTER tier
+  ROOKIE:   { minFp: 130 },  // SUB tier
+  BUST:     { minFp: 0   },
 };
 
 export function calculateWinTier(totalFp: number): WinTierKey {
   return _calculateWinTier(totalFp, FOOTBALL_WIN_TIERS);
 }
 
-export function calculatePayout(tier: WinTierKey, betAmount: number): number {
-  return _calculatePayout(tier, betAmount, FOOTBALL_WIN_TIERS);
-}
 
-export function calculatePayoutWithStreak(tier: WinTierKey, betAmount: number, streak: number): number {
-  return _calculatePayoutWithStreak(tier, betAmount, FOOTBALL_WIN_TIERS, streak, STREAK_TIERS);
-}
+

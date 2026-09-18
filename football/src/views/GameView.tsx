@@ -20,11 +20,11 @@ import {
 } from "../adapters/gameAdapter";
 import {
   calculateWinTier,
-  calculatePayoutWithStreak,
-  getStreakMultiplier,
+
+
   FOOTBALL_WIN_TIERS,
-  STREAK_TIERS,
-} from "../utils/payoutLogic";
+
+} from "../utils/scoreTiers";
 import { SoccerCard, resetAllOverlays } from "../components/SoccerCard";
 import {
   FOOTBALL_FTUE_CONFIG,
@@ -57,12 +57,12 @@ const WIN_TIERS: WinTierDisplay[] = [
 
 const LEGEND_DATA: LegendData = {
   payoutRows: [
-    { label: "LEGEND",  score: "215+", payout: "50x",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.35)"   },
-    { label: "MOTM",    score: "192+", payout: "8x",   color: "#F59E0B", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.3)"   },
-    { label: "CAPTAIN", score: "167+", payout: "3x",   color: "#3B82F6", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.28)"  },
-    { label: "STARTER", score: "150+", payout: "1.5x", color: "#10B981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)"  },
-    { label: "SUB",     score: "130+", payout: "0.5x", color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.22)" },
-    { label: "BUST",    score: "<130", payout: "—",    color: "#6B7280", bg: "rgba(107,114,128,0.06)", border: "rgba(107,114,128,0.18)" },
+    { label: "LEGEND",  score: "215+",   color: "#EF4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.35)"   },
+    { label: "MOTM",    score: "192+",    color: "#F59E0B", bg: "rgba(245,158,11,0.10)",  border: "rgba(245,158,11,0.3)"   },
+    { label: "CAPTAIN", score: "167+",    color: "#3B82F6", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.28)"  },
+    { label: "STARTER", score: "150+",  color: "#10B981", bg: "rgba(16,185,129,0.08)",  border: "rgba(16,185,129,0.25)"  },
+    { label: "SUB",     score: "130+",  color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.22)" },
+    { label: "BUST",    score: "<130",     color: "#6B7280", bg: "rgba(107,114,128,0.06)", border: "rgba(107,114,128,0.18)" },
   ],
   bonusRows: [
     { label: "3-WIN STREAK",  condition: "3 wins in a row",  reward: "1.3x payout" },
@@ -129,10 +129,10 @@ export default function GameView() {
     gaugeThresholds: GAUGE_THRESHOLDS,
     tierFromSalary,
     calculateWinTier,
-    calculatePayoutWithStreak,
+
     winTiersMap: FOOTBALL_WIN_TIERS,
-    getStreakMultiplier,
-    streakTiers: STREAK_TIERS,
+
+
     gameBarWinTiers: WIN_TIERS,
     gameBarLegend: LEGEND_DATA,
     // gameAdapter functions use the local football PlayerCard type (no "RED" tier);

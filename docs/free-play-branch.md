@@ -16,8 +16,14 @@ The new branch-specific lock supersedes older hide-only economy locks for this c
 
 ## Database isolation
 
-Use a dedicated free-play database/project and its own environment configuration. Do not apply migration `021_free_play_sessions.sql` to the mother's database: it intentionally revokes browser access to legacy economy functions and wallet records. It preserves historical records, writes only zero monetary compatibility values to the existing hand audit schema, and never creates or updates a wallet.
+Use a dedicated free-play database/project and its own environment configuration. Do not apply migration `021_free_play_sessions.sql` to the mother's database: it intentionally revokes browser access to legacy economy functions and wallet records. Migration 021 introduces score-only sessions. Migration 022 then removes the legacy economy tables, functions and hand-log columns from the dedicated free-play schema. It requires an explicit dedicated-database marker and refuses existing financial data; never apply it to the mother database.
 
 No remote migration or deployment is part of this change. Until that separate backend is configured, the local shell can be inspected but real authenticated gameplay is unavailable. There is no fallback to the old deployed API or to fabricated local results.
 
 The score-only database test is `scripts/tests/free-play-db.mjs`. It uses disposable PGlite/PostgreSQL and can be run with `PGLITE_MODULE` pointing at an installed `@electric-sql/pglite/dist/index.js`; it never connects to the live product.
+
+## Hidden-economy removal — 2026-09-19
+
+Remove, rather than hide, the dormant pool leaderboard, pool store, payout/streak calculators, wallet/bet state, payout celebration, and monetary simulators from this branch. Preserve score tiers and the nonmonetary lineup budget. Keep only defensive rejection/filtering of legacy monetary inputs/messages. The basketball bundle must not import parked-sport money commentary.
+
+Release verification includes a built-artifact economy guard, solo and friend-challenge regression tests, and disposable database checks proving the final schema has no wallet or monetary hand-log fields. Migration 022 must refuse an unmarked database or existing financial history. No live migration, push, or deployment is authorized by this cleanup.

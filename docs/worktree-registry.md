@@ -387,3 +387,5 @@ Untracked files with no marker and no commit are **at risk**. The registry exist
 ## release/basketball-free-play — ACTIVE, 2026-09-18
 
 Path: /Users/john/Documents/Codex/2026-09-18/referenced-chatgpt-conversation-this-is-an/work/replay-free-play. Base: ab082b5. Mother preservation ref: mother/all-features-2026-09-18. Clean at creation; no inherited changes. This clone has only the release checkout plus this worktree; older Desktop registry entries describe a different clone and were not pruned or modified. Scope: docs/free-play-branch.md. Last reviewed: 2026-09-18.
+
+Free-play review 2026-09-19: removed hidden economy code, added production artifact guard and dedicated-database cleanup migration. Local cleanup commit only; no push, deploy, live migration, or mother changes. Verification and isolation contract: `docs/free-play-branch.md`.

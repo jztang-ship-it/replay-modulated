@@ -22,7 +22,7 @@ import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types";
 import { h2hArcRenderer, h2hOverlayRenderer } from "../views/GameView";
 import { redrawRoster, resolveRoster } from "../adapters/gameAdapter";
-import { calculateWinTier } from "../utils/payoutLogic";
+import { calculateWinTier } from "../utils/scoreTiers";
 import { SENDER_HAND, INITIAL_RECIPIENT_HAND } from "./h2hMockFixture";
 
 const MOCK_CHALLENGE_ID = "dev-mock-challenge";

@@ -1,6 +1,6 @@
 // shared/utils/triggerEvaluation.ts
 import type { GeneratedCard } from "../types/index";
-import type { WinTierMap, WinTierKey } from "./payoutLogic";
+import type { WinTierMap, WinTierKey } from "./scoreTiers";
 import type { TopGameReason } from "../commentary/types";
 
 const RECORD_BADGE_IDS = ["TOP_GAME", "CAREER_HIGH", "NBA_RECORD", "SEASON_RECORD", "PB"];

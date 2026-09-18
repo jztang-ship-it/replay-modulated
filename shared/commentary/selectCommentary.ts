@@ -37,7 +37,6 @@ import { selectStory } from "./storySelector";
 
 // Static imports — work in ESM/Node/Vite without require/createRequire shims.
 import basketballLibrary from "./libraries/basketball.json" with { type: "json" };
-import baseballLibrary from "./libraries/baseball.json" with { type: "json" };
 import { PLAYER_CULTURE as BASKETBALL_CULTURE } from "../../basketball/src/utils/playerCulture";
 import { PLAYER_CULTURE as BASEBALL_CULTURE } from "../../baseball/src/utils/playerCulture";
 import { TEAM_FLAVOR as BASKETBALL_TEAM_FLAVOR } from "../../basketball/src/utils/teamFlavor";
@@ -47,7 +46,6 @@ import { TEAM_FLAVOR as BASEBALL_TEAM_FLAVOR } from "../../baseball/src/utils/te
 
 const _libraries: Record<string, CommentaryLibrary> = {
   basketball: basketballLibrary as CommentaryLibrary,
-  baseball: baseballLibrary as CommentaryLibrary,
 };
 
 function loadLibrary(sport: string): CommentaryLibrary {

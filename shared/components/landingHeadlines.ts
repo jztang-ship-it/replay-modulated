@@ -25,7 +25,7 @@
 // caller emits the selected `variantKey` to analytics.
 
 import type { TakeCardTrigger } from "@shared/challengeTakeCard/types";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
+import type { WinTierKey } from "@shared/utils/scoreTiers";
 
 // ── Bank shape ───────────────────────────────────────────────────────────
 

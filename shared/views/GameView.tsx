@@ -1,40 +1,4 @@
-/**
- * shared/views/GameView.tsx
- *
- * Phase 2 sub-PR 05 — the canonical GameView component. Per-sport wrappers
- * shrink to ~80-line files that build a GameAdapter literal and render
- * <GameView adapter={...}>. All variation flows through the adapter or
- * through SportAdapter; this file contains zero `if (sportKey === ...)`
- * branches.
- *
- * What lives here:
- *   - Full GameView JSX (header, RosterGrid, GameBar, TierGauge, footer,
- *     all overlays — RegisterModal, LeaderboardScreen, ProfileScreen,
- *     BellSheet, FeedbackModal, CollectScreen, PwaInstallPrompt)
- *   - All inline <style> blocks (tier flip / slam / fade animations)
- *   - Local UI/modal state (showProfile, showLeaderboard, bellOpen,
- *     showRegisterModal, showCollect, showNamePrompt, showRawScore,
- *     feedbackOpen, unreadCount, bigWinFired, multipliersHost, controlsHost)
- *   - Chad usher message scheduling
- *   - Tier flip / near-miss / spring reset effects
- *
- * What flows in via the adapter:
- *   - sportAdapter (rosterSize, salaryCap)
- *   - dealInitialRoster / redrawRoster / resolveRoster (non-FTUE)
- *   - ftueDealRoster / ftueRedrawRoster / ftueResolveRoster (FTUE)
- *   - CardComponent (AthleteCard / BaseballCard)
- *   - calculateWinTier / calculatePayoutWithStreak / winTiersMap /
- *     getStreakMultiplier
- *   - gameBarWinTiers + gameBarLegend (sport-specific tier rows + legend)
- *   - getTodaysStars + (optional) computeRosterCeiling
- *   - ftueTextConfig (optional — basketball uses CoachLayer defaults)
- *   - PostHandSheet (optional — baseball-only today)
- *   - resetAllOverlays
- *
- * State + persistence: useSharedGameState owns the canonical hooks bag.
- * Reveal + spring orchestration: useReveal returns the callbacks +
- * derived helpers (computeDisplayFp / computeLockedSalary).
- */
+
 
 import {
   useMemo,
@@ -60,7 +24,7 @@ import { AuthoritativeHand, handErrorMessage } from "../utils/authoritativeHand"
 import { getActiveSeason } from "../engines/dataEngine";
 import type { GameAdapter } from "./GameAdapter";
 import type { GamePhase, PlayerCard } from "@shared/types";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
+import type { WinTierKey } from "@shared/utils/scoreTiers";
 import {
   RosterGrid as SharedRosterGrid,
   type RosterGridCardProps,
@@ -102,9 +66,7 @@ import {
 // these is the biggest single Lighthouse perf win available without
 // touching the game core. Each named-export wrapper below converts the
 // dynamic import's namespace to the { default } shape lazy() expects.
-const LeaderboardScreen = lazy(() =>
-  import("@shared/components/LeaderboardScreen").then(m => ({ default: m.LeaderboardScreen }))
-);
+
 const ProfileScreen = lazy(() =>
   import("@shared/components/ProfileScreen").then(m => ({ default: m.ProfileScreen }))
 );
@@ -170,8 +132,6 @@ const REVEAL_MODE: "auto" | "tap" = "tap";
 //   the history prompt takes over.
 const FTUE_SLAM_HOLD_MS = 2000;
 const FTUE_HISTORY_DWELL_MS = 1200;
-
-const BASE_BET = 10;
 
 // Phase 1 trigger split (2026-06-03, docs/challenge-landing-v2-phase1-
 // trigger-split-lock.md): the post-reveal "missed X by Y" copy and the
@@ -318,7 +278,6 @@ function hasPendingResumeShare(): boolean {
   }
 }
 
-
 export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallengeCtx, setChallengeBackCtx, clearChallengeBackCtx, onTakeBoss }: Props) {
   const {
     sportKey,
@@ -326,10 +285,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     leaderboardScope,
     gaugeThresholds,
     calculateWinTier,
-    calculatePayoutWithStreak,
+
     winTiersMap,
-    getStreakMultiplier,
-    streakTiers,
+
     gameBarWinTiers,
     gameBarLegend,
     dealInitialRoster,
@@ -369,9 +327,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     leaderboardScope,
   }), [sportKey, adapter.localStorageNamespace, leaderboardScope]);
   const shared = useSharedGameState(sharedAdapter, { rosterSize: ROSTER_SIZE });
-  // Boss is deliberately parked for the controlled basketball beta. Keeping
-  // its engine behind this one gate avoids both its network read and any
-  // player-facing route while preserving the implementation for a later launch.
+
   const BOSS_BETA_ENABLED = false;
   const bossEntry = useBossEntry(BOSS_BETA_ENABLED ? sportKey : "");
   // Defect 1 (boss-flow): hub-level boss-detail fetch so BossScreen mounts
@@ -394,12 +350,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     statsFlippedIds, setStatsFlippedIds,
     mvpId, setMvpId,
     rosterRef,
-    betMultiplier, setBetMultiplier,
-    balance, setBalance,
-    isBalanceAnimating,
-    persistBalance: saveBalance,
+
     winTier, setWinTier,
-    winPayout, setWinPayout,
+
     streak,
     handCount,
     currentHandIdRef, serverResultRef,
@@ -419,11 +372,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     incrementHandCount,
     newlyUnlockedAchievements,
     clearNewlyUnlockedAchievements,
-    // Lock-time server resolve (sets currentHandIdRef and records the audit result).
-    // Referenced by persistLock at the commitRound seam (~:1944); the binding was
-    // lost from this destructure, orphaning that call (esbuild ships unbound names;
-    // the spy-tested round machine never invoked the real wiring) — so every hand
-    // threw a swallowed ReferenceError: no handId, no server audit result, entry_fee_skipped.
+
     logHandToDb,
   } = shared;
   const serverGame = useRef(new AuthoritativeHand());
@@ -592,7 +541,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     localStorage.setItem(`replaymod_pregame_intro_${sportKey}`, "1");
     chadFiredThisIdleRef.current = true;
     setLegendGold(true);
-    setFtueCommentaryOverride({ parts: [chadMessage("welcome", !economyEnabled)], sticky: true });
+    setFtueCommentaryOverride({ parts: [chadMessage("welcome", true)], sticky: true });
   }, [gameState]); // eslint-disable-line
 
   // ── Challenge mode: auto-deal on accept + intro chip ──
@@ -748,7 +697,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     if (localStorage.getItem("rm_usher_rookie_first_win") === "1") return;
     localStorage.setItem("rm_usher_rookie_first_win", "1");
     setLegendGold(true);
-    setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win", !economyEnabled)], sticky: true });
+    setFtueCommentaryOverride({ parts: [chadMessage("rookie_first_win", true)], sticky: true });
   }, [gameState, winTier, challengeCtx]); // eslint-disable-line
 
   // All other Chad messages — evaluated once per IDLE.
@@ -796,7 +745,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       localStorage.setItem("rm_chad_last_hand", String(handCount));
       chadFiredThisIdleRef.current = true;
       chadLastHandRef.current = handCount;
-      setFtueCommentaryOverride({ parts: [chadMessage(topic, !economyEnabled)], sticky: true });
+      setFtueCommentaryOverride({ parts: [chadMessage(topic, true)], sticky: true });
       if (topic === "leaderboard_intro" || topic === "leaderboard_explainer") {
         setTrophyPulsing(true);
       } else {
@@ -1092,32 +1041,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // (see handleCardRevealStart), this gives the per-card rollup feel the
   // user asked for, regardless of auto / tap / mixed reveal path.
   const heldFpAtDraw = 0;
-  // In challenge mode there's no wager — win/loss is the head-to-head
-  // comparison. Lock the effective multiplier to 1x so all downstream
-  // bet math (payout, animations, FTUE seeds) reads 1x even if the
-  // user's preferred multiplier from a prior session is higher. The UI
-  // hides the multiplier selector entirely so it can't drift from this.
-  // Build-phase entryFee collapse: when the sport disables the multiplier
-  // (basketball, adapter.multiplierEnabled === false), the bet is a single
-  // entryFee — pin the effective multiplier to 1. Default true ⇒ multiplier
-  // live (baseball/football unchanged). betMultiplier state + setBetMultiplier
-  // stay intact and re-wireable; only the input-to-bet role is disconnected.
-  const multiplierEnabled = false; // Free-play branch: cannot be enabled by an adapter.
+
+
   // Build-phase round cap. Default 1 ⇒ single-shot (today's flow) for any sport
   // that doesn't opt in. Basketball sets 3. Read site owns the default.
   const maxRounds = adapter.maxRounds ?? 1;
-  // Streaks paused for sports that opt out (basketball). Default true ⇒ live.
-  // effectiveStreak collapses the streak to 0 at every DISPLAY/MULTIPLIER read
-  // site (getStreakMultiplier(0) = 1.0), neutralizing the effect without touching
-  // the real `streak` state, its counting, or the streak_at_play column.
+
   const streaksEnabled = false;
   const effectiveStreak = streaksEnabled ? streak : 0;
-  // F2P money seam. Default true ⇒ economy LIVE (baseball/football unchanged).
-  // Basketball sets false: the wallet never moves — charge/gate/credit are
-  // bypassed at their call sites (closure body kept intact for the pinned tests).
-  const economyEnabled = false;
-  const effectiveBetMultiplier = (!multiplierEnabled || challengeCtx) ? 1 : betMultiplier;
-  const currentBet = 0;
+
   const gameAnalytics = useGameAnalytics(sportKey);
 
   // ── Reveal + spring orchestration ──────────────────────────────────
@@ -1128,19 +1060,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const reveal = useReveal({
     adapter: sharedAdapter,
     state: shared,
-    // Adapter's calculateWinTier/calculatePayoutWithStreak are typed
-    // (totalFp) => WinTierKey (non-null); useReveal's contract widens to
-    // WinTierKey | null for forward compatibility. The cast is safe — both
-    // sport implementations always return a concrete tier.
+
     calculateWinTier: calculateWinTier as (totalFp: number) => WinTierKey | null,
-    calculatePayoutWithStreak: calculatePayoutWithStreak as (
-      tier: WinTierKey | null,
-      bet: number,
-      streak: number,
-    ) => number,
-    currentBet,
-    betMultiplier: effectiveBetMultiplier,
-    economyEnabled,
+
     rosterRef,
     isAnonymous,
     setBigWinFired,
@@ -1162,7 +1084,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     prevRevealTierRef,
     nearMissChoreTimersRef,
     deductedSalaryCardsRef,
-    pendingBalanceUpdateRef,
+
     computeDisplayFp,
     computeLockedSalary,
     bindIsSkippingRef,
@@ -1324,23 +1246,19 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     const handStatus = adapter.getHandStatus?.(lockedGaugeFpRef.current ?? 0) ?? null;
     const isLoss = winTier === "BUST" || handStatus === "COLD_NIGHT";
 
-
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
       tierGlow: tc.glow,
-      payout: winPayout,
+
       streak: effectiveStreak,
       isBust: winTier === "BUST",
-      betMultiplier: effectiveBetMultiplier,
-      tierMultiplier: 0,
-      streakMultiplier: 1,
-      baseBet: 0,
+
       isLoss,
-      lossAmount: 0,
+
       handStatus,
     };
-  }, [gameState, winTier, winPayout, streak, effectiveBetMultiplier]); // eslint-disable-line
+  }, [gameState, winTier,  streak, ]); // eslint-disable-line
 
   const capUsed = useMemo(() => sumSalary(roster), [roster]);
 
@@ -1370,14 +1288,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     return Math.min(100, Math.round((totalFp / maxPossible) * 100));
   }, [gameState, roster, totalFp, computeRosterCeiling]);
 
-  // Sum of bonus FP (badges + dailyBonus) accumulated across cards that have
-  // finished revealing. Surfaces next to Team FP as "(+30)". During REVEAL
-  // each card's bonus contribution lands the moment its FP roll-up completes,
-  // so the (+N) ticks up alongside the headline number rather than appearing
-  // fully formed at the start. RollingNumber smooths the visual between steps.
-  // Dependency on runningTotalFp ensures the memo re-runs at the same cadence
-  // as the headline FP — getVisibleFp is a stable callback ref and on its own
-  // wouldn't trigger recomputation per card-completion.
   const teamBonusFp = useMemo(() => {
     const cardBonus = (c: any): number => {
       const daily = Number(c?.dailyBonus ?? 0);
@@ -1585,7 +1495,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       handCount,
       sport: sportKey,
       topGame: topGameInfo.topGame,
-      streakTiers,
+
     };
 
     const copy = selectCommentary(copyInput as any);
@@ -1746,24 +1656,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   const regularFinalGaugeKick = false;
 
-  // Pre-verdict gauge collapse (Option A): on non-verdict states the TierGauge
-  // span (hidden bar + empty 96px commentary) is inert and reads as a dead band
-  // between the TEAM FP / BUDGET stats and the DEAL/NEXT button. When inert,
-  // collapse it and let the flex:1 card stage absorb the reclaimed ~112px. Kept
-  // FALSE where the space is genuinely used — verdict layout (44c1fc38), FTUE
-  // coach text, or a live multiplier row (other sports' HOLD). REVEALING is
-  // excluded (the bar fills there), matching the state list below.
-  // Pre-verdict voice band — the decision states (IDLE + HOLD) speak; DEALING/
-  // DRAWING stay quiet (empty band). Stateless, non-FTUE, non-challenge. Skipped
-  // on HOLD when a live multiplier row owns that band (other sports). Picked once
-  // per (section, hand, round) and cached in a ref so re-renders don't re-pick or
-  // thrash the anti-repeat window. NOT routed through the RESULTS-gated
-  // postRevealCopy useMemo.
   const voiceLineRef = useRef<string | null>(null);
   const voiceLineKeyRef = useRef<string | null>(null);
   const voiceLine = useMemo(() => {
     const speaks = (gameState === "IDLE" || gameState === "HOLD") && !challengeCtx && !ftueActive
-      && !(gameState === "HOLD" && multiplierEnabled);
+;
     if (!speaks) return null;
     const section = gameState === "HOLD" ? "hold" : "idle";
     const key = `${section}:${handCount}:${roundsUsed}`;
@@ -1772,7 +1669,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     voiceLineRef.current = line;
     voiceLineKeyRef.current = key;
     return line;
-  }, [gameState, challengeCtx, ftueActive, multiplierEnabled, handCount, roundsUsed, sportKey]);
+  }, [gameState, challengeCtx, ftueActive, handCount, roundsUsed, sportKey]);
   // IDLE/HOLD with a line un-collapse the 96px band; everything else empty.
   const gaugeVoice = voiceLine != null;
 
@@ -1782,7 +1679,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     && (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD" || gameState === "DRAWING")
     && postRevealCopy == null
     && ftueCommentaryOverride == null
-    && !(isPreRevealFooter && !challengeCtx && multiplierEnabled);
+;
 
   // Tier result phase
   useEffect(() => {
@@ -1819,7 +1716,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       springTimersRef.current = [];
       setSpringFp(null);
       setSpringSettled(false);
-      pendingBalanceUpdateRef.current = null;
+
       lockedGaugeFpRef.current = null;
       springHasFiredRef.current = false;
       frozenBarFpRef.current = null;
@@ -2040,12 +1937,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       // from the flip-complete falls through and deals normally.
       if (ftueActiveNow && ceremonyPhaseRef.current === "cards") { runCeremonyFlipThenDeal(); return; }
       if (ftueActiveNow && ceremonyPhaseRef.current === "flipping") return;
-      // F2P: skip the affordability lockout when the economy is off (wallet never
-      // moves). Outer-wrapped so the inner `if (balance < currentBet)` line stays
-      // byte-identical for the pinned betOncePerHand assertion.
-      if (economyEnabled) {
-        // Affordability is checked under the server wallet lock, not localStorage.
-      }
+
       resetReveal();
       resetAllOverlays();
       setRoundsUsed(1); // new hand → the deal is round/lineup 1 (lock fires after 2 rerolls = 3 lineups at maxRounds 3; first reroll locks at maxRounds 1 = single-shot)
@@ -2101,11 +1993,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         return;
       }
       setGameError(null);
-      // Economic invariant: ONE hand pays once and rakes once. The entry bet +
-      // bonus rake now fire at LINEUP-LOCK (via the round-machine controller's
-      // lock path — see the HOLD branch below), NOT here at deal entry and NOT
-      // per HOLD→DRAW. A deal is free; money crosses the seam only when the
-      // lineup locks. (Relocated from the deal-entry position of Commit A.)
+
       rosterRef.current = nextRoster;
       gameAnalytics.handDealt(nextRoster);
       setNoTransition(true);
@@ -2123,21 +2011,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
 
     if (gameState === "HOLD") {
-      // One build-phase ROUND: reroll the unheld cards, resolve, then ask the
-      // round-machine controller whether to loop back to HOLD (free) or lock to
-      // REVEALING. A round NEVER touches balance or the rake directly — money
-      // crosses the seam only inside commitRound's lock path (below), once per
-      // hand regardless of round count. Held cards carry forward (lockedCardIds
-      // are keyed by cardId; redraw preserves held cards' ids).
-      // B2a: a round can finish two ways and they converge on ONE shared tail
-      // (commitRound + reveal-prep). The EARLY-LOCK head locks the CURRENT lineup
-      // with no redraw; the REDRAW head (else) is byte-for-byte today's behavior.
-      // The only economic delta between them is the `userTappedReveal` token fed
-      // to commitRound below (earlyLock vs the hardcoded false the redraw uses).
-      // FTUE DRAW-gate (owned, not railroaded): the coach won't advance the round
-      // until the directed cards present this round are held (they're spotlit —
-      // "lock in who you trust"). A stray DRAW tap is a no-op; the user performs
-      // the real hold themselves. Non-FTUE untouched (ftueActive false → skipped).
+
       if (ftueActiveNow && roster.some(c => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c)))) {
         return;
       }
@@ -2213,39 +2087,25 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       mvp = finalRoster.reduce((best: any, c: any) => !best || c.actualFp > best.actualFp ? c : best, null)?.cardId;
       if (mvp) setMvpId(mvp);
 
-      // ── Round-machine decision. Loop back to HOLD (free) or lock to REVEALING.
-      //    On lock, the controller runs the once-per-hand economics in
-      //    crash-boundary order: lineup_locked → persistLock (generates handId +
-      //    writes the single hand_log row + sets currentHandIdRef, awaited) →
-      //    charge → entry_fee_committed → rake. resolvedRoster is finalRoster
-      //    (post-resolveRoster — actualFp baked), so the persisted record is a
-      //    reconstructable owed result; payout derives from the same entryFee
-      //    that charge deducts.
       const decision = await commitRound({
         roundsUsed,
         maxRounds,
         userTappedReveal: earlyLock, // B2a: earlyLock = allHeld && maxRounds>1. false on the redraw path (= today); true only when the player taps with every card held
-        entryFee: currentBet,
+
         streak,
         resolvedRoster: finalRoster,
         resolveOutcome: (roster, fee, strk) => {
           const totalFp = (roster as any[]).reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
           const t = calculateWinTier(totalFp) ?? "BUST";
-          return { totalFp, tier: String(t), payout: 0 };
+          return { totalFp, tier: String(t),  };
         },
         effects: {
-          // Economy-emission gate: mute entry-fee events when the economy is
-          // display-suppressed (basketball). lineup_locked + all other gameplay
-          // events still emit (high-score signal). The seam still CALLS
-          // effects.telemetry; only this injected impl drops the forward — the
-          // commitRound choreography is untouched. economy-ON sports unchanged.
+
           telemetry: (ev, meta) => {
-            if (!economyEnabled && (ev === "entry_fee_committed" || ev === "entry_fee_skipped")) return;
             track("gameplay", ev, { sport: sportKey, hand_number: handCount, ...(meta ?? {}) });
           },
           persistLock: async () => ({ ok: !!serverResultRef.current, handId: currentHandIdRef.current ?? "" }),
-          charge: () => {}, // Wallet debit and credit are one-time server transactions.
-          rake: () => {},
+
         },
       });
       setRoundsUsed(decision.roundsUsed);
@@ -2356,7 +2216,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setStatsFlippedIds(new Set());
       setMvpId(undefined);
       setWinTier(null);
-      setWinPayout(0);
+
       setGameState("IDLE");
       await sleep(50);
       setNoTransition(false);
@@ -2379,7 +2239,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       }, 3500);
     }
     setWinTier(null);
-    setWinPayout(0);
+
     setGameState("RESULTS");
   }
 
@@ -2425,24 +2285,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }
 
-  // Evaluate challenge trigger at WIN_CELEBRATION entry — winTier is valid here
-  // (setWinTier fires 1200ms before setGameState("WIN_CELEBRATION") in _useReveal.ts).
-  // challengeTrigger is set exactly once per hand resolution (the three
-  // setChallengeTrigger sites below). It persists from WIN_CELEBRATION
-  // through RESULTS unchanged. The only mid-hand clear is the
-  // ChallengeSharePrompt dismiss handler (~L2995 — sets null on dismiss).
-  // Between hands the state isn't explicitly cleared at IDLE — it carries
-  // its prior value through IDLE/DEALING/HOLD/DRAWING until the next
-  // resolution overwrites. (Comment updated 2026-05-25 to descriptive
-  // form; prior "At IDLE, challengeTrigger is cleared" wording was
-  // aspirational — no IDLE-phase clearer exists in the code.)
-  // Guard: skip when playing a received challenge (challengeCtx present).
-  //
-  // Rivalry-continuation: when challengeBackCtx is set (user just tapped
-  // "Send It Back" on a win), force the prompt to render even if the
-  // fresh hand wouldn't otherwise qualify. Tag the result with a virtual
-  // "rivalry_back" trigger type so isSpecial fires and the prominent
-  // prompt strip renders (not the small corner icon).
   useEffect(() => {
     if (gameState === "WIN_CELEBRATION" && !challengeCtx) {
       const resolvedRoster = rosterRef.current as import("@shared/types/index").GeneratedCard[];
@@ -2550,22 +2392,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // this is true; REPLAY-only hands stay byte-identical at the 274px board-lock total.
   const challengeCtaActive = !challengeCtx && !challengeDismissed && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance);
 
-  // Basketball-only bottom-grid reclaim (~44px into the flex:1 card stage).
-  // Both reductions are gated on the flag that governs the content the row
-  // would otherwise hold, so baseball/worldcup (both flags default true) stay
-  // byte-identical at their 274/304 board-lock. Within a sport the flags are
-  // runtime-constant, so all four phase branches still sum equal.
-  //  - Track 1 (stats row): basketball has multiplierEnabled:false, so the HOLD
-  //    bet-multiplier line never renders → content ~48px fits 52px (4px buffer).
-  //  - Track 9 (action row): basketball has streaksEnabled:false, so no
-  //    StreakFireRow above the button → 50px (REPLAY) / 80px (challenge stack)
-  //    hold button(38)+minHeight(40)+pad. Safe-area inset is lifted out of the
-  //    grid to the inner container (see Row 9 host + inner column below), so the
-  //    50/80 no longer has to reserve the notch internally.
-  const gridStatsRow = multiplierEnabled ? "72px" : "52px";
-  const gridActionRow = streaksEnabled
-    ? (challengeCtaActive ? "104px" : "74px")
-    : (challengeCtaActive ? "80px" : "50px");
+  const gridStatsRow = "52px";
+  const gridActionRow = challengeCtaActive ? "80px" : "50px";
 
   // Challenge mode post-reveal continuity:
   //   1. WIN_CELEBRATION fires (reveal done, gauge settled, springSettled=true).
@@ -3187,18 +3015,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         <div style={{
           flex: "0 0 auto",
           display: "grid",
-          // ALL states sum to 274px so the stats row (row 1) and the card stage
-          // never move between phases (Part 1: locked board — the bottom grid is
-          // bottom-anchored, so a constant total pins row 1 at a fixed Y). Only
-          // the 96px band content changes: verdict text (RESULTS) / voice line
-          // (IDLE+HOLD, gaugeVoice) / empty air (gaugeInert). The bar row (14px)
-          // collapses to 0 on the collapsed-bar states; REVEALING keeps the bar
-          // (fill) via the last shape. Verdict branch byte-identical to 44c1fc38.
-          // BUG 1: action row (last track) grows 74px→104px ONLY when the CHALLENGE
-          // stack shows, so the CHALLENGE + gap + "not this one" + safe-area fits without
-          // clipping. The ~30px grows into the flex:1 roster area (bottom grid is
-          // 0 0 auto, bottom-anchored). REPLAY-only hands keep 74px → the 274px board-lock
-          // total is byte-identical; only challenge hands shift row 1 up ~30px.
+
           gridTemplateRows: verdictLayout
             ? `${gridStatsRow} 16px 0px 0px 0px 0px 96px 16px ${gridActionRow}`
             : gaugeVoice
@@ -3267,13 +3084,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 )}
                 {tierResultPhase === 2 && (() => {
 
-
-
-
-
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
-
-
 
                   // Phase 1 trigger split (2026-06-03): renamed bad_beat
                   // → choke. challengeTrigger.trigger now emits "choke"
@@ -3339,9 +3150,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                             {ceilingPct}% ceiling
                           </span>
                         )}
-                        {/* F2P: the wager net / payout $ display is hidden when the
-                            economy is off (the wallet never moves). FP + ceiling
-                            still show. */}
 
                       </div>
                     </>
@@ -3461,7 +3269,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             />
           </div>
 
-          {/* Multiplier host */}
           <div
             ref={(el) => setMultipliersHost(el)}
             style={{
@@ -3557,8 +3364,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       {/* Portals only — sibling of inner column */}
       <SharedGameBar
         gameState={gameState}
-        balance={balance}
-        isBalanceAnimating={isBalanceAnimating}
+
         totalFp={totalFp}
         lastCardProgress={lastCardProgress}
         lastCardFp={lastCardFp}
@@ -3566,8 +3372,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         capUsed={capUsed}
         lockedSalary={lockedSalary}
         revealedSalary={revealedSalary}
-        betMultiplier={effectiveBetMultiplier}
-        baseBet={BASE_BET}
+
         challengeMode={!!challengeCtx}
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
@@ -3578,8 +3383,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         ftuePrimaryPulse={ftuePrimaryPulse}
         ftuePrimaryLocked={ftuePrimaryLocked}
         hideTierBar
-        showBetMultiplier={multiplierEnabled}
-        onBetMultiplier={setBetMultiplier}
+
         onAction={handleButtonClick}
         // Human Challenge SUSPENDED for launch — HIDDEN, not deleted (Collect-
         // pattern: suspend the surface, preserve the engine). Forcing
@@ -3598,10 +3402,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         onDismissChallenge={() => setChallengeDismissed(true)}
         celebration={celebrationData}
         onWinCelebrationComplete={onWinCelebrationComplete}
-        onWageAnimationComplete={() => {
-          pendingBalanceUpdateRef.current?.();
-          pendingBalanceUpdateRef.current = null;
-        }}
+
         replayPulse={(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && springSettled}
         splitFooter={{ multipliersHost, controlsHost }}
         splitMultiplierRowVisible={isPreRevealFooter}
@@ -3631,8 +3432,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         bossLive={bossLive}
         streak={streak}
         showStreak={streaksEnabled}
-        economyEnabled={economyEnabled}
-        streakTiers={streakTiers}
+
         onLegendOpened={() => {
           const today = new Date().toISOString().slice(0, 10);
           localStorage.setItem("replaymod_legend_seen_date", today);
@@ -3651,13 +3451,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           when its flag fires. Showing nothing while a chunk loads is the
           right behavior (chunk loads in <100ms on warm cache). */}
       <Suspense fallback={null}>
-        {showLeaderboard && (
-          <LeaderboardScreen
-            currentUid={getPlayerUid()}
-            sport={leaderboardScope}
-            onClose={() => setShowLeaderboard(false)}
-          />
-        )}
 
         {BOSS_BETA_ENABLED && showBoss && (
           <BossScreen
@@ -3723,7 +3516,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           <ProfileScreen
             currentUid={getPlayerUid()}
             sport={leaderboardScope}
-            economyEnabled={economyEnabled}
+
             onClose={() => setShowProfile(false)}
             isAnonymous={isAnonymous}
             onSaveAccount={() => {
@@ -3784,7 +3577,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
             isBust={winTier === "BUST"}
             nearMissGap={gaugeSnap.isNearMiss && gaugeSnap.nextTier ? Math.max(0, gaugeSnap.nextMin - displayFp) : 0}
             nearMissNextTier={gaugeSnap.isNearMiss ? gaugeSnap.nextTier : null}
-            winPayout={winPayout}
+
             currentUid={getPlayerUid()}
             onPlayAgain={handleButtonClick}
             onViewLeaderboard={() => {

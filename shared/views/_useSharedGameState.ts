@@ -1,50 +1,7 @@
-/**
- * shared/views/_useSharedGameState.ts
- *
- * Phase 2 sub-PR 03 — owns the GameView state hooks + leaderboard helpers
- * that are common to every sport. Per-sport GameView wrappers call this
- * hook with a (partial) GameAdapter and destructure the return value into
- * the same names previously held by local hooks.
- *
- * What lives here:
- *   - Core game state (gameState, roster, betMultiplier, balance, …)
- *   - Hand outcome state (winTier, winPayout, streak, handCount, …)
- *   - Reveal-adjacent state (revealIndex, revealedSalary, lastRevealedCardId,
- *     springFp, springSettled — the *state*; the orchestrator/callbacks
- *     stay in the per-sport file until Task 4)
- *   - Commentary-chip channel state (ftueCommentaryOverride — legacy name)
- *   - Leaderboard helpers (submitToLeaderboard, checkLeaderboardRank,
- *     logHandToDb) bound to adapter.leaderboardScope
- *
- * What stays per-sport (deferred to later tasks):
- *   - UI/modal state (showProfile, showLeaderboard, bellOpen, …)        Task 5
- *   - Reveal orchestration callbacks + spring runner                    Task 4
- *   - Sport-specific imports (sportAdapter, calculateWinTier, …)
- *
- * localStorage key policy: sport-private state goes through
- * nsKey(adapter, ...) which prepends adapter.localStorageNamespace + "_"
- * if it is non-empty. Cross-sport / device-global flags use raw keys and
- * are documented inline at each call site (e.g. rm_on_board_today, which
- * intentionally lives outside the per-sport namespace because the
- * leaderboard board state is global to the device, not per-sport).
- *
- * Phase 2 originally shipped with localStorageNamespace = "" for both
- * sports, which leaked basketball's streak / personal-bests into a
- * fresh baseball play (the user's "extra win already existing" bug).
- * fix/baseball-stale-win flipped baseball to "baseball" and kept
- * basketball at "" so existing basketball users keep all their state.
- * Per-key policy:
- *   - replaymod_streak  → nsKey (sport-scoped)
- *   - rm_best_hand      → nsKey (sport-scoped, applied at call site in _useReveal.ts + ProfileScreen.tsx + LeaderboardScreen.tsx)
- *   - rm_best_tier      → nsKey (sport-scoped, applied at call site)
- *   - replaymod_balance → raw  (one wallet across sports)
- *   - replaymod_hand_count → raw  (analytics-grade total; read by AuthProvider too)
- *   - rm_on_board_today → raw  (device-global trophy flag)
- * See docs/storage-keys-audit.md for the full enumeration.
- */
+
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
+import type { WinTierKey } from "@shared/utils/scoreTiers";
 import type { PlayerCard } from "@shared/types";
 import { getPlayerUid, getNickname, getSessionId } from "@shared/utils/playerIdentity";
 import { supabase } from "@shared/lib/supabase";
@@ -125,14 +82,8 @@ export function useSharedGameState(
   const [mvpId, setMvpId] = useState<string | undefined>();
   const rosterRef = useRef<PlayerCard[]>([]);
 
-  // ── Bet + balance ──────────────────────────────────────────────────
-  const [betMultiplier, setBetMultiplier] = useState(1);
-  const [balance, setBalance] = useState<number>(0);
-  const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
-
-  // ── Outcome ────────────────────────────────────────────────────────
   const [winTier, setWinTier] = useState<WinTierKey | null>(null);
-  const [winPayout, setWinPayout] = useState(0);
+
   const [streak, setStreak] = useState<number>(() =>
     parseInt(localStorage.getItem(nsKey(adapter, "replaymod_streak")) ?? "0", 10),
   );
@@ -170,10 +121,6 @@ export function useSharedGameState(
     parts: React.ReactNode[]; sticky?: boolean;
   } | null>(null);
 
-  // ── Bound balance persistence helpers ──────────────────────────────
-  const persistBalance = useCallback((_v: number) => {}, []); // Compatibility only: no wallet exists.
-
-  // ── Leaderboard helpers — adapter.leaderboardScope replaces hardcoded sport literals ──
   const submitToLeaderboard = useCallback(async (
     metric: string,
     value: number,
@@ -330,15 +277,8 @@ export function useSharedGameState(
     mvpId, setMvpId,
     rosterRef,
 
-    // Bet + balance
-    betMultiplier, setBetMultiplier,
-    balance, setBalance,
-    isBalanceAnimating, setIsBalanceAnimating,
-    persistBalance,
-
-    // Outcome
     winTier, setWinTier,
-    winPayout, setWinPayout,
+
     streak, setStreak,
     handCount, setHandCount,
     currentHandIdRef, serverResultRef,

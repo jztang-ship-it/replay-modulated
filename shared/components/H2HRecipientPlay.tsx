@@ -1,104 +1,4 @@
 import { AuthoritativeHand } from "../utils/authoritativeHand";
-// shared/components/H2HRecipientPlay.tsx
-//
-// Layout A / Layout B restructure
-// (docs/layout-a-b-restructure-design-lock.md, Pass 1 — STRUCTURAL).
-// Supersedes the prior single-fluid hold_select → column_flip → VS
-// arc by introducing two formal named layouts with an ordered
-// transition between them. Pre-deal is killed; the opponent card-flip
-// is killed; the VS / Ready-Set-Go beat is killed.
-//
-// State machine (8 states, ordered):
-//   loading:           !dataReady or load/engine error. Replaces the
-//                      former pre_deal entry — auto-advances to
-//                      deal_in the moment dataReady flips true and
-//                      no error is set. Hosts the engine-error path
-//                      that pre_deal used to host (loading copy +
-//                      Try Again CTA on error).
-//   deal_in:           Theatrical lay-down cascade. Bottom cards land
-//                      one-by-one face-up from challengeCtx.
-//                      initialRoster (server snapshot of the sender's
-//                      deal — NOT a redraw). Opponent strip ABSENT
-//                      throughout (Layout A). Stage-text slot in the
-//                      top zone hosts the deal-intro beat (Pass 1:
-//                      placeholder render; Pass 2 fills with the
-//                      templated {opponent}/{score} bank).
-//   hold_select:       6 face-up bottom cards; preview-then-hold
-//                      (#11). Stage 1 / Stage 2 / instructional copy
-//                      in the top-zone stage-text slot. Draw CTA.
-//                      Opponent strip ABSENT (Layout A).
-//   redraw_running:    Unheld flip face-down immediately on Draw tap;
-//                      held stay face-up in place (held-position
-//                      invariant). redrawRoster() runs ONCE; front
-//                      faces for unheld slots stay unmounted until
-//                      your_redraw_flip lights them up (path β
-//                      no-flicker). Opponent strip ABSENT.
-//   your_redraw_flip:  LEFT→RIGHT col 0→5 on the BOTTOM strip only.
-//                      Held column: bottom stays face-up. Replacement
-//                      column: bottom flips back→front (the recipient
-//                      sees their own redraw resolve). Opponent strip
-//                      is NOT touched here — design-lock §3 step 2.
-//                      Still Layout A.
-//   ab_transition:     ~250–300ms ONE coordinated beat. Opponent
-//                      strip + opponent hero slot fade/slide IN
-//                      face-up at the top (no flip — design lock §3
-//                      step 3 kills the opponent flip). Your hero
-//                      region expands from the Layout A small floor
-//                      back to the Layout B full floor; the flex
-//                      layout pushes your mini-strip down naturally
-//                      (the "slide DOWN" of §3 step 3 IS the hero
-//                      expansion). Opponent name stays fixed across
-//                      the beat (it lives in the shell's top zone
-//                      header through both layouts).
-//   handoff_resolving: ~1000ms settle-pause (§3 step 4). Layout B
-//                      fully composed: opponent strip face-up,
-//                      your strip slid-down, BOTH hero slots EMPTY
-//                      (two stacked dashed-border boxes). Empty
-//                      headline; stillness. Replaces the prior VS /
-//                      Ready-Set-Go beat. resolveRoster() fires
-//                      partway through this hold (as before) and
-//                      sets `arc` on resolve.
-//   arc:               H2HRecipientReveal mounts inside the still-
-//                      mounted playing canvas via compositeOverlay
-//                      (Fix C2 single-canvas continuity). Reveal +
-//                      results overlay take over from here.
-//
-// Engine reuse — UNCHANGED:
-//   - dealInitialRoster() is NOT called from the recipient surface;
-//     deal_in reads challengeCtx.initialRoster.
-//   - redrawRoster() runs once at hold_select → redraw_running.
-//   - resolveRoster() runs once during handoff_resolving (settle-
-//     pause) on the POST-REDRAW finalRoster.
-//
-// The two flips — kept distinct:
-//   YOUR replacement flip (kept): BottomStripCell owns its own
-//     .h2h-play-flip-inner rotateY scaffold; driven by
-//     your_redraw_flip's revealedColumns counter.
-//   OPPONENT flip (killed): TopStripCell renders the sender card
-//     face-up DIRECTLY — no rotateY, no perspective, no back face.
-//     Visibility is gated by the strip-wrapper's height/opacity
-//     transition between Layout A (0px / 0) and Layout B
-//     (HAND_STRIP_HEIGHT_PX / 1).
-//
-// Held-position invariant (carried forward): held cards never change
-// slot position across states 1–5. wasHeld carries into arc's
-// revealOrder which encodes "held revealed last" — position is
-// anchor, not sequence.
-//
-// Carry-forward from the superseded hold_select-budget lock:
-//   - Fluid clamp() text sizing + 3-line deterministic clamp.
-//   - Hero floor smaller in Layout A states; full in Layout B states.
-//   - Comfortable floor + scroll fallback (overflow-y:auto +
-//     sticky-CTA) applies to ALL non-arc states (Layout A is denser
-//     than the previous hold_select-only treatment; Layout B is the
-//     densest — settle-pause + arc are where the floor most engages
-//     and where the old img-5 CTA clip is fixed).
-//
-// Timings: PRE_REVEAL_HOLD_MS is bumped 800 → 1000ms for the settle-
-// pause per design-lock §9. DEAL_CASCADE_INTERVAL_MS,
-// COLUMN_FLIP_DURATION_MS, COLUMN_FLIP_INTERSTITIAL_MS,
-// AB_TRANSITION_DURATION_MS are NOT design-locked; values here are
-// the starting points for live verification.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeneratedCard } from "@shared/types";
@@ -116,7 +16,7 @@ import { setActiveSeason, ensureLoaded, isLoaded } from "@shared/engines/dataEng
 import { chDebug } from "@shared/lib/chDebug";
 import { isRealName } from "@shared/utils/isRealName";
 import { formatBossTeamSeason } from "@shared/utils/seasonRange";
-import { commitRound } from "@shared/views/_roundMachine";
+import { advanceRound as commitRound } from "@shared/views/_roundMachine";
 import {
   H2HBoardShell,
   HERO_CARD_ROW_HEIGHT_CSS,
@@ -134,8 +34,6 @@ export const DEAL_CASCADE_INTERVAL_MS = 120;
  *  Used by CSS rotateY transition + state-advance scheduling. */
 export const COLUMN_FLIP_DURATION_MS = 250;
 
-/** Delay between one column completing its flip and the next column
- *  beginning. Per design footer: not locked — live-verification tunable. */
 export const COLUMN_FLIP_INTERSTITIAL_MS = 150;
 
 /** Settle-pause (design-lock §3 step 4 / §9): hold after the A→B
@@ -349,22 +247,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     onSendItBack, onTryAgain, onPlayOwnHand, onDismiss,
   } = props;
 
-  // FIX 1 — data-engine load gate. The playing surface mounts OUTSIDE
-  // DailySeasonReelGate (App.tsx left-branches into H2HRecipientPlay
-  // when h2hPlayingMode && challengeCtx), so the data engine is NOT
-  // pre-loaded by the gate. setActiveSeason() invalidates whatever
-  // was previously loaded (when seasons differ — or freshly null on
-  // first mount), so we must call ensureLoaded() before any engine
-  // call (redrawRoster, resolveRoster). State machine is gated on
-  // dataReady; engineError surfaces a recoverable error state to the
-  // user. ensureLoaded is idempotent (dataEngine has isLoaded() guard
-  // at shared/engines/dataEngine.ts:119), so a same-season remount
-  // doesn't re-fetch.
-  // dataReady starts true if the engine is ALREADY loaded for this
-  // season (e.g., the user previously navigated through DailySeasonReelGate
-  // with a matching season). Synchronous short-circuit avoids a
-  // useless re-render and lets the tests render → tap Deal without a
-  // microtask flush in between.
   const serverGame = useRef(new AuthoritativeHand());
   const [serverRoster, setServerRoster] = useState<GeneratedCard[] | null>(null);
   const [dataReady, setDataReady] = useState(false);
@@ -381,7 +263,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       if (previous && (previous.challenge_id !== challengeCtx.challengeId || previous.sport !== sport || previous.season !== challengeCtx.season)) serverGame.current = new AuthoritativeHand();
       const session = serverGame.current.snapshot ?? await serverGame.current.start({
         sport, season: challengeCtx.season, challenge_id: challengeCtx.challengeId,
-        ...(sport === "football" ? { competition: "world_cup" } : {}), bet_amount: 0,
+        ...(sport === "football" ? { competition: "world_cup" } : {}),
       });
       if (!cancelled) { setServerRoster(session.roster); setDataReady(true); }
     })().catch(() => { if (!cancelled) setDataLoadError(true); });
@@ -621,26 +503,12 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
       timers.push(id);
     }
     const finalId = window.setTimeout(() => {
-      // 4a SWAP: route the round's loop/lock decision through commitRound as a
-      // BLACK BOX (entryFee:0, no-op economics; _roundMachine.ts untouched).
-      // commitRound's resolvedRoster is never economically read here (no-op
-      // resolveOutcome), so the single real resolveRoster stays in
-      // handoff_resolving — the finalRoster→resolveRoster→arc seam does NOT move.
+
       void (async () => {
         const decision = await commitRound({
           roundsUsed: roundsUsedRef.current,
           maxRounds,
           userTappedReveal: false,
-          entryFee: 0,
-          streak: 0,
-          resolvedRoster: flipFinalRoster as any,
-          resolveOutcome: () => ({ totalFp: 0, tier: "", payout: 0 }),
-          effects: {
-            telemetry: () => {},
-            persistLock: async () => ({ ok: false, handId: "" }),
-            charge: () => {},
-            rake: () => {},
-          },
         });
         roundsUsedRef.current = decision.roundsUsed;
         // Signage was already advanced on the committing Next tap (handleDraw,
@@ -1000,16 +868,6 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
           roundsUsed: roundsUsedRef.current,
           maxRounds,
           userTappedReveal: true,
-          entryFee: 0,
-          streak: 0,
-          resolvedRoster: finalRoster as any,
-          resolveOutcome: () => ({ totalFp: 0, tier: "", payout: 0 }),
-          effects: {
-            telemetry: () => {},
-            persistLock: async () => ({ ok: false, handId: "" }),
-            charge: () => {},
-            rake: () => {},
-          },
         });
         setState((s) =>
           s.kind === "hold_select"
@@ -1300,11 +1158,7 @@ export function H2HRecipientPlay(props: H2HRecipientPlayProps) {
     previewedSlotIndex !== null && state.kind === "hold_select"
       ? state.held.has(previewedSlotIndex)
       : false;
-  // Layout B settle-pause gap between the two stacked empty hero slots
-  // — matches H2HBoardShell.HERO_MIN_HEIGHT_CSS's "+ 14px" battlefield
-  // row gap so the empty composition lands at the same Y-bounds as the
-  // reveal arc's battlefield grid (no layout shift when the composite
-  // arc mounts).
+
   const SETTLE_HERO_GAP_PX = 14;
 
   // RD3 — armed-rail visibility. Spans the full pre-arc window so the

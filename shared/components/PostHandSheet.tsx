@@ -27,7 +27,7 @@ interface Props {
   isBust: boolean;
   nearMissGap: number;
   nearMissNextTier: string | null;
-  winPayout: number;
+
   currentUid: string;
   onPlayAgain: () => void;
   onViewLeaderboard: () => void;
@@ -35,7 +35,7 @@ interface Props {
 
 export function PostHandSheet({
   totalFp, winTier, isBust, nearMissGap, nearMissNextTier,
-  winPayout, currentUid, onPlayAgain, onViewLeaderboard,
+   currentUid, onPlayAgain, onViewLeaderboard,
 }: Props) {
   const [challenge, setChallenge] = useState<{ nickname: string; score: number; metric: string } | null>(null);
 

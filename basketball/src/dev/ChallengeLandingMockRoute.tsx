@@ -26,7 +26,7 @@
 
 import { ChallengeTakeCardLanding } from "@shared/components/ChallengeTakeCardLanding";
 import { LANDING_MOCK_FIXTURES, getMockCaseFromUrl } from "./challengeLandingMockFixture";
-import { calculateWinTier } from "../utils/payoutLogic";
+import { calculateWinTier } from "../utils/scoreTiers";
 import { recordBossResult } from "@shared/utils/bossResultMemory";
 import { h2hArcRenderer } from "../views/GameView";
 

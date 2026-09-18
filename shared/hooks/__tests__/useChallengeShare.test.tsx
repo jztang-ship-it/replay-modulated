@@ -16,7 +16,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useChallengeShare } from "../useChallengeShare";
 import { evaluateTrigger, type TriggerResult } from "@shared/utils/triggerEvaluation";
-import type { WinTierMap } from "@shared/utils/payoutLogic";
+import type { WinTierMap } from "@shared/utils/scoreTiers";
 import type { GeneratedCard } from "@shared/types";
 
 const fetchMock = vi.fn(() =>

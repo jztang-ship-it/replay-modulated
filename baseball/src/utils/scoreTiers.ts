@@ -1,0 +1,44 @@
+/**
+ * baseball/src/utils/payoutLogic.ts
+ * Thresholds for the 5-card baseball roster (2P + 3BAT, 617-player pool,
+ * $180 cap, salary = round(avgFP)). Even +30 spacing ROOKIE→MVP, LEGEND
+ * ceiling raised +50 from MVP to keep LEGEND rate near target 2%.
+ * 20k-hand random-play sim: 46.6/20.9/15.0/9.3/6.3/2.0.
+ * MUST stay in sync with:
+ *   - baseball/src/adapters/baseballConfig.ts winCondition.thresholds
+ *   - baseball/src/views/GameView.tsx GAUGE_THRESHOLDS + WIN_TIERS + LEGEND_DATA
+ */
+import {
+  calculateWinTier as _calculateWinTier,
+} from "@shared/utils/scoreTiers";
+import type { WinTierKey, WinTierMap } from "@shared/utils/scoreTiers";
+
+// Baseball streak schedule — historical 3/5/10 → 1.3/1.7/2.5 values.
+// Per-sport so basketball can rebalance without affecting baseball.
+
+
+/** Baseball streak multiplier — sport-bound wrapper. */
+
+/** Baseball next-streak-tier — sport-bound wrapper. */
+
+
+
+export type { WinTierKey };
+export type WinTier = WinTierKey;
+
+export const BASEBALL_WIN_TIERS: WinTierMap = {
+  LEGEND:   { minFp: 310  },  // ~2%
+  MVP:      { minFp: 260  },  // ~6%
+  ALL_STAR: { minFp: 230   },  // ~9%
+  STARTER:  { minFp: 200 },  // ~15%
+  ROOKIE:   { minFp: 170 },  // ~21%
+  BUST:     { minFp: 0   },  // ~47%
+};
+
+export function calculateWinTier(totalFp: number): WinTierKey {
+  return _calculateWinTier(totalFp, BASEBALL_WIN_TIERS);
+}
+
+
+
+

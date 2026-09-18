@@ -19,7 +19,7 @@ import { H2HRecipientReveal } from "@shared/components/H2HRecipientReveal";
 import type { ChallengeCtx } from "@shared/adapters/challengeTypes";
 import type { GeneratedCard } from "@shared/types";
 import { h2hArcRenderer, h2hOverlayRenderer } from "../views/GameView";
-import { calculateWinTier } from "../utils/payoutLogic";
+import { calculateWinTier } from "../utils/scoreTiers";
 import { RECIPIENT_HAND } from "./h2hMockFixture";
 
 const MOCK_BOSS_CHALLENGE_ID = "dev-mock-boss-claim";

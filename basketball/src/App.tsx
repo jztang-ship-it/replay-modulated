@@ -48,7 +48,7 @@ import { sportAdapter } from "./adapters/SportAdapter";
 // the App can mount H2HRecipientPlay without going through GameView.
 import { h2hArcRenderer, h2hOverlayRenderer } from "./views/GameView";
 import { redrawRoster, resolveRoster, dealFreshRoster } from "./adapters/gameAdapter";
-import { calculateWinTier } from "./utils/payoutLogic";
+import { calculateWinTier } from "./utils/scoreTiers";
 
 // ?debug=1 overlay. Eager import (not lazy) so a chunk-load failure
 // can't silently hide it behind a null Suspense fallback. Mounted at
@@ -747,7 +747,6 @@ function AppInner() {
         <ProfileScreen
           currentUid={uid || getPlayerUid()}
           sport={SPORT}
-          economyEnabled={false} // basketball F2P layer: economy off (matches the adapter); hides the money_won rank
           onClose={() => setShowProfile(false)}
           isAnonymous={isAnonymous}
           onSaveAccount={() => { setShowProfile(false); setShowSignIn(true); }}

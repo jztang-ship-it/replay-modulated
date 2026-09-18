@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { evaluateTrigger, type TriggerResult } from "@shared/utils/triggerEvaluation";
 import { track } from "@shared/analytics/analytics";
 import type { GeneratedCard } from "@shared/types/index";
-import type { WinTierMap } from "@shared/utils/payoutLogic";
+import type { WinTierMap } from "@shared/utils/scoreTiers";
 import { supabase } from "@shared/lib/supabase";
 import { enrichInitialRosterForChallenge } from "@shared/utils/enrichInitialRosterForChallenge";
 import { getPlayerUid } from "@shared/utils/playerIdentity";
@@ -92,12 +92,8 @@ export type HandLogGapFillResult = "written" | "exists" | "skipped-anon" | "erro
  *   still-anonymous `u_…` id SKIPS the write (never poison the uuid column).
  * Gate 2 (shape): final_roster via serializeResolvedRoster — the exact array
  *   shape the recipient's Array.isArray check at sender-hand.ts:100 requires.
- * Gate 3 (completeness): the same column set logHandToDb writes (the reveal
- *   read needs hand_id/total_fp/tier/final_roster; downstream audits key on
- *   hand_id). payout/streak_at_play are gap-fill defaults — real values only
- *   exist when persistLock landed (it didn't here); the money seam already
- *   skipped the charge on that failure, so there is no authoritative payout to
- *   record and this row exists for the H2H reveal READ, not reconciliation.
+ * Gate 3 (completeness): write the score-only fields needed by the recipient
+ *   reveal: hand_id, total_fp, tier, and final_roster. No monetary fields.
  */
 export async function ensureSenderHandLogRow(
   args: CreateChallengeArgs,
@@ -130,8 +126,6 @@ export async function ensureSenderHandLogRow(
         .filter(Boolean),
       total_fp: args.totalFp,
       tier: args.winTier,
-      payout: 0,
-      streak_at_play: 0,
       verified: !!session?.access_token,
       sport: args.sport,
       season: args.season,

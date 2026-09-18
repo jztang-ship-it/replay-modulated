@@ -1427,7 +1427,7 @@ describe("H2HRecipientPlay — FIX 1 ensureLoaded gate", () => {
     // Default isLoaded mock returns true; no override needed.
     await render(<H2HRecipientPlay {...baseProps()} challengeCtx={makeCtx()} />);
     expect(ensureLoadedMock).toHaveBeenCalledTimes(1);
-    expect(serverFixture.start).toHaveBeenLastCalledWith({sport:"basketball",season:"2425",challenge_id:"test-challenge-id",bet_amount:0});
+    expect(serverFixture.start).toHaveBeenLastCalledWith({sport:"basketball",season:"2425",challenge_id:"test-challenge-id"});
   });
 });
 

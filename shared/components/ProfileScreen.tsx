@@ -27,13 +27,10 @@ interface Props {
   isAnonymous?: boolean;
   onSaveAccount?: () => void;
   onOpenFeedback: () => void;
-  /** When false (F2P layer — basketball), the "Most Won" (money_won) rank is
-   *  hidden — both its fetch and its display. Default true ⇒ shown (live-economy
-   *  sports). RANK_METRICS itself is untouched (hide-don't-delete). */
-  economyEnabled?: boolean;
+
 }
 
-export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveAccount, onOpenFeedback, economyEnabled = false }: Props) {
+export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveAccount, onOpenFeedback,  }: Props) {
   const visibleRankMetrics = RANK_METRICS;
   const { user, signOut } = useAuth();
   const [nickname, setNick] = useState(() => getNickname());
@@ -70,7 +67,7 @@ export function ProfileScreen({ currentUid, sport, onClose, isAnonymous, onSaveA
           setRanks(prev => ({ ...prev, [m.id]: { rank: null, score: null } }));
         });
     }
-  }, [currentUid, sport, economyEnabled]);
+  }, [currentUid, sport, ]);
 
   function handleSave() {
     const trimmed = editValue.trim();

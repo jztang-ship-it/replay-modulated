@@ -18,7 +18,7 @@ function toCardScore(card: any): CardScore {
  * Evaluate and persist achievements from the verified hand row only.
  * The v2 roster and its stat/identity fields are generated from the trusted server catalog.
  * This is deliberately best-effort: a notification/achievement failure must
- * never roll back an already-settled balance or hand result. Retrying the
+ * never roll back an already-settled hand result. Retrying the
  * same hand is safe because user_achievements has a unique user/id key.
  */
 export async function awardVerifiedAchievements(
@@ -31,7 +31,7 @@ export async function awardVerifiedAchievements(
 
   const [{ data: hand, error: handError }, { data: existing, error: existingError }, { count: handCount, error: stateError }] = await Promise.all([
     supabaseAdmin.from("hand_log")
-      .select("hand_id, total_fp, tier, final_roster, streak_at_play")
+      .select("hand_id, total_fp, tier, final_roster")
       .eq("hand_id", handId).eq("player_id", userId).eq("verified", true).eq("authority_version", 2).maybeSingle(),
     supabaseAdmin.from("user_achievements")
       .select("achievement_id").eq("user_id", userId),
@@ -54,7 +54,7 @@ export async function awardVerifiedAchievements(
     isWin: !["BUST", "ROOKIE"].includes(String(hand.tier)),
     rosterIds: rawRoster.map((card: any) => String(card?.basePlayerId ?? "")).filter(Boolean),
     cards,
-    streak: Number(hand.streak_at_play ?? 0),
+    streak: 0,
     handsPlayed: Number(handCount ?? 0),
     existingAchievementIds: (existing ?? []).map((row: any) => String(row.achievement_id)),
   };

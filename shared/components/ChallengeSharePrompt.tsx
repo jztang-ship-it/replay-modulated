@@ -1,7 +1,7 @@
 // shared/components/ChallengeSharePrompt.tsx
 import { useContext, useMemo, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import type { GeneratedCard } from "@shared/types/index";
-import type { WinTierMap } from "@shared/utils/payoutLogic";
+import type { WinTierMap } from "@shared/utils/scoreTiers";
 import type { TriggerResult } from "@shared/utils/triggerEvaluation";
 import { useChallengeShare } from "@shared/hooks/useChallengeShare";
 import { getNickname, setNickname } from "@shared/utils/playerIdentity";

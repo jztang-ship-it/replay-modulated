@@ -34,7 +34,7 @@
 import { describe, it, expect } from "vitest";
 import { evaluateTrigger, type TriggerResult } from "@shared/utils/triggerEvaluation";
 import type { GeneratedCard } from "@shared/types/index";
-import type { WinTierMap } from "@shared/utils/payoutLogic";
+import type { WinTierMap } from "@shared/utils/scoreTiers";
 
 // ── Test fixtures ────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ function card(overrides: Partial<GeneratedCard> = {}): GeneratedCard {
 }
 
 // Mirror of basketball legacy static tiers (matches the FALLBACK_MIN_FP
-// shape in basketball/src/utils/payoutLogic.ts). Identical numbers to the
+// shape in basketball/src/utils/scoreTiers.ts). Identical numbers to the
 // fixtures in shared/utils/__tests__/triggerEvaluation.test.ts so this test's
 // thresholds line up with the broader suite.
 const TIERS: WinTierMap = {

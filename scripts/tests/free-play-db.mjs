@@ -11,15 +11,26 @@ CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY);
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT NULL::uuid $$;
 CREATE TABLE public.shared_challenges(challenge_id uuid PRIMARY KEY);
 CREATE TABLE public.challenge_attempts(id uuid PRIMARY KEY);`);
-// Use the actual historical table definitions, excluding unrelated old RPC implementations.
+// Exercise the real legacy wallet, reward and settlement functions before removal.
 await db.exec(migration('001_player_tables.sql'));
-await db.exec(migration('002_server_side_extension.sql').split('-- resolve_hand RPC')[0]);
-await db.exec(migration('019_authoritative_sessions.sql').split('CREATE TABLE public.hand_sessions')[0]+'COMMIT;');
-await db.exec(`CREATE FUNCTION public.grant_coins(int,text) RETURNS void LANGUAGE sql AS $$ SELECT $$;
-GRANT EXECUTE ON FUNCTION public.grant_coins(int,text) TO authenticated;
-INSERT INTO auth.users VALUES ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
+await db.exec(migration('002_server_side_extension.sql'));
+await db.exec(migration('019_authoritative_sessions.sql').split('-- Legacy authority is explicitly excluded')[0]+'COMMIT;');
+await db.exec(migration('003_inbox.sql'));
+const rewards=migration('018_security_permissions_and_rewards.sql');
+await db.exec(rewards.slice(rewards.indexOf('CREATE TABLE public.reward_claims')));
+await db.exec(`INSERT INTO auth.users VALUES ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');
 INSERT INTO player_state(id,balance) VALUES ('22222222-2222-4222-8222-222222222222',4321);`);
 await db.exec(migration('021_free_play_sessions.sql'));
+await assert.rejects(db.exec(migration('022_remove_economy.sql')),/dedicated free-play database/);
+await db.exec('ROLLBACK');
+await db.exec("SET replay.free_play_database='true'");
+await assert.rejects(db.exec(migration('022_remove_economy.sql')),/nonempty economy table/);
+await db.exec('ROLLBACK');
+assert.deepEqual((await db.query('SELECT balance FROM player_state')).rows,[{balance:4321}]);
+// Remove only the synthetic fixture from this disposable test database.
+await db.exec('DELETE FROM player_state');
+await db.exec(migration('022_remove_economy.sql'));
+
 const uid='11111111-1111-4111-8111-111111111111';
 const roster=Array.from({length:5},(_,i)=>({basePlayerId:`player${i}`,actualFp:20+i}));
 const state={roster,draws:0,resolved:false};
@@ -36,11 +47,10 @@ const settled=await commit('hand-a',1,{...state,resolved:true},true);assert.equa
 assert.deepEqual(Object.keys(settled.state.hand).sort(),['hand_id','season','sport','tier','total_fp']);
 assert.equal((await commit('hand-a',1,state,true)).revision,2);
 assert.equal((await db.query('SELECT count(*)::int AS n FROM hand_log')).rows[0].n,1);
-assert.deepEqual((await db.query('SELECT payout,bet_amount,streak_at_play FROM hand_log')).rows[0],{payout:0,bet_amount:0,streak_at_play:0});
-assert.deepEqual((await db.query('SELECT balance FROM player_state')).rows,[{balance:4321}]);
-const perms=(await db.query(`SELECT has_function_privilege('authenticated','public.grant_coins(integer,text)','EXECUTE') AS coins,
- has_table_privilege('authenticated','public.player_state','SELECT') AS wallet,
- has_function_privilege('authenticated','public.start_free_play_hand(uuid,text,uuid,text,text,text,uuid,jsonb)','EXECUTE') AS client_start`)).rows[0];
-assert.deepEqual(perms,{coins:false,wallet:false,client_start:false});
-console.log('PASS: score-only start/draw/settle, duplicate requests, one audit row, owner/revision checks, unchanged wallets and revoked browser economy access.');
+
+assert.equal((await db.query("SELECT count(*)::int n FROM information_schema.columns WHERE table_schema='public' AND table_name='hand_log' AND column_name IN ('payout','bet_amount','streak_multiplier','streak_at_play')")).rows[0].n,0);
+assert.equal((await db.query("SELECT to_regclass('public.player_state') AS wallet")).rows[0].wallet,null);
+assert.equal((await db.query("SELECT count(*)::int n FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname IN ('grant_coins','resolve_hand','start_authoritative_hand','commit_authoritative_hand')")).rows[0].n,0);
+assert.equal((await db.query("SELECT has_function_privilege('authenticated','public.start_free_play_hand(uuid,text,uuid,text,text,text,uuid,jsonb)','EXECUTE') AS allowed")).rows[0].allowed,false);
+console.log('PASS: dedicated-database and financial-record guards; no wallet or economy functions/columns; score-only start/draw/settle, retry, ownership and revision checks.');
 await db.close();

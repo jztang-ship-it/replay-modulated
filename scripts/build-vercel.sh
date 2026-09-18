@@ -50,3 +50,6 @@ echo "dist/ contents (top level):"
 ls -la dist/ | head -20
 echo "dist/basketball/ contents:"
 ls -la dist/basketball/ | head -10
+
+# Reject dormant economy code as well as visible economy copy.
+node scripts/check-free-play-build.mjs dist

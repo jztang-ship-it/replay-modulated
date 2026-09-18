@@ -1,22 +1,4 @@
-/**
- * basketball/src/views/GameView.tsx
- *
- * Phase 2 sub-PR 05 — wrapper. Builds a GameAdapter literal and renders
- * the canonical <GameView> from shared. All state, JSX, overlays,
- * reveal orchestration, and FTUE flow live in shared/views/GameView.tsx.
- *
- * Anything basketball-specific flows through this adapter:
- *   - sportAdapter (rosterSize, salaryCap)
- *   - dealInitialRoster / redrawRoster / resolveRoster
- *   - calculateWinTier / calculatePayoutWithStreak / BASKETBALL_WIN_TIERS
- *   - getStreakMultiplier
- *   - AthleteCard (card render slot)
- *   - getTodaysStars + computeRosterCeiling
- *   - basketball-specific GameBar tier rows + legend (in this file)
- *
- * Basketball does NOT use PostHandSheet — adapter slot left undefined,
- * shared GameView's conditional render skips it.
- */
+
 
 import { useEffect, useMemo, useState } from "react";
 import { getActiveSeason } from "@shared/engines/dataEngine";
@@ -54,35 +36,29 @@ import {
 import { AthleteCard, resetAllOverlays } from "../components/AthleteCard";
 import {
   calculateWinTier,
-  calculatePayoutWithStreak,
-  getStreakMultiplier,
+
   getBasketballHandStatus,
   getBasketballWinTiers,
   getGaugeThresholds,
   getGameBarWinTiers,
-  STREAK_TIERS,
-} from "../utils/payoutLogic";
 
-/** Build the legend modal's payout rows from the active season's win-tier
- *  thresholds. Without this the legend modal showed a static "190+" ROOKIE
- *  floor that no longer matched per-season-calibrated thresholds (e.g. a
- *  161.5 FP win counted as ROOKIE while the legend modal said "needs 190").
- *  Multipliers stay static — they control payout, not difficulty. */
-function buildPayoutRows(): LegendData["payoutRows"] {
+} from "../utils/scoreTiers";
+
+function buildTierRows(): LegendData["tierRows"] {
   const t = getBasketballWinTiers();
   return [
-    { label: "LEGEND",   score: `${t.LEGEND.minFp}+`,             payout: "",  color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
-    { label: "MVP",      score: `${t.MVP.minFp}+`,                payout: "",   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
-    { label: "ALL-STAR", score: `${t.ALL_STAR.minFp}+`,           payout: "",   color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
-    { label: "STARTER",  score: `${t.STARTER.minFp}+`,            payout: "", color: "#3B82F6", bg: "rgba(59,130,246,0.08)",   border: "rgba(59,130,246,0.25)"   },
+    { label: "LEGEND",   score: `${t.LEGEND.minFp}+`,               color: "#EF4444", bg: "rgba(239,68,68,0.12)",    border: "rgba(239,68,68,0.35)"    },
+    { label: "MVP",      score: `${t.MVP.minFp}+`,                   color: "#FB923C", bg: "rgba(251,146,60,0.10)",   border: "rgba(251,146,60,0.3)"    },
+    { label: "ALL-STAR", score: `${t.ALL_STAR.minFp}+`,              color: "#C084FC", bg: "rgba(192,132,252,0.10)",  border: "rgba(192,132,252,0.25)"  },
+    { label: "STARTER",  score: `${t.STARTER.minFp}+`,             color: "#3B82F6", bg: "rgba(59,130,246,0.08)",   border: "rgba(59,130,246,0.25)"   },
     // ROOKIE is now the FLOOR (BUST removed from display — dormant in the shared
     // type, never reached by basketball). It shows the sub-STARTER band BUST used
     // to occupy rather than a nonsensical "0+".
-    { label: "ROOKIE",   score: `<${t.STARTER.minFp}`,            payout: "", color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
+    { label: "ROOKIE",   score: `<${t.STARTER.minFp}`,             color: "#22C55E", bg: "rgba(34,197,94,0.10)",    border: "rgba(34,197,94,0.25)"    },
   ];
 }
 
-const LEGEND_DATA_STATIC: Omit<LegendData, "payoutRows"> = {
+const LEGEND_DATA_STATIC: Omit<LegendData, "tierRows"> = {
   scoringRules: [
     { stat: "Point",    pts: "+1.0" },
     { stat: "Rebound",  pts: "+1.2" },
@@ -221,13 +197,13 @@ export default function GameView({
     gaugeThresholds: getGaugeThresholds(),
     tierFromSalary,
     calculateWinTier,
-    calculatePayoutWithStreak,
+
     winTiersMap: getBasketballWinTiers(),
-    getStreakMultiplier,
+
     getHandStatus: getBasketballHandStatus,
-    streakTiers: STREAK_TIERS,
+
     gameBarWinTiers: getGameBarWinTiers(),
-    gameBarLegend: { ...LEGEND_DATA_STATIC, payoutRows: buildPayoutRows() },
+    gameBarLegend: { ...LEGEND_DATA_STATIC, tierRows: buildTierRows() },
     dealInitialRoster,
     redrawRoster,
     resolveRoster,
@@ -253,16 +229,10 @@ export default function GameView({
     // call site, but TypeScript treats the optional/required asymmetry as
     // an incompatible signature. Cast pins it to the contract.
     CardComponent: AthleteCard as GameAdapter["CardComponent"],
-    // Build-phase: single entryFee (multiplier dormant — state/selector intact but
-    // hidden + disconnected from the bet) + up to 3 hold/reroll rounds per hand.
-    multiplierEnabled: false,
-    // Streaks paused (hide-don't-delete): no multiplier escalation in the F2P
-    // social layer. State/columns/counting preserved; only surfacing + effect off.
+
+
     streaksEnabled: false,
-    // F2P layer: the money seam is OFF — no entry-fee debit, no affordability
-    // lockout, no payout credit. The charge/gate/credit code stays intact and
-    // re-wireable (see docs/economy-retrieval-map.md); only the effect is bypassed.
-    economyEnabled: false,
+
     maxRounds: 3,
     // 5-card layout: row 1 = 2 cards centered (slots 0-1), row 2 = 3 cards
     // (slots 2-4). Mirror image of baseball's "dice 5" (bb-dice5) — same

@@ -29,7 +29,7 @@ import {
   BANKS,
   type BankVariant,
 } from "../landingHeadlines";
-import type { WinTierKey } from "@shared/utils/payoutLogic";
+import type { WinTierKey } from "@shared/utils/scoreTiers";
 
 // Mock the analytics surface so test assertions can verify the emit
 // without coupling to the real client. The component imports `track`

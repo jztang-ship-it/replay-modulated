@@ -1,3 +1,7 @@
+## 2026-09-19 — LOCKED: free-play hidden-economy removal
+
+For `release/basketball-free-play`, remove dormant economy implementation, not only UI visibility. Keep the all-features mother branch unchanged. Score thresholds and lineup-budget rules remain. Dedicated empty free-play database only; migration 022 refuses existing financial records. Verification: full regression suite, release build with economy artifact guard, disposable PostgreSQL schema/access checks. Live backend and deployment remain unconfigured/unverified. See `docs/free-play-branch.md`.
+
 # ReplayMod — Design Decisions & Session State
 
 **Last updated:** 2026-06-25

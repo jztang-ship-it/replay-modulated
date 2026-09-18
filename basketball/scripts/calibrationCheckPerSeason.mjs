@@ -26,7 +26,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SEASONS_DIR = join(__dirname, "..", "public", "data", "seasons");
 const N = parseInt(process.argv[2] ?? "5000", 10);
 
-// Per BASKETBALL_WIN_TIERS in basketball/src/utils/payoutLogic.ts
+// Per BASKETBALL_WIN_TIERS in basketball/src/utils/scoreTiers.ts
 const LIVE_TIERS = [
   { tier: "ROOKIE",   minFP: 185 },
   { tier: "STARTER",  minFP: 205 },

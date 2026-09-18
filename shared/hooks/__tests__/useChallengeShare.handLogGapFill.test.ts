@@ -99,8 +99,8 @@ describe("ensureSenderHandLogRow — idempotent share-path gap-fill (fix c)", ()
     expect(row.sport).toBe("basketball");
     expect(row.season).toBe("2425");
     expect(row.verified).toBe(true);
-    expect(row.payout).toBe(0);
-    expect(row.streak_at_play).toBe(0);
+    expect(row).not.toHaveProperty("payout");
+    expect(row).not.toHaveProperty("streak_at_play");
     expect(row.roster_ids).toEqual(["p1", "p2"]);
     // Gate 2: final_roster is the serializeResolvedRoster array shape the
     // recipient's Array.isArray check at sender-hand.ts:100 requires.

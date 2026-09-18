@@ -8,7 +8,7 @@
 import { describe, it, expect } from "vitest";
 import { evaluateTrigger, type TriggerResult } from "../triggerEvaluation";
 import type { GeneratedCard } from "@shared/types/index";
-import type { WinTierMap } from "@shared/utils/payoutLogic";
+import type { WinTierMap } from "@shared/utils/scoreTiers";
 
 function card(overrides: Partial<GeneratedCard> = {}): GeneratedCard {
   return {
