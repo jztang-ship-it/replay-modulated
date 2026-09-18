@@ -88,25 +88,15 @@ import { track } from "@shared/analytics/analytics";
 // Lazy-load CollectScreen — only renders when showCollect is true (post-hand
 // rewards). Saves ~30-50 KB from the initial bundle for the most common
 // path (no rewards yet).
-const CollectScreen = lazy(() =>
-  import("@shared/engagement/CollectScreen").then(m => ({ default: m.CollectScreen }))
-);
 import { TierGauge, computeGaugeState } from "@shared/components/TierGauge";
 import { TeamStamp } from "@shared/components/TeamStamp";
-import { useEngagement } from "@shared/engagement/useEngagement";
 import { soundManager } from "@shared/utils/soundManager";
-import { getBonusPool } from "@shared/utils/bonusPoolStore";
 import { audioDirector } from "@shared/utils/audioDirector";
 import {
   getPlayerUid,
   getNickname,
   setNickname,
 } from "@shared/utils/playerIdentity";
-import {
-  captureReferrerFromUrl,
-  applyReferral,
-  claimReferral,
-} from "@shared/utils/referral";
 // Lazy-load all the conditional overlays — they only mount when their
 // respective open flags fire, which is rare on first paint. Code-splitting
 // these is the biggest single Lighthouse perf win available without
@@ -260,73 +250,6 @@ if (typeof document !== "undefined" && !document.getElementById(GV_STYLE_ID)) {
     }
   `;
   document.head.appendChild(st);
-}
-
-// ── BonusPoolPill — pool meter with drip + gold blink on bet ─────────────────
-
-function BonusPoolPill({ betAmount, betNonce, onAmountChange, sportKey, competition, economyEnabled = true }: {
-  betAmount: number;
-  betNonce: number;
-  onAmountChange?: (v: number) => void;
-  sportKey: string;
-  competition?: string;
-  /** When false, the 5% rake accrual is paused — the contributeBet call (and its
-   *  local animation) are skipped. Decouples the rake from the Pill render: even
-   *  if the Pill is rendered, the rake stays off when the economy is off. Default
-   *  true ⇒ rake live (baseball/football). */
-  economyEnabled?: boolean;
-}) {
-  const [amount, setAmount] = useState(1000);
-  const [displayAmount, setDisplayAmount] = useState(1000);
-  const [pulse, setPulse] = useState(false);
-  const prevNonceRef = useRef(betNonce);
-  const rafRef = useRef(0);
-
-  // Mount: fetch real KV-backed pool value. Periodic poll keeps display fresh.
-  useEffect(() => {
-    let cancelled = false;
-    const sync = async () => {
-      try {
-        const pool = await getBonusPool(sportKey, competition);
-        if (cancelled) return;
-        setAmount(pool);
-        onAmountChange?.(pool);
-      } catch { /* swallow — keep last known value */ }
-    };
-    sync();
-    const pollId = setInterval(sync, 30_000);
-    return () => { cancelled = true; clearInterval(pollId); };
-  }, []); // eslint-disable-line
-
-  // Sync display with amount when not animating
-  useEffect(() => {
-    if (!pulse) setDisplayAmount(amount);
-  }, [amount, pulse]);
-
-  // Pool mutations happen only inside the server hand-resolution transaction.
-  // The client only polls the resulting value; it never submits a rake amount.
-  useEffect(() => {
-    if (betNonce === prevNonceRef.current) return;
-    prevNonceRef.current = betNonce;
-  }, [betNonce]);
-
-  return (
-    <div style={{
-      display: "inline-flex", alignItems: "center", gap: 6,
-      padding: "4px 14px", borderRadius: 20,
-      background: pulse ? "rgba(255,215,0,0.25)" : "rgba(255,215,0,0.06)",
-      border: `1px solid rgba(255,215,0,${pulse ? 0.7 : 0.18})`,
-      boxShadow: pulse ? "0 0 12px 3px rgba(255,215,0,0.35)" : "none",
-      transition: "background 400ms ease, border-color 400ms ease, box-shadow 400ms ease",
-    }}>
-      <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: 1.2, color: "rgba(255,215,0,0.6)", textTransform: "uppercase" }}>
-        Bonus Pool
-      </span>
-      <span style={{ fontSize: 12, fontWeight: 950, color: "#FFD700", fontVariantNumeric: "tabular-nums", textShadow: pulse ? "0 0 12px rgba(255,215,0,0.8)" : "0 0 8px rgba(255,215,0,0.5)" }}>
-        ${Math.round(displayAmount).toLocaleString("en-US")}
-      </span>
-    </div>
-  );
 }
 
 interface Props {
@@ -505,28 +428,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   } = shared;
   const serverGame = useRef(new AuthoritativeHand());
 
-  const {
-    taskStates,
-    loginStreak,
-    coins,
-    xp,
-    recordHandPlayed,
-    recordHandWon,
-    recordHandLost,
-    collectTask,
-    recordStreakWin,
-    recordStreakBust,
-    recordBonusPlayerUsed,
-    recordTierReached,
-    recordMultiplierUsed,
-    streakCount,
-    weeklyTaskStates,
-    perpetualTaskStates,
-    recordLeaderboardViewed,
-  } = useEngagement({ economyEnabled: adapter.economyEnabled ?? true });
+  // No engagement currency, task rewards, or referral hook is mounted in free play.
 
   // ── UI / modal state (lifted from per-sport in Task 5) ────────────
-  const [showCollect, setShowCollect] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [nameInput, setNameInput] = useState(() => getNickname());
   const [multipliersHost, setMultipliersHost] = useState<HTMLDivElement | null>(null);
@@ -668,16 +572,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // deps so the effect re-evaluates same-hand on the write, instead of
   // waiting for the next gameState/handCount transition.
   const [onBoardTick, setOnBoardTick] = useState(0);
-
-  // ── Referral capture + claim ────────────────────────────────────────
-  useEffect(() => {
-    captureReferrerFromUrl();
-    if (handCount >= 1) applyReferral();
-  }, []); // eslint-disable-line
-
-  useEffect(() => {
-    claimReferral(handCount, loginStreak);
-  }, [handCount, loginStreak]);
 
   // ── Chad usher — single priority queue, max one message per IDLE return ──
   const chadFiredThisIdleRef = useRef(false);
@@ -1208,7 +1102,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // entryFee — pin the effective multiplier to 1. Default true ⇒ multiplier
   // live (baseball/football unchanged). betMultiplier state + setBetMultiplier
   // stay intact and re-wireable; only the input-to-bet role is disconnected.
-  const multiplierEnabled = adapter.multiplierEnabled ?? true;
+  const multiplierEnabled = false; // Free-play branch: cannot be enabled by an adapter.
   // Build-phase round cap. Default 1 ⇒ single-shot (today's flow) for any sport
   // that doesn't opt in. Basketball sets 3. Read site owns the default.
   const maxRounds = adapter.maxRounds ?? 1;
@@ -1216,14 +1110,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // effectiveStreak collapses the streak to 0 at every DISPLAY/MULTIPLIER read
   // site (getStreakMultiplier(0) = 1.0), neutralizing the effect without touching
   // the real `streak` state, its counting, or the streak_at_play column.
-  const streaksEnabled = adapter.streaksEnabled ?? true;
+  const streaksEnabled = false;
   const effectiveStreak = streaksEnabled ? streak : 0;
   // F2P money seam. Default true ⇒ economy LIVE (baseball/football unchanged).
   // Basketball sets false: the wallet never moves — charge/gate/credit are
   // bypassed at their call sites (closure body kept intact for the pinned tests).
-  const economyEnabled = adapter.economyEnabled ?? true;
+  const economyEnabled = false;
   const effectiveBetMultiplier = (!multiplierEnabled || challengeCtx) ? 1 : betMultiplier;
-  const currentBet = BASE_BET * effectiveBetMultiplier;
+  const currentBet = 0;
   const gameAnalytics = useGameAnalytics(sportKey);
 
   // ── Reveal + spring orchestration ──────────────────────────────────
@@ -1251,14 +1145,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     isAnonymous,
     setBigWinFired,
     setOnBoardTick,
-    recordHandPlayed,
-    recordHandWon,
-    recordHandLost,
-    recordTierReached,
-    recordStreakWin,
-    recordStreakBust,
-    recordBonusPlayerUsed,
-    recordMultiplierUsed,
     gameAnalytics,
     getTopGameInfo: () => topGameInfoHolder.current,
   });
@@ -1431,14 +1317,14 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   const celebrationData: CelebrationData | undefined = useMemo(() => {
     if (gameState !== "WIN_CELEBRATION" || !winTier) return undefined;
     const tc = CELEBRATION_TIER_COLORS[winTier] ?? { color: "#888", glow: "#88888833" };
-    const tierMult = winTiersMap[winTier]?.multiplier ?? 0;
+
     // B2a status flags: sparse, absolute, tier-orthogonal. Cold Night inherits the
     // visual loss-coloring hook BUST vacated (Step 2) so a cold hand looks distinct
     // from a neutral ROOKIE; Heater gets its own gold/flame treatment in the bottom.
     const handStatus = adapter.getHandStatus?.(lockedGaugeFpRef.current ?? 0) ?? null;
     const isLoss = winTier === "BUST" || handStatus === "COLD_NIGHT";
-    const lossAmount = winTier === "BUST" ? BASE_BET * effectiveBetMultiplier : 0;
-    const streakMult = getStreakMultiplier(effectiveStreak);
+
+
     return {
       tierLabel: formatTierLabel(winTier),
       tierColor: tc.color,
@@ -1447,11 +1333,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       streak: effectiveStreak,
       isBust: winTier === "BUST",
       betMultiplier: effectiveBetMultiplier,
-      tierMultiplier: tierMult,
-      streakMultiplier: streakMult,
-      baseBet: BASE_BET,
+      tierMultiplier: 0,
+      streakMultiplier: 1,
+      baseBet: 0,
       isLoss,
-      lossAmount,
+      lossAmount: 0,
       handStatus,
     };
   }, [gameState, winTier, winPayout, streak, effectiveBetMultiplier]); // eslint-disable-line
@@ -2193,7 +2079,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           sport: sportKey,
           season: isChallenge ? challengeCtx!.season : (getActiveSeason() ?? (sportKey === "football" ? "2022" : "2425")),
           competition: adapter.competition,
-          bet_amount: currentBet,
           ...(isChallenge ? { challenge_id: challengeCtx!.challengeId } : {}),
         });
         res = { roster: session.roster };
@@ -2346,7 +2231,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         resolveOutcome: (roster, fee, strk) => {
           const totalFp = (roster as any[]).reduce((s, c) => s + Number((c as any).actualFp ?? 0), 0);
           const t = calculateWinTier(totalFp) ?? "BUST";
-          return { totalFp, tier: String(t), payout: (calculatePayoutWithStreak as any)(t, fee, strk) };
+          return { totalFp, tier: String(t), payout: 0 };
         },
         effects: {
           // Economy-emission gate: mute entry-fee events when the economy is
@@ -3039,14 +2924,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               // Solo play surface hides Play + Collect (kept in PRIMARY_TABS,
               // parked pre-launch); profile + bell stay. Challenge-via-GameView
               // header is left unchanged.
-              hiddenTabs={!challengeCtx ? ["home", "collect"] : []}
-              onCollect={() => setShowCollect(true)}
+              hiddenTabs={["home", "collect"]}
               onProfile={() => {
                 setShowProfile(true);
                 clearNewlyUnlockedAchievements();
                 track("profile", "profile_self_view", { sport: adapter.sportKey });
               }}
-              hasUncollected={taskStates.some(t => t.progress >= t.target && !t.collected)}
               // Combined unread count: inbox messages + challenge
               // notifications. Bell badge surfaces both signals.
               unreadInboxCount={unreadCount + challengeUnreadCount}
@@ -3088,22 +2971,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               </div>
             ) : (
               <>
-                {/* BONUS POOL paused for the F2P layer (economyEnabled=false):
-                    the surface is hidden AND the 5% rake stops accruing — the
-                    sole contributeBet() call site lives inside BonusPoolPill, so
-                    not rendering it pauses the rake. The store
-                    (bonusPoolStore.ts) is intact and re-wireable. SlateChip is a
-                    non-economy surface and stays. */}
-                {economyEnabled && (
-                  <BonusPoolPill
-                    betAmount={currentBet}
-                    betNonce={betNonce}
-                    sportKey={sportKey}
-                    competition={adapter.competition}
-                    economyEnabled={economyEnabled}
-                    onAmountChange={(v) => { bonusPoolRef.current = v; }}
-                  />
-                )}
                 {/* L2/#1 season display-pin: the FTUE is a sealed 2025-26 hand, so
                     suppress the live slate chip (which reads getActiveSeason → today's
                     boss-coupled season, e.g. "2006-07 · 135 players" — wrong for this
@@ -3399,15 +3266,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   </>
                 )}
                 {tierResultPhase === 2 && (() => {
-                  const amountWagered = BASE_BET * effectiveBetMultiplier;
-                  const net = winPayout - amountWagered;
-                  const netPositive = net > 0;
-                  const netColor = netPositive ? "#7FFF00" : "#FF3B30";
-                  const netLabel = netPositive ? `+$${net}` : `-$${Math.abs(net)}`;
+
+
+
+
+
                   const FF = "'Rajdhani','Oswald','Arial Narrow',sans-serif";
-                  const tierMult = winTiersMap[winTier as WinTierKey]?.multiplier ?? 0;
-                  const streakMult = getStreakMultiplier(effectiveStreak);
-                  const showStreakFactor = streakMult > 1;
+
+
+
                   // Phase 1 trigger split (2026-06-03): renamed bad_beat
                   // → choke. challengeTrigger.trigger now emits "choke"
                   // (live evaluator post-rename); TeamStampKind union now
@@ -3475,22 +3342,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                         {/* F2P: the wager net / payout $ display is hidden when the
                             economy is off (the wallet never moves). FP + ceiling
                             still show. */}
-                        {!challengeCtx && economyEnabled && (
-                          winTier === "BUST" ? (
-                            <span style={{ fontSize: 20, fontWeight: 700, color: netColor, fontFamily: FF, letterSpacing: "-0.5px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
-                              {netLabel}
-                            </span>
-                          ) : (
-                            <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6, fontFamily: FF }}>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.55)", lineHeight: 1, letterSpacing: 0.3, fontVariantNumeric: "tabular-nums" }}>
-                                {tierMult}×{showStreakFactor ? ` × ${streakMult}×` : ""} →
-                              </span>
-                              <span style={{ fontSize: 20, fontWeight: 700, color: "#7FFF00", lineHeight: 1, letterSpacing: "-0.5px", fontVariantNumeric: "tabular-nums" }}>
-                                +${winPayout}
-                              </span>
-                            </span>
-                          )
-                        )}
+
                       </div>
                     </>
                   );
@@ -3553,16 +3405,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     );
                   })()}
                 </div>
-                {gameState === "HOLD" && !challengeCtx && multiplierEnabled && economyEnabled && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-                    <span style={{ fontSize: 16, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1 }}>
-                      {BASE_BET} × {betMultiplier}x =
-                    </span>
-                    <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1, color: betMultiplier === 1 ? "#22C55E" : betMultiplier === 3 ? "#3B82F6" : betMultiplier === 5 ? "#C084FC" : betMultiplier === 10 ? "#FB923C" : "rgba(255,255,255,0.35)" }}>
-                      ${BASE_BET * betMultiplier}
-                    </span>
-                  </div>
-                )}
+
               </div>
             )}
           </div>
@@ -3593,7 +3436,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               onTierCross={undefined}
               postRevealCopy={postRevealCopy}
               missTier={challengeTrigger?.nearMissNextTier ?? undefined}
-              commentaryOverride={(showCollect || showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
+              commentaryOverride={(showLeaderboard || showProfile) ? null : ftueCommentaryOverride}
               collapseBar={verdictLayout || gaugeVoice}
               collapseBox={gaugeInert}
               voiceText={gaugeVoice ? voiceLine : null}
@@ -3663,34 +3506,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                 overflow: "hidden",
               }}
             >
-              {showCollect && (
-                (() => {
-                  const bonusPlayers = getTodaysStars();
-                  return (
-                    <Suspense fallback={null}>
-                      <CollectScreen
-                        taskStates={taskStates}
-                        weeklyTaskStates={weeklyTaskStates}
-                        perpetualTaskStates={perpetualTaskStates}
-                        loginStreak={loginStreak}
-                        coins={coins}
-                        xp={xp}
-                        streakCount={streakCount}
-                        economyEnabled={economyEnabled}
-                        bonusPlayers={bonusPlayers}
-                        onViewLeaderboard={() => {
-                          setShowCollect(false);
-                          setShowLeaderboard(true);
-                          track("leaderboard", "viewed", { source: "collect_screen" });
-                        }}
-                        recordLeaderboardViewed={recordLeaderboardViewed}
-                        onClose={() => setShowCollect(false)}
-                        onCollect={(id) => { collectTask?.(id); }}
-                      />
-                    </Suspense>
-                  );
-                })()
-              )}
               {/* Name change prompt — after hand 3 */}
               {showNamePrompt && (
                 <div style={{

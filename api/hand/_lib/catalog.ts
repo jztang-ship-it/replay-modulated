@@ -76,7 +76,7 @@ export function outcome(sport:string,season:string,roster:any[]) {
  const fp=Math.round(roster.reduce((n,c)=>n+c.actualFp,0)*10)/10;
  const bb=(thresholds as any)[season];
  if(sport!=='basketball') throw new Error('Unsupported sport');
- const rows=Object.entries(bb??{}).map(([tier,minFp])=>({tier,minFp:Number(minFp),multiplier:({ROOKIE:.5,STARTER:1.5,ALL_STAR:3,MVP:8,LEGEND:20} as any)[tier]}));
+ const rows=Object.entries(bb??{}).map(([tier,minFp])=>({tier,minFp:Number(minFp)}));
  if(!rows.length)throw new Error('Season thresholds unavailable');
- return rows.sort((a,b)=>b.minFp-a.minFp).find(t=>fp>=t.minFp)??{tier:'BUST',minFp:0,multiplier:0};
+ return rows.sort((a,b)=>b.minFp-a.minFp).find(t=>fp>=t.minFp)??{tier:'BUST',minFp:0};
 }

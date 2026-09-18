@@ -530,7 +530,7 @@ export function CardFront(props: CardFrontProps) {
         {/* SALARY — top-left */}
         <div style={{ position: "absolute", top: "6.5%", left: "6%", zIndex: 8, pointerEvents: "none", lineHeight: 1 }}>
           <span data-ftue-label="salary" style={{ fontSize: 16, fontWeight: 900, fontStyle: "italic", color: onCardText, letterSpacing: -0.5, lineHeight: 1 }}>
-            ${salary}
+            {salary}
           </span>
         </div>
 

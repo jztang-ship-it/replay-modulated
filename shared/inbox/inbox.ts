@@ -66,7 +66,11 @@ export async function listMessages(userId: string): Promise<InboxMessage[]> {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) { console.warn('[inbox] listMessages failed', error); return []; }
-  return (data ?? []) as InboxMessage[];
+  // Do not surface historical financial messages in this product.
+  return ((data ?? []) as InboxMessage[]).filter(message =>
+    message.message_type !== 'bonus_pool' &&
+    !/\b(coins?|payouts?|wallet|wager|cash|bonus pool)\b/i.test(JSON.stringify(message.payload))
+  );
 }
 
 export async function markRead(messageId: string): Promise<void> {
@@ -132,33 +136,6 @@ export async function addBigWinMessage(
   if (error) { console.warn('[inbox] addBigWinMessage failed', error); return; }
   await pruneInboxToCap(userId);
 }
-
-export async function addBonusPoolMessage(
-  userId: string,
-  args: { amount_won: number },
-  // ECONOMY-GATED — this writes a bonus-pool/coins message. The bonus pool is
-  // paused while the economy is gated (F2P layer; see docs/economy-retrieval-map.md).
-  // This util has no adapter/economyEnabled context, so the gate is an EXPLICIT,
-  // required param: a future caller (bonus-pool distribution is post-beta — still
-  // no call site) MUST pass the sport's economyEnabled, and the function no-ops when
-  // false. Re-wiring is therefore a deliberate decision, not a silent default.
-  // DO NOT WIRE WHILE ECONOMY GATED. Hide-don't-delete: the function stays intact.
-  economyEnabled: boolean,
-): Promise<void> {
-  if (!economyEnabled) return;
-  const payload: Payload = {
-    title: 'You got a piece of the pool',
-    body: `+${args.amount_won.toLocaleString()} coins from the bonus pool. Nice run.`,
-    amount_won: args.amount_won,
-  };
-  const { error } = await supabase
-    .from('inbox_messages')
-    .insert({ user_id: userId, message_type: 'bonus_pool', payload });
-  if (error) { console.warn('[inbox] addBonusPoolMessage failed', error); return; }
-  await pruneInboxToCap(userId);
-}
-
-// ---------- Survey response ----------
 
 export async function submitSurveyResponse(
   messageId: string,
@@ -233,9 +210,4 @@ export async function submitFeedback(
     });
   if (error) { console.warn('[inbox] submitFeedback failed', error); return false; }
   return true;
-}
-
-export async function grantFeedbackCoins(amount: number): Promise<void> {
-  const { error } = await supabase.rpc('grant_coins', { p_amount: amount, p_reason: 'feedback_v1' });
-  if (error) throw new Error('Feedback reward unavailable or already claimed');
 }

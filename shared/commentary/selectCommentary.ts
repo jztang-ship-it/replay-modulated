@@ -243,13 +243,13 @@ const ARCHETYPE_FRAMING: Partial<Record<CommentaryArchetype, string[]>> = {
 const ANCHOR_DELIVERED_FRAMING = [
   "The whole roster was waiting on the anchor, and they came through.",
   "Anchor delivered. That's why you pay for the big card.",
-  "The money card paid its salary tonight.",
+  "The anchor card justified its lineup cost tonight.",
   "Everyone was leaning on the anchor to show up. They showed up.",
   "You pay that salary for nights exactly like this.",
 ];
 const ANCHOR_FAILED_FRAMING = [
   "The roster was waiting on the anchor, and the anchor didn't come.",
-  "When the money card goes quiet, the whole hand feels it.",
+  "When the anchor card goes quiet, the whole hand feels it.",
   "Anchor didn't cover the salary tonight.",
   "The big card went small. Hard to recover from that.",
   "The roster was built around one card. That card didn't show up.",
@@ -273,7 +273,7 @@ function nearMissFraming(gap: number, seed: number): string {
       "A made basket away. Literally one bucket.",
       "Three FP or fewer. Three.",
       "The next tier was a single possession away.",
-      "That HURTS — one fewer turnover and this cashes bigger.",
+      "That HURTS — one fewer turnover and this scores higher.",
     ], seed, 60) ?? "";
   }
   if (gap <= 5) {
@@ -334,7 +334,7 @@ const CHAD_ANALOGIES: Record<Intensity, string[]> = {
     "This is what the hype is for. Not the hype itself — the hype EARNS this.",
     "A result with texture. The kind you can feel through the page.",
     "The hand equivalent of nailing the parallel park on the first try, with witnesses.",
-    "Paid rent and then some. The and-then-some is what you remember.",
+    "Cleared the target and then some. The extra is what you remember.",
     "Like a surprise upgrade at the airport — somehow both deserved and undeserved.",
     "The hand you mention at Thanksgiving in place of being interesting.",
     "Real hand, real night, real reason to feel okay about Wednesday.",
@@ -356,7 +356,7 @@ const CHAD_ANALOGIES: Record<Intensity, string[]> = {
     "Comfortable like the couch you've owned for twelve years.",
     "Not flashy. Not confused. Just got it done — the middle child of good hands.",
     "This was the IKEA assembly where you actually followed the instructions.",
-    "Paid like a Wednesday. No surprise, no complaints.",
+    "Played like a Wednesday. No surprise, no complaints.",
     "Result delivered with the same energy as your hairdresser saying 'looking good.'",
     "Solid the way your car is solid — does the thing, doesn't ask questions.",
     "The hand equivalent of getting exactly the change you expected.",
@@ -364,10 +364,10 @@ const CHAD_ANALOGIES: Record<Intensity, string[]> = {
   starter_normal: [
     "Not memorable. That's the point.",
     "Solid like a desk — not exciting, but you need one.",
-    "Paycheck hand. No style points, just the number.",
+    "Workmanlike hand. No style points, just the number.",
     "The hand your accountant would give a tasteful thumbs-up.",
     "Business casual. Got the job done in khakis.",
-    "Not the story you tell. Still the hand that paid the tab.",
+    "Not the story you tell. Still a hand that got the job done.",
     "Result like a successful trip to Costco — you got what you came for and left.",
     "Middle-of-the-road hand. The road gets you there fine; nobody's writing songs about it.",
     "Got it done with the same energy as paying bills on time.",
@@ -461,7 +461,7 @@ const CHAD_ANALOGIES: Record<Intensity, string[]> = {
     "Roster performance was the algorithm showing you ads for things you already bought.",
     "Tonight was a customer service hold song on loop.",
     "Sound of silence from the entire lineup. Not artistic. Just silent.",
-    "You paid full salary for a no-show lineup.",
+    "You used the whole budget on a no-show lineup.",
     "Tonight was the IKEA assembly with three missing screws and a spite-filled allen wrench.",
     "This hand had the energy of an email sent Friday at 4:59 PM that nobody reads until Monday.",
   ],

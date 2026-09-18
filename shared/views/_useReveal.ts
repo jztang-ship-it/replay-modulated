@@ -114,14 +114,7 @@ export interface UseRevealArgs {
   setOnBoardTick: (updater: (t: number) => number) => void;
 
   // ── Engagement counters ─────────────────────────────────────────────
-  recordHandPlayed: () => void;
-  recordHandWon: () => void;
-  recordHandLost: () => void;
-  recordTierReached: (tier: string | null) => void;
-  recordStreakWin: () => void;
-  recordStreakBust: () => void;
-  recordBonusPlayerUsed: (count: number) => void;
-  recordMultiplierUsed: (mult: number) => void;
+
 
   // ── Analytics ───────────────────────────────────────────────────────
   gameAnalytics: { handResolved: (fp: number, tier: string, bust: boolean, badges: number, ts: number) => void };
@@ -185,8 +178,8 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     economyEnabled = true,
     rosterRef,
     isAnonymous, setBigWinFired, setOnBoardTick,
-    recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
-    recordStreakWin, recordStreakBust, recordBonusPlayerUsed, recordMultiplierUsed,
+
+
     gameAnalytics, getTopGameInfo,
   } = args;
 
@@ -355,7 +348,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
       const server = state.serverResultRef.current;
       if (!server) return; // No speculative reward or leaderboard submission.
       const tier = server.tier as WinTierKey;
-      const payout = Number(server.payout);
+      const payout = 0;
       setWinTier(tier);
       setWinPayout(payout);
       const bust = !tier || tier === "BUST";
@@ -385,29 +378,6 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
       // is unset (shouldn't happen by flow), we skip the linked hand_best submit
       // rather than send an unlinked/null-handId row.
       const handIdForAudit = currentHandIdRef.current ?? undefined;
-      recordHandPlayed();
-      if (!bust) recordHandWon(); else recordHandLost();
-
-      // Tier reached
-      recordTierReached(tier);
-
-      // Streak
-      if (!bust) {
-        recordStreakWin();
-      } else {
-        recordStreakBust();
-      }
-
-      // Bonus players used this hand
-      const bonusCount = rosterRef.current.filter(
-        c => Number((c as any).dailyBonus ?? 0) > 0
-      ).length;
-      if (bonusCount > 0) {
-        recordBonusPlayerUsed(bonusCount);
-      }
-
-      // Multiplier used this hand
-      recordMultiplierUsed(betMultiplier);
       {
         // Increment the persistent hand counter at hand-resolution — single
         // source of truth, independent of which user-action path exits
@@ -417,10 +387,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
         // gated surfaces (name_prompt, chad nudges, PWA install prompt,
         // first_share_invitation, etc.) silently broken.
         incrementHandCount();
-        pendingBalanceUpdateRef.current = () => {
-          setBalance(Number(server.balance));
-          persistBalance(Number(server.balance));
-          state.setStreak(Number(server.streak_at_play));
+        (() => {
           // These fire for all non-bust hands (ROOKIE still counts for leaderboard/session)
           if (!bust) {
             // Reuse the lock-generated handId (currentHandIdRef) — api/leaderboard
@@ -470,7 +437,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
           if (newTierRank > prevTierRank) {
             localStorage.setItem(bestTierKey, tier ?? "BUST");
           }
-        };
+        })();
         const t = window.setTimeout(() => {
           setGameState("WIN_CELEBRATION");
         }, 1200);
@@ -486,8 +453,8 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     submitToLeaderboard, checkLeaderboardRank,
     incrementStreak, resetStreak, incrementHandCount,
     setBigWinFired, setOnBoardTick, gameAnalytics, getTopGameInfo,
-    recordHandPlayed, recordHandWon, recordHandLost, recordTierReached,
-    recordStreakWin, recordStreakBust, recordBonusPlayerUsed, recordMultiplierUsed,
+
+
   ]);
 
   // ── Derived display helpers ────────────────────────────────────────

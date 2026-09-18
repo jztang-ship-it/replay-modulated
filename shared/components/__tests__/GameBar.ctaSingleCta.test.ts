@@ -55,12 +55,12 @@ describe("CTA row — closing the share overlay does NOT collapse the challenge"
 });
 
 describe("free-play money seam", () => {
-  it("keeps the wage completion timer but renders no Wage surface when the economy is off", () => {
-    expect(GAME_BAR).toMatch(/if \(!visible\) return null;/);
-    expect(GAME_BAR.match(/visible=\{economyEnabled\}/g)).toHaveLength(2);
+  it("has no wage animation component or timer", () => {
+    expect(GAME_BAR).not.toContain("function WageDisplay(");
+    expect(GAME_BAR).not.toContain("<WageDisplay");
   });
 
   it("does not render the HOLD-state dollar multiplier summary in free play", () => {
-    expect(GAME_VIEW).toContain('gameState === "HOLD" && !challengeCtx && multiplierEnabled && economyEnabled');
+    expect(GAME_VIEW).not.toContain('+$' + '{winPayout}');
   });
 });

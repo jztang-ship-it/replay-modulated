@@ -42,7 +42,7 @@ export function PostHandSheet({
   useEffect(() => {
     try {
       const raw = localStorage.getItem("rm_challenge_target");
-      if (raw) setChallenge(JSON.parse(raw));
+      if (raw) { const saved = JSON.parse(raw); if (["hand_best", "hand_avg"].includes(saved.metric)) setChallenge(saved); }
     } catch { }
   }, []);
 
@@ -54,7 +54,7 @@ export function PostHandSheet({
   function formatChallengeScore(c: { score: number; metric: string }) {
     if (c.metric === "hand_best") return `${c.score.toFixed(1)} FP`;
     if (c.metric === "hand_avg") return `${c.score.toFixed(1)} FP avg`;
-    return `${c.score.toLocaleString()} coins`;
+    return `${c.score.toFixed(1)} FP`;
   }
 
   const tierColor = TIER_COLORS[winTier] ?? "#6B7280";

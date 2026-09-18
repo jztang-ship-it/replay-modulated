@@ -56,9 +56,6 @@ export type GameState =
   | "IDLE" | "DEALING" | "HOLD" | "DRAWING"
   | "REVEALING" | "RESULTS" | "WIN_CELEBRATION";
 
-const STARTING_BALANCE = 5000;
-const MIN_BALANCE_FLOOR = 500;
-
 /** The fields the hook actually reads off the adapter. Keeping the
  *  parameter narrowed to a Pick<> means call sites can pass a partial
  *  literal during the multi-PR lift instead of constructing dummy
@@ -72,22 +69,6 @@ function nsKey(adapter: SharedGameStateAdapter, key: string): string {
   return adapter.localStorageNamespace
     ? `${adapter.localStorageNamespace}_${key}`
     : key;
-}
-
-// Balance is intentionally cross-sport — it represents the player's wallet,
-// not a per-sport stat. Using nsKey here would orphan basketball balances
-// when baseball flips its namespace. Raw key keeps the wallet shared.
-function loadBalance(_adapter: SharedGameStateAdapter): number {
-  try {
-    const v = localStorage.getItem("replaymod_balance");
-    const n = v ? Number(v) : NaN;
-    if (Number.isFinite(n) && n >= MIN_BALANCE_FLOOR) return n;
-    return STARTING_BALANCE;
-  } catch { return STARTING_BALANCE; }
-}
-
-function saveBalance(_adapter: SharedGameStateAdapter, v: number) {
-  try { localStorage.setItem("replaymod_balance", String(v)); } catch { }
 }
 
 function createPlaceholders(rosterSize: number): PlayerCard[] {
@@ -146,7 +127,7 @@ export function useSharedGameState(
 
   // ── Bet + balance ──────────────────────────────────────────────────
   const [betMultiplier, setBetMultiplier] = useState(1);
-  const [balance, setBalance] = useState<number>(() => loadBalance(adapter));
+  const [balance, setBalance] = useState<number>(0);
   const [isBalanceAnimating, setIsBalanceAnimating] = useState(false);
 
   // ── Outcome ────────────────────────────────────────────────────────
@@ -190,7 +171,7 @@ export function useSharedGameState(
   } | null>(null);
 
   // ── Bound balance persistence helpers ──────────────────────────────
-  const persistBalance = useCallback((v: number) => saveBalance(adapter, v), [adapter]);
+  const persistBalance = useCallback((_v: number) => {}, []); // Compatibility only: no wallet exists.
 
   // ── Leaderboard helpers — adapter.leaderboardScope replaces hardcoded sport literals ──
   const submitToLeaderboard = useCallback(async (

@@ -25,8 +25,8 @@ const BBALL_SHIM = read("../../../basketball/src/views/GameView.tsx");
 
 describe("entryFee collapse — adapter-gated, defaults preserve current behavior", () => {
   // ── INERTNESS: defaults live at the shared READ site (absent field = current) ──
-  it("GameView reads multiplierEnabled with a `?? true` default at the read site", () => {
-    expect(GAME_VIEW).toMatch(/adapter\.multiplierEnabled\s*\?\?\s*true/);
+  it("GameView cannot enable wagers in this branch", () => {
+    expect(GAME_VIEW).toMatch(/multiplierEnabled\s*=\s*false/);
   });
   it("maxRounds=1 inertness (runtime): first reroll locks = single-shot", async () => {
     let charges = 0;
@@ -51,8 +51,8 @@ describe("entryFee collapse — adapter-gated, defaults preserve current behavio
   it("effectiveBetMultiplier pins to 1 when the multiplier is disabled", () => {
     expect(GAME_VIEW).toMatch(/effectiveBetMultiplier\s*=\s*\(!multiplierEnabled\s*\|\|\s*challengeCtx\)\s*\?\s*1\s*:\s*betMultiplier/);
   });
-  it("the bet derives from the folded effectiveBetMultiplier (no money path reads raw betMultiplier)", () => {
-    expect(GAME_VIEW).toMatch(/currentBet\s*=\s*BASE_BET\s*\*\s*effectiveBetMultiplier/);
+  it("every game uses zero stake regardless of legacy multiplier state", () => {
+    expect(GAME_VIEW).toMatch(/currentBet\s*=\s*0/);
   });
 
   // ── SELECTOR HIDDEN when disabled ───────────────────────────────────────────
@@ -60,8 +60,8 @@ describe("entryFee collapse — adapter-gated, defaults preserve current behavio
     expect(GAME_VIEW).toMatch(/showBetMultiplier=\{multiplierEnabled\}/);
   });
   it("GameBar gates the multiplier selector on showBetMultiplier (default true)", () => {
-    expect(GAME_BAR).toMatch(/showBetMultiplier\s*=\s*true/);         // default = shown
-    expect(GAME_BAR).toMatch(/showBetMultiplier\s*&&\s*multiplierRow/); // gated render
+    expect(GAME_BAR).toMatch(/showBetMultiplier\s*=\s*false/);         // default = shown
+    expect(GAME_BAR).not.toContain("function WageDisplay(");
   });
 
   // ── DORMANT, NOT DELETED: state + setter survive ────────────────────────────

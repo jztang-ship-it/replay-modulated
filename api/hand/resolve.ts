@@ -7,7 +7,10 @@ import { quota,ipKey,boundedBody,digest } from './_lib/security.js';
 import { SPORTS,deal,draw,resolve,outcome } from './_lib/catalog.js';
 import { awardVerifiedAchievements } from './_lib/achievements.js';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function view(h:any) {return {hand_id:h.hand_id,revision:h.revision,roster:h.state.roster,settled:h.settled,hand:h.state.hand??null,sport:h.sport,season:h.season,competition:h.competition,challenge_id:h.challenge_id};}
+function view(h:any) {
+ const raw=h.state.hand;
+ const hand=raw ? {hand_id:raw.hand_id,total_fp:raw.total_fp,tier:raw.tier,sport:raw.sport,season:raw.season} : null;
+ return {hand_id:h.hand_id,revision:h.revision,roster:h.state.roster,settled:h.settled,hand,sport:h.sport,season:h.season,competition:h.competition,challenge_id:h.challenge_id};}
 async function complete(h:any,userId:string) {
  if(h.settled) { try { await awardVerifiedAchievements(userId,h.hand_id,h.sport,h.season); } catch { console.error('[hand] achievement grant deferred'); } }
  return view(h);
@@ -32,23 +35,22 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
     challenge=data;
    }
    // The controlled beta is free-to-play; a client cannot introduce a stake.
-   const bet=0;
    if(b.bet_amount!=null&&b.bet_amount!==0)return res.status(400).json({error:'Invalid stake'});
-   const {data:existing,error:lookupError}=await supabaseAdmin.from('hand_sessions').select('*').eq('player_id',user.id).eq('request_id',b.request_id).maybeSingle();
+   const {data:existing,error:lookupError}=await supabaseAdmin.from('free_play_sessions').select('*').eq('player_id',user.id).eq('request_id',b.request_id).maybeSingle();
    if(lookupError)throw lookupError;
    if(existing){
-    if(existing.sport!==b.sport||existing.season!==b.season||existing.competition!==competition||existing.challenge_id!==(b.challenge_id??null)||existing.bet_amount!==bet)return res.status(409).json({error:'Request context mismatch'});
+    if(existing.sport!==b.sport||existing.season!==b.season||existing.competition!==competition||existing.challenge_id!==(b.challenge_id??null))return res.status(409).json({error:'Request context mismatch'});
     return res.status(200).json(await complete(existing,user.id));
    }
    if(!await quota(`hand:start:${user.id}`,30,3600)||!await quota(`hand:start-ip:${ipKey(req)}`,120,3600))return res.status(429).json({error:'Too many games'});
    const roster=deal(b.sport,b.season,challenge);
-   const {data,error}=await supabaseAdmin.rpc('start_authoritative_hand',{p_user:user.id,p_id:randomUUID(),p_request:b.request_id,p_sport:b.sport,p_season:b.season,p_competition:competition,p_challenge:b.challenge_id??null,p_bet:bet,p_state:{roster,draws:0,resolved:false}});
+   const {data,error}=await supabaseAdmin.rpc('start_free_play_hand',{p_user:user.id,p_id:randomUUID(),p_request:b.request_id,p_sport:b.sport,p_season:b.season,p_competition:competition,p_challenge:b.challenge_id??null,p_state:{roster,draws:0,resolved:false}});
    if(isAuthoritySchemaMissing(error))throw error;
-   if(error)return res.status(409).json({error:'Cannot start hand; check balance or retry'});
+   if(error)return res.status(409).json({error:'Cannot start hand; please retry'});
    return res.status(200).json(view(data));
   }
   if(typeof b.hand_id!=='string'||!UUID.test(b.hand_id))return res.status(400).json({error:'Invalid hand'});
-  const {data:h,error}=await supabaseAdmin.from('hand_sessions').select('*').eq('player_id',user.id).eq('hand_id',b.hand_id).maybeSingle();
+  const {data:h,error}=await supabaseAdmin.from('free_play_sessions').select('*').eq('player_id',user.id).eq('hand_id',b.hand_id).maybeSingle();
   if(error)throw error;if(!h)return res.status(404).json({error:'Hand not found'});
   if(b.action==='status')return res.status(200).json(await complete(h,user.id));
   const held=Array.isArray(b.held_slots)?b.held_slots:[];
@@ -71,7 +73,7 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
    state.resolved=true;
   }
   const tier=outcome(h.sport,h.season,state.roster);
-  const {data:committed,error:commitError}=await supabaseAdmin.rpc('commit_authoritative_hand',{p_user:user.id,p_id:h.hand_id,p_revision:b.revision,p_state:state,p_settle:b.action==='lock',p_tier:tier.tier,p_multiplier:tier.multiplier});
+  const {data:committed,error:commitError}=await supabaseAdmin.rpc('commit_free_play_hand',{p_user:user.id,p_id:h.hand_id,p_revision:b.revision,p_state:state,p_settle:b.action==='lock',p_tier:tier.tier});
   if(isAuthoritySchemaMissing(commitError))throw commitError;
   if(commitError)return res.status(409).json({error:'Concurrent turn; retry the same action'});
   if(committed.settled){try{await awardVerifiedAchievements(user.id,h.hand_id,h.sport,h.season);}catch(e){console.error('[hand] achievement grant deferred');}}

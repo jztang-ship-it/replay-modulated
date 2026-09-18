@@ -31,7 +31,7 @@ const PRIMARY_TABS: { id: TabId; label: string; icon: string }[] = [
 
 const OVERFLOW_TABS: { id: TabId; label: string; icon: string; soon: boolean; desc: string }[] = [
   { id: "pulse",   label: "Pulse",   icon: "📈", soon: true, desc: "Daily sports news" },
-  { id: "tourney", label: "Tourney", icon: "🏆", soon: true, desc: "Compete with other players for big prizes" },
+  { id: "tourney", label: "Tourney", icon: "🏆", soon: true, desc: "Compare your best scores with other players" },
 ];
 
 type Props = {

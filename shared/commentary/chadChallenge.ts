@@ -221,10 +221,10 @@ export function chadChallengeIntro(args: {
 // localStorage prevents replay across sessions.
 
 const NORMAL_PLAY_WELCOME: string[] = [
-  "That was the warm-up. This is today's real game — pick your bet, build your hand, chase the tier.",
-  "Welcome to today's slate. New season, new players, real coins on the line.",
-  "Same game, fresh slate. Cards are today's, stakes are real, tiers pay out.",
-  "Now you're playing for real. Today's slate, your moves, big payouts on the line.",
+  "That was the warm-up. This is today's real game — pick your players, build your hand, chase the tier.",
+  "Welcome to today's slate. New season, new players, a fresh score to beat.",
+  "Same game, fresh slate. Cards are today's, choices matter, tiers mark your score.",
+  "Now you're playing for real. Today's slate, your moves, a new score to chase.",
 ];
 
 export function chadNormalPlayWelcome(): string {
@@ -260,7 +260,7 @@ export function chadChallengeTactical(args: ChadChallengeTacticalArgs): string {
     if (a?.delivered) return pick([
       `Held ${a.name} for the anchor and ${a.name} delivered. Cleared ${possessive}${t}.`,
       `${a.name} came through. Redraws didn't blink. Past ${possessive}${t}.`,
-      `Anchor on ${a.name} paid out, redraws stayed disciplined. Above ${possessive}${t}.`,
+      `Anchor on ${a.name} delivered, redraws stayed disciplined. Above ${possessive}${t}.`,
     ]);
     if (a) return pick([
       `${a.name} didn't pop but the redraws found the gap. Cleared ${possessive}${t}.`,
@@ -275,7 +275,7 @@ export function chadChallengeTactical(args: ChadChallengeTacticalArgs): string {
   if (d <= -1) {
     if (a?.delivered) return pick([
       `Held ${a.name} and ${a.name} did their part. Redraws were the gap to ${possessive}${t}.`,
-      `Anchor on ${a.name} cashed. Redraws didn't keep pace with ${possessive}${t}.`,
+      `Anchor on ${a.name} delivered. Redraws didn't keep pace with ${possessive}${t}.`,
       `${a.name} delivered; the rest of the run stalled short of ${possessive}${t}.`,
     ]);
     if (a) return pick([
@@ -379,7 +379,7 @@ const INITIATION_CHOKE: string[] = [
 
 const INITIATION_FLEX: string[] = [
   "That's not a hand — that's a flag plant. Hand the slate to someone and watch them blink.",
-  "Three big-money cards delivered. Pick a friend who thinks they could match it.",
+  "Three star cards delivered. Pick a friend who thinks they could match it.",
   "Numbers like that need an audience. Send. Wait. Enjoy the silence.",
   "A score this clean doesn't repeat. Lock it in, then pick someone to chase it.",
   "MVP-tier night. The slate is yours; give it to whoever still thinks they're a hooper.",
@@ -756,7 +756,7 @@ const TOP_BIG_SCORE: Line[] = [
   ["You stacked the right names and the right names brought the whole circus. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
   ["{starName} torched the entire opposing lineup tonight — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you were holding him for it."],
   [{ stamp: "win_tier", tier: "{winTier}" }, ". {starName} went absolutely nuclear and you were holding the detonator."],
-  ["Top to bottom, the lineup ran it back like they owed you money — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you held the whole board."],
+  ["Top to bottom, the lineup ran it back like they had something to prove — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you held the whole board."],
   ["{starName} put up the kind of stat line you screenshot. You were on it. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
   ["{starName} ate, and the whole roster ate after him — ", { stamp: "win_tier", tier: "{winTier}" }, " — and you held the whole table."],
   ["You looked at the slate, you picked the heater, the heater turned the building into a sauna. ", { stamp: "win_tier", tier: "{winTier}" }, "."],
@@ -777,7 +777,7 @@ const TOP_RARE_PULL_RECORD: Line[] = [
 
 const TOP_RARE_PULL_CAREER: Line[] = [
   ["{starName} just played the best game of his entire career and you had him locked in — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — that's the hold."],
-  ["{starName} set a new personal high tonight and you were the one cashing on it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you held him for it."],
+  ["{starName} set a new personal high tonight and you were the one benefiting from it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — you held him for it."],
   ["{starName} just outdid every version of himself that came before — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — and you were holding him for it."],
   ["Years in the league and tonight was the one he'll tell his grandkids about. You held him. ", { stamp: "rare_pull", tier: "{rarePullTier}" }, "."],
   ["{starName} ran into his own ceiling tonight and put a hole in it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, " — pure conviction."],
@@ -1311,7 +1311,7 @@ const RES_PHOTO_FINISH_TIE_TACTICAL: string[] = [
   "Tied in spirit. You both played the same cards the same well.",
   "If this had a longer slate, somebody would be embarrassed. Today, neither of you is.",
   "Same hand, same answer. Run a different slate to settle it.",
-  "Inside the noise. Take the photo, don't bet on the rematch.",
+  "Inside the noise. Take the photo, don't assume the rematch.",
   "Slate handed out two clean lines. Coin flip would've called the same shot.",
 ];
 
@@ -1838,13 +1838,13 @@ const INTRO_CHOKE_NAME: Line[] = [
   ["{name} was supposed to be the safe one. {challengerName} settled for {targetScore} and a ", { stamp: "choke" }, ". You're not better than that — prove me wrong."],
   ["Premium pick, premium fold. {challengerName} rode {name} into a ", { stamp: "choke" }, " and left you {targetScore} to either clear or match."],
   [{ stamp: "choke" }, ". {challengerName} stacked {name} for {targetScore} and the math never showed up. Same five. Show me you'd have held different."],
-  ["{challengerName} bet big on {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". The only way to look smarter is to actually be smarter."],
+  ["{challengerName} put their trust in {name} and walked off with {targetScore} — ", { stamp: "choke" }, ". The only way to look smarter is to actually be smarter."],
 ];
 
 const INTRO_CHOKE_GENERIC: Line[] = [
   ["{challengerName} choked {targetScore} with a loaded hand — ", { stamp: "choke" }, ". The only worse look is scrolling past without trying."],
   [{ stamp: "choke" }, ". {challengerName} couldn't drag the same five past {targetScore}. Either you can or you can't — find out."],
-  ["Looked like a winner on paper for {challengerName}. It paid {targetScore}. ", { stamp: "choke" }, " — same hand, your move, no excuses."],
+  ["Looked like a winner on paper for {challengerName}. It scored {targetScore}. ", { stamp: "choke" }, " — same hand, your move, no excuses."],
   ["{challengerName} read the slate; the hands didn't read the room — ", { stamp: "choke" }, ", {targetScore} to beat. Prove you'd hold steadier."],
 ];
 
@@ -1865,7 +1865,7 @@ const INTRO_BIG_SCORE_NAME: Line[] = [
 
 const INTRO_BIG_SCORE_GENERIC: Line[] = [
   ["{challengerName} caught the whole slate hot — ", { stamp: "win_tier" }, ", {targetScore} on the board."],
-  [{ stamp: "win_tier" }, ". {challengerName} stacked the right names and got paid. {targetScore} to beat."],
+  [{ stamp: "win_tier" }, ". {challengerName} stacked the right names and delivered. {targetScore} to beat."],
   ["The whole hand ran for {challengerName} — ", { stamp: "win_tier" }, ", {targetScore} is what it returned."],
   ["{challengerName} hung {targetScore} on these cards — ", { stamp: "win_tier" }, ". Your turn to match it."],
 ];
@@ -1875,7 +1875,7 @@ const INTRO_RARE_PULL_CULTURE: Line[] = [
   ["{cultureLine} {name} carved {challengerName} into the record sheet — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} to chase."],
   [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". {name} hung a number on the whole league for {challengerName}. {cultureLine} {targetScore} on the receipt."],
   ["{challengerName} caught {name} on the night the stat sheet broke — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {targetScore} is the bar."],
-  ["{name} made the highlight reel and {challengerName} cashed it — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {targetScore} to clear."],
+  ["{name} made the highlight reel and {challengerName} got the result — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ". {cultureLine} {targetScore} to clear."],
 ];
 
 const INTRO_RARE_PULL_NAME: Line[] = [
@@ -1888,7 +1888,7 @@ const INTRO_RARE_PULL_NAME: Line[] = [
 const INTRO_RARE_PULL_GENERIC: Line[] = [
   ["{challengerName} caught one of those nights — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} on the receipt."],
   [{ stamp: "rare_pull", tier: "{rarePullTier}" }, ". The slate handed {challengerName} a number people screenshot. {targetScore} to chase."],
-  ["The whole hand ran historic for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} is what it paid."],
+  ["The whole hand ran historic for {challengerName} — ", { stamp: "rare_pull", tier: "{rarePullTier}" }, ", {targetScore} is what it scored."],
 ];
 
 const INTRO_MISS_WITH_GAP: Line[] = [

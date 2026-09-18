@@ -4203,3 +4203,8 @@ representation, iconic seasons doubled. Per season: bank entry (6 from-scratch:
 0203 0405 0506 1112 2122 9899) / activate dormant (9: 0809 0910 1213 1415 1617
 1718 1819 2324 9900) + band calibration + CANDIDATES vetting + regen. Band
 calibration is the gating effort. Fund-as-you-go; not required before C ships.
+
+
+## LOCKED — Pure free-play branch (John, 2026-09-18)
+
+See `docs/free-play-branch.md` for the authorized split, scope, source baseline and acceptance checklist. Mother `mother/all-features-2026-09-18` preserves ab082b5 unchanged. This child removes economy behavior from the playable basketball product; older preserve-in-place rules apply to mother, not to active child functionality. No new opponent, stakes or progression design is authorized.

@@ -43,8 +43,8 @@ export class AuthoritativeHand {
   })();
   try{return await this.inFlight;}finally{this.inFlight=null;this.flightKey=null;}
  }
- async start(context:{sport:string;season:string;competition?:string;challenge_id?:string;bet_amount:number}):Promise<ServerHand> {
-  // Retain the request id on network failure: a retry must not debit a second stake.
+ async start(context:{sport:string;season:string;competition?:string;challenge_id?:string}):Promise<ServerHand> {
+  // Retain the request id on network failure: a retry must not create a second hand.
   if(!this.startKey){this.startKey=crypto.randomUUID();this.startContext=context;}
   if(JSON.stringify(context)!==JSON.stringify(this.startContext))throw new Error("Retry the original game context first");
   const result=await this.send({action:'start',request_id:this.startKey,...context});
