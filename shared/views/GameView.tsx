@@ -52,6 +52,7 @@ import { track } from "@shared/analytics/analytics";
 // Lazy-load CollectScreen — only renders when showCollect is true (post-hand
 // rewards). Saves ~30-50 KB from the initial bundle for the most common
 // path (no rewards yet).
+import { FandomPanel } from "@shared/components/FandomPanel";
 import { TierGauge, computeGaugeState } from "@shared/components/TierGauge";
 import { TeamStamp } from "@shared/components/TeamStamp";
 import { soundManager } from "@shared/utils/soundManager";
@@ -401,6 +402,10 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   //   (isAnonymous=false) AND for the loading window (authReady=false), which
   //   seals the glass-2b signed-in deal leak WITHOUT the glass-2 regression
   //   (the earlier `!!user` requirement wrongly excluded user=null cold users).
+  const [completedFandomIds, setCompletedFandomIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (gameState === "IDLE" || gameState === "DEALING" || gameState === "HOLD") setCompletedFandomIds(new Set());
+  }, [gameState]);
   const ftueActive = false; // Server hands use the real dealt roster.
 
   // ── FTUE opening ceremony (pre-deal wall) ──────────────────────────────────
@@ -1168,9 +1173,13 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       : undefined,
     onCardRevealStart: handleCardRevealStart,
     onCardFpStart,
-    onCardComplete,
+    onCardComplete: (id: string) => {
+      onCardComplete(id);
+      setCompletedFandomIds(previous => new Set([...previous, id]));
+    },
     onAnchorFpComplete,
     onAllComplete: useCallback((_totalFp: number) => {
+      setCompletedFandomIds(new Set(rosterRef.current.map(cardId)));
       clearActiveCard();
       soundManager.stopRevealAmbience();
     }, []), // eslint-disable-line
@@ -3000,6 +3009,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     topGameResult={topGameInfo.topGame as any}
                     columns={rosterGridColumns}
                     CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
+                    showBackedLabels={sportKey === "basketball" && !challengeCtx && !ftueActive}
                     slotLabels={slotLabels}
                   />
                 );
@@ -3233,7 +3243,11 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
               pointerEvents: "auto" as const,
             }}
           >
-            <TierGauge
+            {sportKey === "basketball" && !challengeCtx && !ftueActive ? (
+              <FandomPanel cards={roster} state={gameState} heldIds={heldCardIds}
+                completedIds={completedFandomIds} lastCardId={lastRevealedCardId}
+                thresholds={gaugeThresholds} roundsUsed={roundsUsed} maxRounds={maxRounds} />
+            ) : <TierGauge
               totalFp={gaugeTotalFp}
               thresholds={gaugeThresholds}
               winTier={undefined}
@@ -3266,7 +3280,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   try { localStorage.setItem("rm_solo_ftue_done", "1"); } catch { /* noop */ }
                 }
               }}
-            />
+            />}
           </div>
 
           <div
@@ -3377,6 +3391,8 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         winTiers={gameBarWinTiers}
         legend={legendWithStars}
         sportKey={sportKey}
+        fandomPresentation={sportKey === "basketball" && !challengeCtx && !ftueActive}
+        allBacked={roster.length === 5 && heldCardIds.size === 5}
         roundsUsed={roundsUsed}
         maxRounds={maxRounds}
         ftueActive={ftueActive}

@@ -1,3 +1,7 @@
+## 2026-09-20 — LOCKED: focused fandom presentation
+
+John approved implementation on the clean branch. Implement docs/fandom-pass.md scope: backing, honest draw labels, tier reference, factual historical reveal/result; no mechanics, prizes, new modes or progression. Reuse existing 96px commentary space. Preserve tutorial/challenge presentation. Verify full tests/build, mobile/desktop layout and live solo loop before considering complete.
+
 ## 2026-09-19 — LOCKED: repair current-season settlement
 
 Use one browser/server basketball season-threshold resolver. Preserve existing browser fallback values for seasons without calibrated rows, including 2526; do not recalibrate tiers. Verify 2526 full server deal/draw/outcome, tier boundaries, full suite/build, live settlement and replay. John authorized fixing the blocker and redeploying.

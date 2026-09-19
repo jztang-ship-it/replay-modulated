@@ -15,3 +15,8 @@ it('cannot restore wallet, wagers or payouts through legacy props',()=>{
  expect(screen.getByRole('button',{name:'tiers',exact:false})).toBeTruthy();
  expect(document.body.textContent).not.toMatch(/123456|balance|wager|20x|payout/i);
 });
+
+it.each([[1,false,'DRAW'],[2,false,'FINAL DRAW'],[1,true,'REVEAL']])('honest solo action at pick %s, all backed %s',(roundsUsed,allBacked,name)=>{
+ render(<GameBar gameState="HOLD" totalFp={0} capMax={250} capUsed={0} lockedSalary={0} revealedSalary={0} onAction={()=>{}} winTiers={[{label:'ROOKIE',minFp:0,color:'green',glow:'green'}]} legend={{tierRows:[],scoringRules:[],badges:[]}} maxRounds={3} roundsUsed={roundsUsed} fandomPresentation allBacked={allBacked}/>);
+ expect(screen.getByRole('button',{name,exact:true})).toBeTruthy();
+});

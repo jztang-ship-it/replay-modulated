@@ -172,6 +172,8 @@ type Props = {
   /** Round position for the x/N hold-loop indicator. Both default to single-shot
    *  (maxRounds 1) — the indicator + "NEXT" relabel only engage when maxRounds>1
    *  (basketball), so single-shot sports are untouched. */
+  fandomPresentation?: boolean;
+  allBacked?: boolean;
   roundsUsed?: number;
   maxRounds?: number;
 };
@@ -794,6 +796,8 @@ export function GameBar({
   onTrophyOpened,
   sportKey,
   challengeTarget,
+  fandomPresentation = false,
+  allBacked = false,
   roundsUsed = 1,
   maxRounds = 1,
   ftueActive = false,
@@ -804,6 +808,9 @@ export function GameBar({
   // (DEALING/DRAWING) OR when the history beat locks REPLAY. Superset of the
   // normal gate → non-FTUE (ftuePrimaryLocked=false) is byte-identical.
 
+  const fandomLabel = gameState === "HOLD"
+    ? (allBacked ? "REVEAL" : roundsUsed >= maxRounds - 1 ? "FINAL DRAW" : "DRAW")
+    : gameState === "REVEALING" ? "REVEAL" : actionLabel(gameState, maxRounds, ftueActive);
   const showStreak = false;
   const primaryDisabled = isDisabled(gameState) || ftuePrimaryLocked;
   // x/N hold-loop indicator + "NEXT" relabel — multi-round only. Single-shot
@@ -1002,7 +1009,7 @@ export function GameBar({
                     fontSize: 13, fontWeight: 900, lineHeight: 1, fontVariantNumeric: "tabular-nums",
                     letterSpacing: 1, color: "rgba(255,255,255,0.6)", fontFamily: FF, whiteSpace: "nowrap",
                   }}>
-                    {roundsUsed}/{maxRounds}
+                    {fandomPresentation ? (gameState === "REVEALING" ? "REVEAL" : `PICK ${Math.min(roundsUsed, maxRounds - 1)}/${maxRounds - 1}`) : `${roundsUsed}/${maxRounds}`}
                   </span>
                 )}
 
@@ -1033,7 +1040,7 @@ export function GameBar({
                 animation: (replayPulse || ftuePrimaryPulse) ? "replayPulse 1.2s ease-in-out infinite" : "none",
               }}>
               {(replayPulse || ftuePrimaryPulse) && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
-              {actionLabel(gameState, maxRounds, ftueActive)}
+              {fandomPresentation ? fandomLabel : actionLabel(gameState, maxRounds, ftueActive)}
             </button>
             )}
 
@@ -1233,7 +1240,7 @@ export function GameBar({
                   animation: (replayPulse || ftuePrimaryPulse) ? "replayPulse 1.2s ease-in-out infinite" : "none",
                 }}>
                 {(replayPulse || ftuePrimaryPulse) && <style>{`@keyframes replayPulse { 0%,100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3); } 50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 6px rgba(58,160,255,0.5), 0 0 20px rgba(58,160,255,0.3); } }`}</style>}
-                {actionLabel(gameState, maxRounds, ftueActive)}
+                {fandomPresentation ? fandomLabel : actionLabel(gameState, maxRounds, ftueActive)}
               </button>
               )}
               {/* CHALLENGE-dominant CTA (+ dismiss) — same centered slot; mutually

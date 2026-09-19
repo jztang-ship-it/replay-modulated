@@ -59,6 +59,7 @@ export type RosterGridCardProps = {
 
 type Props = {
   /** Number of grid columns — 3 for basketball, 2 for worldcup */
+  showBackedLabels?: boolean;
   columns: number;
   /** The sport's card component — receives RosterGridCardProps */
   CardComponent: React.ComponentType<RosterGridCardProps>;
@@ -125,7 +126,7 @@ type Props = {
 
 export function RosterGrid(props: Props) {
   const {
-    columns, CardComponent,
+    columns, CardComponent, showBackedLabels = false,
     roster, phase, onCardRollComplete, lockedIds, mvpId,
     flippedIds, revealingIds, noTransition,
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
@@ -296,6 +297,8 @@ export function RosterGrid(props: Props) {
                 {slotLabels[card.slotIndex ?? 0].label}
               </div>
             )}
+            {showBackedLabels && (isLocked || card.wasHeld) && <span data-backed-label
+              style={{ position: "absolute", top: 2, left: 2, zIndex: 45, pointerEvents: "none", background: "#F5C850", color: "#172033", borderRadius: 3, padding: "1px 5px", fontSize: 9, lineHeight: "12px", fontWeight: 900 }}>BACKED</span>}
             <CardComponent
               card={card}
               phase={phase}
