@@ -302,7 +302,7 @@ export function RosterGrid(props: Props) {
             )}
             {showBackedLabels && <style>{`@keyframes dealReadyPulse { 50% { opacity: .65; } } [data-dealing="true"] { animation: dealReadyPulse 700ms ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { [data-dealing="true"] { animation: none; } }`}</style>}
             {showBackedLabels && (isLocked || card.wasHeld) && <span data-backed-label
-              style={{ position: "absolute", top: "17%", right: 4, zIndex: 65, pointerEvents: "none", background: "#F5C850", color: "#172033", borderRadius: 3, padding: "1px 5px", fontSize: 9, lineHeight: "12px", fontWeight: 900 }}>BACKED</span>}
+              style={{ position: "absolute", top: "6.5%", left: "50%", transform: "translateX(-50%)", zIndex: 65, pointerEvents: "none", background: "#F5C850", color: "#172033", borderRadius: 3, padding: "1px 5px", fontSize: 9, lineHeight: "12px", fontWeight: 900 }}>BACKED</span>}
             <CardComponent
               card={card}
               phase={phase}

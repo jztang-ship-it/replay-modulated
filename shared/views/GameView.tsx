@@ -2411,7 +2411,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
 
   const soloFandom = sportKey === "basketball" && !challengeCtx && !ftueActive;
   const choosing = ["IDLE", "DEALING", "HOLD", "DRAWING"].includes(gameState);
-  const gridStatsRow = soloFandom && choosing ? "24px" : "52px";
+  const gridStatsRow = "52px";
   const gridActionRow = challengeCtaActive ? "80px" : "50px";
 
   // Challenge mode post-reveal continuity:
@@ -3080,9 +3080,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   : "default",
             }}
           >
-            {soloFandom && choosing ? (
-              <span data-selection-budget style={{ fontSize: 12, color: "#b8c4d4" }}>{CAP_MAX - lockedSalary} budget left</span>
-            ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
                 {tierResultPhase === 1 && (
                   <>
@@ -3221,7 +3219,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                             Team FP
                           </div>
                         </div>
-                        {!soloFandom && <div style={{ textAlign: "center" }}>
+                        {(!soloFandom || choosing) && <div data-selection-budget style={{ textAlign: "center" }}>
                           <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
                             <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
                               <RollingNumber value={remaining} decimals={0} duration={300} />

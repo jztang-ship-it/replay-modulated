@@ -1,3 +1,9 @@
+## 2026-09-21 — LOCKED: restore selection hierarchy, step 1
+
+John approved staged corrections. This first release restores the original Team FP and remaining-budget /250 row during selection, centers the single BACKED marker between salary and position on every card, and retains the replacement-count instruction. Reuse existing score/budget rendering and values. Timing, automatic final-draw reveal, portraits and commentary are subsequent stages, not bundled into this correction. Verify full tests/build, economy guard and real-browser bounds on mobile/desktop; preserve mother and game rules.
+
+Verification: full suite 158 files / 1,678 tests passed; production build and economy guard passed. Compiled local browser with mocked auth/API verified restored score/budget, all five centered labels aligned with salary, viewport bounds and replacement-count copy at 360×640, 390×844 and 1280×900. No production test records created.
+
 ## 2026-09-20 — LOCKED: solo readiness pass
 
 John approved the next bounded pass: immediate visible Deal motion plus measured request latency improvements; reliable all-backed and consecutive-hand reveal completion; one BACKED marker replacing H on the clean solo surface; phase-specific bottom area (selection: compact budget/instruction/action; reveal: score/next target/history; result: tier/score/takeaway/replay). Keep full tier reference in the existing information view during selection. Preserve scoring, holds, draw count, free-play isolation and mother. Verify runtime reveal regressions, full tests/build, real mobile/desktop layout, and live hands only with explicit production-test permission (requested). No new stakes or progression.
