@@ -220,6 +220,7 @@ export interface CardFrontProps {
   stableCard: PlayerCard;
   phase: GamePhase;
   isLocked: boolean;
+  hideHoldIndicator?: boolean;
   isMvp: boolean;
   isFlipped: boolean;
   canFlip: boolean;
@@ -257,6 +258,7 @@ export interface CardShellProps {
   card: PlayerCard;
   phase: GamePhase;
   locked?: boolean;
+  hideHoldIndicator?: boolean;
   isLocked?: boolean;
   isMvp?: boolean;
   flipped?: boolean;
@@ -524,6 +526,7 @@ export function PlayerCardShell(props: CardShellProps) {
     stableCard,
     phase,
     isLocked: locked,
+    hideHoldIndicator: props.hideHoldIndicator,
     isMvp,
     isFlipped: flipped,
     canFlip,

@@ -25,7 +25,7 @@ const USE_REVEAL = read("../_useReveal.ts");
 // Scope every assertion to the onAnchorFpComplete callback body so a like-named
 // pattern elsewhere can't satisfy (or break) the guard checks.
 const onAnchorFpComplete = (() => {
-  const m = /const onAnchorFpComplete = useCallback\(\(_hookTotal: number\) => \{([\s\S]*?)\n  \}, \[/.exec(USE_REVEAL);
+  const m = /const onAnchorFpComplete = useCallback\(\(_hookTotal: number, sequenceComplete = false\) => \{([\s\S]*?)\n  \}, \[/.exec(USE_REVEAL);
   expect(m, "onAnchorFpComplete callback must be locatable").not.toBeNull();
   return m![1];
 })();
@@ -43,7 +43,7 @@ describe("B2a — all-held reveal completes (onAnchorFpComplete skip-first guard
     // The gate must require hasUnheldCards — this is what lets the all-held case
     // (no unheld sequence, one anchor call) fall through and fire the spring.
     expect(onAnchorFpComplete).toMatch(
-      /if \(hasHeldCards && hasUnheldCards && anchorFpCallCountRef\.current === 0 && !isSkipping\) \{/,
+      /if \(hasHeldCards && hasUnheldCards && anchorFpCallCountRef\.current === 0 && !isSkipping && !sequenceComplete\) \{/,
     );
   });
 
@@ -51,7 +51,7 @@ describe("B2a — all-held reveal completes (onAnchorFpComplete skip-first guard
     // The pre-fix guard. Its return swallowed the lone held-anchor call in the
     // all-held case. Asserting its absence catches a silent revert of the gate.
     expect(onAnchorFpComplete).not.toMatch(
-      /if \(hasHeldCards && anchorFpCallCountRef\.current === 0 && !isSkipping\) \{/,
+      /if \(hasHeldCards && anchorFpCallCountRef\.current === 0 && !isSkipping && !sequenceComplete\) \{/,
     );
   });
 });

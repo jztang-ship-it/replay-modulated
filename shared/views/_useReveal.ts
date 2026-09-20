@@ -76,7 +76,7 @@ export interface UseRevealReturn {
   // Reveal callbacks (passed into useEmotionalReveal at the call site)
   onCardFpStart: (cId: string) => void;
   onCardComplete: (cId: string) => void;
-  onAnchorFpComplete: (hookTotal: number) => void;
+  onAnchorFpComplete: (hookTotal: number, sequenceComplete?: boolean) => void;
 
   // Spring orchestrator
   runSpring: (finalFp: number, onSettled: () => void) => void;
@@ -208,13 +208,24 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     const wd = WN * Math.sqrt(1 - ZETA * ZETA);
     const startMs = performance.now();
 
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      cancelAnimationFrame(springRafRef.current);
+      setSpringFp(null);
+      lockedGaugeFpRef.current = finalFp;
+      setSpringSettled(true);
+      onSettled();
+    };
+    // A hidden/throttled tab may stop delivering animation frames. Result
+    // completion must not depend on painting the decorative score spring.
+    springTimersRef.current.push(window.setTimeout(finish, DURATION_MS + 100));
     const step = () => {
+      if (settled) return;
       const elapsedMs = performance.now() - startMs;
       if (elapsedMs >= DURATION_MS || peak <= 0) {
-        setSpringFp(null);
-        lockedGaugeFpRef.current = finalFp;
-        setSpringSettled(true);
-        onSettled();
+        finish();
         return;
       }
       // Damped-sinusoid impulse: starts at 0, peaks at +peak, oscillates
@@ -256,7 +267,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
   }, [rosterRef, setRevealIndex, setLastRevealedCardId]);
 
   // ── onAnchorFpComplete ─────────────────────────────────────────────
-  const onAnchorFpComplete = useCallback((_hookTotal: number) => {
+  const onAnchorFpComplete = useCallback((_hookTotal: number, sequenceComplete = false) => {
     if (springHasFiredRef.current) return;
     // In tap mode with held cards, onAnchorFpComplete fires twice: once for the
     // non-held anchor and once for the held anchor. Skip the first call so held
@@ -274,7 +285,7 @@ export function useReveal(args: UseRevealArgs): UseRevealReturn {
     // hangs forever. Gate the skip on hasUnheldCards so the lone held-anchor call
     // drives the spring in the all-held case. (Skip mode bypasses this entirely via
     // !isSkipping; this term only affects the tap-mode held-vs-all-held split.)
-    if (hasHeldCards && hasUnheldCards && anchorFpCallCountRef.current === 0 && !isSkipping) {
+    if (hasHeldCards && hasUnheldCards && anchorFpCallCountRef.current === 0 && !isSkipping && !sequenceComplete) {
       anchorFpCallCountRef.current = 1;
       return; // Non-held anchor's call in tap mode — skip, wait for held anchor
     }

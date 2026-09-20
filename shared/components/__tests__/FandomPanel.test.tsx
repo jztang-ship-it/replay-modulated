@@ -35,6 +35,22 @@ it('all-backed selection never promises a replacement',()=>{
 });
 it('a new hand clears score progress and private history',()=>{
  render(<FandomPanel {...props} state="IDLE" completedIds={new Set()}/>);
- expect(screen.getByText('Back who you trust. Draw the rest.')).toBeTruthy();
+ expect(screen.getByText('Five players. Real historical nights.')).toBeTruthy();
  expect(screen.queryByText(/1998-04-04/)).toBeNull();
+});
+
+it('keeps selection to one instruction without tiers or a redundant backing list',()=>{
+ const {container}=render(<FandomPanel {...props} state="HOLD"/>);
+ expect(screen.getByText('1 player will be replaced')).toBeTruthy();
+ expect(container.querySelector('[data-tier-reference]')).toBeNull();
+ expect(screen.queryByText(/Backing Duncan/)).toBeNull();
+});
+it('shows immediate dealing feedback without a zero-score ladder',()=>{
+ const {container}=render(<FandomPanel {...props} state="DEALING"/>);
+ expect(screen.getByText('Dealing your five…')).toBeTruthy();
+ expect(container.querySelector('[data-tier-reference]')).toBeNull();
+});
+it('does not shorten a basketball name to Jr.',()=>{
+ render(<FandomPanel {...props} cards={[{...cards[0],name:'Michael Porter Jr.'}]} completedIds={new Set()} lastCardId={null}/>);
+ expect(screen.getByText('Porter still to come')).toBeTruthy();
 });

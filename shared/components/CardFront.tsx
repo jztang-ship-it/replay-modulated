@@ -257,6 +257,7 @@ export interface CardFrontProps {
   stableCard?: PlayerCard;
   phase: GamePhase;
   isLocked: boolean;
+  hideHoldIndicator?: boolean;
   isMvp: boolean;
   isFlipped: boolean;
   canFlip: boolean;
@@ -870,7 +871,7 @@ export function CardFront(props: CardFrontProps) {
       )}
 
       {/* HOLD INDICATOR */}
-      {isLocked && (() => {
+      {isLocked && !props.hideHoldIndicator && (() => {
         const frontClipId = `card-clip-${cardKey.replace(/[^a-z0-9]/gi, "_")}`;
         return (
           <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 60, clipPath: `url(#${frontClipId})` }}>

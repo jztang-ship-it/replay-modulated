@@ -26,6 +26,7 @@ export type RosterGridCardProps = {
   card: PlayerCard;
   phase: GamePhase;
   locked: boolean;
+  hideHoldIndicator?: boolean;
   onToggleLock: () => void;
   isMvp: boolean;
   flipped: boolean;
@@ -60,6 +61,7 @@ export type RosterGridCardProps = {
 type Props = {
   /** Number of grid columns — 3 for basketball, 2 for worldcup */
   showBackedLabels?: boolean;
+  isDealing?: boolean;
   columns: number;
   /** The sport's card component — receives RosterGridCardProps */
   CardComponent: React.ComponentType<RosterGridCardProps>;
@@ -126,7 +128,7 @@ type Props = {
 
 export function RosterGrid(props: Props) {
   const {
-    columns, CardComponent, showBackedLabels = false,
+    columns, CardComponent, showBackedLabels = false, isDealing = false,
     roster, phase, onCardRollComplete, lockedIds, mvpId,
     flippedIds, revealingIds, noTransition,
     visibleFpMap, canFlip, onToggleLock, onToggleFlip,
@@ -239,6 +241,7 @@ export function RosterGrid(props: Props) {
             key={card.slotIndex ?? id}
             className="card-slot"
             data-slot={card.slotIndex ?? 0}
+            data-dealing={showBackedLabels && isDealing ? "true" : undefined}
             data-ftue-card={id}
             onClick={handleTap}
             style={{
@@ -297,12 +300,14 @@ export function RosterGrid(props: Props) {
                 {slotLabels[card.slotIndex ?? 0].label}
               </div>
             )}
+            {showBackedLabels && <style>{`@keyframes dealReadyPulse { 50% { opacity: .65; } } [data-dealing="true"] { animation: dealReadyPulse 700ms ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { [data-dealing="true"] { animation: none; } }`}</style>}
             {showBackedLabels && (isLocked || card.wasHeld) && <span data-backed-label
-              style={{ position: "absolute", top: 2, left: 2, zIndex: 45, pointerEvents: "none", background: "#F5C850", color: "#172033", borderRadius: 3, padding: "1px 5px", fontSize: 9, lineHeight: "12px", fontWeight: 900 }}>BACKED</span>}
+              style={{ position: "absolute", top: "17%", right: 4, zIndex: 65, pointerEvents: "none", background: "#F5C850", color: "#172033", borderRadius: 3, padding: "1px 5px", fontSize: 9, lineHeight: "12px", fontWeight: 900 }}>BACKED</span>}
             <CardComponent
               card={card}
               phase={phase}
               locked={isLocked}
+              hideHoldIndicator={showBackedLabels}
               onToggleLock={() => onToggleLock(id)}
               isMvp={mvpId === id}
               flipped={isFlipped}

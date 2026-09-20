@@ -208,12 +208,12 @@ export function useEmotionalReveal(params: Params) {
   const timersRef = useRef<number[]>([]);
   const isTapRevealingRef = useRef(false);   // mutex: one card fully completes before next starts
   const pendingTapQueue   = useRef<string[]>([]); // queued card IDs waiting to reveal
+  const claimedTapIds = useRef(new Set<string>());
   const tappedCountRef    = useRef(0);            // ref-based count — never stale inside closures
 
   const clearTimers = useCallback(() => {
     for (const t of timersRef.current) {
       window.clearTimeout(t);
-      window.cancelAnimationFrame(t);
     }
     timersRef.current = [];
   }, []);
@@ -227,6 +227,7 @@ export function useEmotionalReveal(params: Params) {
     isTapRevealingRef.current = false;
     pendingTapQueue.current = [];
     tappedCountRef.current = 0;
+    claimedTapIds.current.clear();
     setVisibleFpMap(new Map());
     setLastCardProgress(0);
     setLastCardFp(0);
@@ -344,6 +345,7 @@ export function useEmotionalReveal(params: Params) {
     isTapRevealingRef.current = false;
     pendingTapQueue.current = [];
     tappedCountRef.current = 0;
+    claimedTapIds.current.clear();
 
     // Skip sequence reveals only cards the user hasn't already tapped.
     // Order: non-held lowest→highest salary, then held lowest→highest salary,
@@ -623,7 +625,6 @@ export function useEmotionalReveal(params: Params) {
         // at full pace so its fire/ice + gauge move lands on its own beat.
         const fastRoll = !params.onBeforeEachHeld && hc.cardId !== anchorId;
         runCardReveal(hc, hc.cardId === anchorId, myRunId, () => {
-          onCardComplete?.(hc.cardId);
           revealOne(idx + 1);
         }, true, fastRoll /* isSkip: non-anchor held cards roll up fast (auto-chain only) */);
       };
@@ -633,10 +634,11 @@ export function useEmotionalReveal(params: Params) {
 
     // Pre-pause before first held card. FTUE walk owns the pace via the beat
     // tap → skip the auto suspense pause.
-    window.setTimeout(() => {
+    const heldStart = window.setTimeout(() => {
       if (runIdRef.current !== myRunId) return;
       revealOne(0);
     }, params.onBeforeEachHeld ? 0 : PRE_PAUSE_MS);
+    timersRef.current.push(heldStart);
   }
 
   // tapRevealCard: called when user taps an unheld card in tap mode.
@@ -644,9 +646,9 @@ export function useEmotionalReveal(params: Params) {
   // even if user taps multiple cards rapidly.
   const tapRevealCard = useCallback((cardId: string) => {
     if (!isActive || revealMode !== "tap") return;
-    if (tappedCardIds.has(cardId)) return;
-    if (pendingTapQueue.current.includes(cardId)) return; // already queued
-
+    if (claimedTapIds.current.has(cardId) || tappedCardIds.has(cardId)) return;
+    if (!revealOrder.some(c => c.cardId === cardId)) return;
+    claimedTapIds.current.add(cardId); // Synchronous: rapid taps cannot queue the active card twice.
     pendingTapQueue.current.push(cardId);
     processTapQueue();
   // eslint-disable-next-line react-hooks/exhaustive-deps

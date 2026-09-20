@@ -1177,11 +1177,12 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       setCompletedFandomIds(previous => new Set([...previous, id]));
     },
     onAnchorFpComplete,
-    onAllComplete: useCallback((_totalFp: number) => {
+    onAllComplete: (_totalFp: number) => {
+      onAnchorFpComplete(_totalFp, true);
       setCompletedFandomIds(new Set(rosterRef.current.map(cardId)));
       clearActiveCard();
       soundManager.stopRevealAmbience();
-    }, []), // eslint-disable-line
+    },
   });
   bindIsSkippingRef(isSkippingRef);
 
@@ -2408,7 +2409,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
   // this is true; REPLAY-only hands stay byte-identical at the 274px board-lock total.
   const challengeCtaActive = !challengeCtx && !challengeDismissed && ((!!challengeTrigger && (gameState === "RESULTS" || gameState === "WIN_CELEBRATION")) || !!grievance);
 
-  const gridStatsRow = "52px";
+  const soloFandom = sportKey === "basketball" && !challengeCtx && !ftueActive;
+  const choosing = ["IDLE", "DEALING", "HOLD", "DRAWING"].includes(gameState);
+  const gridStatsRow = soloFandom && choosing ? "24px" : "52px";
   const gridActionRow = challengeCtaActive ? "80px" : "50px";
 
   // Challenge mode post-reveal continuity:
@@ -3017,6 +3020,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                     columns={rosterGridColumns}
                     CardComponent={CardComponent as React.ComponentType<RosterGridCardProps>}
                     showBackedLabels={sportKey === "basketball" && !challengeCtx && !ftueActive}
+                    isDealing={gameState === "DEALING"}
                     slotLabels={slotLabels}
                   />
                 );
@@ -3033,7 +3037,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
           flex: "0 0 auto",
           display: "grid",
 
-          gridTemplateRows: verdictLayout
+          gridTemplateRows: soloFandom
+            ? `${gridStatsRow} 4px 0px 0px 0px 0px ${choosing ? "36px" : "96px"} 8px ${gridActionRow}`
+            : verdictLayout
             ? `${gridStatsRow} 16px 0px 0px 0px 0px 96px 16px ${gridActionRow}`
             : gaugeVoice
               ? `${gridStatsRow} 16px 0px 0px 0px 0px 96px 16px ${gridActionRow}`
@@ -3074,7 +3080,9 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                   : "default",
             }}
           >
-            {(gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
+            {soloFandom && choosing ? (
+              <span data-selection-budget style={{ fontSize: 12, color: "#b8c4d4" }}>{CAP_MAX - lockedSalary} budget left</span>
+            ) : (gameState === "RESULTS" || gameState === "WIN_CELEBRATION") && winTier && !showRawScore ? (
               <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
                 {tierResultPhase === 1 && (
                   <>
@@ -3213,7 +3221,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                             Team FP
                           </div>
                         </div>
-                        <div style={{ textAlign: "center" }}>
+                        {!soloFandom && <div style={{ textAlign: "center" }}>
                           <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
                             <span style={{ fontSize: 26, fontWeight: 900, color: overBudget ? "#ef4444" : "#FFFFFF", lineHeight: 1, fontStyle: "italic" }}>
                               <RollingNumber value={remaining} decimals={0} duration={300} />
@@ -3225,7 +3233,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
                           <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1.5, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", marginTop: 2 }}>
                             Budget
                           </div>
-                        </div>
+                        </div>}
                       </>
                     );
                   })()}

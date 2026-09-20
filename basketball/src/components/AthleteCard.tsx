@@ -390,6 +390,7 @@ const S: Record<string, React.CSSProperties> = {
 // ── Public component ───────────────────────────────────────────────────────
 
 type Props = {
+  hideHoldIndicator?: boolean;
   card: PlayerCard;
   phase: GamePhase;
   locked?: boolean;

@@ -3,6 +3,7 @@ import type { PlayerCard, GamePhase } from '../types/index';
 import type { TierThreshold } from './TierGauge';
 
 const idOf = (c: PlayerCard) => String((c as any).cardId ?? (c as any).basePlayerId ?? c.id);
+const surname = (name: string) => name.trim().replace(/\s+(Jr\.?|Sr\.?|II|III|IV)$/i, '').split(/\s+/).slice(-1)[0];
 const label = (tier: string) => tier.replace(/_/g, '-');
 const one = (n: number) => (Math.round(n * 10) / 10).toFixed(1);
 export function fandomSummary(cards: PlayerCard[], completed: Set<string>, thresholds: TierThreshold[], finished: boolean) {
@@ -35,7 +36,7 @@ export function FandomPanel({ cards, state, heldIds, completedIds, lastCardId, t
   const featured = leader ?? last;
   const attribution = featured && (featured.wasHeld || heldIds.has(idOf(featured))) ? 'Backed' : 'Drawn';
   const finalDraw = roundsUsed >= maxRounds - 1;
-  const names = backing.map(c => c.name.split(' ').slice(-1)[0]).join(', ');
+  const names = backing.map(c => surname(c.name)).join(', ');
   let headline = 'Back who you trust. Draw the rest.';
   let detail = 'Five players. Real historical nights.';
   let context = 'The ladder shows how your hand scores.';
@@ -49,15 +50,24 @@ export function FandomPanel({ cards, state, heldIds, completedIds, lastCardId, t
       : `${label(summary.achieved?.tier ?? 'ROOKIE')} reached${finished ? '' : ` · ${summary.remaining} left`}`;
     detail = featured ? `${featured.name} · ${attribution} · ${one(featured.actualFp)} FP${finished ? ' · Hand leader' : ''}` : 'Which night will your five deliver?';
     const waiting = backing.filter(c => !completedIds.has(idOf(c)));
-    context = featured ? historyLine(featured) : waiting.length ? `${waiting.map(c => c.name.split(' ').slice(-1)[0]).join(', ')} still to come` : 'Reveal the real games behind your hand';
+    context = featured ? historyLine(featured) : waiting.length ? `${waiting.map(c => surname(c.name)).join(', ')} still to come` : 'Reveal the real games behind your hand';
+  }
+  if (!revealing && !finished) {
+    const text = state === 'DEALING' ? 'Dealing your five…'
+      : state === 'DRAWING' ? 'Getting your next cards…'
+      : state === 'IDLE' ? 'Five players. Real historical nights.'
+      : backing.length === cards.length ? 'All five backed · Reveal their nights'
+      : backing.length ? `${cards.length - backing.length} ${cards.length - backing.length === 1 ? 'player' : 'players'} will be replaced`
+      : 'Tap players to back them';
+    return <section data-fandom-panel aria-label="Your hand" aria-live="polite" style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b8c4d4', fontSize: 12, textAlign: 'center' }}>{text}</section>;
   }
   const row: React.CSSProperties = { margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', lineHeight: '18px' };
   return <section data-fandom-panel aria-label="Your hand and season tiers" style={{ width: '100%', height: 96, boxSizing: 'border-box', padding: '3px 2px', display: 'flex', flexDirection: 'column', gap: 3, textAlign: 'center', color: '#e5e7eb' }}>
-    <div data-tier-reference style={{ display: 'flex', gap: 3, width: '100%', justifyContent: 'center', marginBottom: 2 }}>
+    {finished && <div data-tier-reference style={{ display: 'flex', gap: 3, width: '100%', justifyContent: 'center', marginBottom: 2 }}>
       {summary.tiers.map(t => <div key={t.tier} style={{ flex: 1, minWidth: 0, borderBottom: `2px solid ${(revealing || finished) && summary.score >= t.minFP ? '#F5C850' : '#344155'}`, paddingBottom: 2, fontSize: 9, lineHeight: '11px', color: '#cbd5e1' }}>
         <span style={{ display: 'block', fontWeight: 700 }}>{label(t.tier)}</span><span>{t.minFP}</span>
       </div>)}
-    </div>
+    </div>}
     <p title={headline} style={{ ...row, fontWeight: 800, fontSize: 13, color: '#F5C850' }}>{headline}</p>
     <p title={detail} style={{ ...row, fontSize: 12 }}>{detail}</p>
     <p title={context} style={{ ...row, fontSize: 10, color: '#b8c4d4' }}>{context}</p>
