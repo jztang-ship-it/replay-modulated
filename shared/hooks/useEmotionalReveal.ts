@@ -88,9 +88,6 @@ type Params = {
 };
 
 const ANCHOR_PRE_FLIP_PAUSE_MS = 200;
-/** Dwell after HOLD→DRAWING before kicking off the redraw network call.
- *  Long enough to register as a deliberate shuffle beat, short enough not to lull. */
-export const DRAWING_DWELL_MS = 450;
 // Shake pre-duration varies by result intensity
 const SHAKE_DURATION_MS_DEFAULT   = 400;
 const SHAKE_DURATION_MS_BIG       = 550;  // ON FIRE

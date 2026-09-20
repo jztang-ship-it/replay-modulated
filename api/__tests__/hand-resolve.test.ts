@@ -1,5 +1,6 @@
 import { describe,it,expect,vi,beforeEach } from 'vitest';
-const m=vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn(),rpc:vi.fn(),award:vi.fn(),deal:vi.fn(),draw:vi.fn(),resolve:vi.fn(),outcome:vi.fn(),row:null as any,queryError:null as any,filters:[] as any[]}));
+const m=vi.hoisted(()=>({auth:vi.fn(),quota:vi.fn(),rpc:vi.fn(),award:vi.fn(),waitUntil:vi.fn(),deal:vi.fn(),draw:vi.fn(),resolve:vi.fn(),outcome:vi.fn(),row:null as any,queryError:null as any,filters:[] as any[]}));
+vi.mock('@vercel/functions',()=>({waitUntil:m.waitUntil}));
 vi.mock('../hand/_lib/auth.js',()=>({verifyAuth:m.auth}));
 vi.mock('../hand/_lib/achievements.js',()=>({awardVerifiedAchievements:m.award}));
 vi.mock('../hand/_lib/security.js',async()=>{const real:any=await vi.importActual('../hand/_lib/security.js');return {...real,quota:m.quota};});
@@ -52,4 +53,52 @@ it('starts without sending a stake to any wallet RPC',async()=>{
  await call({action:'start',request_id:id,sport:'basketball',season:'2425'});
  expect(m.rpc.mock.calls[0][0]).toBe('start_free_play_hand');
  expect(m.rpc.mock.calls[0][1]).not.toHaveProperty('p_bet');
+});
+
+
+describe('responsive final draw',()=>{
+ it('keeps the first draw open and settles only the final allowed draw',async()=>{
+  m.row=session();
+  let r=await call({action:'draw',hand_id:id,revision:0,held_slots:[]});
+  expect(r.status).toBe(200);expect(r.data.settled).toBe(false);
+  expect(m.rpc.mock.calls[0][1]).toMatchObject({p_settle:false,p_state:{draws:1}});
+  m.row={...m.row,revision:1,state:m.rpc.mock.calls[0][1].p_state};
+  r=await call({action:'draw',hand_id:id,revision:1,held_slots:[0]});
+  expect(r.status).toBe(200);expect(r.data.settled).toBe(true);
+  expect(m.rpc.mock.calls[1][1]).toMatchObject({p_settle:true,p_revision:1,p_state:{draws:2}});
+  expect(m.draw).toHaveBeenLastCalledWith('basketball','2425',cards,[0]);
+  expect(m.award).toHaveBeenCalledTimes(1);
+ });
+ it('replays a timed-out final draw without drawing or settling twice',async()=>{
+  m.row=session();m.row.state.draws=1;
+  const body={action:'draw',hand_id:id,revision:0,held_slots:[0]};
+  await call(body);
+  m.row={...m.row,revision:1,settled:true,state:m.rpc.mock.calls[0][1].p_state};
+  const retried=await call(body);
+  expect(retried.status).toBe(200);expect(retried.data.settled).toBe(true);
+  expect(m.draw).toHaveBeenCalledTimes(1);expect(m.rpc).toHaveBeenCalledTimes(1);
+ });
+ it('returns the committed result while achievements are still pending',async()=>{
+  m.row=session();m.row.state.draws=1;
+  let finish!: (ids:string[])=>void;
+  m.award.mockReturnValue(new Promise<string[]>(resolve=>{finish=resolve;}));
+  const r=await call({action:'draw',hand_id:id,revision:0,held_slots:[]});
+  expect(r.status).toBe(200);expect(r.data.settled).toBe(true);
+  expect(m.waitUntil).toHaveBeenCalledWith(expect.any(Promise));
+  finish([]);await m.waitUntil.mock.calls[0][0];
+ });
+ it('does not grant achievements after a conflicting final draw',async()=>{
+  m.row=session();m.row.state.draws=1;
+  m.rpc.mockResolvedValue({data:null,error:{message:'stale'}});
+  expect((await call({action:'draw',hand_id:id,revision:0,held_slots:[]})).status).toBe(409);
+  expect(m.award).not.toHaveBeenCalled();expect(m.waitUntil).not.toHaveBeenCalled();
+ });
+ it('checks independent start quotas together and still fails closed',async()=>{
+  let release!: (allowed:boolean)=>void;
+  m.quota.mockImplementation((key:string)=>key.startsWith('hand:start:')?new Promise(resolve=>{release=resolve;}):Promise.resolve(true));
+  const result=call({action:'start',request_id:id,sport:'basketball',season:'2425'});
+  await vi.waitFor(()=>expect(m.quota).toHaveBeenCalledWith(expect.stringMatching(/^hand:start-ip:/),120,3600));
+  expect(m.rpc).not.toHaveBeenCalled();release(false);
+  expect((await result).status).toBe(429);expect(m.rpc).not.toHaveBeenCalled();
+ });
 });

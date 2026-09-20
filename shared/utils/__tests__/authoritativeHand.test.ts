@@ -28,3 +28,14 @@ it('gives a specific authentication error before attempting to deal',async()=>{
  const error=await new AuthoritativeHand().start(context).catch(e=>e);
  expect(error.code).toBe('AUTH_REQUIRED');expect(handErrorMessage(error,'retry')).toContain('Sign-in');expect(fetchMock).not.toHaveBeenCalled();
 });
+
+
+it('reuses the atomically settled final draw instead of requesting a second lock',async()=>{
+ const c=new AuthoritativeHand();await c.start(context);
+ const settled={...value,revision:2,settled:true,hand:{total_fp:200,tier:'STARTER'}};
+ fetchMock.mockResolvedValueOnce({ok:true,json:async()=>settled});
+ const draw=await c.turn('draw',[0,2]);
+ expect(await c.turn('lock',[0,2])).toBe(draw);
+ expect(fetchMock).toHaveBeenCalledTimes(2);
+ expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({action:'draw',held_slots:[0,2]});
+});

@@ -1,3 +1,9 @@
+## 2026-09-20 — LOCKED: responsive Deal and Final Draw
+
+John requested removal of long pauses after Deal and Final Draw. Respond immediately with the existing busy state; block duplicate actions while a request is pending. Remove deliberate pre-request draw dwell and post-deal dead time. Settle the last allowed draw atomically in the existing server transaction, so the subsequent client lock reuses its settled snapshot. Run independent start quotas concurrently and move best-effort achievement work off the result-response path with Vercel waitUntil. Preserve authentication, fail-closed quotas, held choices, server scoring, retry fingerprints and mother branch. Verify retry/idempotency and pending-achievement behavior, full tests/build, then live deal/draw/final-draw/result/replay. No schema change or reveal-effect redesign.
+
+Verification: full suite 156 files / 1,672 tests passed; production-equivalent build and economy guard passed. Initial test attempts were disrupted by host pauses; clean uninterrupted rerun passed in 57 seconds. Compiled local browser confirmed immediate Deal busy feedback, but the full local flow was blocked by inherited connection settings / preview loading; production loop verification remains required after deployment.
+
 ## 2026-09-20 — LOCKED: focused fandom presentation
 
 John approved implementation on the clean branch. Implement docs/fandom-pass.md scope: backing, honest draw labels, tier reference, factual historical reveal/result; no mechanics, prizes, new modes or progression. Reuse existing 96px commentary space. Preserve tutorial/challenge presentation. Verify full tests/build, mobile/desktop layout and live solo loop before considering complete.

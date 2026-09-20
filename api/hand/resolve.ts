@@ -1,6 +1,7 @@
 import { authorityUnavailable, isAuthoritySchemaMissing } from "./_lib/authorityErrors.js";
 import type { VercelRequest,VercelResponse } from '@vercel/node';
 import { randomUUID } from 'node:crypto';
+import { waitUntil } from '@vercel/functions';
 import { supabaseAdmin } from './_lib/supabaseServer.js';
 import { verifyAuth } from './_lib/auth.js';
 import { quota,ipKey,boundedBody,digest } from './_lib/security.js';
@@ -11,8 +12,9 @@ function view(h:any) {
  const raw=h.state.hand;
  const hand=raw ? {hand_id:raw.hand_id,total_fp:raw.total_fp,tier:raw.tier,sport:raw.sport,season:raw.season} : null;
  return {hand_id:h.hand_id,revision:h.revision,roster:h.state.roster,settled:h.settled,hand,sport:h.sport,season:h.season,competition:h.competition,challenge_id:h.challenge_id};}
-async function complete(h:any,userId:string) {
- if(h.settled) { try { await awardVerifiedAchievements(userId,h.hand_id,h.sport,h.season); } catch { console.error('[hand] achievement grant deferred'); } }
+function complete(h:any,userId:string) {
+ // The committed result is ready; best-effort achievements must not hold it up.
+ if(h.settled) waitUntil(awardVerifiedAchievements(userId,h.hand_id,h.sport,h.season).catch(() => { console.error('[hand] achievement grant deferred'); }));
  return view(h);
 }
 export default async function handler(req:VercelRequest,res:VercelResponse) {
@@ -42,7 +44,8 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
     if(existing.sport!==b.sport||existing.season!==b.season||existing.competition!==competition||existing.challenge_id!==(b.challenge_id??null))return res.status(409).json({error:'Request context mismatch'});
     return res.status(200).json(await complete(existing,user.id));
    }
-   if(!await quota(`hand:start:${user.id}`,30,3600)||!await quota(`hand:start-ip:${ipKey(req)}`,120,3600))return res.status(429).json({error:'Too many games'});
+   const startQuotas=await Promise.all([quota(`hand:start:${user.id}`,30,3600),quota(`hand:start-ip:${ipKey(req)}`,120,3600)]);
+   if(startQuotas.some(allowed=>!allowed))return res.status(429).json({error:'Too many games'});
    const roster=deal(b.sport,b.season,challenge);
    const {data,error}=await supabaseAdmin.rpc('start_free_play_hand',{p_user:user.id,p_id:randomUUID(),p_request:b.request_id,p_sport:b.sport,p_season:b.season,p_competition:competition,p_challenge:b.challenge_id??null,p_state:{roster,draws:0,resolved:false}});
    if(isAuthoritySchemaMissing(error))throw error;
@@ -62,8 +65,8 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
   if(h.state.roster.some((c:any,i:number)=>c.wasHeld && !held.includes(i)))return res.status(409).json({error:'Previously held cards must stay held'});
   // Only selection indices are accepted. No client cards, points, tier, season or payout is read here.
   const state={...h.state,last_request:fingerprint};
+  const maxDraws=h.sport==='basketball'?2:1;
   if(b.action==='draw'){
-   const maxDraws=h.sport==='basketball'?2:1;
    if(state.draws>=maxDraws)return res.status(409).json({error:'No draws remaining'});
    state.roster=draw(h.sport,h.season,state.roster,held);state.draws++;
    state.roster=resolve(h.sport,h.season,state.roster,h.created_at,!!h.state.resolved);state.resolved=true;
@@ -73,10 +76,9 @@ export default async function handler(req:VercelRequest,res:VercelResponse) {
    state.resolved=true;
   }
   const tier=outcome(h.sport,h.season,state.roster);
-  const {data:committed,error:commitError}=await supabaseAdmin.rpc('commit_free_play_hand',{p_user:user.id,p_id:h.hand_id,p_revision:b.revision,p_state:state,p_settle:b.action==='lock',p_tier:tier.tier});
+  const {data:committed,error:commitError}=await supabaseAdmin.rpc('commit_free_play_hand',{p_user:user.id,p_id:h.hand_id,p_revision:b.revision,p_state:state,p_settle:b.action==='lock'||state.draws>=maxDraws,p_tier:tier.tier});
   if(isAuthoritySchemaMissing(commitError))throw commitError;
   if(commitError)return res.status(409).json({error:'Concurrent turn; retry the same action'});
-  if(committed.settled){try{await awardVerifiedAchievements(user.id,h.hand_id,h.sport,h.season);}catch(e){console.error('[hand] achievement grant deferred');}}
-  return res.status(200).json(view(committed));
+  return res.status(200).json(complete(committed,user.id));
  }catch(error){console.error('[hand] request failed',error instanceof Error?error.message:'backend error');return res.status(503).json(authorityUnavailable(error));}
 }

@@ -38,7 +38,6 @@ import { BossScreen } from "@shared/components/BossScreen";
 import { getBossResult } from "@shared/utils/bossResultMemory";
 import {
   useEmotionalReveal,
-  DRAWING_DWELL_MS,
 } from "@shared/hooks/useEmotionalReveal";
 import { GameBar as SharedGameBar, type CelebrationData } from "@shared/components/GameBar";
 import { featureFlags } from "@shared/featureFlags";
@@ -1922,7 +1921,15 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
     }
   }
 
+  const primaryActionPendingRef = useRef(false);
   async function onPrimaryAction() {
+    if (primaryActionPendingRef.current || gameState === "DEALING" || gameState === "DRAWING") return;
+    primaryActionPendingRef.current = true;
+    try { await performPrimaryAction(); }
+    finally { primaryActionPendingRef.current = false; }
+  }
+
+  async function performPrimaryAction() {
     // FTUE gate re-evaluated FRESH here (glass-2a termination + glass-2 no
     // double-deal). Re-read first-run at each DEAL (IDLE) — a discrete event,
     // never mid-hand — then compute ftueActiveNow. The DEAL/round injections use
@@ -1947,6 +1954,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       if (ftueActiveNow && ceremonyPhaseRef.current === "cards") { runCeremonyFlipThenDeal(); return; }
       if (ftueActiveNow && ceremonyPhaseRef.current === "flipping") return;
 
+      setGameState("DEALING"); // Acknowledge the tap before awaiting the server.
       resetReveal();
       resetAllOverlays();
       setRoundsUsed(1); // new hand → the deal is round/lineup 1 (lock fires after 2 rerolls = 3 lineups at maxRounds 3; first reroll locks at maxRounds 1 = single-shot)
@@ -2014,7 +2022,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       for (const c of nextRoster) flipState.revealCard(cardId(c));
       await sleep(50);
       for (const c of nextRoster) flipState.completeReveal(cardId(c));
-      await sleep(400);
       setGameState("HOLD");
       return;
     }
@@ -2024,6 +2031,7 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
       if (ftueActiveNow && roster.some(c => adapter.ftueScriptedHand!.directedHoldIds.includes(cardId(c)) && !lockedCardIds.has(cardId(c)))) {
         return;
       }
+      setGameState("DRAWING"); // Also covers all-backed / retry-lock requests.
       const markedRoster = roster.map(c => ({ ...c, wasHeld: lockedCardIds.has(cardId(c)) }));
       // Trigger: tapping the primary CTA with EVERY card held = "lock what I see
       // now". markedRoster is freshly marked from the CURRENT lockedCardIds at tap
@@ -2067,7 +2075,6 @@ export function GameView({ adapter, challengeCtx, challengeBackCtx, clearChallen
         setRoster(markedRoster);
         setGameState("DRAWING");
         gameAnalytics.redrawUsed();
-        await sleep(DRAWING_DWELL_MS);
         let drawRes: any, resolveRes: any;
         try {
           drawRes = await serverGame.current.turn("draw", markedRoster.flatMap((c, i) => c.wasHeld ? [i] : []));
